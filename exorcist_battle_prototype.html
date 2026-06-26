@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>신입 액소시스트 - 전투 프로토타입</title>
+<style>
+/* =========================================================================
+   디자인 토큰 / 전역
+   - 화면비 16:9 고정, 컨테이너 쿼리 단위(cqh/cqw)로 모든 요소를 비율 스케일
+   - 모바일 가로에서도 동일 레이아웃이 그대로 축소/확대됨
+   ========================================================================= */
+:root{
+  --c-sky-1:#bfe3ff; --c-sky-2:#e8f5ff; --c-floor:#dfeaf5;
+  --c-panel:rgba(255,255,255,.82); --c-panel-line:rgba(120,160,210,.45);
+  --c-ink:#2b3b54; --c-ink-soft:#5b7090;
+  --c-gold:#e7b54a; --c-gold-deep:#b07d1d;
+  --c-blue:#3f8fe0; --c-blue-deep:#1f5fa5;
+  --c-red:#e3574e; --c-red-deep:#a82e2e;
+  --c-green:#4bb07a; --c-hp:#e24b4a; --c-hp-bg:#7a2a2a;
+  --r:1.4cqh;
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%; background:#0c1422; overflow:hidden;
+  font-family:"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  user-select:none; -webkit-user-select:none;}
+
+/* 16:9 무대: 뷰포트에 꽉 맞추되 비율 유지(레터박스) */
+#stageWrap{position:fixed; inset:0; display:flex; align-items:center; justify-content:center;}
+#game{
+  position:relative;
+  width:min(100vw, calc(100vh * 16 / 9));
+  height:min(100vh, calc(100vw * 9 / 16));
+  container-type:size;                 /* cqh/cqw 기준 컨테이너 */
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--c-sky-2) 0%, var(--c-sky-1) 55%, #a7d3f5 100%);
+  overflow:hidden; color:var(--c-ink);
+  font-size:2.2cqh; line-height:1.25;
+}
+/* 병원 바닥/창문 분위기(아트 대체) */
+#game::before{content:""; position:absolute; left:0; right:0; bottom:0; height:42%;
+  background:linear-gradient(180deg, rgba(223,234,245,0) 0%, var(--c-floor) 40%, #cdddee 100%);
+  pointer-events:none;}
+.bokeh{position:absolute; border-radius:50%; background:rgba(255,255,255,.35);
+  filter:blur(2cqh); pointer-events:none;}
+
+/* =========================== 상단 HUD =========================== */
+#hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:9cqh;
+  display:flex; align-items:center; gap:1.2cqw; z-index:30;}
+.hud-card{display:flex; align-items:center; gap:.7cqw; background:var(--c-panel);
+  border:0.2cqh solid var(--c-panel-line); border-radius:var(--r);
+  padding:.8cqh 1.1cqw; backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);}
+.portrait{width:5.4cqh; height:5.4cqh; border-radius:50%; display:grid; place-items:center;
+  font-size:3.4cqh; background:linear-gradient(160deg,#fff,#dcecff);
+  border:0.25cqh solid var(--c-gold); box-shadow:0 0 1cqh rgba(231,181,74,.6);}
+.who b{font-size:2.3cqh;} .who span{display:block; font-size:1.5cqh; color:var(--c-ink-soft);}
+.stat{font-size:2.2cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw;}
+.spacer{flex:1;}
+.hud-btn{cursor:pointer; transition:transform .12s;} .hud-btn:active{transform:scale(.94);}
+.relics{font-size:2.6cqh; letter-spacing:.3cqw;}
+.potions{display:flex; gap:.5cqw;}
+.potion{width:3.4cqh; height:3.4cqh; border-radius:1cqh; background:rgba(255,255,255,.5);
+  border:0.2cqh dashed var(--c-panel-line);}
+
+/* =================== 좌측: 현재 효과 / 우측: 적 의도 =================== */
+.side{position:absolute; top:12cqh; width:21cqw; z-index:20;
+  background:var(--c-panel); border:0.2cqh solid var(--c-panel-line);
+  border-radius:var(--r); padding:1.2cqh 1cqw; backdrop-filter:blur(4px);
+  box-shadow:0 .5cqh 1.4cqh rgba(60,90,140,.15);}
+#effects{left:1.4cqh;} #intents{right:1.4cqh;}
+.side h3{font-size:1.9cqh; text-align:center; color:var(--c-ink-soft);
+  padding-bottom:.7cqh; margin-bottom:.7cqh; border-bottom:0.15cqh solid var(--c-panel-line);}
+.eff-row{display:flex; align-items:center; gap:.7cqw; padding:.55cqh 0;}
+.eff-ico{width:3.4cqh; height:3.4cqh; border-radius:.9cqh; flex:none; display:grid; place-items:center;
+  font-size:2cqh; background:linear-gradient(160deg,#eaf3ff,#d6e8ff); border:0.15cqh solid var(--c-panel-line);}
+.eff-txt b{font-size:1.7cqh;} .eff-txt span{display:block; font-size:1.35cqh; color:var(--c-ink-soft);}
+.eff-empty{font-size:1.6cqh; color:var(--c-ink-soft); text-align:center; padding:1cqh 0;}
+
+/* =========================== 전투 스테이지 =========================== */
+#field{position:absolute; left:0; right:0; top:11cqh; bottom:30cqh; z-index:10;}
+.combatant{position:absolute; display:flex; flex-direction:column; align-items:center; gap:.5cqh;}
+.avatar{font-size:11cqh; line-height:1; cursor:default; filter:drop-shadow(0 1cqh 1.2cqh rgba(40,70,120,.25));
+  animation:float 3.4s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-1.4cqh)}}
+.ghost .avatar{opacity:.92; filter:drop-shadow(0 0 1.4cqh rgba(150,200,255,.8));}
+.name{font-size:1.9cqh; font-weight:700; color:var(--c-ink);}
+.hpbar{position:relative; width:15cqw; height:2.6cqh; border-radius:1.3cqh; overflow:hidden;
+  background:var(--c-hp-bg); border:0.2cqh solid rgba(0,0,0,.15);}
+.hpfill{position:absolute; inset:0; background:linear-gradient(180deg,#ff6a63,var(--c-hp));
+  transition:width .35s ease;}
+.hptxt{position:absolute; inset:0; display:grid; place-items:center; color:#fff;
+  font-size:1.6cqh; font-weight:700; text-shadow:0 .1cqh .2cqh rgba(0,0,0,.5);}
+.badges{display:flex; gap:.6cqw; align-items:center; min-height:2.4cqh;}
+.badge{display:flex; align-items:center; gap:.25cqw; font-size:1.7cqh; font-weight:700;
+  padding:.15cqh .6cqw; border-radius:.8cqh; background:rgba(255,255,255,.7); border:0.15cqh solid var(--c-panel-line);}
+.badge.block{color:var(--c-blue-deep);} .badge.weak{color:#8a5cc0;}
+/* 적 의도 말풍선 */
+.intent{display:flex; align-items:center; gap:.4cqw; font-size:1.9cqh; font-weight:700;
+  padding:.4cqh 1cqw; border-radius:1.4cqh; background:var(--c-panel);
+  border:0.2cqh solid var(--c-panel-line); box-shadow:0 .4cqh .9cqh rgba(60,90,140,.2);}
+.intent.atk{color:var(--c-red-deep);} .intent.def{color:var(--c-blue-deep);} .intent.deb{color:#8a5cc0;}
+/* 타겟 가능/선택 표시 */
+.enemy{cursor:pointer;}
+.enemy .hit{position:absolute; inset:-1cqh; border-radius:2cqh;}
+.enemy.targetable .avatar{animation:float 3.4s ease-in-out infinite, pulseT 1s ease-in-out infinite;}
+@keyframes pulseT{0%,100%{filter:drop-shadow(0 0 1.4cqh rgba(255,220,120,.5))}
+  50%{filter:drop-shadow(0 0 2.6cqh rgba(255,200,60,1))}}
+.enemy.hovered .avatar{transform:scale(1.06);}
+.enemy.selected::after{content:""; position:absolute; top:3cqh; left:50%; transform:translateX(-50%);
+  width:13cqh; height:13cqh; border:0.4cqh solid var(--c-gold); border-radius:1.5cqh;
+  clip-path:polygon(0 0,30% 0,30% 8%,8% 8%,8% 30%,0 30%, 0 70%,8% 70%,8% 92%,30% 92%,30% 100%,0 100%,
+    100% 100%,70% 100%,70% 92%,92% 92%,92% 70%,100% 70%, 100% 30%,92% 30%,92% 8%,70% 8%,70% 0,100% 0);
+  pointer-events:none;}
+.dead{opacity:.0; transition:opacity .4s; pointer-events:none;}
+
+/* 떠오르는 데미지/숫자 */
+.float{position:absolute; z-index:60; font-weight:800; font-size:3.4cqh; pointer-events:none;
+  text-shadow:0 .2cqh .4cqh rgba(0,0,0,.4); animation:floatUp .9s ease-out forwards;}
+.float.dmg{color:#ff5b52;} .float.heal{color:#6ee29a;} .float.blk{color:#7cc0ff;}
+@keyframes floatUp{0%{opacity:0; transform:translateY(1cqh) scale(.7)}
+  20%{opacity:1; transform:translateY(-.5cqh) scale(1.1)} 100%{opacity:0; transform:translateY(-6cqh) scale(1)}}
+
+/* =========================== 하단: 핸드/조작 =========================== */
+#dock{position:absolute; left:0; right:0; bottom:0; height:30cqh; z-index:25;}
+/* 에너지 오브 */
+#energy{position:absolute; left:2cqw; bottom:5cqh; width:13cqh; height:13cqh; border-radius:50%;
+  display:grid; place-items:center; cursor:default;
+  background:radial-gradient(circle at 35% 30%, #bfe6ff, #3f8fe0 60%, #1f5fa5);
+  border:0.5cqh solid #cfeaff; box-shadow:0 0 2cqh rgba(80,170,255,.7), inset 0 0 1.5cqh rgba(255,255,255,.5);}
+#energy .val{color:#fff; font-size:4cqh; font-weight:800; text-shadow:0 .2cqh .4cqh rgba(0,40,90,.6);}
+#energy .lbl{position:absolute; bottom:-3.4cqh; left:50%; transform:translateX(-50%);
+  font-size:1.7cqh; font-weight:700; color:var(--c-blue-deep);
+  background:var(--c-panel); padding:.2cqh 1cqw; border-radius:1cqh; border:0.15cqh solid var(--c-panel-line);}
+#energy.flash{animation:shake .35s;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1cqw)}75%{transform:translateX(1cqw)}}
+
+/* 손패 */
+#hand{position:absolute; left:50%; bottom:1cqh; transform:translateX(-50%);
+  display:flex; align-items:flex-end; justify-content:center; gap:0; height:28cqh;}
+.card{position:relative; width:11.5cqw; height:25cqh; margin:0 -.6cqw; border-radius:1.4cqh; flex:none;
+  background:linear-gradient(180deg,#fbfcff,#eef4fb);
+  border:0.35cqh solid #cdddf0; box-shadow:0 .6cqh 1.4cqh rgba(40,70,120,.25);
+  display:flex; flex-direction:column; align-items:center; padding:.6cqh .5cqw; cursor:grab;
+  transition:transform .14s ease, box-shadow .14s ease; touch-action:none;}
+.card:hover{transform:translateY(-3cqh) scale(1.04); z-index:5; box-shadow:0 1.2cqh 2cqh rgba(40,70,120,.35);}
+.card.dragging{opacity:.25;}
+.card.cost-attack{border-color:#f0b9b0;} .card.cost-defense{border-color:#a9cdf0;} .card.cost-skill{border-color:#a9e0c2;}
+.card .cost{position:absolute; top:-1cqh; left:-1cqw; width:4.6cqh; height:4.6cqh; border-radius:50%;
+  display:grid; place-items:center; font-size:2.4cqh; font-weight:800; color:#fff;
+  background:radial-gradient(circle at 35% 30%,#bfe6ff,#3f8fe0 70%); border:0.25cqh solid #eaf6ff;
+  box-shadow:0 0 .8cqh rgba(80,170,255,.7);}
+.card .cname{font-size:1.9cqh; font-weight:800; margin-top:.2cqh;}
+.card .art{width:100%; height:9cqh; margin:.5cqh 0; border-radius:1cqh; display:grid; place-items:center;
+  font-size:6cqh; background:linear-gradient(160deg,#eef6ff,#dcebfb); border:0.15cqh solid #d6e6f5;}
+.card .type{font-size:1.4cqh; font-weight:700; color:#fff; padding:.1cqh .8cqw; border-radius:.7cqh; margin-bottom:.4cqh;}
+.type.attack{background:var(--c-red);} .type.defense{background:var(--c-blue);} .type.skill{background:var(--c-green);}
+.card .desc{font-size:1.45cqh; text-align:center; color:var(--c-ink); line-height:1.3; white-space:pre-line;}
+
+/* 턴 종료 / 더미 */
+#endTurn{position:absolute; right:14cqw; bottom:9cqh; padding:1.6cqh 2.6cqw; cursor:pointer;
+  font-size:2.6cqh; font-weight:800; color:#fff; border-radius:1.4cqh;
+  background:linear-gradient(180deg,#5fa0e8,#2f6fc0); border:0.3cqh solid var(--c-gold);
+  box-shadow:0 .6cqh 1.4cqh rgba(40,70,120,.35); transition:transform .12s;}
+#endTurn:active{transform:scale(.95);}
+#endTurn[disabled]{filter:grayscale(.6) brightness(.85); cursor:default;}
+.pile{position:absolute; bottom:4cqh; width:7cqh; text-align:center; cursor:default;}
+#deckPile{right:6.5cqw;} #discardPile{right:1cqw;}
+.pile .stack{width:7cqh; height:9.5cqh; margin:0 auto; border-radius:1cqh;
+  background:linear-gradient(180deg,#eef4fb,#cfe0f2); border:0.3cqh solid #b9d0ea;
+  box-shadow:.6cqh .6cqh 0 #c3d6ee, 1.2cqh 1.2cqh 0 #b3c9e6; display:grid; place-items:center;
+  font-size:2.4cqh; font-weight:800; color:var(--c-blue-deep);}
+.pile .plbl{font-size:1.6cqh; font-weight:700; color:var(--c-ink-soft); margin-top:1.4cqh;}
+
+/* 하단 안내 */
+#hint{position:absolute; left:50%; bottom:.3cqh; transform:translateX(-50%); z-index:26;
+  font-size:1.9cqh; font-weight:700; color:var(--c-ink); background:rgba(255,255,255,.6);
+  padding:.3cqh 1.4cqw; border-radius:1cqh; white-space:nowrap;}
+#hint .r{color:var(--c-red-deep);} #hint .b{color:var(--c-blue-deep);}
+
+/* 떠오르는 효과 레이어(재렌더 시 지워지지 않도록 분리) */
+#fx{position:absolute; inset:0; z-index:60; pointer-events:none;}
+#aim{position:fixed; inset:0; z-index:79; pointer-events:none;}
+#dragClone{position:fixed; width:11.5cqw; height:25cqh; pointer-events:none; transform:translate(-50%,-50%) scale(1.05);
+  filter:drop-shadow(0 1.6cqh 2cqh rgba(231,181,74,.6));}
+#dragClone .card{box-shadow:0 0 2cqh rgba(231,181,74,.9); border-color:var(--c-gold);}
+
+/* 토스트 */
+#toast{position:absolute; left:50%; top:18cqh; transform:translateX(-50%); z-index:90;
+  background:rgba(40,55,80,.92); color:#fff; font-size:2cqh; font-weight:700;
+  padding:1cqh 2cqw; border-radius:1.2cqh; opacity:0; transition:opacity .2s; pointer-events:none;}
+#toast.show{opacity:1;}
+
+/* 종료(승/패) 오버레이 */
+#over{position:absolute; inset:0; z-index:100; display:none; place-items:center;
+  background:rgba(20,35,60,.55); backdrop-filter:blur(3px);}
+#over.show{display:grid;}
+.over-box{background:var(--c-panel); border:0.3cqh solid var(--c-gold); border-radius:2cqh;
+  padding:4cqh 5cqw; text-align:center; box-shadow:0 2cqh 4cqh rgba(0,0,0,.3);}
+.over-box h2{font-size:5cqh; margin-bottom:1cqh;}
+.over-box p{font-size:2.2cqh; color:var(--c-ink-soft); margin-bottom:2.4cqh;}
+.over-box button{font-size:2.4cqh; font-weight:800; color:#fff; padding:1.4cqh 3cqw; cursor:pointer;
+  border:none; border-radius:1.2cqh; background:linear-gradient(180deg,#5fa0e8,#2f6fc0);}
+
+/* 모바일 세로 진입 시 회전 안내 */
+#rotate{position:fixed; inset:0; z-index:200; display:none; place-items:center; text-align:center;
+  background:#0c1422; color:#cfe2ff;}
+#rotate .ico{font-size:14vw; animation:spin 2s ease-in-out infinite;}
+#rotate p{font-size:5vw; margin-top:3vh; font-weight:700;}
+@keyframes spin{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+@media (orientation:portrait) and (max-width:1000px){ #rotate{display:grid;} }
+</style>
+</head>
+<body>
+
+<div id="stageWrap">
+  <div id="game">
+    <div class="bokeh" style="width:18cqh;height:18cqh;left:14%;top:18%"></div>
+    <div class="bokeh" style="width:12cqh;height:12cqh;right:18%;top:30%"></div>
+
+    <!-- 상단 HUD -->
+    <div id="hud">
+      <div class="hud-card">
+        <div class="portrait">👼</div>
+        <div class="who"><b>빛솔이</b><span>신입 액소시스트</span></div>
+      </div>
+      <div class="hud-card stat">❤️ <span id="hudHp">60/60</span></div>
+      <div class="hud-card stat">🪙 120</div>
+      <div class="hud-card potions"><div class="potion"></div><div class="potion"></div><div class="potion"></div></div>
+      <div class="hud-card relics">🍀 ✝️ 🧸</div>
+      <div class="spacer"></div>
+      <div class="hud-card stat">🏥 5층</div>
+      <div class="hud-card hud-btn">🗺️ 병원 지도</div>
+      <div class="hud-card hud-btn stat">📖 <span id="hudDeck">18</span></div>
+      <div class="hud-card hud-btn">⚙️</div>
+    </div>
+
+    <!-- 좌: 현재 효과 -->
+    <div id="effects" class="side"><h3>현재 효과</h3><div id="effList"></div></div>
+    <!-- 우: 적 행동 의도 -->
+    <div id="intents" class="side"><h3>적 행동 의도</h3><div id="intentList"></div></div>
+
+    <!-- 전투 스테이지 -->
+    <div id="field"></div>
+
+    <!-- 하단 도크 -->
+    <div id="dock">
+      <div id="energy"><span class="val">3/3</span><span class="lbl">에너지</span></div>
+      <div id="hand"></div>
+      <button id="endTurn">턴 종료</button>
+      <div class="pile" id="deckPile"><div class="stack" id="deckCount">18</div><div class="plbl">덱</div></div>
+      <div class="pile" id="discardPile"><div class="stack" id="discardCount">0</div><div class="plbl">버린 카드</div></div>
+    </div>
+
+    <div id="hint">✦ 카드를 드래그하여 <span class="r">적</span> 또는 <span class="b">자신</span>에게 사용하세요!</div>
+
+    <div id="fx"></div>
+    <div id="aim"></div>
+    <div id="dragClone" style="display:none"></div>
+    <div id="toast"></div>
+
+    <!-- 종료 오버레이 -->
+    <div id="over"><div class="over-box">
+      <h2 id="overTitle"></h2><p id="overDesc"></p>
+      <button id="restart">다시 시작</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- 모바일 세로 안내 -->
+<div id="rotate"><div><div class="ico">📱</div><p>기기를 가로로 돌려주세요</p></div></div>
+
+<script>
+"use strict";
+/* =========================================================================
+   카드 데이터베이스
+   - target: 'enemy'(타겟형, 적 지정 필요) / 'self'(비타겟형, 자신 사용)
+   - effects: 순차 적용되는 효과 목록
+   ========================================================================= */
+const CARD_DB = {
+  rosary:{name:"염주",   cost:1, type:"attack",  emoji:"📿", target:"enemy",
+          desc:"적에게 9 피해를 줍니다.\n신성: 1 추가 피해", fx:[{t:"damage",v:9}]},
+  bell:  {name:"방울",   cost:1, type:"attack",  emoji:"🔔", target:"enemy",
+          desc:"적에게 7 피해를 줍니다.\n3장 뽑습니다.",      fx:[{t:"damage",v:7},{t:"draw",v:3}]},
+  doll:  {name:"인형",   cost:1, type:"attack",  emoji:"🧸", target:"enemy",
+          desc:"적에게 8 피해를 줍니다.\n약화 1 부여",         fx:[{t:"damage",v:8},{t:"applyWeak",v:1}]},
+  bible: {name:"성경",   cost:1, type:"defense", emoji:"📖", target:"self",
+          desc:"방어도 8 획득합니다.\n카드 1장을 뽑습니다.",   fx:[{t:"block",v:8},{t:"draw",v:1}]},
+  charm: {name:"오색방지",cost:1, type:"defense", emoji:"🎀", target:"self",
+          desc:"방어도 10 획득합니다.\n약화 1 제거",           fx:[{t:"block",v:10},{t:"removeWeak",v:1}]},
+  pray:  {name:"기도",   cost:1, type:"skill",   emoji:"🙏", target:"self",
+          desc:"체력 6 회복합니다.\n추가 에너지 +1",           fx:[{t:"heal",v:6},{t:"energy",v:1}]},
+};
+
+/* 시작 덱(여러 장 복제) */
+const STARTER_DECK = [
+  "rosary","rosary","rosary","rosary",
+  "bell","bell","doll","doll",
+  "bible","bible","bible","charm","charm","pray",
+];
+
+/* 적 정의 + 의도 후보(move set) */
+const ENEMY_DEFS = [
+  {name:"어린이 유령", emoji:"🧒", maxHp:32, moves:[{t:"defend",v:5},{t:"attack",v:6}], first:0},
+  {name:"할머니 유령", emoji:"👵", maxHp:48, moves:[{t:"debuff",v:1},{t:"attack",v:8}], first:0},
+  {name:"간호사 유령", emoji:"👩‍⚕️", maxHp:40, moves:[{t:"attack",v:9},{t:"defend",v:6}], first:0},
+];
+
+const MAX_ENERGY = 3, DRAW_PER_TURN = 5, WEAK_MULT = 0.75;
+
+/* 전역 상태 */
+let S;
+function newGame(){
+  S = {
+    player:{hp:60, maxHp:60, block:0, weak:0},
+    energy:MAX_ENERGY,
+    enemies:[], hand:[], draw:[], discard:[],
+    selectedId:null, busy:false, over:null,
+  };
+  // 적 생성
+  ENEMY_DEFS.forEach((d,i)=>{
+    S.enemies.push({id:"e"+i, name:d.name, emoji:d.emoji, hp:d.maxHp, maxHp:d.maxHp,
+      block:0, weak:0, moves:d.moves, intent:d.moves[d.first]});
+  });
+  S.selectedId = S.enemies[0].id;
+  // 덱 셔플 후 첫 드로우
+  S.draw = shuffle([...STARTER_DECK]);
+  drawCards(DRAW_PER_TURN);
+  renderAll();
+}
+
+/* ----- 유틸 ----- */
+const $ = s=>document.querySelector(s);
+const livingEnemies = ()=>S.enemies.filter(e=>e.hp>0);
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+/* 카드 드로우: 덱이 비면 버린 더미를 섞어 보충 */
+function drawCards(n){
+  for(let i=0;i<n;i++){
+    if(S.draw.length===0){
+      if(S.discard.length===0) break;     // 더 뽑을 카드 없음
+      S.draw = shuffle(S.discard); S.discard = [];
+    }
+    if(S.hand.length>=10){ break; }       // 손패 한도
+    S.hand.push(S.draw.pop());
+  }
+}
+
+/* =========================================================================
+   카드 사용
+   - 코스트 검사 → 효과 적용 → 버린 더미로 이동 → 승리 판정
+   ========================================================================= */
+function playCard(handIndex, targetEnemy){
+  const key = S.hand[handIndex];
+  const card = CARD_DB[key];
+  if(!card) return false;
+  if(S.energy < card.cost){ flashEnergy(); toast("에너지가 부족합니다"); return false; }
+  if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)){ return false; } // 대상 필요
+
+  S.energy -= card.cost;
+  // 효과 순차 적용
+  for(const e of card.fx){
+    switch(e.t){
+      case "damage":    dealDamage(targetEnemy, e.v, S.player.weak); break;
+      case "block":     S.player.block += e.v; spawnFloat('.player','+'+e.v,'blk'); break;
+      case "draw":      drawCards(e.v); break;
+      case "heal":      S.player.hp = Math.min(S.player.maxHp, S.player.hp+e.v); spawnFloat('.player','+'+e.v,'heal'); break;
+      case "energy":    S.energy += e.v; break;
+      case "applyWeak": if(targetEnemy){ targetEnemy.weak += e.v; } break;
+      case "removeWeak":S.player.weak = Math.max(0, S.player.weak - e.v); break;
+    }
+  }
+  // 손패 → 버린 더미
+  S.hand.splice(handIndex,1);
+  S.discard.push(key);
+
+  if(livingEnemies().length===0){ renderAll(); return endGame("win"); }
+  renderAll();
+  return true;
+}
+
+/* 데미지 처리: 공격자 약화 시 25% 감소 → 방어도 흡수 → HP 차감 */
+function dealDamage(target, raw, attackerWeak){
+  let dmg = raw;
+  if(attackerWeak>0) dmg = Math.floor(dmg*WEAK_MULT);
+  const absorbed = Math.min(target.block, dmg);
+  target.block -= absorbed;
+  const hpLoss = dmg - absorbed;
+  target.hp = Math.max(0, target.hp - hpLoss);
+  // 타겟 셀렉터: 적은 data-id, 플레이어는 .player
+  const sel = target===S.player ? '.player' : '[data-id="'+target.id+'"]';
+  spawnFloat(sel, '-'+hpLoss, 'dmg');
+}
+
+/* =========================================================================
+   턴 종료 → 적 행동 → 새 플레이어 턴
+   ========================================================================= */
+async function endTurn(){
+  if(S.busy || S.over) return;
+  S.busy = true; updateEndBtn();
+
+  // 플레이어 턴 종료: 자신의 약화 1 감소(이번 턴 내내 적용된 뒤 만료)
+  if(S.player.weak>0) S.player.weak = Math.max(0, S.player.weak-1);
+
+  // 남은 손패 버림
+  S.discard.push(...S.hand); S.hand = [];
+  renderAll();
+  await wait(250);
+
+  // 적 행동(순차)
+  for(const e of S.enemies){
+    if(e.hp<=0) continue;
+    const mv = e.intent;
+    if(mv.t==="attack"){ dealDamage(S.player, mv.v, e.weak); }
+    else if(mv.t==="defend"){ e.block += mv.v; spawnFloat('[data-id="'+e.id+'"]','+'+mv.v,'blk'); }
+    else if(mv.t==="debuff"){ S.player.weak += mv.v; spawnFloat('.player','약화','dmg'); }
+    if(e.weak>0) e.weak = Math.max(0, e.weak-1);  // 적 약화 1턴 감소
+    renderAll();
+    if(S.player.hp<=0){ return endGame("lose"); }
+    await wait(450);
+  }
+
+  // 새 플레이어 턴 준비
+  S.player.block = 0;                 // 방어도 초기화(StS 규칙)
+  S.energy = MAX_ENERGY;
+  drawCards(DRAW_PER_TURN);
+  S.enemies.forEach(planIntent);      // 다음 의도 예고
+  S.busy = false;
+  renderAll();
+}
+
+/* 다음 행동 의도 결정(랜덤) */
+function planIntent(e){ if(e.hp>0) e.intent = e.moves[Math.floor(Math.random()*e.moves.length)]; }
+
+function endGame(result){
+  S.over = result; S.busy=false;
+  $("#overTitle").textContent = result==="win" ? "🎉 승리!" : "💀 패배...";
+  $("#overDesc").textContent  = result==="win" ? "모든 유령을 정화했습니다." : "빛솔이가 쓰러졌습니다.";
+  $("#over").classList.add("show");
+  return true;
+}
+
+/* =========================================================================
+   렌더링 (immediate-mode 방식: 상태 변경 시 전체 갱신)
+   ========================================================================= */
+function renderAll(){ renderHud(); renderEffects(); renderIntents(); renderField(); renderHand(); renderDock(); updateEndBtn(); }
+
+function renderHud(){
+  $("#hudHp").textContent = S.player.hp+"/"+S.player.maxHp;
+  $("#hudDeck").textContent = STARTER_DECK.length;
+}
+
+function renderEffects(){
+  const rows=[];
+  if(S.player.block>0) rows.push(eff("🛡️","은총의 보호","방어도 "+S.player.block));
+  if(S.player.weak>0)  rows.push(eff("🌀","약화","공격 피해 25% 감소 ("+S.player.weak+"턴)"));
+  rows.push(eff("💚","치유의 향기","턴 종료 시 일부 회복 카드 보유"));
+  $("#effList").innerHTML = rows.join("") || '<div class="eff-empty">효과 없음</div>';
+}
+function eff(ico,name,sub){
+  return '<div class="eff-row"><div class="eff-ico">'+ico+'</div>'
+       +'<div class="eff-txt"><b>'+name+'</b><span>'+sub+'</span></div></div>';
+}
+
+function renderIntents(){
+  const html = S.enemies.filter(e=>e.hp>0).map(e=>{
+    const m=e.intent; let ico,txt,cls;
+    if(m.t==="attack"){ico="⚔️";txt=m.v+" 피해"+(e.weak>0?" (약화)":"");cls="atk";}
+    else if(m.t==="defend"){ico="🛡️";txt="방어도 "+m.v+" 획득";cls="def";}
+    else {ico="🌀";txt="힘 1 감소 부여";cls="deb";}
+    return '<div class="eff-row"><div class="eff-ico">'+ico+'</div>'
+         +'<div class="eff-txt"><b style="color:'
+         +(cls==="atk"?"var(--c-red-deep)":cls==="def"?"var(--c-blue-deep)":"#8a5cc0")
+         +'">'+e.name+'</b><span>'+txt+'</span></div></div>';
+  }).join("");
+  $("#intentList").innerHTML = html || '<div class="eff-empty">정화 완료</div>';
+}
+
+function renderField(){
+  const f=$("#field"); f.innerHTML="";
+  // 플레이어(좌측)
+  f.appendChild(combatantEl({
+    cls:"player", emoji:"👼", name:"빛솔이", hp:S.player.hp, maxHp:S.player.maxHp,
+    block:S.player.block, weak:S.player.weak, x:18, intent:null,
+  }));
+  // 적(우측 3체)
+  const xs=[52,71,90];
+  S.enemies.forEach((e,i)=>{
+    const el=combatantEl({
+      cls:"enemy ghost"+(e.id===S.selectedId?" selected":""), emoji:e.emoji, name:e.name,
+      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, x:xs[i], intent:e.intent, id:e.id,
+    });
+    if(e.hp<=0) el.classList.add("dead");
+    // 적 선택(클릭/탭): 우측 의도 패널 강조용
+    el.addEventListener("pointerdown",ev=>{ if(e.hp>0){ S.selectedId=e.id; renderField(); } });
+    f.appendChild(el);
+  });
+}
+
+/* 전투원 1명 DOM 생성 */
+function combatantEl(o){
+  const el=document.createElement("div");
+  el.className="combatant "+o.cls;
+  el.style.left=o.x+"%"; el.style.bottom="2cqh"; el.style.transform="translateX(-50%)";
+  if(o.id) el.dataset.id=o.id;
+  const pct=Math.max(0,(o.hp/o.maxHp)*100);
+  const intentHtml = o.intent ? intentBubble(o.intent,o.weak) : "";
+  const badges=[];
+  if(o.block>0) badges.push('<span class="badge block">🛡️ '+o.block+'</span>');
+  if(o.weak>0)  badges.push('<span class="badge weak">🌀 '+o.weak+'</span>');
+  el.innerHTML =
+    intentHtml +
+    '<div class="avatar">'+o.emoji+'</div>'+
+    '<div class="name">'+o.name+'</div>'+
+    '<div class="hpbar"><div class="hpfill" style="width:'+pct+'%"></div>'+
+      '<div class="hptxt">'+o.hp+'/'+o.maxHp+'</div></div>'+
+    '<div class="badges">'+badges.join("")+'</div>'+
+    '<div class="hit"></div>';
+  return el;
+}
+function intentBubble(m,weak){
+  if(m.t==="attack") return '<div class="intent atk">⚔️ '+m.v+(weak>0?'↓':'')+'</div>';
+  if(m.t==="defend") return '<div class="intent def">🛡️ 방어</div>';
+  return '<div class="intent deb">🌀 약화</div>';
+}
+
+function renderHand(){
+  const h=$("#hand"); h.innerHTML="";
+  S.hand.forEach((key,i)=>{
+    const c=CARD_DB[key];
+    const el=document.createElement("div");
+    el.className="card cost-"+c.type;
+    el.dataset.index=i;
+    el.innerHTML =
+      '<div class="cost">'+c.cost+'</div>'+
+      '<div class="cname">'+c.name+'</div>'+
+      '<div class="art">'+c.emoji+'</div>'+
+      '<div class="type '+c.type+'">'+typeLabel(c.type)+'</div>'+
+      '<div class="desc">'+c.desc+'</div>';
+    attachDrag(el, i);   // 드래그 핸들러 연결
+    h.appendChild(el);
+  });
+}
+const typeLabel = t=> t==="attack"?"공격":t==="defense"?"방어":"스킬";
+
+function renderDock(){
+  $("#energy .val").textContent = S.energy+"/"+MAX_ENERGY;
+  $("#deckCount").textContent = S.draw.length;
+  $("#discardCount").textContent = S.discard.length;
+}
+function updateEndBtn(){ $("#endTurn").disabled = !!(S.busy||S.over); }
+
+/* =========================================================================
+   드래그 & 드롭 (Pointer Events 단일 경로: 마우스/터치 통합)
+   ========================================================================= */
+const DRAG_THRESHOLD = 8; // px: 이 이상 움직여야 드래그로 인식(탭과 구분)
+function attachDrag(cardEl, index){
+  let startX=0,startY=0,dragging=false,pid=null;
+
+  cardEl.addEventListener("pointerdown", down);
+  function down(ev){
+    if(S.busy||S.over) return;
+    pid=ev.pointerId; startX=ev.clientX; startY=ev.clientY; dragging=false;
+    cardEl.setPointerCapture(pid);
+    cardEl.addEventListener("pointermove", move);
+    cardEl.addEventListener("pointerup", up);
+    cardEl.addEventListener("pointercancel", cancel);
+  }
+  function move(ev){
+    const dx=ev.clientX-startX, dy=ev.clientY-startY;
+    if(!dragging && Math.hypot(dx,dy)>DRAG_THRESHOLD){
+      dragging=true; beginDrag(cardEl, index);
+    }
+    if(dragging) updateDrag(ev.clientX, ev.clientY, index);
+  }
+  function up(ev){
+    cleanup();
+    if(dragging){ dragging=false; dropDrag(ev.clientX, ev.clientY, index); }
+  }
+  function cancel(){ cleanup(); if(dragging){ dragging=false; endDrag(); } }
+  function cleanup(){
+    try{ cardEl.releasePointerCapture(pid); }catch(e){}
+    cardEl.removeEventListener("pointermove", move);
+    cardEl.removeEventListener("pointerup", up);
+    cardEl.removeEventListener("pointercancel", cancel);
+  }
+}
+
+let dragState=null;
+function beginDrag(cardEl, index){
+  const c=CARD_DB[S.hand[index]];
+  cardEl.classList.add("dragging");
+  const clone=$("#dragClone");
+  clone.innerHTML='<div class="card cost-'+c.type+'" style="width:100%;height:100%">'
+    +'<div class="cost">'+c.cost+'</div><div class="cname">'+c.name+'</div>'
+    +'<div class="art">'+c.emoji+'</div><div class="type '+c.type+'">'+typeLabel(c.type)+'</div>'
+    +'<div class="desc">'+c.desc+'</div></div>';
+  clone.style.display="block";
+  dragState={cardEl, card:c, index, origin:cardEl.getBoundingClientRect()};
+  // 타겟형이면 적들을 강조
+  if(c.target==="enemy") document.querySelectorAll(".enemy").forEach(e=>{
+    if(!e.classList.contains("dead")) e.classList.add("targetable");
+  });
+}
+function updateDrag(x,y,index){
+  if(!dragState) return;
+  const gr=$("#game").getBoundingClientRect();   // #game이 fixed 컨테이닝 블록이므로 기준 변환
+  const clone=$("#dragClone");
+  clone.style.left=(x-gr.left)+"px"; clone.style.top=(y-gr.top)+"px";
+  // 적 호버 표시 (elementFromPoint는 뷰포트 좌표 사용)
+  const en=enemyUnder(x,y);
+  document.querySelectorAll(".enemy.hovered").forEach(e=>e.classList.remove("hovered"));
+  if(dragState.card.target==="enemy" && en) en.el.classList.add("hovered");
+  // 타겟형 화살표 (game 기준 좌표)
+  if(dragState.card.target==="enemy"){
+    const o=dragState.origin;
+    drawAim(o.left+o.width/2-gr.left, o.top-gr.top, x-gr.left, y-gr.top);
+  }
+}
+function dropDrag(x,y,index){
+  const c=dragState ? dragState.card : CARD_DB[S.hand[index]];
+  if(c.target==="enemy"){
+    const en=enemyUnder(x,y);
+    if(en){ playCard(index, en.enemy); } else { /* 무효 드롭 → 스냅백(재렌더) */ }
+  } else {
+    // 자신 대상: 손패 영역 밖(전투 영역)으로 올리면 사용
+    const dock=$("#dock").getBoundingClientRect();
+    if(y < dock.top){ playCard(index, null); }
+  }
+  endDrag();
+}
+function endDrag(){
+  $("#dragClone").style.display="none";
+  $("#aim").innerHTML="";
+  document.querySelectorAll(".targetable,.hovered").forEach(e=>e.classList.remove("targetable","hovered"));
+  if(dragState && dragState.cardEl) dragState.cardEl.classList.remove("dragging");
+  dragState=null;
+  renderHand(); // 스냅백/정리
+}
+
+/* 좌표 아래의 적 찾기(클론/화살표는 pointer-events:none 이라 적이 잡힘) */
+function enemyUnder(x,y){
+  const el=document.elementFromPoint(x,y);
+  if(!el) return null;
+  const ce=el.closest(".enemy");
+  if(!ce || ce.classList.contains("dead")) return null;
+  const enemy=S.enemies.find(e=>e.id===ce.dataset.id);
+  return enemy && enemy.hp>0 ? {el:ce, enemy} : null;
+}
+
+/* 타겟 화살표(곡선) */
+function drawAim(x1,y1,x2,y2){
+  const mx=(x1+x2)/2, my=Math.min(y1,y2)-60;
+  $("#aim").innerHTML=
+    '<svg width="100%" height="100%" style="position:absolute;inset:0">'
+    +'<defs><marker id="ah" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">'
+    +'<path d="M2 2 L10 6 L2 10 Z" fill="#e7b54a"/></marker></defs>'
+    +'<path d="M'+x1+' '+y1+' Q'+mx+' '+my+' '+x2+' '+y2+'" fill="none" '
+    +'stroke="#e7b54a" stroke-width="5" stroke-dasharray="10 8" stroke-linecap="round" '
+    +'marker-end="url(#ah)" opacity="0.9"/></svg>';
+}
+
+/* ----- 피드백 유틸 ----- */
+function spawnFloat(sel, text, kind){
+  const host=document.querySelector(sel); if(!host) return;
+  const g=$("#game").getBoundingClientRect();
+  const r=host.getBoundingClientRect();
+  const el=document.createElement("div");
+  el.className="float "+kind; el.textContent=text;
+  el.style.left=(r.left-g.left+r.width/2)+"px";
+  el.style.top =(r.top -g.top +r.height*0.25)+"px";
+  el.style.transform="translateX(-50%)";
+  $("#fx").appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+let toastT;
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1200);
+}
+function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeout(()=>e.classList.remove("flash"),350); }
+const wait = ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ----- 버튼 바인딩 ----- */
+$("#endTurn").addEventListener("click", endTurn);
+$("#restart").addEventListener("click", ()=>{ $("#over").classList.remove("show"); newGame(); });
+
+/* 시작 */
+newGame();
+</script>
+</body>
+</html>
