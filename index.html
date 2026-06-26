@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>신입 액소시스트 - 전투 프로토타입</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="stageWrap">
+  <div id="game">
+    <div class="bokeh" style="width:18cqh;height:18cqh;left:14%;top:18%"></div>
+    <div class="bokeh" style="width:12cqh;height:12cqh;right:18%;top:30%"></div>
+
+    <!-- 상단 HUD -->
+    <div id="hud">
+      <div class="hud-card">
+        <div class="portrait">👼</div>
+        <div class="who"><b>빛솔이</b><span>신입 액소시스트</span></div>
+      </div>
+      <div class="hud-card stat">❤️ <span id="hudHp">60/60</span></div>
+      <div class="hud-card stat">🪙 120</div>
+      <div class="hud-card potions"><div class="potion"></div><div class="potion"></div><div class="potion"></div></div>
+      <div class="hud-card relics">🍀 ✝️ 🧸</div>
+      <div class="spacer"></div>
+      <div class="hud-card stat">🏥 5층</div>
+      <div class="hud-card hud-btn">🗺️ 병원 지도</div>
+      <div class="hud-card hud-btn stat">📖 <span id="hudDeck">18</span></div>
+      <div class="hud-card hud-btn">⚙️</div>
+    </div>
+
+    <!-- 좌: 현재 효과 -->
+    <div id="effects" class="side"><h3>현재 효과</h3><div id="effList"></div></div>
+    <!-- 우: 적 행동 의도 -->
+    <div id="intents" class="side"><h3>적 행동 의도</h3><div id="intentList"></div></div>
+
+    <!-- 전투 스테이지 -->
+    <div id="field"></div>
+
+    <!-- 하단 도크 -->
+    <div id="dock">
+      <div id="energy"><span class="val">3/3</span><span class="lbl">에너지</span></div>
+      <div id="hand"></div>
+      <button id="endTurn">턴 종료</button>
+      <div class="pile" id="deckPile"><div class="stack" id="deckCount">18</div><div class="plbl">덱</div></div>
+      <div class="pile" id="discardPile"><div class="stack" id="discardCount">0</div><div class="plbl">버린 카드</div></div>
+    </div>
+
+    <div id="hint">✦ 카드를 드래그하여 <span class="r">적</span> 또는 <span class="b">자신</span>에게 사용하세요!</div>
+
+    <div id="fx"></div>
+    <div id="aim"></div>
+    <div id="dragClone" style="display:none"></div>
+    <div id="toast"></div>
+
+    <!-- 종료 오버레이 -->
+    <div id="over"><div class="over-box">
+      <h2 id="overTitle"></h2><p id="overDesc"></p>
+      <button id="restart">다시 시작</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- 모바일 세로 안내 -->
+<div id="rotate"><div><div class="ico">📱</div><p>기기를 가로로 돌려주세요</p></div></div>
+
+<script src="script.js" defer></script>
+</body>
+</html>
