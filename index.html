@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>신입 액소시스트 - 전투 프로토타입</title>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="life-ui.css">
 </head>
 <body>
 
@@ -16,8 +17,8 @@
     <!-- 상단 HUD -->
     <div id="hud">
       <div class="hud-card">
-        <div class="portrait">👼</div>
-        <div class="who"><b>빛솔이</b><span>신입 액소시스트</span></div>
+        <div class="portrait" id="hudPortrait">👼</div>
+        <div class="who"><b id="hudName">빛솔이</b><span id="hudTitle">신입 액소시스트</span></div>
       </div>
       <div class="hud-card stat">❤️ <span id="hudHp">60/60</span></div>
       <div class="hud-card stat">🪙 120</div>
@@ -65,6 +66,10 @@
 <!-- 모바일 세로 안내 -->
 <div id="rotate"><div><div class="ico">📱</div><p>기기를 가로로 돌려주세요</p></div></div>
 
+<!-- 캐릭터/몬스터/라이프는 충돌 방지를 위해 독립 파일로 먼저 로드 -->
+<script src="characterData.js" defer></script>
+<script src="monsterData.js" defer></script>
+<script src="lifeSystem.js" defer></script>
 <script src="script.js" defer></script>
 </body>
 </html>

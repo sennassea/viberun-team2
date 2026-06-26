@@ -1,0 +1,67 @@
+/* =========================================================================
+   Life UI
+   - HP, block, weak, intent, defeat, and floating result display.
+   - Kept separate so the life/combat-stat owner can adjust these styles.
+   ========================================================================= */
+
+/* Current effects / enemy intents */
+.eff-row{display:flex; align-items:center; gap:.7cqw; padding:.55cqh 0;}
+.eff-ico{width:3.4cqh; height:3.4cqh; border-radius:.9cqh; flex:none; display:grid; place-items:center;
+  font-size:2cqh; background:linear-gradient(160deg,#eaf3ff,#d6e8ff); border:0.15cqh solid var(--c-panel-line);}
+.eff-txt b{font-size:1.7cqh;} .eff-txt span{display:block; font-size:1.35cqh; color:var(--c-ink-soft);}
+.eff-empty{font-size:1.6cqh; color:var(--c-ink-soft); text-align:center; padding:1cqh 0;}
+
+/* Combatant HP / status display */
+.combatant{position:absolute; display:flex; flex-direction:column; align-items:center; gap:.5cqh;}
+.avatar{font-size:11cqh; line-height:1; cursor:default; filter:drop-shadow(0 1cqh 1.2cqh rgba(40,70,120,.25));
+  animation:float 3.4s ease-in-out infinite;}
+@keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-1.4cqh)}}
+.ghost .avatar{opacity:.92; filter:drop-shadow(0 0 1.4cqh rgba(150,200,255,.8));}
+.name{font-size:1.9cqh; font-weight:700; color:var(--c-ink);}
+.hpbar{position:relative; width:15cqw; height:2.6cqh; border-radius:1.3cqh; overflow:hidden;
+  background:var(--c-hp-bg); border:0.2cqh solid rgba(0,0,0,.15);}
+.hpfill{position:absolute; inset:0; background:linear-gradient(180deg,#ff6a63,var(--c-hp));
+  transition:width .35s ease;}
+.hptxt{position:absolute; inset:0; display:grid; place-items:center; color:#fff;
+  font-size:1.6cqh; font-weight:700; text-shadow:0 .1cqh .2cqh rgba(0,0,0,.5);}
+.blockbar{position:relative; width:15cqw; height:2.6cqh; border-radius:1.3cqh; overflow:hidden;
+  display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800;
+  background:#254b70; border:0.2cqh solid rgba(0,0,0,.15);
+  box-shadow:0 .25cqh .8cqh rgba(31,95,165,.22), inset 0 .18cqh .25cqh rgba(255,255,255,.16);}
+.blockfill{position:absolute; left:0; top:0; bottom:0; background:linear-gradient(180deg,#7fd2ff,#2f83d7);
+  transition:width .35s ease;}
+.block-icon{position:absolute; left:.25cqh; top:50%; transform:translateY(-50%); width:2.15cqh; height:2.15cqh;
+  display:grid; place-items:center; border-radius:50%; background:rgba(255,255,255,.92);
+  font-size:1.45cqh; line-height:1; box-shadow:0 .12cqh .3cqh rgba(0,45,90,.28); z-index:1;}
+.blockbar b{position:relative; z-index:1; font-size:1.85cqh; line-height:1; text-shadow:0 .1cqh .2cqh rgba(0,0,0,.45);}
+.badges{display:flex; gap:.6cqw; align-items:center; min-height:2.4cqh;}
+.badge{display:flex; align-items:center; gap:.25cqw; font-size:1.7cqh; font-weight:700;
+  padding:.15cqh .6cqw; border-radius:.8cqh; background:rgba(255,255,255,.7); border:0.15cqh solid var(--c-panel-line);}
+.badge.block{color:var(--c-blue-deep);} .badge.weak{color:#8a5cc0;}
+
+/* Enemy intent bubble */
+.intent{display:flex; align-items:center; gap:.4cqw; font-size:1.9cqh; font-weight:700;
+  padding:.4cqh 1cqw; border-radius:1.4cqh; background:var(--c-panel);
+  border:0.2cqh solid var(--c-panel-line); box-shadow:0 .4cqh .9cqh rgba(60,90,140,.2);}
+.intent.atk{color:var(--c-red-deep);} .intent.def{color:var(--c-blue-deep);} .intent.deb{color:#8a5cc0;}
+
+/* Enemy targeting / defeat state */
+.enemy{cursor:pointer;}
+.enemy .hit{position:absolute; inset:-1cqh; border-radius:2cqh;}
+.enemy.targetable .avatar{animation:float 3.4s ease-in-out infinite, pulseT 1s ease-in-out infinite;}
+@keyframes pulseT{0%,100%{filter:drop-shadow(0 0 1.4cqh rgba(255,220,120,.5))}
+  50%{filter:drop-shadow(0 0 2.6cqh rgba(255,200,60,1))}}
+.enemy.hovered .avatar{transform:scale(1.06);}
+.enemy.selected::after{content:""; position:absolute; top:3cqh; left:50%; transform:translateX(-50%);
+  width:13cqh; height:13cqh; border:0.4cqh solid var(--c-gold); border-radius:1.5cqh;
+  clip-path:polygon(0 0,30% 0,30% 8%,8% 8%,8% 30%,0 30%, 0 70%,8% 70%,8% 92%,30% 92%,30% 100%,0 100%,
+    100% 100%,70% 100%,70% 92%,92% 92%,92% 70%,100% 70%, 100% 30%,92% 30%,92% 8%,70% 8%,70% 0,100% 0);
+  pointer-events:none;}
+.dead{opacity:.0; transition:opacity .4s; pointer-events:none;}
+
+/* Floating damage/block/heal numbers */
+.float{position:absolute; z-index:60; font-weight:800; font-size:3.4cqh; pointer-events:none;
+  text-shadow:0 .2cqh .4cqh rgba(0,0,0,.4); animation:floatUp .9s ease-out forwards;}
+.float.dmg{color:#ff5b52;} .float.heal{color:#6ee29a;} .float.blk{color:#7cc0ff;}
+@keyframes floatUp{0%{opacity:0; transform:translateY(1cqh) scale(.7)}
+  20%{opacity:1; transform:translateY(-.5cqh) scale(1.1)} 100%{opacity:0; transform:translateY(-6cqh) scale(1)}}
