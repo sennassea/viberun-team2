@@ -17,25 +17,60 @@ const PLAYER_DEF = COMBAT_DATA.character;
 const MONSTER_DEFS = COMBAT_DATA.monsters;
 
 const CARD_DB = {
-  rosary:{name:"염주",   cost:1, type:"attack",  emoji:"📿", target:"enemy",
-          desc:"적에게 9 피해를 줍니다.\n신성: 1 추가 피해", fx:[{t:"damage",v:9}]},
-  bell:  {name:"방울",   cost:1, type:"attack",  emoji:"🔔", target:"enemy",
-          desc:"적에게 7 피해를 줍니다.\n3장 뽑습니다.",      fx:[{t:"damage",v:7},{t:"draw",v:3}]},
-  doll:  {name:"인형",   cost:1, type:"attack",  emoji:"🧸", target:"enemy",
-          desc:"적에게 8 피해를 줍니다.\n약화 1 부여",         fx:[{t:"damage",v:8},{t:"applyWeak",v:1}]},
-  bible: {name:"성경",   cost:1, type:"defense", emoji:"📖", target:"self",
-          desc:"보호막 8 획득합니다.\n카드 1장을 뽑습니다.", fx:[{t:"block",v:8},{t:"draw",v:1}]},
-  charm: {name:"오색방지",cost:1, type:"defense", emoji:"🎀", target:"self",
-          desc:"보호막 10 획득합니다.\n약화 1 제거",          fx:[{t:"block",v:10},{t:"removeWeak",v:1}]},
-  pray:  {name:"기도",   cost:1, type:"skill",   emoji:"🙏", target:"self",
-          desc:"체력 6 회복합니다.\n추가 에너지 +1",        fx:[{t:"heal",v:6},{t:"energy",v:1}]},
+  rosary:{name:"염주", cost:1, type:"attack", emoji:"📿", target:"enemy", attr:"성불", rarity:"starter",
+          desc:"정화 6\n가장 기본적인 정화 카드", fx:[{t:"damage",v:6}]},
+  bell:{name:"방울", cost:1, type:"attack", emoji:"🔔", target:"enemy", attr:"희망", rarity:"starter",
+          desc:"정화 5\n카드 1장 뽑기", fx:[{t:"damage",v:5},{t:"draw",v:1}]},
+  doll:{name:"인형", cost:1, type:"attack", emoji:"🧸", target:"enemy", attr:"추억", rarity:"starter",
+          desc:"정화 8\n동요 1 부여", fx:[{t:"damage",v:8},{t:"applyWeak",v:1}]},
+  bible:{name:"성경", cost:1, type:"defense", emoji:"📖", target:"self", attr:"희망", rarity:"starter",
+          desc:"마음의 결계 8\n카드 1장 뽑기", fx:[{t:"block",v:8},{t:"draw",v:1}]},
+  charm:{name:"오색부적", cost:1, type:"defense", emoji:"🎀", target:"self", attr:"희망", rarity:"starter",
+          desc:"마음의 결계 6\n동요 1 제거", fx:[{t:"block",v:6},{t:"removeWeak",v:1}]},
+  pray:{name:"기도", cost:1, type:"skill", emoji:"🙏", target:"self", attr:"희망", rarity:"starter",
+          desc:"스트레스 6 회복\n정신력 +1", fx:[{t:"heal",v:6},{t:"energy",v:1}]},
+
+  reaching_hand:{name:"손 내밀기", cost:1, type:"attack", emoji:"🤝", target:"enemy", attr:"희망", rarity:"common",
+          desc:"정화 7\n마음의 결계 5", fx:[{t:"damage",v:7},{t:"block",v:5}]},
+  its_okay:{name:"괜찮아", cost:1, type:"skill", emoji:"🌱", target:"self", attr:"희망", rarity:"common",
+          desc:"스트레스 6 회복\n카드 1장 뽑기", fx:[{t:"heal",v:6},{t:"draw",v:1}]},
+  hope_lantern:{name:"희망의 등불", cost:2, type:"attack", emoji:"🏮", target:"enemy", attr:"희망", rarity:"common",
+          desc:"모든 적에게 정화 6", fx:[{t:"damageAll",v:6}]},
+  small_promise:{name:"작은 약속", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"희망", rarity:"uncommon",
+          desc:"마음의 결계 4\n정신력 +1", fx:[{t:"block",v:4},{t:"energy",v:1}]},
+
+  photo_album:{name:"사진첩", cost:1, type:"attack", emoji:"📷", target:"enemy", attr:"추억", rarity:"uncommon",
+          desc:"정화 6\n카드 2장 뽑기", fx:[{t:"damage",v:6},{t:"draw",v:2}]},
+  old_letter:{name:"오래된 편지", cost:1, type:"attack", emoji:"✉️", target:"enemy", attr:"추억", rarity:"uncommon",
+          desc:"정화 4\n동요 1 부여", fx:[{t:"damage",v:4},{t:"applyWeak",v:1}]},
+  lullaby:{name:"자장가", cost:2, type:"skill", emoji:"🎵", target:"enemy", attr:"추억", rarity:"uncommon",
+          desc:"모든 적에게 동요 1", fx:[{t:"applyWeakAll",v:1}]},
+  old_clock:{name:"낡은 시계", cost:1, type:"skill", emoji:"⏰", target:"enemy", attr:"추억", rarity:"rare",
+          desc:"동요 2 부여", fx:[{t:"applyWeak",v:2}]},
+
+  chant:{name:"염불", cost:1, type:"attack", emoji:"🪷", target:"enemy", attr:"성불", rarity:"common",
+          desc:"정화 9", fx:[{t:"damage",v:9}]},
+  guiding_rite:{name:"천도재", cost:2, type:"attack", emoji:"🕯️", target:"enemy", attr:"성불", rarity:"rare",
+          desc:"모든 적에게 정화 10", fx:[{t:"damageAll",v:10}]},
+  nirvana:{name:"극락왕생", cost:3, type:"attack", emoji:"🌸", target:"enemy", attr:"성불", rarity:"rare",
+          desc:"정화 22\n사용 후 소멸", fx:[{t:"damage",v:22}], exhaust:true},
+  last_goodbye:{name:"마지막 인사", cost:2, type:"attack", emoji:"👋", target:"enemy", attr:"성불", rarity:"rare",
+          desc:"정화 12\n미련 절반 이하 추가 정화 10", fx:[{t:"damage",v:12},{t:"bonusLowHpDamage",v:10}]},
 };
 
-/* 시작 덱(여러 장 복제) */
-const STARTER_DECK = [
+const BASE_STARTER_DECK = [
   "rosary","rosary","rosary","rosary",
   "bell","bell","doll","doll",
   "bible","bible","bible","charm","charm","pray",
+];
+let STARTER_DECK = [...BASE_STARTER_DECK];
+
+const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => CARD_DB[key].rarity !== "starter");
+
+const RELIC_DB = [
+  { id:"incense_burner", name:"향로", emoji:"🏺", desc:"전투 시작 시 마음의 결계 +6" },
+  { id:"spirit_tablet", name:"위령패", emoji:"🪦", desc:"정화 카드 수치 +1 (표시용)" },
+  { id:"charm_box", name:"부적함", emoji:"📦", desc:"첫 턴 정신력 +1 (표시용)" },
 ];
 
 const MAX_ENERGY = 3;
@@ -45,6 +80,7 @@ const DRAW_PER_TURN = 5;
 let S;
 
 function newGame(){
+  STARTER_DECK = [...BASE_STARTER_DECK];
   S = {
     player: LIFE.createPlayer(PLAYER_DEF),
     enemyIndex: 0,
@@ -56,6 +92,8 @@ function newGame(){
     selectedId: null,
     busy: false,
     over: null,
+    rewardOpen: false,
+    relics: [],
   };
 
   spawnCurrentEnemy();
@@ -115,6 +153,17 @@ function playCard(handIndex, targetEnemy){
       case "damage":
         applyDamageWithFeedback(targetEnemy, e.v, S.player.weak);
         break;
+      case "bonusLowHpDamage":
+        if(targetEnemy && targetEnemy.hp > 0 && targetEnemy.hp <= Math.ceil(targetEnemy.maxHp / 2)){
+          applyDamageWithFeedback(targetEnemy, e.v, S.player.weak);
+        }
+        break;
+      case "damageAll":
+        livingEnemies().forEach(enemy => applyDamageWithFeedback(enemy, e.v, S.player.weak));
+        break;
+      case "applyWeakAll":
+        livingEnemies().forEach(enemy => LIFE.addWeak(enemy, e.v));
+        break;
       case "block":
         LIFE.addBlock(S.player, e.v);
         spawnFloat('.player', '+'+e.v, 'blk');
@@ -139,9 +188,13 @@ function playCard(handIndex, targetEnemy){
     }
   }
 
-  // 손패 → 버린 더미
+  // 손패 → 버린 더미. 소멸 카드는 이번 전투에서 제거
   S.hand.splice(handIndex,1);
-  S.discard.push(key);
+  if(!card.exhaust){
+    S.discard.push(key);
+  } else {
+    toast(card.name + " 소멸");
+  }
 
   if(livingEnemies().length===0){
     advanceEnemyOrWin();
@@ -170,6 +223,8 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak){
 
 function advanceEnemyOrWin(){
   const defeated = S.enemies[0];
+  const defeatedGrade = defeated ? (defeated.grade || "normal") : "normal";
+
   if(defeated){
     toast(defeated.name + " 성불 완료");
   }
@@ -180,10 +235,113 @@ function advanceEnemyOrWin(){
     return endGame("win");
   }
 
+  if(defeatedGrade === "normal"){
+    return openCardReward();
+  }
+
+  if(defeatedGrade === "elite"){
+    grantRelic();
+  }
+
   const nextEnemy = spawnCurrentEnemy();
   if(nextEnemy){
     toast(nextEnemy.name + " 등장");
   }
+}
+
+function getRandomRewardKeys(count){
+  const pool = shuffle([...CARD_REWARD_POOL]);
+  return pool.slice(0, count);
+}
+
+function openCardReward(){
+  S.busy = true;
+  S.rewardOpen = true;
+  renderRewardOverlay(getRandomRewardKeys(3));
+  updateEndBtn();
+}
+
+function chooseRewardCard(key){
+  if(!S || !S.rewardOpen) return;
+  const card = CARD_DB[key];
+  if(!card) return;
+
+  STARTER_DECK.push(key);
+  S.discard.push(key);
+  S.rewardOpen = false;
+  S.busy = false;
+  closeRewardOverlay();
+
+  const nextEnemy = spawnCurrentEnemy();
+  if(nextEnemy){
+    toast(card.name + " 획득 / " + nextEnemy.name + " 등장");
+  }
+  renderAll();
+}
+
+function skipRewardCard(){
+  if(!S || !S.rewardOpen) return;
+  S.rewardOpen = false;
+  S.busy = false;
+  closeRewardOverlay();
+  const nextEnemy = spawnCurrentEnemy();
+  if(nextEnemy){
+    toast(nextEnemy.name + " 등장");
+  }
+  renderAll();
+}
+
+function grantRelic(){
+  if(!S.relics) S.relics = [];
+  const relic = RELIC_DB[Math.floor(Math.random() * RELIC_DB.length)];
+  S.relics.push(relic);
+  toast("유물 획득: " + relic.emoji + " " + relic.name);
+}
+
+function ensureRewardOverlay(){
+  let overlay = document.querySelector("#cardRewardOverlay");
+  if(overlay) return overlay;
+
+  overlay = document.createElement("div");
+  overlay.id = "cardRewardOverlay";
+  overlay.innerHTML =
+    '<div class="reward-panel">' +
+      '<h2>정화 보상</h2>' +
+      '<p>새로운 카드 1장을 선택해 덱에 추가하세요.</p>' +
+      '<div class="reward-cards"></div>' +
+      '<button type="button" class="reward-skip">건너뛰기</button>' +
+    '</div>';
+  document.querySelector("#game").appendChild(overlay);
+  overlay.querySelector(".reward-skip").addEventListener("click", skipRewardCard);
+  return overlay;
+}
+
+function renderRewardOverlay(keys){
+  const overlay = ensureRewardOverlay();
+  const wrap = overlay.querySelector(".reward-cards");
+  wrap.innerHTML = keys.map(key => rewardCardHtml(key)).join("");
+  wrap.querySelectorAll(".reward-card").forEach(button => {
+    button.addEventListener("click", () => chooseRewardCard(button.dataset.card));
+  });
+  overlay.classList.add("show");
+}
+
+function rewardCardHtml(key){
+  const c = CARD_DB[key];
+  if(!c) return "";
+  return '<button type="button" class="reward-card cost-' + c.type + '" data-card="' + key + '">' +
+    '<div class="cost">' + c.cost + '</div>' +
+    '<div class="cname">' + c.name + '</div>' +
+    '<div class="art">' + c.emoji + '</div>' +
+    '<div class="type ' + c.type + '">' + typeLabel(c.type) + '</div>' +
+    '<div class="reward-meta">' + (c.attr || "-") + ' · ' + (c.rarity || "common") + '</div>' +
+    '<div class="desc">' + c.desc + '</div>' +
+  '</button>';
+}
+
+function closeRewardOverlay(){
+  const overlay = document.querySelector("#cardRewardOverlay");
+  if(overlay) overlay.classList.remove("show");
 }
 
 /* =========================================================================
@@ -265,12 +423,16 @@ function renderHud(){
   $("#hudTitle").textContent = S.player.title || "";
   $("#hudHp").textContent = S.player.hp+"/"+S.player.maxHp;
   $("#hudDeck").textContent = STARTER_DECK.length;
+  const relics = document.querySelector(".relics");
+  if(relics){
+    relics.textContent = S.relics && S.relics.length ? S.relics.map(r => r.emoji).join(" ") : "🍀 ✝️ 🧸";
+  }
 }
 
 function renderEffects(){
   const rows=[];
-  if(S.player.block>0) rows.push(eff("🛡️","은총의 보호","보호막 "+S.player.block));
-  if(S.player.weak>0)  rows.push(eff("🌀","약화","공격 피해 25% 감소 ("+S.player.weak+"턴)"));
+  if(S.player.block>0) rows.push(eff("🛡️","마음의 결계","결계 "+S.player.block));
+  if(S.player.weak>0)  rows.push(eff("🌀","동요","정화 피해 25% 감소 ("+S.player.weak+"턴)"));
   rows.push(eff("💚","치유의 향기","회복 카드 보유"));
   $("#effList").innerHTML = rows.join("") || '<div class="eff-empty">효과 없음</div>';
 }
@@ -284,9 +446,9 @@ function renderIntents(){
     const m=e.intent;
     if(!m) return "";
     let ico,txt,cls;
-    if(m.t==="attack"){ico="⚔️";txt=(m.name ? m.name+" / " : "")+m.v+" 피해"+(e.weak>0?" (약화)":"");cls="atk";}
-    else if(m.t==="defend"){ico="🛡️";txt=(m.name ? m.name+" / " : "")+"보호막 "+m.v+" 획득";cls="def";}
-    else {ico="🌀";txt=(m.name ? m.name+" / " : "")+"약화 "+m.v+" 부여";cls="deb";}
+    if(m.t==="attack"){ico="💢";txt=(m.name ? m.name+" / " : "")+"스트레스 "+m.v+(e.weak>0?" (동요)":"");cls="atk";}
+    else if(m.t==="defend"){ico="🛡️";txt=(m.name ? m.name+" / " : "")+"결계 "+m.v+" 획득";cls="def";}
+    else {ico="🌀";txt=(m.name ? m.name+" / " : "")+"동요 "+m.v+" 부여";cls="deb";}
     return '<div class="eff-row"><div class="eff-ico">'+ico+'</div>'
          +'<div class="eff-txt"><b style="color:'
          +(cls==="atk"?"var(--c-red-deep)":cls==="def"?"var(--c-blue-deep)":"#8a5cc0")
@@ -336,9 +498,9 @@ function combatantEl(o){
   return el;
 }
 function intentBubble(m,weak){
-  if(m.t==="attack") return '<div class="intent atk">⚔️ '+m.v+(weak>0?'↓':'')+'</div>';
-  if(m.t==="defend") return '<div class="intent def">🛡️ 보호</div>';
-  return '<div class="intent deb">🌀 약화</div>';
+  if(m.t==="attack") return '<div class="intent atk">💢 '+m.v+(weak>0?'↓':'')+'</div>';
+  if(m.t==="defend") return '<div class="intent def">🛡️ 결계</div>';
+  return '<div class="intent deb">🌀 동요</div>';
 }
 
 function renderHand(){
@@ -359,7 +521,7 @@ function renderHand(){
     h.appendChild(el);
   });
 }
-const typeLabel = t=> t==="attack"?"공격":t==="defense"?"방어":"스킬";
+const typeLabel = t=> t==="attack"?"정화":t==="defense"?"결계":"스킬";
 
 function renderDock(){
   $("#energy .val").textContent = S.energy+"/"+MAX_ENERGY;
@@ -494,9 +656,35 @@ function toast(msg){
 function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeout(()=>e.classList.remove("flash"),350); }
 const wait = ms=>new Promise(r=>setTimeout(r,ms));
 
+
+function injectRewardStyles(){
+  if(document.querySelector("#rewardStyle")) return;
+  const style = document.createElement("style");
+  style.id = "rewardStyle";
+  style.textContent = `
+    #cardRewardOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.58);backdrop-filter:blur(.5cqh);}
+    #cardRewardOverlay.show{display:grid;}
+    .reward-panel{width:min(70cqw,90cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.94);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;}
+    .reward-panel h2{font-size:3.2cqh;margin-bottom:.8cqh;color:var(--c-ink);}
+    .reward-panel p{font-size:1.7cqh;color:var(--c-ink-soft);margin-bottom:2cqh;}
+    .reward-cards{display:flex;justify-content:center;align-items:stretch;gap:1.4cqw;margin-bottom:1.6cqh;}
+    .reward-card{position:relative;width:15cqw;min-height:28cqh;border-radius:1.4cqh;background:linear-gradient(180deg,#fbfcff,#eef4fb);border:.35cqh solid #cdddf0;box-shadow:0 .8cqh 1.6cqh rgba(40,70,120,.22);display:flex;flex-direction:column;align-items:center;padding:.8cqh .7cqw;cursor:pointer;font:inherit;color:var(--c-ink);transition:transform .14s, box-shadow .14s;}
+    .reward-card:hover{transform:translateY(-1.4cqh) scale(1.03);box-shadow:0 1.2cqh 2.2cqh rgba(40,70,120,.34);}
+    .reward-card .cost{position:absolute;top:-1cqh;left:-1cqw;width:4.6cqh;height:4.6cqh;border-radius:50%;display:grid;place-items:center;font-size:2.4cqh;font-weight:800;color:#fff;background:radial-gradient(circle at 35% 30%,#bfe6ff,#3f8fe0 70%);border:.25cqh solid #eaf6ff;}
+    .reward-card .cname{font-size:2cqh;font-weight:900;margin-top:.4cqh;}
+    .reward-card .art{width:100%;height:9cqh;margin:.6cqh 0;border-radius:1cqh;display:grid;place-items:center;font-size:6cqh;background:linear-gradient(160deg,#eef6ff,#dcebfb);border:.15cqh solid #d6e6f5;}
+    .reward-card .type{font-size:1.4cqh;font-weight:800;color:#fff;padding:.15cqh .8cqw;border-radius:.7cqh;margin-bottom:.4cqh;}
+    .reward-meta{font-size:1.25cqh;font-weight:800;color:var(--c-ink-soft);margin-bottom:.4cqh;}
+    .reward-card .desc{font-size:1.45cqh;line-height:1.35;white-space:pre-line;}
+    .reward-skip{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#fff;cursor:pointer;color:var(--c-ink-soft);}
+  `;
+  document.head.appendChild(style);
+}
+
 /* ----- 버튼 바인딩 ----- */
 $("#endTurn").addEventListener("click", endTurn);
 $("#restart").addEventListener("click", ()=>{ $("#over").classList.remove("show"); newGame(); });
 
 /* 시작 */
+injectRewardStyles();
 newGame();
