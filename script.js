@@ -508,6 +508,14 @@ const wait = ms=>new Promise(r=>setTimeout(r,ms));
 /* ----- 버튼 바인딩 ----- */
 $("#endTurn").addEventListener("click", endTurn);
 $("#restart").addEventListener("click", ()=>{ $("#over").classList.remove("show"); newGame(); });
+if(window.initDeckViewer){
+  window.initDeckViewer({
+    buttonSelector: "#deckViewerButton",
+    getDeck: () => [...STARTER_DECK],
+    getCard: key => CARD_DB[key],
+    getTypeLabel: typeLabel,
+  });
+}
 
 /* 시작 */
 newGame();
