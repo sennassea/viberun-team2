@@ -6,6 +6,10 @@
    ========================================================================= */
 (function attachLifeSystem(global){
   const WEAK_MULT = 0.75;
+  const STATUS_META = {
+    weak: { kind: "debuff", icon: "🌀", label: "약화", showCount: true },
+    healingAura: { kind: "buff", icon: "💚", label: "치유의 향기", showCount: false }
+  };
 
   const LifeSystem = {
     config: {
@@ -24,7 +28,8 @@
         hp: characterData.hp,
         maxHp: characterData.maxHp,
         block: Math.min(characterData.maxHp, characterData.block || 0),
-        weak: characterData.weak || 0
+        weak: characterData.weak || 0,
+        healingAura: characterData.healingAura === false ? 0 : 1
       };
     },
 
@@ -97,6 +102,55 @@
 
     isDead(target){
       return !target || target.hp <= 0;
+    },
+
+    percent(value, max){
+      if(!max || max <= 0) return 0;
+      return Math.min(100, Math.max(0, (value / max) * 100));
+    },
+
+    renderCombatantStats(unit){
+      return this.renderHpBar(unit) + this.renderBlockBar(unit) + this.renderStatuses(unit);
+    },
+
+    renderHpBar(unit){
+      const hpPct = this.percent(unit.hp, unit.maxHp);
+      return '<div class="hpbar"><div class="hpfill" style="width:' + hpPct + '%"></div>' +
+        '<div class="hptxt">' + unit.hp + '/' + unit.maxHp + '</div></div>';
+    },
+
+    renderBlockBar(unit){
+      const block = unit.block || 0;
+      if(block <= 0) return "";
+
+      const blockPct = this.percent(block, unit.maxHp);
+      return '<div class="blockbar">' +
+        '<div class="blockfill" style="width:' + blockPct + '%"></div>' +
+        '<span class="block-icon">&#128737;&#65039;</span><b>' + block + '</b>' +
+        '</div>';
+    },
+
+    renderStatuses(unit){
+      const statuses = [];
+      if((unit.weak || 0) > 0){
+        statuses.push(this.renderStatusIcon("weak", unit.weak));
+      }
+      if((unit.healingAura || 0) > 0){
+        statuses.push(this.renderStatusIcon("healingAura", unit.healingAura));
+      }
+
+      return '<div class="badges">' + statuses.join("") + '</div>';
+    },
+
+    renderStatusIcon(type, count){
+      const meta = STATUS_META[type];
+      if(!meta) return "";
+
+      return '<span class="status-icon ' + meta.kind + ' ' + type + '" data-status="' + type +
+        '" aria-label="' + meta.label + '">' +
+        '<span class="status-symbol">' + meta.icon + '</span>' +
+        (meta.showCount === false ? "" : '<span class="status-count">' + count + '</span>') +
+        '</span>';
     }
   };
 

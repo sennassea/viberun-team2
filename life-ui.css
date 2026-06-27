@@ -34,10 +34,17 @@
   display:grid; place-items:center; border-radius:50%; background:rgba(255,255,255,.92);
   font-size:1.45cqh; line-height:1; box-shadow:0 .12cqh .3cqh rgba(0,45,90,.28); z-index:1;}
 .blockbar b{position:relative; z-index:1; font-size:1.85cqh; line-height:1; text-shadow:0 .1cqh .2cqh rgba(0,0,0,.45);}
-.badges{display:flex; gap:.6cqw; align-items:center; min-height:2.4cqh;}
-.badge{display:flex; align-items:center; gap:.25cqw; font-size:1.7cqh; font-weight:700;
-  padding:.15cqh .6cqw; border-radius:.8cqh; background:rgba(255,255,255,.7); border:0.15cqh solid var(--c-panel-line);}
-.badge.block{color:var(--c-blue-deep);} .badge.weak{color:#8a5cc0;}
+.badges{display:flex; gap:.55cqw; align-items:center; justify-content:center; min-height:4.2cqh;}
+.status-icon{position:relative; width:4cqh; height:4cqh; display:grid; place-items:center;
+  border-radius:.65cqh; border:0.2cqh solid rgba(255,255,255,.78);
+  box-shadow:0 .25cqh .55cqh rgba(20,35,60,.28), inset 0 .16cqh .22cqh rgba(255,255,255,.25);}
+.status-icon.buff{background:linear-gradient(160deg,#ffe68a,#d39b22);}
+.status-icon.debuff{background:linear-gradient(160deg,#a785ff,#4c2f91);}
+.status-symbol{font-size:2.25cqh; line-height:1; filter:drop-shadow(0 .1cqh .12cqh rgba(0,0,0,.35));}
+.status-count{position:absolute; right:-.45cqh; bottom:-.55cqh; min-width:1.9cqh; height:1.9cqh;
+  display:grid; place-items:center; padding:0 .28cqh; border-radius:.95cqh;
+  background:rgba(20,28,44,.92); color:#fff; border:0.16cqh solid rgba(255,255,255,.86);
+  font-size:1.25cqh; font-weight:900; line-height:1; box-shadow:0 .15cqh .35cqh rgba(0,0,0,.35);}
 
 /* Enemy intent bubble */
 .intent{display:flex; align-items:center; gap:.4cqw; font-size:1.9cqh; font-weight:700;

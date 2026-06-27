@@ -304,7 +304,7 @@ function renderField(){
   f.appendChild(combatantEl({
     cls:"player", emoji:S.player.emoji || "👼", name:S.player.name,
     hp:S.player.hp, maxHp:S.player.maxHp,
-    block:S.player.block, weak:S.player.weak, x:18, intent:null,
+    block:S.player.block, weak:S.player.weak, healingAura:S.player.healingAura, x:18, intent:null,
   }));
 
   // 현재 몬스터 1명만 우측에 표시
@@ -327,22 +327,12 @@ function combatantEl(o){
   el.style.bottom="2cqh";
   el.style.transform="translateX(-50%)";
   if(o.id) el.dataset.id=o.id;
-  const pct=Math.max(0,(o.hp/o.maxHp)*100);
-  const blockPct=Math.min(100, Math.max(0, ((o.block || 0)/o.maxHp)*100));
   const intentHtml = o.intent ? intentBubble(o.intent,o.weak) : "";
-  const blockHtml = o.block > 0
-    ? '<div class="blockbar"><div class="blockfill" style="width:'+blockPct+'%"></div><span class="block-icon">🛡️</span><b>'+o.block+'</b></div>'
-    : "";
-  const badges=[];
-  if(o.weak>0)  badges.push('<span class="badge weak">?? '+o.weak+'</span>');
   el.innerHTML =
     intentHtml +
     '<div class="avatar">'+o.emoji+'</div>'+
     '<div class="name">'+o.name+'</div>'+ 
-    '<div class="hpbar"><div class="hpfill" style="width:'+pct+'%"></div>'+ 
-      '<div class="hptxt">'+o.hp+'/'+o.maxHp+'</div></div>'+ 
-    blockHtml +
-    '<div class="badges">'+badges.join("")+'</div>'+ 
+    LIFE.renderCombatantStats(o) +
     '<div class="hit"></div>';
   return el;
 }
