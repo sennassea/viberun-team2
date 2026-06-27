@@ -58,4 +58,25 @@
       ]
     }
   ];
+
+  global.BOHYUN_COMBAT_DATA.monsterPatternSystem = {
+    pickNextIntent(monster){
+      if(!monster || monster.hp <= 0 || !Array.isArray(monster.moves) || monster.moves.length === 0){
+        return null;
+      }
+
+      const candidates = monster.intent && monster.intent.t === "defend"
+        ? monster.moves.filter(move => move.t !== "defend")
+        : monster.moves;
+      const pool = candidates.length > 0 ? candidates : monster.moves;
+
+      return pool[Math.floor(Math.random() * pool.length)];
+    },
+
+    planNextIntent(monster){
+      if(!monster) return null;
+      monster.intent = this.pickNextIntent(monster);
+      return monster.intent;
+    }
+  };
 })(window);

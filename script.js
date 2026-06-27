@@ -7,8 +7,9 @@
 
 const COMBAT_DATA = window.BOHYUN_COMBAT_DATA || {};
 const LIFE = window.BOHYUN_LIFE_SYSTEM;
+const MONSTER_PATTERN = COMBAT_DATA.monsterPatternSystem;
 
-if(!COMBAT_DATA.character || !Array.isArray(COMBAT_DATA.monsters) || !LIFE){
+if(!COMBAT_DATA.character || !Array.isArray(COMBAT_DATA.monsters) || !LIFE || !MONSTER_PATTERN){
   throw new Error("캐릭터/몬스터/라이프 데이터 파일이 먼저 로드되어야 합니다.");
 }
 
@@ -241,9 +242,7 @@ async function endTurn(){
 
 /* 다음 행동 의도 결정 */
 function planIntent(e){
-  if(e.hp>0 && e.moves.length>0){
-    e.intent = e.moves[Math.floor(Math.random()*e.moves.length)];
-  }
+  MONSTER_PATTERN.planNextIntent(e);
 }
 
 function endGame(result){
