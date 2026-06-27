@@ -73,6 +73,15 @@ const MAP_PATHS = [
 function nodeFloorIdx(id){ return MAP_FLOORS.findIndex(f => f.some(n => n.id === id)); }
 function getCurrentNodeId(){ return STAGE_NODE_MAP[window.MAP_STATE.currentStage] || "enemy_1"; }
 
+// HUD 층 표기 업데이트 (예: 1F, 2F)
+function updateHudFloor(){
+  const el = document.getElementById("hudFloor");
+  if(!el) return;
+  const nodeId = getCurrentNodeId();
+  const fi = nodeFloorIdx(nodeId);
+  el.textContent = "🏥 " + (fi > 0 ? fi + "F" : "1F");
+}
+
 function getCurrentLabel(nodeId){
   for(const f of MAP_FLOORS) for(const n of f){
     if(n.id !== nodeId) continue;
@@ -96,6 +105,7 @@ function startStage(stageIdx){
   window.MAP_STATE.currentStage = stageIdx;
   window.MAP_STATE.proceedMode  = false;
   loadStageMonsters(stageIdx);
+  updateHudFloor();
   closeMap();
   if(typeof newGame === "function") newGame();
 }
@@ -342,6 +352,7 @@ function setupWinInterception(){
     }
     // 패배 시: 현재 스테이지 그대로 재시도 (몬스터 이미 로드됨)
     window.MAP_STATE.proceedMode = false;
+    updateHudFloor();
   }, true /* capture phase */);
 }
 
@@ -358,6 +369,7 @@ function setupWinInterception(){
       }
     });
     setupWinInterception();
+    updateHudFloor(); // 초기 층 표기 설정
   }
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup);
   else setup();
