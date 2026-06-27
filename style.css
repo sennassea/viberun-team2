@@ -110,6 +110,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 #endTurn[disabled]{filter:grayscale(.6) brightness(.85); cursor:default;}
 .pile{position:absolute; bottom:4cqh; width:7cqh; text-align:center; cursor:default;}
 #deckPile{right:6.5cqw;} #discardPile{right:1cqw;}
+#deckPile,#discardPile{cursor:pointer;}
 .pile .stack{width:7cqh; height:9.5cqh; margin:0 auto; border-radius:1cqh;
   background:linear-gradient(180deg,#eef4fb,#cfe0f2); border:0.3cqh solid #b9d0ea;
   box-shadow:.6cqh .6cqh 0 #c3d6ee, 1.2cqh 1.2cqh 0 #b3c9e6; display:grid; place-items:center;

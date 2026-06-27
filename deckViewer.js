@@ -11,11 +11,27 @@
   ];
 
   function initDeckViewer(){
-    const button = document.querySelector("#deckViewerButton");
-    if(!button) return;
+    const triggers = [
+      { el: document.querySelector("#deckViewerButton"), tab: "all" },
+      { el: document.querySelector("#deckPile"), tab: "hand" },
+      { el: document.querySelector("#discardPile"), tab: "discard" },
+    ].filter(trigger => trigger.el);
+
+    if(triggers.length === 0) return;
 
     els = createDeckViewer();
-    button.addEventListener("click", openDeckViewer);
+    triggers.forEach(bindOpenTrigger);
+  }
+
+  function bindOpenTrigger(trigger){
+    trigger.el.addEventListener("click", () => openDeckViewer(trigger.tab));
+    trigger.el.setAttribute("role", "button");
+    trigger.el.setAttribute("tabindex", "0");
+    trigger.el.addEventListener("keydown", event => {
+      if(event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openDeckViewer(trigger.tab);
+    });
   }
 
   function getDeck(){
@@ -83,8 +99,9 @@
     };
   }
 
-  function openDeckViewer(){
+  function openDeckViewer(tabId){
     if(!els) return;
+    if(tabId) activeTab = tabId;
     renderDeckViewer();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
