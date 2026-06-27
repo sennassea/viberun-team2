@@ -42,9 +42,12 @@
         maxHp: monsterData.maxHp,
         block: Math.min(monsterData.maxHp, monsterData.block || 0),
         weak: monsterData.weak || 0,
+        grade: monsterData.grade || "normal",
         x: monsterData.x || 72,
         moves: monsterData.moves || [],
-        intent: (monsterData.moves || [])[monsterData.first || 0] || null
+        intent: (monsterData.moves || [])[monsterData.first || 0] || null,
+        lastIntentType: null,
+        intentRepeatCount: 0
       };
     },
 
