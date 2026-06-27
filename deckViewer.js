@@ -2,20 +2,40 @@
 
 (function(){
   let els = null;
-  let getDeck = () => [];
-  let getCard = () => null;
-  let getTypeLabel = type => type;
+  let activeTab = "all";
 
-  function initDeckViewer(options){
-    const button = document.querySelector(options.buttonSelector);
+  const TABS = [
+    { id: "all", label: "전체 카드", getCards: () => getDeck() },
+    { id: "hand", label: "손에 든 카드", getCards: () => getHand() },
+    { id: "discard", label: "버린 카드", getCards: () => getDiscard() },
+  ];
+
+  function initDeckViewer(){
+    const button = document.querySelector("#deckViewerButton");
     if(!button) return;
-
-    getDeck = options.getDeck || getDeck;
-    getCard = options.getCard || getCard;
-    getTypeLabel = options.getTypeLabel || getTypeLabel;
 
     els = createDeckViewer();
     button.addEventListener("click", openDeckViewer);
+  }
+
+  function getDeck(){
+    return typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
+  }
+
+  function getHand(){
+    return typeof S === "undefined" || !S ? [] : [...S.hand];
+  }
+
+  function getDiscard(){
+    return typeof S === "undefined" || !S ? [] : [...S.discard];
+  }
+
+  function getCard(key){
+    return typeof CARD_DB === "undefined" ? null : CARD_DB[key];
+  }
+
+  function getTypeLabel(type){
+    return typeof typeLabel === "undefined" ? type : typeLabel(type);
   }
 
   function createDeckViewer(){
@@ -30,6 +50,9 @@
           '<h2 id="deckViewerTitle">보유 카드</h2>' +
           '<button type="button" class="deck-viewer-close" aria-label="닫기">×</button>' +
         '</div>' +
+        '<div class="deck-viewer-tabs" role="tablist" aria-label="카드 더미 선택">' +
+          TABS.map(tabButtonHtml).join("") +
+        '</div>' +
         '<div class="deck-viewer-summary"></div>' +
         '<div class="deck-viewer-grid"></div>' +
       '</div>';
@@ -39,6 +62,12 @@
     });
 
     overlay.querySelector(".deck-viewer-close").addEventListener("click", closeDeckViewer);
+    overlay.querySelectorAll(".deck-viewer-tab").forEach(button => {
+      button.addEventListener("click", () => {
+        activeTab = button.dataset.tab;
+        renderDeckViewer();
+      });
+    });
     document.addEventListener("keydown", event => {
       if(event.key === "Escape" && overlay.classList.contains("show")) closeDeckViewer();
     });
@@ -47,6 +76,7 @@
 
     return {
       overlay,
+      tabs: Array.from(overlay.querySelectorAll(".deck-viewer-tab")),
       summary: overlay.querySelector(".deck-viewer-summary"),
       grid: overlay.querySelector(".deck-viewer-grid"),
       close: overlay.querySelector(".deck-viewer-close"),
@@ -68,14 +98,27 @@
   }
 
   function renderDeckViewer(){
-    const deck = getDeck();
-    const counts = countCards(deck);
+    const tab = TABS.find(item => item.id === activeTab) || TABS[0];
+    const cards = tab.getCards();
+    const counts = countCards(cards);
     const entries = Object.keys(counts)
       .map(key => ({ key, count: counts[key], card: getCard(key) }))
       .filter(entry => entry.card);
 
-    els.summary.textContent = "총 " + deck.length + "장 / " + entries.length + "종류";
-    els.grid.innerHTML = entries.map(deckCardHtml).join("");
+    els.tabs.forEach(button => {
+      const selected = button.dataset.tab === tab.id;
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-selected", selected ? "true" : "false");
+    });
+    els.summary.textContent = tab.label + " " + cards.length + "장 / " + entries.length + "종류";
+    els.grid.innerHTML = entries.length
+      ? entries.map(deckCardHtml).join("")
+      : '<div class="deck-viewer-empty">표시할 카드가 없습니다.</div>';
+  }
+
+  function tabButtonHtml(tab){
+    return '<button type="button" class="deck-viewer-tab" role="tab" aria-selected="false" data-tab="' +
+      escapeAttr(tab.id) + '">' + escapeHtml(tab.label) + '</button>';
   }
 
   function countCards(deck){
@@ -110,5 +153,5 @@
     return escapeHtml(value).replace(/\s+/g, "-");
   }
 
-  window.initDeckViewer = initDeckViewer;
+  initDeckViewer();
 })();

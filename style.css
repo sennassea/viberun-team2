@@ -147,9 +147,17 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .deck-viewer-head h2{font-size:3cqh; line-height:1; flex:1;}
 .deck-viewer-close{width:4.2cqh; height:4.2cqh; border-radius:50%; border:0.2cqh solid var(--c-panel-line);
   background:#fff; color:var(--c-ink); font-size:3cqh; font-weight:800; line-height:1; cursor:pointer;}
+.deck-viewer-tabs{display:flex; gap:.6cqw; padding:1.1cqh 0 0;}
+.deck-viewer-tab{height:4.2cqh; padding:0 1.2cqw; border-radius:.9cqh;
+  border:0.2cqh solid var(--c-panel-line); background:rgba(255,255,255,.72);
+  color:var(--c-ink-soft); font-size:1.75cqh; font-weight:800; cursor:pointer;}
+.deck-viewer-tab.active{background:var(--c-blue); border-color:var(--c-blue-deep); color:#fff;}
 .deck-viewer-summary{font-size:1.8cqh; font-weight:700; color:var(--c-ink-soft); padding:1.1cqh 0;}
 .deck-viewer-grid{display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:1.2cqh;
   overflow:auto; padding:.5cqh .4cqw 1cqh;}
+.deck-viewer-empty{grid-column:1 / -1; min-height:22cqh; display:grid; place-items:center;
+  border:0.2cqh dashed var(--c-panel-line); border-radius:1.2cqh;
+  color:var(--c-ink-soft); font-size:2cqh; font-weight:800;}
 .deck-viewer-card{position:relative; min-height:25cqh; border-radius:1.2cqh;
   background:linear-gradient(180deg,#fbfcff,#eef4fb); border:0.3cqh solid #cdddf0;
   box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18); display:flex; flex-direction:column;
