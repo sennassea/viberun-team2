@@ -125,6 +125,7 @@ function newGame(){
     over: null,
     rewardOpen: false,
     relics: [],
+    turn: 1,
   };
 
   spawnCurrentEnemy();
@@ -428,6 +429,7 @@ async function endTurn(){
   // 새 플레이어 턴 준비
   LIFE.prepareNextPlayerTurn(S.player);
   S.energy = MAX_ENERGY;
+  S.turn += 1;
   drawCards(DRAW_PER_TURN);
   S.enemies.forEach(planIntent);
   S.busy = false;
@@ -459,6 +461,7 @@ function renderHud(){
   $("#hudTitle").textContent = S.player.title || "";
   $("#hudHp").textContent = S.player.hp+"/"+S.player.maxHp;
   $("#hudDeck").textContent = STARTER_DECK.length;
+  $("#hudTurnNum").textContent = S.turn;
   const relics = document.querySelector(".relics");
   if(relics){
     relics.textContent = S.relics && S.relics.length ? S.relics.map(r => r.emoji).join(" ") : "🍀 ✝️ 🧸";
