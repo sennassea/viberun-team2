@@ -21,6 +21,26 @@
     discard: { type: "order", direction: "desc" },
   };
 
+  const TYPE_FILTERS = [
+    { id: "all", label: "모든 타입" },
+    { id: "attack", label: "정화(공격)" },
+    { id: "defense", label: "결계(방어)" },
+    { id: "skill", label: "스킬(강화)" },
+  ];
+
+  const ATTRIBUTE_FILTERS = [
+    { id: "all", label: "모든 속성" },
+    { id: "spirit", label: "성불" },
+    { id: "hope", label: "희망" },
+    { id: "memory", label: "추억" },
+  ];
+
+  const filterState = {
+    all: { type: "all", attribute: "all" },
+    hand: { type: "all", attribute: "all" },
+    discard: { type: "all", attribute: "all" },
+  };
+
   const EMPTY_TEXT = {
     all: "보유 중인 카드가 없습니다.",
     hand: "손에 든 카드가 없습니다.",
@@ -99,6 +119,10 @@
           '<label>정렬 <select class="deck-viewer-sort-type">' + SORT_OPTIONS.map(optionHtml).join("") + '</select></label>' +
           '<label>방향 <select class="deck-viewer-sort-direction">' + SORT_DIRECTIONS.map(optionHtml).join("") + '</select></label>' +
         '</div>' +
+        '<div class="deck-viewer-filter" aria-label="카드 필터">' +
+          '<label>타입 <select class="deck-viewer-filter-type">' + TYPE_FILTERS.map(optionHtml).join("") + '</select></label>' +
+          '<label>속성 <select class="deck-viewer-filter-attribute">' + ATTRIBUTE_FILTERS.map(optionHtml).join("") + '</select></label>' +
+        '</div>' +
         '<div class="deck-viewer-grid"></div>' +
       '</div>';
 
@@ -121,6 +145,14 @@
       sortState[activeTab].direction = event.target.value;
       renderDeckViewer();
     });
+    overlay.querySelector(".deck-viewer-filter-type").addEventListener("change", event => {
+      filterState[activeTab].type = event.target.value;
+      renderDeckViewer();
+    });
+    overlay.querySelector(".deck-viewer-filter-attribute").addEventListener("change", event => {
+      filterState[activeTab].attribute = event.target.value;
+      renderDeckViewer();
+    });
     document.addEventListener("keydown", event => {
       if(event.key === "Escape" && overlay.classList.contains("show")) closeDeckViewer();
     });
@@ -133,6 +165,8 @@
       summary: overlay.querySelector(".deck-viewer-summary"),
       sortType: overlay.querySelector(".deck-viewer-sort-type"),
       sortDirection: overlay.querySelector(".deck-viewer-sort-direction"),
+      filterType: overlay.querySelector(".deck-viewer-filter-type"),
+      filterAttribute: overlay.querySelector(".deck-viewer-filter-attribute"),
       grid: overlay.querySelector(".deck-viewer-grid"),
       close: overlay.querySelector(".deck-viewer-close"),
     };
@@ -145,9 +179,9 @@
     style.id = "deckViewerScrollStyles";
     style.textContent =
       ".deck-viewer-panel{min-height:0;}" +
-      ".deck-viewer-sort{display:flex;justify-content:flex-end;gap:.8cqw;padding:0 0 1cqh;}" +
-      ".deck-viewer-sort label{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
-      ".deck-viewer-sort select{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
+      ".deck-viewer-sort,.deck-viewer-filter{display:flex;justify-content:flex-end;gap:.8cqw;padding:0 0 1cqh;}" +
+      ".deck-viewer-sort label,.deck-viewer-filter label{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
+      ".deck-viewer-sort select,.deck-viewer-filter select{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
       ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}";
     document.head.appendChild(style);
   }
@@ -170,7 +204,8 @@
   function renderDeckViewer(){
     const tab = TABS.find(item => item.id === activeTab) || TABS[0];
     const cards = tab.getCards();
-    const entries = sortEntries(buildCardEntries(cards), tab.id);
+    const entries = sortEntries(filterEntries(buildCardEntries(cards), tab.id), tab.id);
+    const visibleCount = entries.reduce((total, entry) => total + entry.count, 0);
 
     els.tabs.forEach(button => {
       const selected = button.dataset.tab === tab.id;
@@ -179,13 +214,16 @@
     });
     els.sortType.value = sortState[tab.id].type;
     els.sortDirection.value = sortState[tab.id].direction;
-    els.summary.textContent = tab.label + " " + cards.length + "장 / " + entries.length + "종류";
+    els.filterType.value = filterState[tab.id].type;
+    els.filterAttribute.value = filterState[tab.id].attribute;
+    els.summary.textContent = tab.label + " " + visibleCount + "장 / " + entries.length + "종류";
     els.grid.innerHTML = entries.length
       ? entries.map(deckCardHtml).join("")
       : '<div class="deck-viewer-empty">표시할 카드가 없습니다.</div>';
     if(entries.length === 0){
       const empty = els.grid.querySelector(".deck-viewer-empty");
       if(empty) empty.textContent = EMPTY_TEXT[tab.id] || "해당하는 카드가 없습니다.";
+      if(empty && cards.length > 0) empty.textContent = "조건에 맞는 카드가 없습니다.";
     }
   }
 
@@ -210,6 +248,31 @@
       entriesByKey[key].order = index;
     });
     return Object.keys(entriesByKey).map(key => entriesByKey[key]);
+  }
+
+  function filterEntries(entries, tabId){
+    const state = filterState[tabId] || filterState.all;
+    return entries.filter(entry => {
+      const typeMatches = state.type === "all" || getCardFilterType(entry.card) === state.type;
+      const attributeMatches = state.attribute === "all" || getCardFilterAttribute(entry.card) === state.attribute;
+      return typeMatches && attributeMatches;
+    });
+  }
+
+  function getCardFilterType(card){
+    const type = card.cardType || card.type || card.kind;
+    if(type === "attack" || type === "purify" || type === "정화" || type === "공격") return "attack";
+    if(type === "defense" || type === "barrier" || type === "결계" || type === "방어") return "defense";
+    if(type === "skill" || type === "boost" || type === "스킬" || type === "강화") return "skill";
+    return "";
+  }
+
+  function getCardFilterAttribute(card){
+    const attribute = card.attribute || card.attr || card.element || card.property;
+    if(attribute === "spirit" || attribute === "성불") return "spirit";
+    if(attribute === "hope" || attribute === "희망") return "hope";
+    if(attribute === "memory" || attribute === "추억") return "memory";
+    return "";
   }
 
   function sortEntries(entries, tabId){
