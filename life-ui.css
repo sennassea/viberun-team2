@@ -54,15 +54,22 @@
 
 /* Enemy targeting / defeat state */
 .enemy{cursor:pointer;}
-.enemy .hit{position:absolute; inset:-1cqh; border-radius:2cqh;}
+.enemy .hit{position:absolute; left:50%; transform:translateX(-50%); width:15cqw; top:3cqh; height:14cqh; border-radius:2cqh;}
 .enemy.targetable .avatar{animation:float 3.4s ease-in-out infinite, pulseT 1s ease-in-out infinite;}
 @keyframes pulseT{0%,100%{filter:drop-shadow(0 0 1.4cqh rgba(255,220,120,.5))}
   50%{filter:drop-shadow(0 0 2.6cqh rgba(255,200,60,1))}}
 .enemy.hovered .avatar{transform:scale(1.06);}
-.enemy.selected::after{content:""; position:absolute; top:3cqh; left:50%; transform:translateX(-50%);
-  width:13cqh; height:13cqh; border:0.4cqh solid var(--c-gold); border-radius:1.5cqh;
-  clip-path:polygon(0 0,30% 0,30% 8%,8% 8%,8% 30%,0 30%, 0 70%,8% 70%,8% 92%,30% 92%,30% 100%,0 100%,
-    100% 100%,70% 100%,70% 92%,92% 92%,92% 70%,100% 70%, 100% 30%,92% 30%,92% 8%,70% 8%,70% 0,100% 0);
+.enemy.hovered::after{content:""; position:absolute; top:3cqh; left:50%; transform:translateX(-50%);
+  width:15cqw; height:14cqh;
+  background:
+    linear-gradient(var(--c-gold),var(--c-gold)) 0    0   /0.35cqh 28% no-repeat,
+    linear-gradient(var(--c-gold),var(--c-gold)) 0    0   /28%  0.35cqh no-repeat,
+    linear-gradient(var(--c-gold),var(--c-gold)) 100% 0   /0.35cqh 28% no-repeat,
+    linear-gradient(var(--c-gold),var(--c-gold)) 100% 0   /28%  0.35cqh no-repeat,
+    linear-gradient(var(--c-gold),var(--c-gold)) 0    100%/0.35cqh 28% no-repeat,
+    linear-gradient(var(--c-gold),var(--c-gold)) 0    100%/28%  0.35cqh no-repeat,
+    linear-gradient(var(--c-gold),var(--c-gold)) 100% 100%/0.35cqh 28% no-repeat,
+    linear-gradient(var(--c-gold),var(--c-gold)) 100% 100%/28%  0.35cqh no-repeat;
   pointer-events:none;}
 .dead{opacity:.0; transition:opacity .4s; pointer-events:none;}
 
