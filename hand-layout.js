@@ -59,9 +59,8 @@
       card.style.transformOrigin = 'bottom center';
       card.style.zIndex        = i + 1;
 
-      /* CSS 변수로 각도 저장 → hand-layout.css :hover에서 참조 */
+      /* CSS 변수로 각도 저장 → hand-layout.css에서 transform 직접 적용 */
       card.style.setProperty('--card-angle', angle.toFixed(2) + 'deg');
-      card.style.transform = 'rotate(' + angle.toFixed(2) + 'deg)';
 
       /* 이전 방식(마진/스케일 변수) 제거 */
       card.style.removeProperty('--hand-card-margin');

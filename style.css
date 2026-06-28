@@ -63,10 +63,10 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   padding-bottom:.7cqh; margin-bottom:.7cqh; border-bottom:0.15cqh solid var(--c-panel-line);}
 
 /* =========================== ?꾪닾 ?ㅽ뀒?댁? =========================== */
-#field{position:absolute; left:0; right:0; top:11cqh; bottom:30cqh; z-index:10;}
+#field{position:absolute; left:0; right:0; top:11cqh; bottom:36cqh; z-index:10;}
 
 /* =========================== ?섎떒: ?몃뱶/議곗옉 =========================== */
-#dock{position:absolute; left:0; right:0; bottom:0; height:30cqh; z-index:25;}
+#dock{position:absolute; left:0; right:0; bottom:0; height:36cqh; z-index:25;}
 /* ?먮꼫吏 ?ㅻ툕 */
 #energy{position:absolute; left:2cqw; bottom:5cqh; width:13cqh; height:13cqh; border-radius:50%;
   display:grid; place-items:center; cursor:default;
@@ -81,7 +81,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 
 /* ?먰뙣 */
 #hand{position:absolute; left:50%; bottom:1cqh; transform:translateX(-50%);
-  display:flex; align-items:flex-end; justify-content:center; gap:0; height:28cqh;}
+  display:flex; align-items:flex-end; justify-content:center; gap:0; height:34cqh;}
 .card{position:relative; width:11.5cqw; height:25cqh; margin:0 -.6cqw; border-radius:1.4cqh; flex:none;
   background:linear-gradient(180deg,#fbfcff,#eef4fb);
   border:0.35cqh solid #cdddf0; box-shadow:0 .6cqh 1.4cqh rgba(40,70,120,.25);
