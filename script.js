@@ -85,7 +85,8 @@ const $ = s=>document.querySelector(s);
 const livingEnemies = ()=>S.enemies.filter(e=>e.hp>0);
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
 
-/* 카드 드로우: 덱이 비면 버린 더미를 섞어 보충 */
+/* 카드 드로우: 덱이 비면 버린 더미를 섞어 보충
+   손패가 10장이면 새로 뽑은 카드를 버린 더미로 이동 (최대 10장 제한) */
 function drawCards(n){
   for(let i=0;i<n;i++){
     if(S.draw.length===0){
@@ -93,8 +94,12 @@ function drawCards(n){
       S.draw = shuffle(S.discard);
       S.discard = [];
     }
-    if(S.hand.length>=10) break;
-    S.hand.push(S.draw.pop());
+    const drawn = S.draw.pop();
+    if(S.hand.length >= 10){
+      S.discard.push(drawn);
+    } else {
+      S.hand.push(drawn);
+    }
   }
 }
 
