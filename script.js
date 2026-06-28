@@ -56,6 +56,48 @@ const CARD_DB = {
           desc:"정화 22\n사용 후 소멸", fx:[{t:"damage",v:22}], exhaust:true},
   last_goodbye:{name:"마지막 인사", cost:2, type:"attack", emoji:"👋", target:"enemy", attr:"성불", rarity:"rare",
           desc:"정화 12\n미련 절반 이하 추가 정화 10", fx:[{t:"damage",v:12},{t:"bonusLowHpDamage",v:10}]},
+
+  // =========================
+  // 추가 카드 v0.3 - 희망 계열
+  // =========================
+  warm_word:{name:"따뜻한 말", cost:0, type:"skill", emoji:"💬", target:"self", attr:"희망", rarity:"common",
+          desc:"마음의 결계 3\n카드 1장 뽑기", fx:[{t:"block",v:3},{t:"draw",v:1}]},
+  steady_breath:{name:"고른 숨", cost:1, type:"defense", emoji:"🌬️", target:"self", attr:"희망", rarity:"common",
+          desc:"마음의 결계 9", fx:[{t:"block",v:9}]},
+  comforting_light:{name:"위로의 빛", cost:1, type:"skill", emoji:"✨", target:"self", attr:"희망", rarity:"common",
+          desc:"스트레스 8 회복", fx:[{t:"heal",v:8}]},
+  guardian_prayer:{name:"수호 기도", cost:2, type:"defense", emoji:"🛡️", target:"self", attr:"희망", rarity:"uncommon",
+          desc:"마음의 결계 14\n동요 1 제거", fx:[{t:"block",v:14},{t:"removeWeak",v:1}]},
+  dawn_of_hope:{name:"희망의 새벽", cost:2, type:"skill", emoji:"🌅", target:"self", attr:"희망", rarity:"rare",
+          desc:"스트레스 10 회복\n정신력 +1\n카드 1장 뽑기", fx:[{t:"heal",v:10},{t:"energy",v:1},{t:"draw",v:1}]},
+
+  // =========================
+  // 추가 카드 v0.3 - 추억 계열
+  // =========================
+  faded_photo:{name:"빛바랜 사진", cost:1, type:"attack", emoji:"🖼️", target:"enemy", attr:"추억", rarity:"common",
+          desc:"정화 5\n동요 1 부여\n카드 1장 뽑기", fx:[{t:"damage",v:5},{t:"applyWeak",v:1},{t:"draw",v:1}]},
+  familiar_song:{name:"익숙한 노래", cost:1, type:"skill", emoji:"🎶", target:"enemy", attr:"추억", rarity:"common",
+          desc:"동요 1 부여\n카드 2장 뽑기", fx:[{t:"applyWeak",v:1},{t:"draw",v:2}]},
+  memory_fragment:{name:"기억 조각", cost:0, type:"skill", emoji:"🧩", target:"self", attr:"추억", rarity:"uncommon",
+          desc:"카드 1장 뽑기\n정신력 +1", fx:[{t:"draw",v:1},{t:"energy",v:1}]},
+  old_diary:{name:"낡은 일기장", cost:2, type:"attack", emoji:"📔", target:"enemy", attr:"추억", rarity:"uncommon",
+          desc:"정화 8\n동요 2 부여", fx:[{t:"damage",v:8},{t:"applyWeak",v:2}]},
+  day_we_met:{name:"처음 만난 날", cost:2, type:"attack", emoji:"🌸", target:"enemy", attr:"추억", rarity:"rare",
+          desc:"정화 12\n카드 2장 뽑기", fx:[{t:"damage",v:12},{t:"draw",v:2}]},
+
+  // =========================
+  // 추가 카드 v0.3 - 성불 계열
+  // =========================
+  talisman_strike:{name:"부적 던지기", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"성불", rarity:"common",
+          desc:"정화 8", fx:[{t:"damage",v:8}]},
+  purification_wave:{name:"정화의 파동", cost:2, type:"attack", emoji:"〰️", target:"enemy", attr:"성불", rarity:"uncommon",
+          desc:"모든 적에게 정화 8", fx:[{t:"damageAll",v:8}]},
+  final_rite:{name:"마지막 의식", cost:2, type:"attack", emoji:"🕯️", target:"enemy", attr:"성불", rarity:"uncommon",
+          desc:"정화 14", fx:[{t:"damage",v:14}]},
+  soul_release:{name:"혼백 해방", cost:3, type:"attack", emoji:"🕊️", target:"enemy", attr:"성불", rarity:"rare",
+          desc:"정화 18\n동요 2 부여", fx:[{t:"damage",v:18},{t:"applyWeak",v:2}]},
+  lotus_path:{name:"연꽃길", cost:3, type:"attack", emoji:"🪷", target:"enemy", attr:"성불", rarity:"rare",
+          desc:"모든 적에게 정화 14\n사용 후 소멸", fx:[{t:"damageAll",v:14}], exhaust:true},
 };
 
 const BASE_STARTER_DECK = [
