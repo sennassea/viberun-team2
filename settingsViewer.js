@@ -1,6 +1,7 @@
 "use strict";
 
 (function(){
+  const SAVE_KEY = "viberunSaveState";
   let els = null;
   let pauseState = null;
 
@@ -9,6 +10,7 @@
     if(!trigger) return;
 
     els = createSettingsViewer();
+    restoreSavedProgress();
     bindOpenTrigger(trigger);
   }
 
@@ -77,6 +79,7 @@
     });
     overlay.querySelector(".settings-viewer-close").addEventListener("click", closeSettingsViewer);
     overlay.querySelector(".settings-viewer-danger").addEventListener("click", openGiveUpConfirm);
+    overlay.querySelector(".settings-viewer-primary").addEventListener("click", saveProgressAndExit);
     overlay.querySelector(".settings-viewer-confirm-no").addEventListener("click", closeGiveUpConfirm);
     overlay.querySelector(".settings-viewer-confirm-yes").addEventListener("click", confirmGiveUp);
     document.addEventListener("keydown", event => {
@@ -105,6 +108,42 @@
       '<input id="settingsVolume' + id + '" type="range" min="0" max="100" value="' + value + '">' +
       '<output>' + value + '</output>' +
     '</label>';
+  }
+
+  function restoreSavedProgress(){
+    if(typeof localStorage === "undefined") return;
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if(!raw) return;
+      const saved = JSON.parse(raw);
+      if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
+      if(typeof S !== "undefined") S = saved.state;
+      if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
+      if(S) S.busy = false;
+      if(typeof renderAll === "function") renderAll();
+    } catch(error) {
+      localStorage.removeItem(SAVE_KEY);
+    }
+  }
+
+  function saveProgressAndExit(){
+    if(typeof localStorage === "undefined" || typeof S === "undefined" || !S || S.over) return;
+
+    const state = JSON.parse(JSON.stringify(S));
+    state.busy = pauseState ? pauseState.busy : !!S.busy;
+    const starterDeck = typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
+
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        state,
+        starterDeck,
+      }));
+      closeSettingsViewer();
+      if(typeof toast === "function") toast("진행 상태가 저장되었습니다.");
+    } catch(error) {
+      if(typeof toast === "function") toast("저장에 실패했습니다.");
+    }
   }
 
   function ensureSettingsViewerStyles(){
@@ -174,8 +213,14 @@
 
   function confirmGiveUp(){
     if(typeof endGame !== "function") return;
+    clearSavedProgress();
     endGame("lose");
     closeSettingsViewer();
+  }
+
+  function clearSavedProgress(){
+    if(typeof localStorage === "undefined") return;
+    localStorage.removeItem(SAVE_KEY);
   }
 
   function pauseCombat(){
