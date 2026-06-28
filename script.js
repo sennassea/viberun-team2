@@ -619,16 +619,15 @@ function beginDrag(cardEl, index){
 }
 function updateDrag(x,y,index){
   if(!dragState) return;
-  const gr=$("#game").getBoundingClientRect();
   const clone=$("#dragClone");
-  clone.style.left=(x-gr.left)+"px";
-  clone.style.top=(y-gr.top)+"px";
+  clone.style.left=x+"px";
+  clone.style.top=y+"px";
   const en=enemyUnder(x,y);
   document.querySelectorAll(".enemy.hovered").forEach(e=>e.classList.remove("hovered"));
   if(dragState.card.target==="enemy" && en) en.el.classList.add("hovered");
   if(dragState.card.target==="enemy"){
     const o=dragState.origin;
-    drawAim(o.left+o.width/2-gr.left, o.top-gr.top, x-gr.left, y-gr.top);
+    drawAim(o.left+o.width/2, o.top+o.height/2, x, y);
   }
 }
 function dropDrag(x,y,index){
