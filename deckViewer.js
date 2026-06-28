@@ -5,6 +5,7 @@
   let activeTab = "all";
   let detailEntries = [];
   let activeDetailIndex = -1;
+  let showUpgradePreview = false;
 
   const SORT_OPTIONS = [
     { id: "order", label: "최신순" },
@@ -180,6 +181,12 @@
       openCardDetail(cardEl.dataset.cardKey);
     });
     overlay.querySelector(".card-detail-backdrop").addEventListener("click", event => {
+      const upgrade = event.target.closest("[data-card-detail-upgrade]");
+      if(upgrade){
+        event.stopPropagation();
+        toggleUpgradePreview();
+        return;
+      }
       const nav = event.target.closest("[data-card-detail-nav]");
       if(nav){
         event.stopPropagation();
@@ -252,16 +259,20 @@
       ".card-detail-panel{position:relative;width:min(72cqw,104cqh);max-height:70cqh;overflow:visible;background:linear-gradient(180deg,#fffdf6,#eef8ff);border:.35cqh solid var(--c-gold);border-radius:1.4cqh;box-shadow:0 1.6cqh 3.2cqh rgba(20,35,60,.3);padding:2.4cqh 2.2cqw;}" +
       ".card-detail-close{position:absolute;top:1cqh;right:1cqh;width:4cqh;height:4cqh;border-radius:50%;border:.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);font-size:2.8cqh;font-weight:900;line-height:1;cursor:pointer;}" +
       ".card-detail-spread{display:grid;grid-template-columns:minmax(18cqh,24cqw) minmax(0,1fr);gap:2cqw;align-items:stretch;}" +
-      ".card-detail-front{display:grid;place-items:center;min-height:46cqh;}" +
+      ".card-detail-front{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2cqh;min-height:46cqh;}" +
       ".card-detail-back{min-height:46cqh;border-radius:1.2cqh;background:linear-gradient(150deg,rgba(255,255,255,.78),rgba(235,248,255,.74));border:.22cqh solid var(--c-panel-line);box-shadow:inset 0 0 0 .35cqh rgba(255,255,255,.36);padding:2cqh 1.6cqw 1.6cqh;display:flex;flex-direction:column;}" +
       ".card-detail-card{position:relative;width:min(21cqw,28cqh);height:45cqh;border-radius:1.4cqh;background:linear-gradient(180deg,#fbfcff,#eef4fb);border:.35cqh solid #cdddf0;box-shadow:0 .9cqh 1.8cqh rgba(40,70,120,.25);display:flex;flex-direction:column;align-items:center;padding:1cqh .9cqw;color:var(--c-ink);}" +
       ".card-detail-card.cost-attack{border-color:#f0b9b0;}.card-detail-card.cost-defense{border-color:#a9cdf0;}.card-detail-card.cost-skill{border-color:#a9e0c2;}" +
+      ".card-detail-card.upgraded{border-color:var(--c-gold);box-shadow:0 0 0 .35cqh rgba(231,181,74,.24),0 1cqh 2cqh rgba(40,70,120,.28);background:linear-gradient(180deg,#fffdf2,#edf8ff);}" +
       ".card-detail-card .deck-viewer-count{position:absolute;top:.7cqh;right:.7cqw;min-width:3.7cqh;height:3.1cqh;display:grid;place-items:center;border-radius:1.55cqh;background:var(--c-gold);color:#fff;font-size:1.65cqh;font-weight:900;}" +
       ".card-detail-card .cost{position:absolute;top:-1cqh;left:-.9cqw;width:4.8cqh;height:4.8cqh;border-radius:50%;display:grid;place-items:center;font-size:2.45cqh;font-weight:900;color:#fff;background:radial-gradient(circle at 35% 30%,#bfe6ff,#3f8fe0 70%);border:.25cqh solid #eaf6ff;box-shadow:0 0 .8cqh rgba(80,170,255,.7);}" +
       ".card-detail-card .cname{font-size:2.35cqh;font-weight:900;margin-top:.3cqh;padding:0 2cqh;text-align:center;}" +
       ".card-detail-card .art{width:100%;height:16cqh;margin:1cqh 0;border-radius:1.2cqh;display:grid;place-items:center;font-size:9cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.18cqh solid #d6e6f5;}" +
       ".card-detail-card .type{font-size:1.55cqh;font-weight:800;color:#fff;padding:.15cqh .9cqw;border-radius:.8cqh;margin-bottom:.8cqh;}" +
       ".card-detail-card .desc{font-size:1.7cqh;text-align:center;color:var(--c-ink);line-height:1.35;white-space:pre-line;}" +
+      ".card-detail-upgrade-toggle{height:4.2cqh;min-width:13cqw;border-radius:2.1cqh;border:.22cqh solid var(--c-gold);background:linear-gradient(180deg,#fff8d9,#ffe59a);color:#7a5510;font-size:1.8cqh;font-weight:900;cursor:pointer;box-shadow:0 .5cqh 1cqh rgba(80,60,20,.16);}" +
+      ".card-detail-upgrade-toggle:hover,.card-detail-upgrade-toggle:focus-visible{outline:none;transform:translateY(-.2cqh);box-shadow:0 .7cqh 1.3cqh rgba(80,60,20,.22);}" +
+      ".card-detail-upgrade-toggle.active{background:linear-gradient(180deg,#eaf7ff,#cfe9ff);border-color:var(--c-blue);color:var(--c-blue-deep);}" +
       ".card-detail-kicker{font-size:1.5cqh;font-weight:900;color:var(--c-ink-soft);margin-bottom:.4cqh;}" +
       ".card-detail-nav{position:absolute;top:50%;transform:translateY(-50%);width:5cqh;height:7cqh;border-radius:2.5cqh;border:.22cqh solid var(--c-panel-line);background:rgba(255,255,255,.9);color:var(--c-blue-deep);font-size:5cqh;font-weight:900;line-height:1;display:grid;place-items:center;cursor:pointer;box-shadow:0 .6cqh 1.2cqh rgba(40,70,120,.2);}" +
       ".card-detail-nav:hover,.card-detail-nav:focus-visible{background:#fff;outline:none;box-shadow:0 .8cqh 1.6cqh rgba(40,70,120,.3);}" +
@@ -274,12 +285,13 @@
       ".card-detail-badge.type-attack{color:#a82e2e;border-color:#f0b9b0;background:#fff1ef;}" +
       ".card-detail-badge.type-defense{color:#1f5fa5;border-color:#a9cdf0;background:#eef7ff;}" +
       ".card-detail-badge.type-skill{color:#2c7b55;border-color:#a9e0c2;background:#effbf4;}" +
+      ".card-detail-badge.upgrade{color:#7a5510;border-color:var(--c-gold);background:#fff6cf;}" +
       ".card-detail-desc{margin-top:1.8cqh;padding:1.4cqh 1.2cqw;border-radius:1cqh;background:rgba(255,255,255,.68);border:.15cqh solid var(--c-panel-line);font-size:1.9cqh;font-weight:800;line-height:1.45;white-space:pre-line;text-align:center;}" +
       ".card-detail-info{display:grid;grid-template-columns:1fr;gap:1cqh;margin-top:1.2cqh;}" +
       ".card-detail-info section{border-radius:1cqh;background:rgba(255,255,255,.62);border:.15cqh solid var(--c-panel-line);padding:1.1cqh 1cqw;}" +
       ".card-detail-info h4{font-size:1.65cqh;margin-bottom:.5cqh;color:var(--c-ink-soft);}" +
       ".card-detail-info p{font-size:1.65cqh;line-height:1.45;color:var(--c-ink);font-weight:700;}" +
-      "@media (max-width:700px){.card-detail-panel{width:78cqw;max-height:72cqh;overflow:auto;}.card-detail-spread{grid-template-columns:1fr;}.card-detail-front{min-height:auto;}.card-detail-back{min-height:auto;}.card-detail-card{width:min(42cqw,28cqh);height:40cqh;}.card-detail-card .art{height:12cqh;font-size:7cqh;}.card-detail-prev{left:.8cqh;}.card-detail-next{right:.8cqh;}.card-detail-nav{top:auto;bottom:1cqh;transform:none;width:4.4cqh;height:4.4cqh;font-size:3.6cqh;}.card-detail-info{grid-template-columns:1fr;}.card-detail-top{grid-template-columns:10cqh minmax(0,1fr);}.card-detail-art{height:10cqh;font-size:6cqh;}}";
+      "@media (max-width:700px){.card-detail-panel{width:78cqw;max-height:72cqh;overflow:auto;}.card-detail-spread{grid-template-columns:1fr;}.card-detail-front{min-height:auto;}.card-detail-back{min-height:auto;}.card-detail-card{width:min(42cqw,28cqh);height:40cqh;}.card-detail-card .art{height:12cqh;font-size:7cqh;}.card-detail-upgrade-toggle{min-width:28cqw;}.card-detail-prev{left:.8cqh;}.card-detail-next{right:.8cqh;}.card-detail-nav{top:auto;bottom:1cqh;transform:none;width:4.4cqh;height:4.4cqh;font-size:3.6cqh;}.card-detail-info{grid-template-columns:1fr;}.card-detail-top{grid-template-columns:10cqh minmax(0,1fr);}.card-detail-art{height:10cqh;font-size:6cqh;}}";
     document.head.appendChild(style);
   }
 
@@ -305,6 +317,7 @@
     if(index < 0) return;
 
     activeDetailIndex = index;
+    showUpgradePreview = false;
     renderCardDetail();
     els.detailBackdrop.classList.add("show");
     els.detailBackdrop.setAttribute("aria-hidden", "false");
@@ -314,6 +327,7 @@
   function closeCardDetail(){
     if(!els || !els.detailBackdrop) return;
     activeDetailIndex = -1;
+    showUpgradePreview = false;
     els.detailBackdrop.classList.remove("show");
     els.detailBackdrop.setAttribute("aria-hidden", "true");
   }
@@ -321,13 +335,20 @@
   function moveCardDetail(step){
     if(!els || !els.detailBackdrop.classList.contains("show") || detailEntries.length === 0) return;
     activeDetailIndex = (activeDetailIndex + step + detailEntries.length) % detailEntries.length;
+    showUpgradePreview = false;
+    renderCardDetail();
+  }
+
+  function toggleUpgradePreview(){
+    if(activeDetailIndex < 0) return;
+    showUpgradePreview = !showUpgradePreview;
     renderCardDetail();
   }
 
   function renderCardDetail(){
     const entry = detailEntries[activeDetailIndex];
     if(!entry) return;
-    els.detailBody.innerHTML = cardDetailHtml(entry, activeDetailIndex, detailEntries.length);
+    els.detailBody.innerHTML = cardDetailHtml(entry, activeDetailIndex, detailEntries.length, showUpgradePreview);
   }
 
   function renderDeckViewer(){
@@ -448,28 +469,34 @@
     '</button>';
   }
 
-  function cardDetailHtml(entry, index, total){
-    const card = entry.card;
+  function cardDetailHtml(entry, index, total, isUpgrade){
+    const card = isUpgrade ? getUpgradePreviewCard(entry.card) : entry.card;
     const typeId = getCardFilterType(card) || card.type;
     const attrId = getCardFilterAttribute(card);
+    const changeText = getUpgradeChangeText(entry.card, card);
     return '<button type="button" class="card-detail-nav card-detail-prev" data-card-detail-nav="prev" aria-label="이전 카드">‹</button>' +
       '<div class="card-detail-spread">' +
         '<div class="card-detail-front">' +
-          detailCardFaceHtml(entry) +
+          detailCardFaceHtml(entry, card, isUpgrade) +
+          '<button type="button" class="card-detail-upgrade-toggle' + (isUpgrade ? ' active' : '') + '" data-card-detail-upgrade="true">' +
+            (isUpgrade ? '기본 보기' : '강화 확인') +
+          '</button>' +
         '</div>' +
         '<div class="card-detail-back">' +
           '<div class="card-detail-title">' +
-            '<div class="card-detail-kicker">카드 정보 ' + escapeHtml(index + 1) + ' / ' + escapeHtml(total) + '</div>' +
+            '<div class="card-detail-kicker">' + (isUpgrade ? '강화 미리보기' : '카드 정보') + ' ' + escapeHtml(index + 1) + ' / ' + escapeHtml(total) + '</div>' +
             '<h3 id="cardDetailTitle">' + escapeHtml(card.name) + '</h3>' +
             '<div class="card-detail-badges">' +
               '<span class="card-detail-badge">정신력 ' + escapeHtml(card.cost) + '</span>' +
               '<span class="card-detail-badge type-' + escapeAttr(typeId) + '">' + escapeHtml(getFriendlyTypeLabel(card)) + '</span>' +
               '<span class="card-detail-badge">' + escapeHtml(getFriendlyAttributeLabel(card)) + '</span>' +
               '<span class="card-detail-badge">보유 x' + escapeHtml(entry.count) + '</span>' +
+              (isUpgrade ? '<span class="card-detail-badge upgrade">강화</span>' : '') +
             '</div>' +
           '</div>' +
           '<div class="card-detail-desc">' + escapeHtml(card.desc) + '</div>' +
           '<div class="card-detail-info">' +
+            (isUpgrade ? '<section><h4>강화 변화</h4><p>' + escapeHtml(changeText) + '</p></section>' : '') +
             '<section><h4>카드 종류</h4><p>' + escapeHtml(getTypeDescription(card)) + '</p></section>' +
             '<section><h4>카드 속성</h4><p>' + escapeHtml(getAttributeDescription(attrId)) + '</p></section>' +
           '</div>' +
@@ -478,9 +505,9 @@
       '<button type="button" class="card-detail-nav card-detail-next" data-card-detail-nav="next" aria-label="다음 카드">›</button>';
   }
 
-  function detailCardFaceHtml(entry){
-    const card = entry.card;
-    return '<div class="card-detail-card cost-' + escapeAttr(card.type) + '">' +
+  function detailCardFaceHtml(entry, displayCard, isUpgrade){
+    const card = displayCard || entry.card;
+    return '<div class="card-detail-card cost-' + escapeAttr(card.type) + (isUpgrade ? ' upgraded' : '') + '">' +
       '<div class="deck-viewer-count">x' + entry.count + '</div>' +
       '<div class="cost">' + escapeHtml(card.cost) + '</div>' +
       '<div class="cname">' + escapeHtml(card.name) + '</div>' +
@@ -488,6 +515,77 @@
       '<div class="type ' + escapeAttr(card.type) + '">' + escapeHtml(getTypeLabel(card.type)) + '</div>' +
       '<div class="desc">' + escapeHtml(card.desc) + '</div>' +
     '</div>';
+  }
+
+  function getUpgradePreviewCard(card){
+    const upgradedFx = Array.isArray(card.fx) ? card.fx.map(upgradeEffect) : [];
+    return {
+      ...card,
+      name: String(card.name) + "+",
+      fx: upgradedFx,
+      desc: buildPreviewDescription(upgradedFx, card),
+    };
+  }
+
+  function upgradeEffect(effect){
+    if(!effect || typeof effect.v !== "number") return { ...effect };
+    const bonusByType = {
+      damage: 3,
+      bonusLowHpDamage: 3,
+      damageAll: 2,
+      block: 3,
+      heal: 3,
+      applyWeak: 1,
+      applyWeakAll: 1,
+      removeWeak: 1,
+      draw: 1,
+      energy: 1,
+    };
+    const bonus = bonusByType[effect.t] || 0;
+    return { ...effect, v: effect.v + bonus };
+  }
+
+  function buildPreviewDescription(effects, sourceCard){
+    const lines = effects.map(effectDescription).filter(Boolean);
+    if(sourceCard.exhaust) lines.push("사용 후 소멸");
+    return lines.length > 0 ? lines.join("\n") : sourceCard.desc;
+  }
+
+  function effectDescription(effect){
+    if(!effect) return "";
+    switch(effect.t){
+      case "damage": return "정화 " + effect.v;
+      case "bonusLowHpDamage": return "미련 절반 이하 추가 정화 " + effect.v;
+      case "damageAll": return "모든 적에게 정화 " + effect.v;
+      case "block": return "마음의 결계 " + effect.v;
+      case "draw": return "카드 " + effect.v + "장 뽑기";
+      case "heal": return "스트레스 " + effect.v + " 회복";
+      case "energy": return "정신력 +" + effect.v;
+      case "applyWeak": return "동요 " + effect.v + " 부여";
+      case "applyWeakAll": return "모든 적에게 동요 " + effect.v;
+      case "removeWeak": return "동요 " + effect.v + " 제거";
+      default: return "";
+    }
+  }
+
+  function getUpgradeChangeText(baseCard, upgradedCard){
+    if(!Array.isArray(baseCard.fx) || !Array.isArray(upgradedCard.fx)) return "강화 후 카드 이름과 효과 설명이 미리보기로 표시됩니다.";
+    const changes = upgradedCard.fx.map((effect, index) => {
+      const before = baseCard.fx[index];
+      if(!before || typeof before.v !== "number" || typeof effect.v !== "number" || before.v === effect.v) return "";
+      return getEffectChangeLabel(effect.t) + " " + before.v + " → " + effect.v;
+    }).filter(Boolean);
+    return changes.length > 0 ? changes.join("\n") : "강화 후 카드 이름과 효과 설명이 미리보기로 표시됩니다.";
+  }
+
+  function getEffectChangeLabel(type){
+    if(type === "damage" || type === "bonusLowHpDamage" || type === "damageAll") return "정화";
+    if(type === "block") return "결계";
+    if(type === "heal") return "회복";
+    if(type === "draw") return "카드 뽑기";
+    if(type === "energy") return "정신력";
+    if(type === "applyWeak" || type === "applyWeakAll" || type === "removeWeak") return "동요";
+    return "효과";
   }
 
   function getFriendlyTypeLabel(card){
