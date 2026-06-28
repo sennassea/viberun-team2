@@ -10,31 +10,31 @@
   global.BOHYUN_COMBAT_DATA.monsters = [
     {
       id: "child_spirit",
-      name: "아이 영혼",
+      name: "이름없는 아이",
       emoji: "🧒",
       maxHp: 32,
       x: 72,
       first: 0,
       moves: [
-        { t: "attack", v: 6, name: "울음" },
-        { t: "defend", v: 5, name: "웅크리기" }
+        { t: "attack", v: 5, name: "작은 울음" },
+        { t: "defend", v: 5, name: "이불 속 숨기" }
       ]
     },
     {
       id: "grandmother_spirit",
-      name: "할머니 영혼",
+      name: "회상자",
       emoji: "👵",
       maxHp: 48,
       x: 72,
       first: 0,
       moves: [
-        { t: "debuff", v: 1, name: "깊은 한숨" },
-        { t: "attack", v: 8, name: "그리움" }
+        { t: "debuff", v: 1, name: "잊혀진 이름" },
+        { t: "attack", v: 8, name: "오래된 자장가" }
       ]
     },
     {
       id: "nurse_spirit",
-      name: "간호사 영혼",
+      name: "야간 간호사",
       emoji: "👩‍⚕️",
       maxHp: 40,
       x: 72,
@@ -46,15 +46,15 @@
     },
     {
       id: "runner_spirit",
-      name: "육상선수 영혼",
+      name: "마지막 주자",
       emoji: "🏃",
-      maxHp: 64,
+      maxHp: 70,
       x: 72,
       first: 0,
       moves: [
-        { t: "attack", v: 10, name: "불안한 질주" },
-        { t: "defend", v: 8, name: "출발선에 멈춤" },
-        { t: "attack", v: 14, name: "전력 질주" }
+        { t: "attack", v: 10, name: "멈추지 못한 출발" },
+        { t: "defend", v: 8, name: "다시 서려는 마음" },
+        { t: "attack", v: 18, name: "마지막 질주" }
       ]
     }
   ];
@@ -70,12 +70,12 @@
 
   const loreMoveDrafts = {
     child_spirit: [
-      { t: "attack", v: 5, name: "간절한 울음", role: "normalAttack" },
-      { t: "attack", v: 6, name: "손을 잡아끌기", role: "normalAttack" },
-      { t: "defend", v: 5, name: "작은 기다림", role: "defense" }
+      { t: "attack", v: 5, name: "작은 울음", role: "normalAttack" },
+      { t: "attack", v: 6, name: "손 내밀기", role: "normalAttack" },
+      { t: "defend", v: 5, name: "이불 속 숨기", role: "defense" }
     ],
     grandmother_spirit: [
-      { t: "attack", v: 7, name: "따뜻한 회상", role: "normalAttack" },
+      { t: "debuff", v: 1, name: "잊혀진 이름", role: "debuff" },
       { t: "attack", v: 7, name: "오래된 자장가", role: "normalAttack" },
       { t: "attack", v: 10, name: "그리움의 빛", role: "specialAttack" },
       { t: "defend", v: 6, name: "빛바랜 사진", role: "defense" }
@@ -102,12 +102,14 @@
   });
 
   const extraMonsters = [
-    { id:"mother_spirit", name:"엄마 유령", emoji:"👩", maxHp:52, x:72, first:0,
-      grade:"elite", moves:[{t:"attack",v:9,name:"애타는 손길",role:"normalAttack"},{t:"attack",v:10,name:"이름 부르기",role:"normalAttack"},{t:"attack",v:12,name:"못다 한 약속",role:"specialAttack"},{t:"defend",v:7,name:"품 안의 기억",role:"defense"}] },
-    { id:"grandfather_spirit", name:"할아버지 유령", emoji:"👴", maxHp:58, x:72, first:0,
-      grade:"elite", moves:[{t:"attack",v:10,name:"추억의 메아리",role:"normalAttack"},{t:"attack",v:9,name:"오래된 이야기",role:"normalAttack"},{t:"attack",v:12,name:"가족을 부르는 주문",role:"specialAttack"},{t:"defend",v:8,name:"오래된 약속",role:"defense"}] },
-    { id:"doctor_spirit", name:"의사 유령", emoji:"👨‍⚕️", maxHp:44, x:72, first:0,
-      grade:"elite", moves:[{t:"attack",v:9,name:"다급한 회진",role:"normalAttack"},{t:"attack",v:8,name:"살피는 손길",role:"normalAttack"},{t:"attack",v:11,name:"집중 진료",role:"specialAttack"},{t:"defend",v:6,name:"진료 준비",role:"defense"}] }
+    { id:"mother_spirit", name:"보호자", emoji:"👩", maxHp:52, x:72, first:0,
+      grade:"elite", moves:[{t:"attack",v:9,name:"애타는 부름",role:"normalAttack"},{t:"attack",v:10,name:"놓지 못한 손",role:"normalAttack"},{t:"attack",v:12,name:"못다 한 약속",role:"specialAttack"},{t:"defend",v:7,name:"품 안의 기억",role:"defense"}] },
+    { id:"grandfather_spirit", name:"낡은 약속", emoji:"👴", maxHp:58, x:72, first:0,
+      grade:"elite", moves:[{t:"attack",v:10,name:"추억의 메아리",role:"normalAttack"},{t:"attack",v:9,name:"오래된 이야기",role:"normalAttack"},{t:"attack",v:12,name:"가족을 부르는 주문",role:"specialAttack"},{t:"defend",v:8,name:"낡은 약속",role:"defense"}] },
+    { id:"doctor_spirit", name:"미련의 의사", emoji:"👨‍⚕️", maxHp:46, x:72, first:0,
+      grade:"elite", moves:[{t:"attack",v:9,name:"다급한 회진",role:"normalAttack"},{t:"attack",v:8,name:"살피는 손길",role:"normalAttack"},{t:"attack",v:11,name:"집중 진료",role:"specialAttack"},{t:"defend",v:7,name:"진료 준비",role:"defense"}] },
+    { id:"ward_wraith", name:"병실의 망령", emoji:"🛏️", maxHp:54, x:72, first:0,
+      grade:"elite", moves:[{t:"debuff",v:1,name:"꺼지지 않는 형광등",role:"debuff"},{t:"attack",v:9,name:"반복되는 신음",role:"normalAttack"},{t:"attack",v:12,name:"닫힌 커튼",role:"specialAttack"},{t:"defend",v:7,name:"빈 침대",role:"defense"}] }
   ];
 
   global.BOHYUN_COMBAT_DATA.baseMonsters = global.BOHYUN_COMBAT_DATA.monsters.map(cloneMonster);
@@ -121,18 +123,19 @@
 
   global.BOHYUN_COMBAT_DATA.monsterGroups = {
     normal: ["child_spirit", "grandmother_spirit", "nurse_spirit"],
-    elite: ["mother_spirit", "grandfather_spirit", "doctor_spirit"],
+    elite: ["mother_spirit", "grandfather_spirit", "doctor_spirit", "ward_wraith"],
     boss: ["runner_spirit"]
   };
 
   const monsterEncounterList = [
-    { id: "stage_child_spirit", label: "아이 유령", monsterIds: ["child_spirit"] },
-    { id: "stage_grandmother_spirit", label: "할머니 유령", monsterIds: ["grandmother_spirit"] },
-    { id: "stage_nurse_spirit", label: "간호사 유령", monsterIds: ["nurse_spirit"] },
-    { id: "stage_mother_spirit", label: "엄마 유령", monsterIds: ["mother_spirit"] },
-    { id: "stage_grandfather_spirit", label: "할아버지 유령", monsterIds: ["grandfather_spirit"] },
-    { id: "stage_doctor_spirit", label: "의사 유령", monsterIds: ["doctor_spirit"] },
-    { id: "stage_runner_spirit", label: "육상선수 유령", monsterIds: ["runner_spirit"] }
+    { id: "stage_child_spirit", label: "이름없는 아이", monsterIds: ["child_spirit"] },
+    { id: "stage_grandmother_spirit", label: "회상자", monsterIds: ["grandmother_spirit"] },
+    { id: "stage_nurse_spirit", label: "야간 간호사", monsterIds: ["nurse_spirit"] },
+    { id: "stage_mother_spirit", label: "보호자", monsterIds: ["mother_spirit"] },
+    { id: "stage_grandfather_spirit", label: "오래된 약속", monsterIds: ["grandfather_spirit"] },
+    { id: "stage_doctor_spirit", label: "미련의 의사", monsterIds: ["doctor_spirit"] },
+    { id: "stage_ward_wraith", label: "병실의 망령", monsterIds: ["ward_wraith"] },
+    { id: "stage_runner_spirit", label: "마지막 주자", monsterIds: ["runner_spirit"] }
   ];
 
   global.BOHYUN_COMBAT_DATA.monsterEncounters = monsterEncounterList.reduce((encounters, encounter) => {
@@ -183,7 +186,9 @@
   global.BOHYUN_COMBAT_DATA.monsters.splice(
     0,
     global.BOHYUN_COMBAT_DATA.monsters.length,
-    ...global.BOHYUN_COMBAT_DATA.getMonstersByGrade("normal")
+    ...global.BOHYUN_COMBAT_DATA.getMonstersByGrade("normal"),
+    ...global.BOHYUN_COMBAT_DATA.getMonstersByGrade("elite"),
+    ...global.BOHYUN_COMBAT_DATA.getMonstersByGrade("boss")
   );
 
   global.BOHYUN_COMBAT_DATA.monsterPatternSystem = {
