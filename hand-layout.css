@@ -15,20 +15,31 @@
   margin: 0;
   transform-origin: bottom center;
   transform: rotate(var(--card-angle, 0deg));
-  transition: transform .14s ease, box-shadow .14s ease;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
 
-/* 호버: 팬 회전 유지하며 카드 들어올림 */
+/* 호버: 카드 직립 + 적당히 확대 + 살짝 들어올림 */
 #hand .card:hover {
-  transform: rotate(var(--card-angle, 0deg)) translateY(-3cqh) scale(1.04);
+  transform: rotate(0deg) translateY(-4cqh) scale(1.2);
   z-index: 99 !important;
-  box-shadow: 0 1.2cqh 2.4cqh rgba(40,70,120,.4);
+  box-shadow: 0 1.5cqh 3cqh rgba(40,70,120,.45);
+  transition: transform .2s ease, box-shadow .2s ease;
 }
 
 /* 드래그 중: 팬 회전만 유지, 반투명 */
 #hand .card.dragging {
   transform: rotate(var(--card-angle, 0deg));
   opacity: .25;
+}
+
+/* 공격 카드 타겟팅 중: 직립·확대·앞으로 (카드는 손패에 고정) */
+#hand .card.targeting {
+  transform: rotate(0deg) translateY(-5cqh) scale(1.15);
+  z-index: 200 !important;
+  opacity: 1;
+  box-shadow: 0 2cqh 4cqh rgba(231,181,74,.6);
+  border-color: var(--c-gold) !important;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 
 /* ================================================================
