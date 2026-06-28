@@ -1,14 +1,16 @@
 "use strict";
 /* =========================================================================
    Battle Tooltip System (tooltip.js)
-   - 플레이어 위 마우스 오버 → 현재 효과 툴팁
-   - 몬스터 위 마우스 오버 → 행동 의도 + 상태이상 툴팁
-   - 새 상태이상 추가 시 EFFECT_INFO / INTENT_INFO 에만 항목 추가
+   ─ 전투원 툴팁: 플레이어/몬스터 위 마우스 오버 → 효과·의도 툴팁
+   ─ 카드 용어 툴팁: 카드 위 마우스 오버 → 용어 설명 툴팁
    ========================================================================= */
 (function () {
 
-  /* ── 효과 정보 DB ─────────────────────────────────────────────────────── */
-  /* 새로운 상태이상 추가 시 여기에 항목 추가 */
+  /* ══════════════════════════════════════════════════════════════════════
+     I. 전투원 툴팁 데이터
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* ── 효과 정보 DB (새 상태이상 추가 시 여기에 항목 추가) ──────────────── */
   var EFFECT_INFO = {
     block: {
       icon: "🛡️",
@@ -25,16 +27,9 @@
       name: "치유의 향기",
       desc: function () { return "회복 카드를 보유하고 있습니다."; }
     }
-    /* 예시 — 새 상태이상:
-    poison: {
-      icon: "🧪",
-      name: "독",
-      desc: function (v) { return "턴 종료 시 " + v + " 피해를 받습니다."; }
-    } */
   };
 
-  /* ── 행동 의도 DB ─────────────────────────────────────────────────────── */
-  /* 새로운 행동 타입 추가 시 여기에 항목 추가 */
+  /* ── 행동 의도 DB (새 행동 타입 추가 시 여기에 항목 추가) ────────────── */
   var INTENT_INFO = {
     attack: {
       icon: "💢",
@@ -55,8 +50,7 @@
       desc: function (m) {
         var s = "이 적은 ";
         if (m.name) s += '"' + m.name + '" / ';
-        s += "결계 " + m.v + " 를 획득하려고 합니다.";
-        return s;
+        return s + "결계 " + m.v + " 를 획득하려고 합니다.";
       }
     },
     debuff: {
@@ -66,15 +60,89 @@
       desc: function (m) {
         var s = "이 적은 ";
         if (m.name) s += '"' + m.name + '" / ';
-        s += "동요 " + m.v + " 를 부여하려고 합니다.";
-        return s;
+        return s + "동요 " + m.v + " 를 부여하려고 합니다.";
       }
     }
   };
 
-  /* ── DOM 준비 ─────────────────────────────────────────────────────────── */
-  var game  = document.getElementById("game");
-  var field = document.getElementById("field");
+  /* ══════════════════════════════════════════════════════════════════════
+     II. 카드 용어 툴팁 데이터
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* ── 카드 용어 DB (새 용어 추가 시 여기에 항목 추가) ─────────────────── */
+  /* test: 카드 설명에서 용어를 감지하는 함수
+     icon / name / desc: 툴팁에 표시할 정보                              */
+  var CARD_TERM_INFO = [
+    {
+      test: function (d) { return /정화/.test(d); },
+      icon: "✨",
+      name: "정화",
+      desc: "적에게 피해를 줍니다. 적의 결계를 먼저 깎은 후 나머지 피해가 체력을 감소시킵니다."
+    },
+    {
+      test: function (d) { return /마음의 결계/.test(d); },
+      icon: "🛡️",
+      name: "마음의 결계",
+      desc: "피해를 대신 받는 보호막입니다. 결계가 남아있으면 체력이 줄지 않습니다."
+    },
+    {
+      test: function (d) { return /스트레스.{0,6}회복/.test(d); },
+      icon: "❤️",
+      name: "스트레스 회복",
+      desc: "감소한 체력을 회복합니다. 최대 체력을 초과하여 회복할 수 없습니다."
+    },
+    {
+      test: function (d) { return /동요/.test(d); },
+      icon: "🌀",
+      name: "동요",
+      desc: "정화 피해를 25% 감소시키는 상태이상입니다. 매 턴 1씩 감소합니다."
+    },
+    {
+      test: function (d) { return /뽑기/.test(d); },
+      icon: "🃏",
+      name: "카드 뽑기",
+      desc: "덱에서 손패로 카드를 가져옵니다. 덱이 비면 버린 더미를 섞어 보충합니다. 손패는 최대 10장입니다."
+    },
+    {
+      test: function (d) { return /정신력/.test(d); },
+      icon: "⚡",
+      name: "정신력",
+      desc: "카드를 사용하는 데 필요한 자원입니다. 매 턴 시작 시 최대치(3)로 회복됩니다."
+    },
+    {
+      test: function (d) { return /미련/.test(d); },
+      icon: "🌫️",
+      name: "미련",
+      desc: "영혼이 이 세상에 남게 하는 집착입니다. 이 게임에서는 적의 체력을 가리킵니다."
+    },
+    {
+      test: function (d) { return /소멸/.test(d); },
+      icon: "💨",
+      name: "소멸",
+      desc: "사용 후 덱으로 돌아가지 않고 이번 전투에서 영구 제거됩니다."
+    },
+    {
+      test: function (d) { return /모든 적/.test(d); },
+      icon: "🎯",
+      name: "전체 공격",
+      desc: "전투 중인 모든 적에게 효과를 적용합니다."
+    }
+    /* 예시 — 새 용어 추가:
+    {
+      test: function (d) { return /독/.test(d); },
+      icon: "🧪",
+      name: "독",
+      desc: "턴 종료 시 스택 수만큼 피해를 받습니다."
+    } */
+  ];
+
+  /* ══════════════════════════════════════════════════════════════════════
+     III. DOM 공통 준비
+     ══════════════════════════════════════════════════════════════════════ */
+
+  var game   = document.getElementById("game");
+  var field  = document.getElementById("field");
+  var handEl = document.getElementById("hand");
 
   var tooltip = document.createElement("div");
   tooltip.id = "battle-tooltip";
@@ -90,7 +158,7 @@
     /* 툴팁 컨테이너 */
     "#battle-tooltip{" +
       "position:absolute;z-index:80;pointer-events:none;display:none;" +
-      "min-width:20cqw;max-width:26cqw;" +
+      "min-width:18cqw;max-width:26cqw;" +
       "background:rgba(14,22,38,.91);backdrop-filter:blur(5px);" +
       "border:.2cqh solid rgba(100,140,200,.4);border-radius:1.4cqh;" +
       "padding:1.1cqh 1.2cqw;" +
@@ -110,7 +178,7 @@
     ".btt-desc{display:block;font-size:1.28cqh;color:rgba(190,210,235,.80);" +
       "margin-top:.15cqh;line-height:1.45;white-space:pre-wrap}" +
 
-    /* 구분선 (의도 / 상태이상 사이) */
+    /* 구분선 */
     ".btt-sep{border:none;border-top:.18cqh solid rgba(255,255,255,.14);margin:.35cqh 0}" +
 
     /* 효과 없음 */
@@ -129,10 +197,13 @@
       + '</div></div>';
   }
 
+  /* ══════════════════════════════════════════════════════════════════════
+     IV. 전투원 툴팁
+     ══════════════════════════════════════════════════════════════════════ */
+
   /* ── 플레이어 툴팁 내용 ───────────────────────────────────────────────── */
   function buildPlayerHtml(player) {
     var rows = [];
-
     if ((player.block || 0) > 0) {
       var b = EFFECT_INFO.block;
       rows.push(makeRow(b.icon, b.name, b.desc(player.block)));
@@ -145,8 +216,7 @@
       var h = EFFECT_INFO.healingAura;
       rows.push(makeRow(h.icon, h.name, h.desc()));
     }
-    /* 새 플레이어 상태이상 추가 시 위와 같은 패턴으로 push */
-
+    /* 새 플레이어 상태이상 추가 시 여기에 push */
     return rows.length
       ? rows.join("")
       : '<div class="btt-empty">현재 효과 없음</div>';
@@ -155,8 +225,6 @@
   /* ── 적 툴팁 내용 ─────────────────────────────────────────────────────── */
   function buildEnemyHtml(enemy) {
     var rows = [];
-
-    /* 행동 의도 */
     if (enemy.intent) {
       var info = INTENT_INFO[enemy.intent.t] || INTENT_INFO.attack;
       rows.push(makeRow(
@@ -165,57 +233,43 @@
         info.color
       ));
     }
-
-    /* 적 상태이상 */
     var statusRows = [];
     if ((enemy.weak || 0) > 0) {
       var wk = EFFECT_INFO.weak;
       statusRows.push(makeRow(wk.icon, wk.name, wk.desc(enemy.weak)));
     }
     /* 새 적 상태이상 추가 시 위와 같은 패턴으로 statusRows.push */
-
     if (statusRows.length > 0) {
       if (rows.length > 0) rows.push('<hr class="btt-sep">');
       rows = rows.concat(statusRows);
     }
-
     return rows.length
       ? rows.join("")
       : '<div class="btt-empty">정보 없음</div>';
   }
 
-  /* ── 툴팁 위치 계산 ───────────────────────────────────────────────────── */
-  function positionTooltip(cbEl, isPlayer) {
+  /* ── 전투원 툴팁 위치 ─────────────────────────────────────────────────── */
+  function positionCombatantTooltip(cbEl, isPlayer) {
     var gRect   = game.getBoundingClientRect();
     var cbRect  = cbEl.getBoundingClientRect();
     var tipRect = tooltip.getBoundingClientRect();
     var pad = 8;
-
     var relLeft  = cbRect.left  - gRect.left;
     var relRight = cbRect.right - gRect.left;
     var relTop   = cbRect.top   - gRect.top;
-
-    /* 플레이어(좌): 툴팁을 오른쪽에 / 적(우): 툴팁을 왼쪽에 */
-    var tx = isPlayer
-      ? relRight + pad
-      : relLeft - tipRect.width - pad;
+    var tx = isPlayer ? relRight + pad : relLeft - tipRect.width - pad;
     var ty = relTop + cbRect.height * 0.1;
-
-    /* 화면 밖으로 나가지 않도록 보정 */
     tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
     ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
-
     tooltip.style.left = tx + "px";
     tooltip.style.top  = ty + "px";
   }
 
-  /* ── 핵심 show / hide ─────────────────────────────────────────────────── */
+  /* ── 전투원 툴팁 상태 ─────────────────────────────────────────────────── */
   var activeId = null;
 
-  function showFor(cbEl) {
-    /* script.js의 전역 S 참조 */
+  function showCombatantFor(cbEl) {
     if (typeof S === "undefined" || !S) return;
-
     var isPlayer = cbEl.classList.contains("player");
     var isEnemy  = cbEl.classList.contains("enemy");
     if (!isPlayer && !isEnemy) return;
@@ -224,51 +278,142 @@
     if (isPlayer) {
       html = buildPlayerHtml(S.player);
     } else {
-      var eid   = cbEl.dataset.id;
+      var eid = cbEl.dataset.id;
       var enemy = S.enemies.find(function (e) { return e.id === eid; });
       if (!enemy) return;
       html = buildEnemyHtml(enemy);
     }
 
+    cardActiveEl = null;          /* 카드 툴팁 상태 초기화 */
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
-    positionTooltip(cbEl, isPlayer);
+    positionCombatantTooltip(cbEl, isPlayer);
   }
 
-  function hideTooltip() {
+  function hideCombatantTooltip() {
     activeId = null;
     tooltip.classList.remove("tt-show");
   }
 
-  /* ── 이벤트 위임 (#field) ─────────────────────────────────────────────── */
+  /* ── 전투원 이벤트 위임 ───────────────────────────────────────────────── */
   field.addEventListener("mouseover", function (e) {
     var cb = e.target.closest(".combatant");
     if (!cb || cb.classList.contains("dead")) {
-      if (activeId !== null) hideTooltip();
+      if (activeId !== null) hideCombatantTooltip();
       return;
     }
     var newId = cb.dataset.id || "player";
-    if (newId === activeId) return;   /* 같은 대상 위에서 재진입 방지 */
+    if (newId === activeId) return;
     activeId = newId;
-    showFor(cb);
+    showCombatantFor(cb);
   });
 
-  field.addEventListener("mouseleave", hideTooltip);
+  field.addEventListener("mouseleave", hideCombatantTooltip);
 
   /* ── renderField() 재렌더 시 실시간 갱신 ─────────────────────────────── */
   new MutationObserver(function () {
     if (activeId === null) return;
-
     var sel = activeId === "player"
       ? ".combatant.player"
       : '.combatant[data-id="' + activeId + '"]';
     var cb = field.querySelector(sel);
+    if (!cb || cb.classList.contains("dead")) { hideCombatantTooltip(); return; }
+    showCombatantFor(cb);
+  }).observe(field, { childList: true });
 
-    if (!cb || cb.classList.contains("dead")) {
-      hideTooltip();
+  /* ══════════════════════════════════════════════════════════════════════
+     V. 카드 용어 툴팁
+     ══════════════════════════════════════════════════════════════════════ */
+
+  var cardActiveEl = null;
+
+  /* ── 카드 설명에서 용어 추출 후 HTML 빌드 ────────────────────────────── */
+  function buildCardTermHtml(descText) {
+    var rows = CARD_TERM_INFO
+      .filter(function (t) { return t.test(descText); })
+      .map(function (t) { return makeRow(t.icon, t.name, t.desc, null); });
+    return rows.join("");
+  }
+
+  /* ── 카드 툴팁 위치 ───────────────────────────────────────────────────── */
+  /* 카드가 화면 오른쪽 반에 있으면 툴팁을 왼쪽에, 왼쪽 반이면 오른쪽에 */
+  function positionCardTooltip(cardEl) {
+    var gRect   = game.getBoundingClientRect();
+    var cRect   = cardEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+
+    var cardMidX = (cRect.left + cRect.right) / 2;
+    var gameMidX = gRect.left + gRect.width / 2;
+
+    var tx = cardMidX > gameMidX
+      ? (cRect.left  - gRect.left) - tipRect.width - pad
+      : (cRect.right - gRect.left) + pad;
+
+    var ty = (cRect.top - gRect.top);
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  /* ── 카드 툴팁 표시 ───────────────────────────────────────────────────── */
+  function showCardTooltip(cardEl) {
+    /* 드래그 중에는 카드 용어 툴팁을 표시하지 않음 */
+    if (typeof dragState !== "undefined" && dragState !== null) return;
+
+    var descEl = cardEl.querySelector(".desc");
+    if (!descEl) return;
+
+    var html = buildCardTermHtml(descEl.textContent.trim());
+    if (!html) {
+      /* 설명할 용어가 없는 카드는 상태만 추적하고 툴팁 미표시 */
+      cardActiveEl = cardEl;
       return;
     }
-    showFor(cb);
-  }).observe(field, { childList: true });
+
+    activeId = null;            /* 전투원 툴팁 상태 초기화 */
+    cardActiveEl = cardEl;
+    tooltip.innerHTML = html;
+    tooltip.classList.add("tt-show");
+    positionCardTooltip(cardEl);
+  }
+
+  /* ── 카드 툴팁 숨김 ───────────────────────────────────────────────────── */
+  function hideCardTooltip() {
+    cardActiveEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  /* ── 손패 카드 이벤트 위임 ────────────────────────────────────────────── */
+  handEl.addEventListener("mouseover", function (e) {
+    var card = e.target.closest(".card");
+    if (!card) return;
+    if (card === cardActiveEl) return;
+    showCardTooltip(card);
+  });
+
+  handEl.addEventListener("mouseleave", hideCardTooltip);
+
+  /* ── 덱 뷰어 카드 이벤트 위임 ────────────────────────────────────────── */
+  /* 덱 뷰어는 동적으로 열리므로 game 레벨에서 위임 처리                  */
+  /* 대상: 덱 보유 카드 / 뽑을 카드 / 버린 카드 탭의 .deck-viewer-card    */
+  game.addEventListener("mouseover", function (e) {
+    var dvCard = e.target.closest(".deck-viewer-card");
+    if (!dvCard) return;
+    if (dvCard === cardActiveEl) return;
+    showCardTooltip(dvCard);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!cardActiveEl || !cardActiveEl.classList.contains("deck-viewer-card")) return;
+    var dvCard = e.target.closest(".deck-viewer-card");
+    if (!dvCard) return;
+    var to = e.relatedTarget;
+    if (to && dvCard.contains(to)) return; /* 카드 내부 이동 시 무시 */
+    hideCardTooltip();
+  });
 
 })();
