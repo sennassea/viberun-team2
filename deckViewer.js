@@ -133,6 +133,12 @@
         '</div>' +
         '</div>' +
         '<div class="deck-viewer-grid"></div>' +
+        '<div class="card-detail-backdrop" aria-hidden="true">' +
+          '<div class="card-detail-panel" role="dialog" aria-modal="true" aria-labelledby="cardDetailTitle">' +
+            '<button type="button" class="card-detail-close" aria-label="닫기">×</button>' +
+            '<div class="card-detail-body"></div>' +
+          '</div>' +
+        '</div>' +
       '</div>';
 
     overlay.addEventListener("click", event => {
@@ -166,8 +172,22 @@
       searchState[activeTab] = event.target.value;
       renderDeckViewer();
     });
+    overlay.querySelector(".deck-viewer-grid").addEventListener("click", event => {
+      const cardEl = event.target.closest(".deck-viewer-card");
+      if(!cardEl) return;
+      openCardDetail(cardEl.dataset.cardKey, Number(cardEl.dataset.cardCount || 1));
+    });
+    overlay.querySelector(".card-detail-backdrop").addEventListener("click", event => {
+      if(event.target === event.currentTarget) closeCardDetail();
+    });
+    overlay.querySelector(".card-detail-close").addEventListener("click", closeCardDetail);
     document.addEventListener("keydown", event => {
-      if(event.key === "Escape" && overlay.classList.contains("show")) closeDeckViewer();
+      if(event.key !== "Escape" || !overlay.classList.contains("show")) return;
+      if(overlay.querySelector(".card-detail-backdrop.show")){
+        closeCardDetail();
+        return;
+      }
+      closeDeckViewer();
     });
 
     (document.querySelector("#game") || document.body).appendChild(overlay);
@@ -182,6 +202,9 @@
       filterAttribute: overlay.querySelector(".deck-viewer-filter-attribute"),
       search: overlay.querySelector(".deck-viewer-search-input"),
       grid: overlay.querySelector(".deck-viewer-grid"),
+      detailBackdrop: overlay.querySelector(".card-detail-backdrop"),
+      detailBody: overlay.querySelector(".card-detail-body"),
+      detailClose: overlay.querySelector(".card-detail-close"),
       close: overlay.querySelector(".deck-viewer-close"),
     };
   }
@@ -201,7 +224,27 @@
       ".deck-viewer-sort label,.deck-viewer-filter label,.deck-viewer-search{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
       ".deck-viewer-sort select,.deck-viewer-filter select,.deck-viewer-search input{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
       ".deck-viewer-search input{width:15cqw;}" +
-      ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}";
+      ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}" +
+      ".deck-viewer-card{font:inherit;color:var(--c-ink);cursor:pointer;text-align:inherit;transition:transform .14s ease,box-shadow .14s ease;}" +
+      ".deck-viewer-card:hover,.deck-viewer-card:focus-visible{transform:translateY(-.6cqh);box-shadow:0 .9cqh 1.8cqh rgba(40,70,120,.28);outline:none;}" +
+      ".card-detail-backdrop{position:absolute;inset:0;z-index:2;display:none;place-items:center;background:rgba(35,55,85,.34);border-radius:var(--r);backdrop-filter:blur(2px);}" +
+      ".card-detail-backdrop.show{display:grid;}" +
+      ".card-detail-panel{position:relative;width:min(54cqw,72cqh);max-height:68cqh;overflow:auto;background:linear-gradient(180deg,#fffdf6,#eef8ff);border:.35cqh solid var(--c-gold);border-radius:1.4cqh;box-shadow:0 1.6cqh 3.2cqh rgba(20,35,60,.3);padding:2.4cqh 2.2cqw;}" +
+      ".card-detail-close{position:absolute;top:1cqh;right:1cqh;width:4cqh;height:4cqh;border-radius:50%;border:.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);font-size:2.8cqh;font-weight:900;line-height:1;cursor:pointer;}" +
+      ".card-detail-top{display:grid;grid-template-columns:13cqh minmax(0,1fr);gap:1.6cqw;align-items:center;padding-right:3.4cqh;}" +
+      ".card-detail-art{height:13cqh;border-radius:1.2cqh;display:grid;place-items:center;font-size:7.5cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.2cqh solid #d6e6f5;}" +
+      ".card-detail-title h3{font-size:3.2cqh;line-height:1.1;margin-bottom:.8cqh;}" +
+      ".card-detail-badges{display:flex;flex-wrap:wrap;gap:.6cqh;}" +
+      ".card-detail-badge{min-height:3cqh;display:inline-flex;align-items:center;border-radius:1.5cqh;padding:.2cqh .9cqw;background:rgba(255,255,255,.82);border:.15cqh solid var(--c-panel-line);font-size:1.55cqh;font-weight:900;color:var(--c-ink-soft);}" +
+      ".card-detail-badge.type-attack{color:#a82e2e;border-color:#f0b9b0;background:#fff1ef;}" +
+      ".card-detail-badge.type-defense{color:#1f5fa5;border-color:#a9cdf0;background:#eef7ff;}" +
+      ".card-detail-badge.type-skill{color:#2c7b55;border-color:#a9e0c2;background:#effbf4;}" +
+      ".card-detail-desc{margin-top:1.8cqh;padding:1.4cqh 1.2cqw;border-radius:1cqh;background:rgba(255,255,255,.68);border:.15cqh solid var(--c-panel-line);font-size:1.9cqh;font-weight:800;line-height:1.45;white-space:pre-line;text-align:center;}" +
+      ".card-detail-info{display:grid;grid-template-columns:1fr 1fr;gap:1cqh;margin-top:1.2cqh;}" +
+      ".card-detail-info section{border-radius:1cqh;background:rgba(255,255,255,.62);border:.15cqh solid var(--c-panel-line);padding:1.1cqh 1cqw;}" +
+      ".card-detail-info h4{font-size:1.65cqh;margin-bottom:.5cqh;color:var(--c-ink-soft);}" +
+      ".card-detail-info p{font-size:1.65cqh;line-height:1.45;color:var(--c-ink);font-weight:700;}" +
+      "@media (max-width:700px){.card-detail-panel{width:72cqw;}.card-detail-info{grid-template-columns:1fr;}.card-detail-top{grid-template-columns:10cqh minmax(0,1fr);}.card-detail-art{height:10cqh;font-size:6cqh;}}";
     document.head.appendChild(style);
   }
 
@@ -216,8 +259,25 @@
 
   function closeDeckViewer(){
     if(!els) return;
+    closeCardDetail();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
+  }
+
+  function openCardDetail(key, count){
+    const card = getCard(key);
+    if(!els || !card) return;
+
+    els.detailBody.innerHTML = cardDetailHtml(card, count);
+    els.detailBackdrop.classList.add("show");
+    els.detailBackdrop.setAttribute("aria-hidden", "false");
+    els.detailClose.focus();
+  }
+
+  function closeCardDetail(){
+    if(!els || !els.detailBackdrop) return;
+    els.detailBackdrop.classList.remove("show");
+    els.detailBackdrop.setAttribute("aria-hidden", "true");
   }
 
   function renderDeckViewer(){
@@ -327,14 +387,67 @@
 
   function deckCardHtml(entry){
     const card = entry.card;
-    return '<div class="deck-viewer-card cost-' + escapeAttr(card.type) + '">' +
+    return '<button type="button" class="deck-viewer-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="' + entry.count + '">' +
       '<div class="deck-viewer-count">x' + entry.count + '</div>' +
       '<div class="cost">' + card.cost + '</div>' +
       '<div class="cname">' + escapeHtml(card.name) + '</div>' +
       '<div class="art">' + escapeHtml(card.emoji) + '</div>' +
       '<div class="type ' + escapeAttr(card.type) + '">' + escapeHtml(getTypeLabel(card.type)) + '</div>' +
       '<div class="desc">' + escapeHtml(card.desc) + '</div>' +
-    '</div>';
+    '</button>';
+  }
+
+  function cardDetailHtml(card, count){
+    const typeId = getCardFilterType(card) || card.type;
+    const attrId = getCardFilterAttribute(card);
+    return '<div class="card-detail-top">' +
+        '<div class="card-detail-art">' + escapeHtml(card.emoji) + '</div>' +
+        '<div class="card-detail-title">' +
+          '<h3 id="cardDetailTitle">' + escapeHtml(card.name) + '</h3>' +
+          '<div class="card-detail-badges">' +
+            '<span class="card-detail-badge">정신력 ' + escapeHtml(card.cost) + '</span>' +
+            '<span class="card-detail-badge type-' + escapeAttr(typeId) + '">' + escapeHtml(getFriendlyTypeLabel(card)) + '</span>' +
+            '<span class="card-detail-badge">' + escapeHtml(getFriendlyAttributeLabel(card)) + '</span>' +
+            '<span class="card-detail-badge">보유 x' + escapeHtml(count) + '</span>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-detail-desc">' + escapeHtml(card.desc) + '</div>' +
+      '<div class="card-detail-info">' +
+        '<section><h4>카드 종류</h4><p>' + escapeHtml(getTypeDescription(card)) + '</p></section>' +
+        '<section><h4>카드 속성</h4><p>' + escapeHtml(getAttributeDescription(attrId)) + '</p></section>' +
+      '</div>';
+  }
+
+  function getFriendlyTypeLabel(card){
+    const type = getCardFilterType(card);
+    if(type === "attack") return "정화";
+    if(type === "defense") return "결계";
+    if(type === "skill") return "스킬";
+    return getTypeLabel(card.type);
+  }
+
+  function getTypeDescription(card){
+    const type = getCardFilterType(card);
+    if(type === "attack") return "몬스터의 미련 게이지를 줄여 마음을 가볍게 하는 카드입니다.";
+    if(type === "defense") return "플레이어에게 마음의 결계를 부여해 스트레스 공격을 먼저 막아줍니다.";
+    if(type === "skill") return "직접 정화하지 않고 회복, 카드 뽑기, 상태 변화 같은 다양한 도움을 줍니다.";
+    return "전투 흐름에 특별한 효과를 더하는 카드입니다.";
+  }
+
+  function getFriendlyAttributeLabel(card){
+    const attr = getCardFilterAttribute(card);
+    if(attr === "hope") return "희망";
+    if(attr === "memory") return "추억";
+    if(attr === "spirit") return "성불";
+    return card.attribute || card.attr || card.element || card.property || "속성 없음";
+  }
+
+  function getAttributeDescription(attribute){
+    if(attribute === "hope") return "상대의 절망을 위로하고 마음을 안정시키는 따뜻한 속성입니다.";
+    if(attribute === "memory") return "잊혀진 기억을 되돌려 인간성을 회복시키는 다정한 속성입니다.";
+    if(attribute === "spirit") return "남아있는 미련을 정화하여 편안히 승천시키는 맑은 속성입니다.";
+    return "아직 자세한 설명이 정해지지 않은 속성입니다.";
   }
 
   function escapeHtml(value){
