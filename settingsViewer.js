@@ -54,7 +54,7 @@
           '</section>' +
           '<div class="settings-viewer-actions">' +
             '<button type="button" class="settings-viewer-danger">포기하기</button>' +
-            '<button type="button" class="settings-viewer-primary">저장 후 종료</button>' +
+            '<button type="button" class="settings-viewer-primary">저장하기</button>' +
           '</div>' +
         '</div>' +
         '<div class="settings-viewer-confirm" aria-hidden="true">' +
@@ -64,6 +64,16 @@
             '<div class="settings-viewer-confirm-actions">' +
               '<button type="button" class="settings-viewer-confirm-yes">예</button>' +
               '<button type="button" class="settings-viewer-confirm-no">아니오</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="settings-viewer-save-confirm" aria-hidden="true">' +
+          '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsSaveTitle">' +
+            '<h3 id="settingsSaveTitle">진행 상황을 저장하시겠습니까?</h3>' +
+            '<p>현재 게임 진행 상황이 저장되며,<br>이후 다시 이어서 진행할 수 있습니다.</p>' +
+            '<div class="settings-viewer-confirm-actions">' +
+              '<button type="button" class="settings-viewer-save-yes">예</button>' +
+              '<button type="button" class="settings-viewer-save-no">아니오</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -78,7 +88,7 @@
               '<section><h4>대상 선택</h4><p>정화 카드는 적에게, 회복이나 결계 카드는 자신에게 사용됩니다. 적이 여럿일 때는 원하는 적을 터치해서 대상을 확인할 수 있습니다.</p></section>' +
               '<section><h4>턴 종료</h4><p>더 사용할 카드가 없다면 턴 종료 버튼을 누르세요. 남은 카드는 버린 카드 더미로 이동하고 적의 행동이 진행됩니다.</p></section>' +
               '<section><h4>카드 더미</h4><p>덱과 버린 카드 더미를 눌러 현재 보유 카드, 손에 든 카드, 버린 카드를 확인할 수 있습니다.</p></section>' +
-              '<section><h4>설정</h4><p>설정 화면이 열려 있는 동안 전투는 일시 정지됩니다. 저장 후 종료를 누르면 현재 진행 상태가 저장됩니다.</p></section>' +
+              '<section><h4>설정</h4><p>설정 화면이 열려 있는 동안 전투는 일시 정지됩니다. 저장하기를 누르면 현재 진행 상태가 저장됩니다.</p></section>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -96,13 +106,19 @@
     overlay.querySelector(".settings-viewer-help").addEventListener("click", openHelp);
     overlay.querySelector(".settings-viewer-help-close").addEventListener("click", closeHelp);
     overlay.querySelector(".settings-viewer-danger").addEventListener("click", openGiveUpConfirm);
-    overlay.querySelector(".settings-viewer-primary").addEventListener("click", saveProgressAndExit);
+    overlay.querySelector(".settings-viewer-primary").addEventListener("click", openSaveConfirm);
+    overlay.querySelector(".settings-viewer-save-no").addEventListener("click", closeSaveConfirm);
+    overlay.querySelector(".settings-viewer-save-yes").addEventListener("click", saveProgressAndExit);
     overlay.querySelector(".settings-viewer-confirm-no").addEventListener("click", closeGiveUpConfirm);
     overlay.querySelector(".settings-viewer-confirm-yes").addEventListener("click", confirmGiveUp);
     document.addEventListener("keydown", event => {
       if(event.key !== "Escape" || !overlay.classList.contains("show")) return;
       if(overlay.querySelector(".settings-viewer-confirm.show")){
         closeGiveUpConfirm();
+        return;
+      }
+      if(overlay.querySelector(".settings-viewer-save-confirm.show")){
+        closeSaveConfirm();
         return;
       }
       if(overlay.querySelector(".settings-viewer-help-layer.show")){
@@ -119,6 +135,9 @@
       help: overlay.querySelector(".settings-viewer-help"),
       helpLayer: overlay.querySelector(".settings-viewer-help-layer"),
       helpClose: overlay.querySelector(".settings-viewer-help-close"),
+      saveConfirm: overlay.querySelector(".settings-viewer-save-confirm"),
+      saveNo: overlay.querySelector(".settings-viewer-save-no"),
+      primary: overlay.querySelector(".settings-viewer-primary"),
       close: overlay.querySelector(".settings-viewer-close"),
       confirm: overlay.querySelector(".settings-viewer-confirm"),
       confirmNo: overlay.querySelector(".settings-viewer-confirm-no"),
@@ -192,8 +211,8 @@
       ".settings-viewer-actions button{height:4.4cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-danger{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-primary{background:var(--c-blue);color:#fff;}" +
-      ".settings-viewer-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
-      ".settings-viewer-confirm.show{display:grid;}" +
+      ".settings-viewer-confirm,.settings-viewer-save-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
+      ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show{display:grid;}" +
       ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:2.2cqh 2cqw;text-align:center;}" +
       ".settings-viewer-confirm-panel h3{font-size:2.4cqh;color:var(--c-ink);margin-bottom:1cqh;}" +
       ".settings-viewer-confirm-panel p{font-size:1.7cqh;line-height:1.45;color:var(--c-ink-soft);font-weight:800;margin-bottom:1.8cqh;}" +
@@ -201,6 +220,8 @@
       ".settings-viewer-confirm-actions button{height:4.2cqh;min-width:8cqw;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-confirm-no{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-confirm-yes{background:#fff1ef;color:var(--c-red-deep);}" +
+      ".settings-viewer-save-no{background:#fff;color:var(--c-ink-soft);}" +
+      ".settings-viewer-save-yes{background:var(--c-blue);color:#fff;}" +
       ".settings-viewer-help-layer{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
       ".settings-viewer-help-layer.show{display:grid;}" +
       ".settings-viewer-help-panel{width:min(46cqw,68cqh);max-height:58cqh;display:flex;flex-direction:column;background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:1.8cqh 1.6cqw;}" +
@@ -226,6 +247,7 @@
   function closeSettingsViewer(){
     if(!els) return;
     closeHelp();
+    closeSaveConfirm();
     closeGiveUpConfirm();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
@@ -244,6 +266,20 @@
     els.helpLayer.classList.remove("show");
     els.helpLayer.setAttribute("aria-hidden", "true");
     if(els.overlay.classList.contains("show")) els.help.focus();
+  }
+
+  function openSaveConfirm(){
+    if(!els || !els.saveConfirm) return;
+    els.saveConfirm.classList.add("show");
+    els.saveConfirm.setAttribute("aria-hidden", "false");
+    if(els.saveNo) els.saveNo.focus();
+  }
+
+  function closeSaveConfirm(){
+    if(!els || !els.saveConfirm) return;
+    els.saveConfirm.classList.remove("show");
+    els.saveConfirm.setAttribute("aria-hidden", "true");
+    if(els.overlay.classList.contains("show")) els.primary.focus();
   }
 
   function openGiveUpConfirm(){
