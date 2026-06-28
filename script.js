@@ -605,13 +605,17 @@ function attachDrag(cardEl, index){
 let dragState=null;
 function beginDrag(cardEl, index){
   const c=CARD_DB[S.hand[index]];
-  cardEl.classList.add("dragging");
   const clone=$("#dragClone");
   clone.innerHTML='<div class="card cost-'+c.type+'" style="width:100%;height:100%">'
     +'<div class="cost">'+c.cost+'</div><div class="cname">'+c.name+'</div>'
     +'<div class="art">'+c.emoji+'</div><div class="type '+c.type+'">'+typeLabel(c.type)+'</div>'
     +'<div class="desc">'+c.desc+'</div></div>';
-  clone.style.display="block";
+  if(c.target==="enemy"){
+    cardEl.classList.add("targeting");
+  } else {
+    cardEl.classList.add("dragging");
+    clone.style.display="block";
+  }
   dragState={cardEl, card:c, index, origin:cardEl.getBoundingClientRect()};
   if(c.target==="enemy") document.querySelectorAll(".enemy").forEach(e=>{
     if(!e.classList.contains("dead")) e.classList.add("targetable");
@@ -619,14 +623,16 @@ function beginDrag(cardEl, index){
 }
 function updateDrag(x,y,index){
   if(!dragState) return;
-  const clone=$("#dragClone");
-  clone.style.left=x+"px";
-  clone.style.top=y+"px";
+  if(dragState.card.target !== "enemy"){
+    const clone=$("#dragClone");
+    clone.style.left=x+"px";
+    clone.style.top=y+"px";
+  }
   const en=enemyUnder(x,y);
   document.querySelectorAll(".enemy.hovered").forEach(e=>e.classList.remove("hovered"));
   if(dragState.card.target==="enemy" && en) en.el.classList.add("hovered");
   if(dragState.card.target==="enemy"){
-    const o=dragState.origin;
+    const o=dragState.cardEl.getBoundingClientRect();
     drawAim(o.left+o.width/2, o.top+o.height/2, x, y);
   }
 }
@@ -645,7 +651,7 @@ function endDrag(){
   $("#dragClone").style.display="none";
   $("#aim").innerHTML="";
   document.querySelectorAll(".targetable,.hovered").forEach(e=>e.classList.remove("targetable","hovered"));
-  if(dragState && dragState.cardEl) dragState.cardEl.classList.remove("dragging");
+  if(dragState && dragState.cardEl) dragState.cardEl.classList.remove("dragging", "targeting");
   dragState=null;
   renderHand();
 }
