@@ -4,6 +4,12 @@
   let els = null;
   let activeTab = "all";
 
+  const EMPTY_TEXT = {
+    all: "보유 중인 카드가 없습니다.",
+    hand: "손에 든 카드가 없습니다.",
+    discard: "버린 카드가 없습니다.",
+  };
+
   const TABS = [
     { id: "all", label: "전체 카드", getCards: () => getDeck() },
     { id: "hand", label: "손에 든 카드", getCards: () => getHand() },
@@ -144,6 +150,10 @@
     els.grid.innerHTML = entries.length
       ? entries.map(deckCardHtml).join("")
       : '<div class="deck-viewer-empty">표시할 카드가 없습니다.</div>';
+    if(entries.length === 0){
+      const empty = els.grid.querySelector(".deck-viewer-empty");
+      if(empty) empty.textContent = EMPTY_TEXT[tab.id] || "해당하는 카드가 없습니다.";
+    }
   }
 
   function tabButtonHtml(tab){
