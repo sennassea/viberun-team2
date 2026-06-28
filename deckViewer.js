@@ -41,6 +41,12 @@
     discard: { type: "all", attribute: "all" },
   };
 
+  const searchState = {
+    all: "",
+    hand: "",
+    discard: "",
+  };
+
   const EMPTY_TEXT = {
     all: "보유 중인 카드가 없습니다.",
     hand: "손에 든 카드가 없습니다.",
@@ -116,6 +122,7 @@
         '</div>' +
         '<div class="deck-viewer-summary"></div>' +
         '<div class="deck-viewer-controls">' +
+        '<label class="deck-viewer-search">검색 <input class="deck-viewer-search-input" type="search" placeholder="카드 이름"></label>' +
         '<div class="deck-viewer-sort" aria-label="카드 정렬">' +
           '<label>정렬 <select class="deck-viewer-sort-type">' + SORT_OPTIONS.map(optionHtml).join("") + '</select></label>' +
           '<label>방향 <select class="deck-viewer-sort-direction">' + SORT_DIRECTIONS.map(optionHtml).join("") + '</select></label>' +
@@ -155,6 +162,10 @@
       filterState[activeTab].attribute = event.target.value;
       renderDeckViewer();
     });
+    overlay.querySelector(".deck-viewer-search-input").addEventListener("input", event => {
+      searchState[activeTab] = event.target.value;
+      renderDeckViewer();
+    });
     document.addEventListener("keydown", event => {
       if(event.key === "Escape" && overlay.classList.contains("show")) closeDeckViewer();
     });
@@ -169,6 +180,7 @@
       sortDirection: overlay.querySelector(".deck-viewer-sort-direction"),
       filterType: overlay.querySelector(".deck-viewer-filter-type"),
       filterAttribute: overlay.querySelector(".deck-viewer-filter-attribute"),
+      search: overlay.querySelector(".deck-viewer-search-input"),
       grid: overlay.querySelector(".deck-viewer-grid"),
       close: overlay.querySelector(".deck-viewer-close"),
     };
@@ -181,12 +193,14 @@
     style.id = "deckViewerScrollStyles";
     style.textContent =
       ".deck-viewer-panel{min-height:0;}" +
-      ".deck-viewer-controls{display:flex;align-items:center;justify-content:space-between;gap:1cqw;padding:0 0 1cqh;}" +
+      ".deck-viewer-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;column-gap:1cqw;row-gap:.7cqh;padding:0 0 1cqh;}" +
       ".deck-viewer-sort,.deck-viewer-filter{display:flex;gap:.8cqw;min-width:0;}" +
-      ".deck-viewer-sort{order:2;justify-content:flex-end;}" +
-      ".deck-viewer-filter{order:1;justify-content:flex-start;}" +
-      ".deck-viewer-sort label,.deck-viewer-filter label{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
-      ".deck-viewer-sort select,.deck-viewer-filter select{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
+      ".deck-viewer-filter{grid-column:1;grid-row:1 / span 2;justify-content:flex-start;}" +
+      ".deck-viewer-search{grid-column:2;grid-row:1;justify-self:end;}" +
+      ".deck-viewer-sort{grid-column:2;grid-row:2;justify-content:flex-end;}" +
+      ".deck-viewer-sort label,.deck-viewer-filter label,.deck-viewer-search{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
+      ".deck-viewer-sort select,.deck-viewer-filter select,.deck-viewer-search input{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
+      ".deck-viewer-search input{width:15cqw;}" +
       ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}";
     document.head.appendChild(style);
   }
@@ -221,6 +235,7 @@
     els.sortDirection.value = sortState[tab.id].direction;
     els.filterType.value = filterState[tab.id].type;
     els.filterAttribute.value = filterState[tab.id].attribute;
+    els.search.value = searchState[tab.id];
     els.summary.textContent = tab.label + " " + visibleCount + "장 / " + entries.length + "종류";
     els.grid.innerHTML = entries.length
       ? entries.map(deckCardHtml).join("")
@@ -257,10 +272,12 @@
 
   function filterEntries(entries, tabId){
     const state = filterState[tabId] || filterState.all;
+    const query = searchState[tabId].trim().toLowerCase();
     return entries.filter(entry => {
       const typeMatches = state.type === "all" || getCardFilterType(entry.card) === state.type;
       const attributeMatches = state.attribute === "all" || getCardFilterAttribute(entry.card) === state.attribute;
-      return typeMatches && attributeMatches;
+      const nameMatches = !query || String(entry.card.name).toLowerCase().includes(query);
+      return typeMatches && attributeMatches && nameMatches;
     });
   }
 
