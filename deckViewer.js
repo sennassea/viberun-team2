@@ -4,6 +4,23 @@
   let els = null;
   let activeTab = "all";
 
+  const SORT_OPTIONS = [
+    { id: "order", label: "최신순" },
+    { id: "name", label: "이름순" },
+    { id: "cost", label: "코스트순" },
+  ];
+
+  const SORT_DIRECTIONS = [
+    { id: "desc", label: "내림차순" },
+    { id: "asc", label: "오름차순" },
+  ];
+
+  const sortState = {
+    all: { type: "order", direction: "desc" },
+    hand: { type: "order", direction: "desc" },
+    discard: { type: "order", direction: "desc" },
+  };
+
   const EMPTY_TEXT = {
     all: "보유 중인 카드가 없습니다.",
     hand: "손에 든 카드가 없습니다.",
@@ -78,6 +95,10 @@
           TABS.map(tabButtonHtml).join("") +
         '</div>' +
         '<div class="deck-viewer-summary"></div>' +
+        '<div class="deck-viewer-sort" aria-label="카드 정렬">' +
+          '<label>정렬 <select class="deck-viewer-sort-type">' + SORT_OPTIONS.map(optionHtml).join("") + '</select></label>' +
+          '<label>방향 <select class="deck-viewer-sort-direction">' + SORT_DIRECTIONS.map(optionHtml).join("") + '</select></label>' +
+        '</div>' +
         '<div class="deck-viewer-grid"></div>' +
       '</div>';
 
@@ -92,6 +113,14 @@
         renderDeckViewer();
       });
     });
+    overlay.querySelector(".deck-viewer-sort-type").addEventListener("change", event => {
+      sortState[activeTab].type = event.target.value;
+      renderDeckViewer();
+    });
+    overlay.querySelector(".deck-viewer-sort-direction").addEventListener("change", event => {
+      sortState[activeTab].direction = event.target.value;
+      renderDeckViewer();
+    });
     document.addEventListener("keydown", event => {
       if(event.key === "Escape" && overlay.classList.contains("show")) closeDeckViewer();
     });
@@ -102,6 +131,8 @@
       overlay,
       tabs: Array.from(overlay.querySelectorAll(".deck-viewer-tab")),
       summary: overlay.querySelector(".deck-viewer-summary"),
+      sortType: overlay.querySelector(".deck-viewer-sort-type"),
+      sortDirection: overlay.querySelector(".deck-viewer-sort-direction"),
       grid: overlay.querySelector(".deck-viewer-grid"),
       close: overlay.querySelector(".deck-viewer-close"),
     };
@@ -114,6 +145,9 @@
     style.id = "deckViewerScrollStyles";
     style.textContent =
       ".deck-viewer-panel{min-height:0;}" +
+      ".deck-viewer-sort{display:flex;justify-content:flex-end;gap:.8cqw;padding:0 0 1cqh;}" +
+      ".deck-viewer-sort label{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
+      ".deck-viewer-sort select{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
       ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}";
     document.head.appendChild(style);
   }
@@ -136,16 +170,15 @@
   function renderDeckViewer(){
     const tab = TABS.find(item => item.id === activeTab) || TABS[0];
     const cards = tab.getCards();
-    const counts = countCards(cards);
-    const entries = Object.keys(counts)
-      .map(key => ({ key, count: counts[key], card: getCard(key) }))
-      .filter(entry => entry.card);
+    const entries = sortEntries(buildCardEntries(cards), tab.id);
 
     els.tabs.forEach(button => {
       const selected = button.dataset.tab === tab.id;
       button.classList.toggle("active", selected);
       button.setAttribute("aria-selected", selected ? "true" : "false");
     });
+    els.sortType.value = sortState[tab.id].type;
+    els.sortDirection.value = sortState[tab.id].direction;
     els.summary.textContent = tab.label + " " + cards.length + "장 / " + entries.length + "종류";
     els.grid.innerHTML = entries.length
       ? entries.map(deckCardHtml).join("")
@@ -159,6 +192,45 @@
   function tabButtonHtml(tab){
     return '<button type="button" class="deck-viewer-tab" role="tab" aria-selected="false" data-tab="' +
       escapeAttr(tab.id) + '">' + escapeHtml(tab.label) + '</button>';
+  }
+
+  function optionHtml(option){
+    return '<option value="' + escapeAttr(option.id) + '">' + escapeHtml(option.label) + '</option>';
+  }
+
+  function buildCardEntries(cards){
+    const entriesByKey = {};
+    cards.forEach((key, index) => {
+      const card = getCard(key);
+      if(!card) return;
+      if(!entriesByKey[key]){
+        entriesByKey[key] = { key, count: 0, card, order: index };
+      }
+      entriesByKey[key].count += 1;
+      entriesByKey[key].order = index;
+    });
+    return Object.keys(entriesByKey).map(key => entriesByKey[key]);
+  }
+
+  function sortEntries(entries, tabId){
+    const state = sortState[tabId] || sortState.all;
+    const direction = state.direction === "asc" ? 1 : -1;
+
+    return [...entries].sort((a, b) => {
+      const compared = compareEntries(a, b, state.type);
+      if(compared !== 0) return compared * direction;
+      return a.order - b.order;
+    });
+  }
+
+  function compareEntries(a, b, type){
+    if(type === "name"){
+      return a.card.name.localeCompare(b.card.name, "ko");
+    }
+    if(type === "cost"){
+      return a.card.cost - b.card.cost;
+    }
+    return a.order - b.order;
   }
 
   function countCards(deck){
