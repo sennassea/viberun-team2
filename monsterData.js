@@ -123,10 +123,21 @@
       moves: [
         { t: "attack", v: 10, name: "멈추지 못한 출발", role: "normalAttack" },
         { t: "attack", v: 11, name: "비틀린 보폭", role: "normalAttack" },
-        { t: "defend", v: 8, name: "다시 서려는 마음", role: "defense" },
-        { t: "attack", v: 18, name: "마지막 질주", role: "burst", requiresPrevious: "defend" },
-        { t: "debuff", v: 1, name: "잃어버린 트랙", role: "debuff" }
-      ]
+        { t: "defend", v: 8, name: "다시 서려는 마음", role: "defense" }
+      ],
+      nextPhase: {
+        name: "마지막 주자",
+        maxHp: 80,
+        x: 72,
+        first: 0,
+        moves: [
+          { t: "attack", v: 11, name: "멈추지 못한 출발", role: "normalAttack" },
+          { t: "attack", v: 12, name: "비틀린 보폭", role: "normalAttack" },
+          { t: "debuff", v: 1, name: "잃어버린 트랙", role: "debuff" },
+          { t: "defend", v: 10, name: "다시 서려는 마음", role: "defense" },
+          { t: "attack", v: 22, name: "마지막 질주", role: "burst", requiresPrevious: "defend" }
+        ]
+      }
     }
   ];
 
@@ -141,9 +152,16 @@
     { id: "stage_runner_spirit", label: "마지막 주자", monsterIds: ["runner_spirit"] }
   ];
 
+  const cloneMoveList = moves => Array.isArray(moves) ? moves.map(move => ({ ...move })) : [];
+  const clonePhase = phase => phase ? ({
+    ...phase,
+    moves: cloneMoveList(phase.moves)
+  }) : null;
   const cloneMonster = monster => ({
     ...monster,
-    moves: Array.isArray(monster.moves) ? monster.moves.map(move => ({ ...move })) : []
+    moves: cloneMoveList(monster.moves),
+    phases: Array.isArray(monster.phases) ? monster.phases.map(clonePhase) : undefined,
+    nextPhase: clonePhase(monster.nextPhase)
   });
 
   data.monsterCatalog = MONSTER_DEFS.reduce((catalog, monster) => {

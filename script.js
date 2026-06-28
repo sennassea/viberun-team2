@@ -152,7 +152,7 @@ function spawnCurrentEnemy(){
 
 /* ----- 유틸 ----- */
 const $ = s=>document.querySelector(s);
-const livingEnemies = ()=>S.enemies.filter(e=>e.hp>0);
+const livingEnemies = ()=>S.enemies.filter(e=>!LIFE.isDefeated(e));
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
 
 /* 카드 드로우: 덱이 비면 버린 더미를 섞어 보충
@@ -181,7 +181,7 @@ function playCard(handIndex, targetEnemy){
   const card = CARD_DB[key];
   if(!card) return false;
   if(S.energy < card.cost){ flashEnergy(); toast("에너지가 부족합니다"); return false; }
-  if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
+  if(card.target==="enemy" && (!targetEnemy || LIFE.isDefeated(targetEnemy))) return false;
 
   S.energy -= card.cost;
 
@@ -191,7 +191,7 @@ function playCard(handIndex, targetEnemy){
         applyDamageWithFeedback(targetEnemy, e.v, S.player.weak);
         break;
       case "bonusLowHpDamage":
-        if(targetEnemy && targetEnemy.hp > 0 && targetEnemy.hp <= Math.ceil(targetEnemy.maxHp / 2)){
+        if(targetEnemy && !LIFE.isDefeated(targetEnemy) && targetEnemy.hp <= Math.ceil(targetEnemy.maxHp / 2)){
           applyDamageWithFeedback(targetEnemy, e.v, S.player.weak);
         }
         break;
@@ -255,6 +255,12 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak){
   }
   if(result.absorbed === 0 && result.hpLoss === 0){
     spawnFloat(sel, '0', 'blk');
+  }
+  if(target !== S.player && result.hpLoss > 0){
+    const defeatResult = LIFE.resolveMonsterDefeat(target);
+    if(defeatResult.phaseChanged){
+      spawnFloat(sel, '2페이즈', 'blk');
+    }
   }
 }
 
@@ -400,7 +406,7 @@ async function endTurn(){
 
   // 현재 몬스터 행동
   for(const e of S.enemies){
-    if(e.hp<=0) continue;
+    if(LIFE.isDefeated(e)) continue;
     const mv = e.intent;
     if(!mv) continue;
 
@@ -419,7 +425,12 @@ async function endTurn(){
     LIFE.reduceWeak(e, 1);
     renderAll();
 
-    if(S.player.hp<=0){
+    const playerDeath = LIFE.resolvePlayerDeath(S.player);
+    if(playerDeath.prevented){
+      spawnFloat('.player', '+' + S.player.hp, 'heal');
+      renderAll();
+    }
+    if(playerDeath.dead){
       return endGame("lose");
     }
 
@@ -481,7 +492,7 @@ function eff(ico,name,sub){
 }
 
 function renderIntents(){
-  const html = S.enemies.filter(e=>e.hp>0).map(e=>{
+  const html = S.enemies.filter(e=>!LIFE.isDefeated(e)).map(e=>{
     const m=e.intent;
     if(!m) return "";
     let ico,txt,cls;
@@ -513,8 +524,8 @@ function renderField(){
       cls:"enemy ghost"+(e.id===S.selectedId?" selected":""), emoji:e.emoji, name:e.name,
       hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, x:e.x || 72, intent:e.intent, id:e.id,
     });
-    if(e.hp<=0) el.classList.add("dead");
-    el.addEventListener("pointerdown",()=>{ if(e.hp>0){ S.selectedId=e.id; renderField(); } });
+    if(LIFE.isDefeated(e)) el.classList.add("dead");
+    el.addEventListener("pointerdown",()=>{ if(!LIFE.isDefeated(e)){ S.selectedId=e.id; renderField(); } });
     f.appendChild(el);
   });
 }
@@ -665,7 +676,7 @@ function enemyUnder(x,y){
   const ce=el.closest(".enemy");
   if(!ce || ce.classList.contains("dead")) return null;
   const enemy=S.enemies.find(e=>e.id===ce.dataset.id);
-  return enemy && enemy.hp>0 ? {el:ce, enemy} : null;
+  return enemy && !LIFE.isDefeated(enemy) ? {el:ce, enemy} : null;
 }
 
 function drawAim(x1,y1,x2,y2){
