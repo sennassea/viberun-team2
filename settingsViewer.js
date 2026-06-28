@@ -55,6 +55,16 @@
             '<button type="button" class="settings-viewer-primary">저장 후 종료</button>' +
           '</div>' +
         '</div>' +
+        '<div class="settings-viewer-confirm" aria-hidden="true">' +
+          '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsGiveUpTitle">' +
+            '<h3 id="settingsGiveUpTitle">정말 포기하시겠습니까?</h3>' +
+            '<p>포기하면 패배로 처리되며, 진행도와 이번 진행에서 얻은 카드들이 모두 리셋됩니다.</p>' +
+            '<div class="settings-viewer-confirm-actions">' +
+              '<button type="button" class="settings-viewer-confirm-no">아니오</button>' +
+              '<button type="button" class="settings-viewer-confirm-yes">예</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
       '</div>';
 
     overlay.addEventListener("click", event => {
@@ -66,8 +76,16 @@
       if(output) output.textContent = event.target.value;
     });
     overlay.querySelector(".settings-viewer-close").addEventListener("click", closeSettingsViewer);
+    overlay.querySelector(".settings-viewer-danger").addEventListener("click", openGiveUpConfirm);
+    overlay.querySelector(".settings-viewer-confirm-no").addEventListener("click", closeGiveUpConfirm);
+    overlay.querySelector(".settings-viewer-confirm-yes").addEventListener("click", confirmGiveUp);
     document.addEventListener("keydown", event => {
-      if(event.key === "Escape" && overlay.classList.contains("show")) closeSettingsViewer();
+      if(event.key !== "Escape" || !overlay.classList.contains("show")) return;
+      if(overlay.querySelector(".settings-viewer-confirm.show")){
+        closeGiveUpConfirm();
+        return;
+      }
+      closeSettingsViewer();
     });
 
     (document.querySelector("#game") || document.body).appendChild(overlay);
@@ -76,6 +94,8 @@
       overlay,
       help: overlay.querySelector(".settings-viewer-help"),
       close: overlay.querySelector(".settings-viewer-close"),
+      confirm: overlay.querySelector(".settings-viewer-confirm"),
+      confirmNo: overlay.querySelector(".settings-viewer-confirm-no"),
     };
   }
 
@@ -95,7 +115,7 @@
     style.textContent =
       ".settings-viewer{position:absolute;inset:0;z-index:96;display:none;place-items:center;background:rgba(20,35,60,.45);backdrop-filter:blur(3px);}" +
       ".settings-viewer.show{display:grid;}" +
-      ".settings-viewer-panel{width:min(54cqw,72cqh);max-height:72cqh;display:flex;flex-direction:column;background:var(--c-panel);border:0.3cqh solid var(--c-gold);border-radius:var(--r);box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:2cqh 2cqw;}" +
+      ".settings-viewer-panel{position:relative;width:min(54cqw,72cqh);max-height:72cqh;display:flex;flex-direction:column;background:var(--c-panel);border:0.3cqh solid var(--c-gold);border-radius:var(--r);box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:2cqh 2cqw;}" +
       ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding-bottom:1.2cqh;border-bottom:0.15cqh solid var(--c-panel-line);}" +
       ".settings-viewer-head h2{font-size:3cqh;line-height:1;flex:1;}" +
       ".settings-viewer-help{width:3.8cqh;height:3.8cqh;border-radius:50%;border:0.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-blue-deep);font-size:2.2cqh;font-weight:900;line-height:1;cursor:pointer;}" +
@@ -109,7 +129,16 @@
       ".settings-viewer-actions{display:flex;justify-content:flex-end;gap:1cqw;}" +
       ".settings-viewer-actions button{height:4.4cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-danger{background:#fff1ef;color:var(--c-red-deep);}" +
-      ".settings-viewer-primary{background:var(--c-blue);color:#fff;}";
+      ".settings-viewer-primary{background:var(--c-blue);color:#fff;}" +
+      ".settings-viewer-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
+      ".settings-viewer-confirm.show{display:grid;}" +
+      ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:2.2cqh 2cqw;text-align:center;}" +
+      ".settings-viewer-confirm-panel h3{font-size:2.4cqh;color:var(--c-ink);margin-bottom:1cqh;}" +
+      ".settings-viewer-confirm-panel p{font-size:1.7cqh;line-height:1.45;color:var(--c-ink-soft);font-weight:800;margin-bottom:1.8cqh;}" +
+      ".settings-viewer-confirm-actions{display:flex;justify-content:center;gap:1cqw;}" +
+      ".settings-viewer-confirm-actions button{height:4.2cqh;min-width:8cqw;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
+      ".settings-viewer-confirm-no{background:#fff;color:var(--c-ink-soft);}" +
+      ".settings-viewer-confirm-yes{background:#fff1ef;color:var(--c-red-deep);}";
     document.head.appendChild(style);
   }
 
@@ -123,9 +152,30 @@
 
   function closeSettingsViewer(){
     if(!els) return;
+    closeGiveUpConfirm();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
     resumeCombat();
+  }
+
+  function openGiveUpConfirm(){
+    if(!els || !els.confirm) return;
+    els.confirm.classList.add("show");
+    els.confirm.setAttribute("aria-hidden", "false");
+    if(els.confirmNo) els.confirmNo.focus();
+  }
+
+  function closeGiveUpConfirm(){
+    if(!els || !els.confirm) return;
+    els.confirm.classList.remove("show");
+    els.confirm.setAttribute("aria-hidden", "true");
+    if(els.overlay.classList.contains("show")) els.close.focus();
+  }
+
+  function confirmGiveUp(){
+    if(typeof endGame !== "function") return;
+    endGame("lose");
+    closeSettingsViewer();
   }
 
   function pauseCombat(){
