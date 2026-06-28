@@ -189,6 +189,92 @@
     return this.getMonstersByIds(this.monsterGroups[grade] || []);
   };
 
+  data.monsterPlacementRules = {
+    normal: {
+      label: "일반 몬스터 맵",
+      grades: ["normal"]
+    },
+    elite: {
+      label: "엘리트 몬스터 포함 맵",
+      grades: ["normal", "elite"],
+      defaultGradeCounts: {
+        normal: 2,
+        elite: 1
+      }
+    },
+    boss: {
+      label: "보스 맵",
+      grades: ["normal", "elite", "boss"],
+      defaultGradeCounts: {
+        boss: 1
+      }
+    }
+  };
+
+  data.getMonsterPoolByStageType = function getMonsterPoolByStageType(stageType){
+    const rule = this.monsterPlacementRules[stageType];
+    if(!rule) return [];
+
+    return rule.grades.flatMap(grade => this.getMonstersByGrade(grade));
+  };
+
+  data.getRandomMonsterByStageType = function getRandomMonsterByStageType(stageType){
+    const pool = this.getMonsterPoolByStageType(stageType);
+    if(pool.length === 0) return null;
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  data.getRandomMonsterByGrade = function getRandomMonsterByGrade(grade){
+    const pool = this.getMonstersByGrade(grade);
+    if(pool.length === 0) return null;
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  data.getAutoStageMonstersByGradeCounts = function getAutoStageMonstersByGradeCounts(stageType, gradeCounts){
+    const rule = this.monsterPlacementRules[stageType];
+    if(!rule || !gradeCounts || typeof gradeCounts !== "object") return [];
+
+    const allowedGrades = new Set(rule.grades);
+    const monsters = [];
+
+    Object.entries(gradeCounts).forEach(([grade, count]) => {
+      if(!allowedGrades.has(grade)) return;
+
+      const monsterCount = Math.max(0, Number(count) || 0);
+      for(let i = 0; i < monsterCount; i += 1){
+        const monster = this.getRandomMonsterByGrade(grade);
+        if(monster) monsters.push(monster);
+      }
+    });
+
+    return monsters;
+  };
+
+  data.getAutoStageMonsters = function getAutoStageMonsters(stageType, count){
+    const rule = this.monsterPlacementRules[stageType];
+    if(!rule) return [];
+
+    if(count === undefined && rule.defaultGradeCounts){
+      return this.getAutoStageMonstersByGradeCounts(stageType, rule.defaultGradeCounts);
+    }
+
+    if(count && typeof count === "object"){
+      return this.getAutoStageMonstersByGradeCounts(stageType, count);
+    }
+
+    const monsterCount = Math.max(1, Number(count) || 1);
+    const monsters = [];
+
+    for(let i = 0; i < monsterCount; i += 1){
+      const monster = this.getRandomMonsterByStageType(stageType);
+      if(monster) monsters.push(monster);
+    }
+
+    return monsters;
+  };
+
   data.getEncounterMonsters = function getEncounterMonsters(encounterId){
     const encounter = this.monsterEncounters[encounterId];
     return encounter ? this.getMonstersByIds(encounter.monsterIds) : [];
