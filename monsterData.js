@@ -1,8 +1,8 @@
 "use strict";
 /* =========================================================================
    몬스터 데이터
-   - 병원 챕터 몬스터 데이터 및 패턴 적용 버전
-   - 기존 id / t / role 구조는 최대한 유지하여 충돌 위험 최소화
+   - 아이 → 할머니 → 간호사 → 육상선수 순차 전투
+   - 몬스터 이름, 체력, 행동 후보만 이 파일에서 관리
    ========================================================================= */
 (function attachMonsterData(global){
   global.BOHYUN_COMBAT_DATA = global.BOHYUN_COMBAT_DATA || {};
@@ -40,7 +40,7 @@
       x: 72,
       first: 0,
       moves: [
-        { t: "attack", v: 8, name: "분주한 호출" },
+        { t: "attack", v: 9, name: "호출음" },
         { t: "defend", v: 6, name: "차트 정리" }
       ]
     },
@@ -103,33 +103,13 @@
 
   const extraMonsters = [
     { id:"mother_spirit", name:"보호자", emoji:"👩", maxHp:52, x:72, first:0,
-      grade:"elite", moves:[
-        {t:"attack",v:9,name:"애타는 부름",role:"normalAttack"},
-        {t:"attack",v:10,name:"놓지 못한 손",role:"normalAttack"},
-        {t:"attack",v:12,name:"못다 한 약속",role:"specialAttack"},
-        {t:"defend",v:7,name:"품 안의 기억",role:"defense"}
-      ] },
-    { id:"grandfather_spirit", name:"오래된 약속", emoji:"👴", maxHp:58, x:72, first:0,
-      grade:"elite", moves:[
-        {t:"attack",v:10,name:"추억의 메아리",role:"normalAttack"},
-        {t:"attack",v:9,name:"오래된 이야기",role:"normalAttack"},
-        {t:"attack",v:12,name:"가족을 부르는 주문",role:"specialAttack"},
-        {t:"defend",v:8,name:"낡은 약속",role:"defense"}
-      ] },
+      grade:"elite", moves:[{t:"attack",v:9,name:"애타는 부름",role:"normalAttack"},{t:"attack",v:10,name:"놓지 못한 손",role:"normalAttack"},{t:"attack",v:12,name:"못다 한 약속",role:"specialAttack"},{t:"defend",v:7,name:"품 안의 기억",role:"defense"}] },
+    { id:"grandfather_spirit", name:"낡은 약속", emoji:"👴", maxHp:58, x:72, first:0,
+      grade:"elite", moves:[{t:"attack",v:10,name:"추억의 메아리",role:"normalAttack"},{t:"attack",v:9,name:"오래된 이야기",role:"normalAttack"},{t:"attack",v:12,name:"가족을 부르는 주문",role:"specialAttack"},{t:"defend",v:8,name:"낡은 약속",role:"defense"}] },
     { id:"doctor_spirit", name:"미련의 의사", emoji:"👨‍⚕️", maxHp:46, x:72, first:0,
-      grade:"elite", moves:[
-        {t:"attack",v:9,name:"다급한 회진",role:"normalAttack"},
-        {t:"attack",v:8,name:"살피는 손길",role:"normalAttack"},
-        {t:"attack",v:11,name:"집중 진료",role:"specialAttack"},
-        {t:"defend",v:7,name:"진료 준비",role:"defense"}
-      ] },
+      grade:"elite", moves:[{t:"attack",v:9,name:"다급한 회진",role:"normalAttack"},{t:"attack",v:8,name:"살피는 손길",role:"normalAttack"},{t:"attack",v:11,name:"집중 진료",role:"specialAttack"},{t:"defend",v:7,name:"진료 준비",role:"defense"}] },
     { id:"ward_wraith", name:"병실의 망령", emoji:"🛏️", maxHp:54, x:72, first:0,
-      grade:"elite", moves:[
-        {t:"debuff",v:1,name:"꺼지지 않는 형광등",role:"debuff"},
-        {t:"attack",v:9,name:"반복되는 신음",role:"normalAttack"},
-        {t:"attack",v:12,name:"닫힌 커튼",role:"specialAttack"},
-        {t:"defend",v:7,name:"빈 침대",role:"defense"}
-      ] }
+      grade:"elite", moves:[{t:"debuff",v:1,name:"꺼지지 않는 형광등",role:"debuff"},{t:"attack",v:9,name:"반복되는 신음",role:"normalAttack"},{t:"attack",v:12,name:"닫힌 커튼",role:"specialAttack"},{t:"defend",v:7,name:"빈 침대",role:"defense"}] }
   ];
 
   global.BOHYUN_COMBAT_DATA.baseMonsters = global.BOHYUN_COMBAT_DATA.monsters.map(cloneMonster);
@@ -203,8 +183,6 @@
     }
   }));
 
-  // 현재 테스트 빌드에서는 병원 챕터 전체 흐름을 바로 확인할 수 있도록
-  // 일반 → 엘리트 → 보스 순서로 몬스터를 배치합니다.
   global.BOHYUN_COMBAT_DATA.monsters.splice(
     0,
     global.BOHYUN_COMBAT_DATA.monsters.length,

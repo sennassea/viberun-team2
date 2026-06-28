@@ -36,8 +36,18 @@ const CARD_DB = {
           desc:"스트레스 6 회복\n카드 1장 뽑기", fx:[{t:"heal",v:6},{t:"draw",v:1}]},
   hope_lantern:{name:"희망의 등불", cost:2, type:"attack", emoji:"🏮", target:"enemy", attr:"희망", rarity:"common",
           desc:"모든 적에게 정화 6", fx:[{t:"damageAll",v:6}]},
+  warm_word:{name:"따뜻한 말", cost:0, type:"skill", emoji:"💬", target:"self", attr:"희망", rarity:"common",
+          desc:"마음의 결계 3\n카드 1장 뽑기", fx:[{t:"block",v:3},{t:"draw",v:1}]},
+  steady_breath:{name:"고른 숨", cost:1, type:"defense", emoji:"🌬️", target:"self", attr:"희망", rarity:"common",
+          desc:"마음의 결계 9", fx:[{t:"block",v:9}]},
+  comforting_light:{name:"위로의 빛", cost:1, type:"skill", emoji:"✨", target:"self", attr:"희망", rarity:"common",
+          desc:"스트레스 8 회복", fx:[{t:"heal",v:8}]},
   small_promise:{name:"작은 약속", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"희망", rarity:"uncommon",
           desc:"마음의 결계 4\n정신력 +1", fx:[{t:"block",v:4},{t:"energy",v:1}]},
+  guardian_prayer:{name:"수호 기도", cost:2, type:"defense", emoji:"🛡️", target:"self", attr:"희망", rarity:"uncommon",
+          desc:"마음의 결계 14\n동요 1 제거", fx:[{t:"block",v:14},{t:"removeWeak",v:1}]},
+  dawn_of_hope:{name:"희망의 새벽", cost:2, type:"skill", emoji:"🌅", target:"self", attr:"희망", rarity:"rare",
+          desc:"스트레스 10 회복\n정신력 +1\n카드 1장 뽑기", fx:[{t:"heal",v:10},{t:"energy",v:1},{t:"draw",v:1}]},
 
   photo_album:{name:"사진첩", cost:1, type:"attack", emoji:"📷", target:"enemy", attr:"추억", rarity:"uncommon",
           desc:"정화 6\n카드 2장 뽑기", fx:[{t:"damage",v:6},{t:"draw",v:2}]},
@@ -47,33 +57,6 @@ const CARD_DB = {
           desc:"모든 적에게 동요 1", fx:[{t:"applyWeakAll",v:1}]},
   old_clock:{name:"낡은 시계", cost:1, type:"skill", emoji:"⏰", target:"enemy", attr:"추억", rarity:"rare",
           desc:"동요 2 부여", fx:[{t:"applyWeak",v:2}]},
-
-  chant:{name:"염불", cost:1, type:"attack", emoji:"🪷", target:"enemy", attr:"성불", rarity:"common",
-          desc:"정화 9", fx:[{t:"damage",v:9}]},
-  guiding_rite:{name:"천도재", cost:2, type:"attack", emoji:"🕯️", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"모든 적에게 정화 10", fx:[{t:"damageAll",v:10}]},
-  nirvana:{name:"극락왕생", cost:3, type:"attack", emoji:"🌸", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"정화 22\n사용 후 소멸", fx:[{t:"damage",v:22}], exhaust:true},
-  last_goodbye:{name:"마지막 인사", cost:2, type:"attack", emoji:"👋", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"정화 12\n미련 절반 이하 추가 정화 10", fx:[{t:"damage",v:12},{t:"bonusLowHpDamage",v:10}]},
-
-  // =========================
-  // 추가 카드 v0.3 - 희망 계열
-  // =========================
-  warm_word:{name:"따뜻한 말", cost:0, type:"skill", emoji:"💬", target:"self", attr:"희망", rarity:"common",
-          desc:"마음의 결계 3\n카드 1장 뽑기", fx:[{t:"block",v:3},{t:"draw",v:1}]},
-  steady_breath:{name:"고른 숨", cost:1, type:"defense", emoji:"🌬️", target:"self", attr:"희망", rarity:"common",
-          desc:"마음의 결계 9", fx:[{t:"block",v:9}]},
-  comforting_light:{name:"위로의 빛", cost:1, type:"skill", emoji:"✨", target:"self", attr:"희망", rarity:"common",
-          desc:"스트레스 8 회복", fx:[{t:"heal",v:8}]},
-  guardian_prayer:{name:"수호 기도", cost:2, type:"defense", emoji:"🛡️", target:"self", attr:"희망", rarity:"uncommon",
-          desc:"마음의 결계 14\n동요 1 제거", fx:[{t:"block",v:14},{t:"removeWeak",v:1}]},
-  dawn_of_hope:{name:"희망의 새벽", cost:2, type:"skill", emoji:"🌅", target:"self", attr:"희망", rarity:"rare",
-          desc:"스트레스 10 회복\n정신력 +1\n카드 1장 뽑기", fx:[{t:"heal",v:10},{t:"energy",v:1},{t:"draw",v:1}]},
-
-  // =========================
-  // 추가 카드 v0.3 - 추억 계열
-  // =========================
   faded_photo:{name:"빛바랜 사진", cost:1, type:"attack", emoji:"🖼️", target:"enemy", attr:"추억", rarity:"common",
           desc:"정화 5\n동요 1 부여\n카드 1장 뽑기", fx:[{t:"damage",v:5},{t:"applyWeak",v:1},{t:"draw",v:1}]},
   familiar_song:{name:"익숙한 노래", cost:1, type:"skill", emoji:"🎶", target:"enemy", attr:"추억", rarity:"common",
@@ -85,9 +68,14 @@ const CARD_DB = {
   day_we_met:{name:"처음 만난 날", cost:2, type:"attack", emoji:"🌸", target:"enemy", attr:"추억", rarity:"rare",
           desc:"정화 12\n카드 2장 뽑기", fx:[{t:"damage",v:12},{t:"draw",v:2}]},
 
-  // =========================
-  // 추가 카드 v0.3 - 성불 계열
-  // =========================
+  chant:{name:"염불", cost:1, type:"attack", emoji:"🪷", target:"enemy", attr:"성불", rarity:"common",
+          desc:"정화 9", fx:[{t:"damage",v:9}]},
+  guiding_rite:{name:"천도재", cost:2, type:"attack", emoji:"🕯️", target:"enemy", attr:"성불", rarity:"rare",
+          desc:"모든 적에게 정화 10", fx:[{t:"damageAll",v:10}]},
+  nirvana:{name:"극락왕생", cost:3, type:"attack", emoji:"🌸", target:"enemy", attr:"성불", rarity:"rare",
+          desc:"정화 22\n사용 후 소멸", fx:[{t:"damage",v:22}], exhaust:true},
+  last_goodbye:{name:"마지막 인사", cost:2, type:"attack", emoji:"👋", target:"enemy", attr:"성불", rarity:"rare",
+          desc:"정화 12\n미련 절반 이하 추가 정화 10", fx:[{t:"damage",v:12},{t:"bonusLowHpDamage",v:10}]},
   talisman_strike:{name:"부적 던지기", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"성불", rarity:"common",
           desc:"정화 8", fx:[{t:"damage",v:8}]},
   purification_wave:{name:"정화의 파동", cost:2, type:"attack", emoji:"〰️", target:"enemy", attr:"성불", rarity:"uncommon",
@@ -100,6 +88,7 @@ const CARD_DB = {
           desc:"모든 적에게 정화 14\n사용 후 소멸", fx:[{t:"damageAll",v:14}], exhaust:true},
 };
 
+/* 시작 덱(여러 장 복제) */
 const BASE_STARTER_DECK = [
   "rosary","rosary","rosary","rosary",
   "bell","bell","doll","doll",
@@ -165,7 +154,8 @@ const $ = s=>document.querySelector(s);
 const livingEnemies = ()=>S.enemies.filter(e=>e.hp>0);
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
 
-/* 카드 드로우: 덱이 비면 버린 더미를 섞어 보충 */
+/* 카드 드로우: 덱이 비면 버린 더미를 섞어 보충
+   손패가 10장이면 새로 뽑은 카드를 버린 더미로 이동 (최대 10장 제한) */
 function drawCards(n){
   for(let i=0;i<n;i++){
     if(S.draw.length===0){
@@ -173,8 +163,12 @@ function drawCards(n){
       S.draw = shuffle(S.discard);
       S.discard = [];
     }
-    if(S.hand.length>=10) break;
-    S.hand.push(S.draw.pop());
+    const drawn = S.draw.pop();
+    if(S.hand.length >= 10){
+      S.discard.push(drawn);
+    } else {
+      S.hand.push(drawn);
+    }
   }
 }
 
@@ -541,7 +535,7 @@ function combatantEl(o){
 }
 function intentBubble(m,weak){
   if(m.t==="attack") return '<div class="intent atk">💢 '+m.v+(weak>0?'↓':'')+'</div>';
-  if(m.t==="defend") return '<div class="intent def">🛡️ 결계</div>';
+  if(m.t==="defend") return '<div class="intent def">🛡️ 보호</div>';
   return '<div class="intent deb">🌀 동요</div>';
 }
 
