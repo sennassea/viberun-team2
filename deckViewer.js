@@ -55,6 +55,8 @@
   }
 
   function createDeckViewer(){
+    ensureDeckViewerScrollStyles();
+
     const overlay = document.createElement("div");
     overlay.id = "deckViewerOverlay";
     overlay.className = "deck-viewer";
@@ -97,6 +99,17 @@
       grid: overlay.querySelector(".deck-viewer-grid"),
       close: overlay.querySelector(".deck-viewer-close"),
     };
+  }
+
+  function ensureDeckViewerScrollStyles(){
+    if(document.querySelector("#deckViewerScrollStyles")) return;
+
+    const style = document.createElement("style");
+    style.id = "deckViewerScrollStyles";
+    style.textContent =
+      ".deck-viewer-panel{min-height:0;}" +
+      ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}";
+    document.head.appendChild(style);
   }
 
   function openDeckViewer(tabId){
