@@ -58,10 +58,10 @@
         '<div class="settings-viewer-confirm" aria-hidden="true">' +
           '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsGiveUpTitle">' +
             '<h3 id="settingsGiveUpTitle">정말 포기하시겠습니까?</h3>' +
-            '<p>포기하면 패배로 처리되며, 진행도와 이번 진행에서 얻은 카드들이 모두 리셋됩니다.</p>' +
+            '<p>포기하면 패배로 처리되며,<br>진행도와 얻은 카드들이 모두 리셋됩니다.</p>' +
             '<div class="settings-viewer-confirm-actions">' +
-              '<button type="button" class="settings-viewer-confirm-no">아니오</button>' +
               '<button type="button" class="settings-viewer-confirm-yes">예</button>' +
+              '<button type="button" class="settings-viewer-confirm-no">아니오</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
