@@ -245,7 +245,7 @@
       ".deck-viewer-panel{min-height:0;}" +
       ".deck-viewer-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;column-gap:1cqw;row-gap:.7cqh;padding:0 0 1cqh;}" +
       ".deck-viewer-sort,.deck-viewer-filter{display:flex;gap:.8cqw;min-width:0;}" +
-      ".deck-viewer-filter{grid-column:1;grid-row:1 / span 2;justify-content:flex-start;}" +
+      ".deck-viewer-filter{grid-column:1;grid-row:2;justify-content:flex-start;}" +
       ".deck-viewer-search{grid-column:2;grid-row:1;justify-self:end;}" +
       ".deck-viewer-sort{grid-column:2;grid-row:2;justify-content:flex-end;}" +
       ".deck-viewer-sort label,.deck-viewer-filter label,.deck-viewer-search{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
