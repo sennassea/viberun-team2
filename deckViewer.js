@@ -115,6 +115,7 @@
           TABS.map(tabButtonHtml).join("") +
         '</div>' +
         '<div class="deck-viewer-summary"></div>' +
+        '<div class="deck-viewer-controls">' +
         '<div class="deck-viewer-sort" aria-label="카드 정렬">' +
           '<label>정렬 <select class="deck-viewer-sort-type">' + SORT_OPTIONS.map(optionHtml).join("") + '</select></label>' +
           '<label>방향 <select class="deck-viewer-sort-direction">' + SORT_DIRECTIONS.map(optionHtml).join("") + '</select></label>' +
@@ -122,6 +123,7 @@
         '<div class="deck-viewer-filter" aria-label="카드 필터">' +
           '<label>타입 <select class="deck-viewer-filter-type">' + TYPE_FILTERS.map(optionHtml).join("") + '</select></label>' +
           '<label>속성 <select class="deck-viewer-filter-attribute">' + ATTRIBUTE_FILTERS.map(optionHtml).join("") + '</select></label>' +
+        '</div>' +
         '</div>' +
         '<div class="deck-viewer-grid"></div>' +
       '</div>';
@@ -179,7 +181,10 @@
     style.id = "deckViewerScrollStyles";
     style.textContent =
       ".deck-viewer-panel{min-height:0;}" +
-      ".deck-viewer-sort,.deck-viewer-filter{display:flex;justify-content:flex-end;gap:.8cqw;padding:0 0 1cqh;}" +
+      ".deck-viewer-controls{display:flex;align-items:center;justify-content:space-between;gap:1cqw;padding:0 0 1cqh;}" +
+      ".deck-viewer-sort,.deck-viewer-filter{display:flex;gap:.8cqw;min-width:0;}" +
+      ".deck-viewer-sort{order:2;justify-content:flex-end;}" +
+      ".deck-viewer-filter{order:1;justify-content:flex-start;}" +
       ".deck-viewer-sort label,.deck-viewer-filter label{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
       ".deck-viewer-sort select,.deck-viewer-filter select{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
       ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}";
