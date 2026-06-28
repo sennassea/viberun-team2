@@ -123,8 +123,8 @@
         '<div class="deck-viewer-tabs" role="tablist" aria-label="카드 더미 선택">' +
           TABS.map(tabButtonHtml).join("") +
         '</div>' +
-        '<div class="deck-viewer-summary"></div>' +
         '<div class="deck-viewer-controls">' +
+        '<div class="deck-viewer-summary"></div>' +
         '<label class="deck-viewer-search">검색 <input class="deck-viewer-search-input" type="search" placeholder="카드 이름"></label>' +
         '<div class="deck-viewer-sort" aria-label="카드 정렬">' +
           '<label>정렬 <select class="deck-viewer-sort-type">' + SORT_OPTIONS.map(optionHtml).join("") + '</select></label>' +
@@ -245,6 +245,7 @@
       ".deck-viewer-panel{min-height:0;}" +
       ".deck-viewer-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;column-gap:1cqw;row-gap:.7cqh;padding:0 0 1cqh;}" +
       ".deck-viewer-sort,.deck-viewer-filter{display:flex;gap:.8cqw;min-width:0;}" +
+      ".deck-viewer-summary{grid-column:1;grid-row:1;}" +
       ".deck-viewer-filter{grid-column:1;grid-row:2;justify-content:flex-start;}" +
       ".deck-viewer-search{grid-column:2;grid-row:1;justify-self:end;}" +
       ".deck-viewer-sort{grid-column:2;grid-row:2;justify-content:flex-end;}" +
