@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gwiro-v4';
+const CACHE_NAME = 'gwiro-v1';
 const APP_SHELL = [
   './',
   './index.html',
