@@ -709,9 +709,7 @@ function toast(msg){
   clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1200);
 }
 function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeout(()=>e.classList.remove("flash"),350); }
-const wait = ms=> window.ViberunMobile
-  ? window.ViberunMobile.wait(ms)
-  : new Promise(r=>setTimeout(r,ms));
+const wait = ms=>new Promise(r=>setTimeout(r,ms));
 
 
 function injectRewardStyles(){

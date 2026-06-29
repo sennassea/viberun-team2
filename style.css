@@ -10,7 +10,6 @@
   --c-red:#e3574e; --c-red-deep:#a82e2e;
   --c-green:#4bb07a; --c-hp:#e24b4a; --c-hp-bg:#7a2a2a;
   --r:1.4cqh;
-  --app-height:100vh;
 }
 *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%; background:#0c1422; overflow:hidden;
@@ -18,7 +17,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   user-select:none; -webkit-user-select:none;}
 
 /* 16:9 臾대?: 酉고룷?몄뿉 苑?留욎텛??鍮꾩쑉 ?좎?(?덊꽣諛뺤뒪) */
-#stageWrap{position:fixed; inset:0; height:var(--app-height); display:flex; align-items:center; justify-content:center;}
+#stageWrap{position:fixed; inset:0; display:flex; align-items:center; justify-content:center;}
 #game{
   position:relative;
   width:min(100vw, calc(100vh * 16 / 9));
@@ -28,23 +27,6 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
     radial-gradient(120% 80% at 50% 0%, var(--c-sky-2) 0%, var(--c-sky-1) 55%, #a7d3f5 100%);
   overflow:hidden; color:var(--c-ink);
   font-size:2.2cqh; line-height:1.25;
-}
-@supports (height: 100dvh){
-  #game{
-    width:min(100vw, calc(100dvh * 16 / 9));
-    height:min(100dvh, calc(100vw * 9 / 16));
-  }
-}
-@supports not (container-type: size){
-  #game{font-size:min(2.2vh, 1.2375vw);}
-}
-html.app-paused #game::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:240;
-  pointer-events:none;
-  background:rgba(12,20,34,.18);
 }
 /* 蹂묒썝 諛붾떏/李쎈Ц 遺꾩쐞湲??꾪듃 ?泥? */
 #game::before{content:""; position:absolute; left:0; right:0; bottom:0; height:42%;
