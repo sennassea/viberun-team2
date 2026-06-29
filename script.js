@@ -354,6 +354,9 @@ function ensureRewardOverlay(){
 }
 
 function renderRewardOverlay(keys){
+  if(typeof window.BOHYUN_MARK_CARDS_ENCOUNTERED === "function"){
+    window.BOHYUN_MARK_CARDS_ENCOUNTERED(keys);
+  }
   const overlay = ensureRewardOverlay();
   const wrap = overlay.querySelector(".reward-cards");
   wrap.innerHTML = keys.map(key => rewardCardHtml(key)).join("");
