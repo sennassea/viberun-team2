@@ -711,15 +711,15 @@ function startNewGameFromMenu(){
 
   if(typeof generateMap === "function") generateMap();
   if(window.MAP_STATE){
-    window.MAP_STATE.currentStage = 0;
-    window.MAP_STATE.proceedMode = false;
+    window.MAP_STATE.currentStage = -1;
+    window.MAP_STATE.proceedMode = true;
+    window.MAP_STATE.startMapMode = true;
   }
-  if(typeof loadStageMonsters === "function") loadStageMonsters(0);
   if(typeof updateHudFloor === "function") updateHudFloor();
   $("#over").classList.remove("show");
-  newGame();
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.add("hidden");
+  if(typeof openMap === "function") openMap();
   updateContinueButtonInfo();
 }
 

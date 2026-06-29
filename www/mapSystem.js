@@ -80,8 +80,8 @@ function generateMap(){
   MAP_STAGES    = [];
   POPUP_GETTERS = [];
 
-  // Floor 0: 입구
-  MAP_FLOORS.push([{ id:"start", type:"start", emoji:"🚪", label:"입구" }]);
+  // Floor 0: 로비
+  MAP_FLOORS.push([{ id:"start", type:"start", emoji:"🚪", label:"로비" }]);
 
   let stageIdx = 0;
 
@@ -180,6 +180,7 @@ function nodeFloorIdx(id){
 }
 
 function getCurrentNodeId(){
+  if(window.MAP_STATE.currentStage < 0) return "start";
   for(const f of MAP_FLOORS) for(const n of f){
     if(n.stageIndex === window.MAP_STATE.currentStage) return n.id;
   }
@@ -232,6 +233,7 @@ function loadStageMonsters(idx){
 function startStage(stageIdx){
   window.MAP_STATE.currentStage = stageIdx;
   window.MAP_STATE.proceedMode  = false;
+  window.MAP_STATE.startMapMode = false;
   loadStageMonsters(stageIdx);
   updateHudFloor();
   closeMap();
@@ -242,6 +244,8 @@ function startStage(stageIdx){
 function openMap(){
   let ov = document.getElementById("mapOverlay");
   if(!ov){ ov = buildOverlay(); document.getElementById("game").appendChild(ov); }
+  const isStartMap = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
+  ov.classList.toggle("start-map-mode", !!isStartMap);
   const fi = nodeFloorIdx(getCurrentNodeId());
   if(fi >= 0) centerScrollOnFloor(fi);
   renderCanvas(getCurrentNodeId());
@@ -251,8 +255,18 @@ function openMap(){
 
 function closeMap(){
   const ov = document.getElementById("mapOverlay"); if(!ov) return;
+  const returnToStart = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
   ov.style.opacity = "0";
-  setTimeout(() => { if(ov.parentNode) ov.remove(); }, 280);
+  setTimeout(() => {
+    if(ov.parentNode) ov.remove();
+    if(returnToStart){
+      window.MAP_STATE.startMapMode = false;
+      window.MAP_STATE.proceedMode = false;
+      const startScreen = document.getElementById("startScreen");
+      if(startScreen) startScreen.classList.remove("hidden");
+      if(typeof updateContinueButtonInfo === "function") updateContinueButtonInfo();
+    }
+  }, 280);
 }
 
 /* ── 오버레이 DOM ──────────────────────────────────────────────────────── */
@@ -436,10 +450,6 @@ function renderCanvas(currentNodeId){
   });
 
   // 노드 팝업 (다음 스테이지가 아닌 노드)
-  svg.querySelectorAll("[data-stage]:not([data-nextstage])").forEach(el => {
-    el.style.cursor = "pointer";
-    el.addEventListener("click", e => showNodePopup(e, el));
-  });
 }
 
 /* ── 몬스터 팝업 ────────────────────────────────────────────────────────── */
