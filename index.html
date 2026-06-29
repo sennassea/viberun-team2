@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#111827">
 <title>신입 액소시스트 - 전투 프로토타입</title>
+<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="life-ui.css">
 <link rel="stylesheet" href="map.css">
@@ -77,5 +79,12 @@
 <script src="settingsViewer.js" defer></script>
 <script src="mapSystem.js" defer></script>
 <script src="hand-layout.js" defer></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js');
+  });
+}
+</script>
 </body>
 </html>
