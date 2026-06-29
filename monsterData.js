@@ -11,6 +11,52 @@
     {
       id: "child_spirit",
       name: "이름없는 아이",
+      family: "아이",
+      emoji: "👼",
+      grade: "normal",
+      maxHp: 32,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "attack", v: 5, name: "작은 울음", role: "normalAttack" },
+        { t: "attack", v: 6, name: "손 내밀기", role: "normalAttack" },
+        { t: "defend", v: 5, name: "이불 속 숨기", role: "defense" }
+      ]
+    },
+    {
+      id: "child_spirit_lost",
+      name: "길을 잃은 아이",
+      family: "아이",
+      emoji: "👼",
+      grade: "normal",
+      maxHp: 32,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "attack", v: 5, name: "작은 울음", role: "normalAttack" },
+        { t: "attack", v: 6, name: "손 내밀기", role: "normalAttack" },
+        { t: "defend", v: 5, name: "이불 속 숨기", role: "defense" }
+      ]
+    },
+    {
+      id: "child_spirit_night",
+      name: "밤을 걷는 아이",
+      family: "아이",
+      emoji: "👼",
+      grade: "normal",
+      maxHp: 32,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "attack", v: 5, name: "작은 울음", role: "normalAttack" },
+        { t: "attack", v: 6, name: "손 내밀기", role: "normalAttack" },
+        { t: "defend", v: 5, name: "이불 속 숨기", role: "defense" }
+      ]
+    },
+    {
+      id: "child_spirit_window",
+      name: "창가의 아이",
+      family: "아이",
       emoji: "👼",
       grade: "normal",
       maxHp: 32,
@@ -25,6 +71,55 @@
     {
       id: "grandmother_spirit",
       name: "회상자",
+      family: "노인",
+      emoji: "👵",
+      grade: "normal",
+      maxHp: 48,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "debuff", v: 1, name: "잊혀진 이름", role: "debuff" },
+        { t: "attack", v: 7, name: "오래된 자장가", role: "normalAttack" },
+        { t: "attack", v: 10, name: "그리움의 빛", role: "specialAttack" },
+        { t: "defend", v: 6, name: "빛바랜 사진", role: "defense" }
+      ]
+    },
+    {
+      id: "grandmother_spirit_memory",
+      name: "메모리를 지키는 노인",
+      family: "노인",
+      emoji: "👵",
+      grade: "normal",
+      maxHp: 48,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "debuff", v: 1, name: "잊혀진 이름", role: "debuff" },
+        { t: "attack", v: 7, name: "오래된 자장가", role: "normalAttack" },
+        { t: "attack", v: 10, name: "그리움의 빛", role: "specialAttack" },
+        { t: "defend", v: 6, name: "빛바랜 사진", role: "defense" }
+      ]
+    },
+    {
+      id: "grandmother_spirit_dream",
+      name: "꿈을 간직한 노인",
+      family: "노인",
+      emoji: "👵",
+      grade: "normal",
+      maxHp: 48,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "debuff", v: 1, name: "잊혀진 이름", role: "debuff" },
+        { t: "attack", v: 7, name: "오래된 자장가", role: "normalAttack" },
+        { t: "attack", v: 10, name: "그리움의 빛", role: "specialAttack" },
+        { t: "defend", v: 6, name: "빛바랜 사진", role: "defense" }
+      ]
+    },
+    {
+      id: "grandmother_spirit_echo",
+      name: "메아리의 노인",
+      family: "노인",
       emoji: "👵",
       grade: "normal",
       maxHp: 48,
@@ -40,6 +135,55 @@
     {
       id: "nurse_spirit",
       name: "야간 간호사",
+      family: "간호사",
+      emoji: "👩‍⚕️",
+      grade: "normal",
+      maxHp: 40,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "attack", v: 8, name: "분주한 호출", role: "normalAttack" },
+        { t: "attack", v: 7, name: "조심스런 처치", role: "normalAttack" },
+        { t: "attack", v: 10, name: "긴급 돌봄", role: "specialAttack" },
+        { t: "defend", v: 6, name: "차트 정리", role: "defense" }
+      ]
+    },
+    {
+      id: "nurse_spirit_lamp",
+      name: "등불 아래 간호사",
+      family: "간호사",
+      emoji: "👩‍⚕️",
+      grade: "normal",
+      maxHp: 40,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "attack", v: 8, name: "분주한 호출", role: "normalAttack" },
+        { t: "attack", v: 7, name: "조심스런 처치", role: "normalAttack" },
+        { t: "attack", v: 10, name: "긴급 돌봄", role: "specialAttack" },
+        { t: "defend", v: 6, name: "차트 정리", role: "defense" }
+      ]
+    },
+    {
+      id: "nurse_spirit_soft",
+      name: "따뜻한 손길의 간호사",
+      family: "간호사",
+      emoji: "👩‍⚕️",
+      grade: "normal",
+      maxHp: 40,
+      x: 72,
+      first: 0,
+      moves: [
+        { t: "attack", v: 8, name: "분주한 호출", role: "normalAttack" },
+        { t: "attack", v: 7, name: "조심스런 처치", role: "normalAttack" },
+        { t: "attack", v: 10, name: "긴급 돌봄", role: "specialAttack" },
+        { t: "defend", v: 6, name: "차트 정리", role: "defense" }
+      ]
+    },
+    {
+      id: "nurse_spirit_watch",
+      name: "침묵을 지키는 간호사",
+      family: "간호사",
       emoji: "👩‍⚕️",
       grade: "normal",
       maxHp: 40,
@@ -123,10 +267,21 @@
       moves: [
         { t: "attack", v: 10, name: "멈추지 못한 출발", role: "normalAttack" },
         { t: "attack", v: 11, name: "비틀린 보폭", role: "normalAttack" },
-        { t: "defend", v: 8, name: "다시 서려는 마음", role: "defense" },
-        { t: "attack", v: 18, name: "마지막 질주", role: "burst", requiresPrevious: "defend" },
-        { t: "debuff", v: 1, name: "잃어버린 트랙", role: "debuff" }
-      ]
+        { t: "defend", v: 8, name: "다시 서려는 마음", role: "defense" }
+      ],
+      nextPhase: {
+        name: "마지막 주자",
+        maxHp: 80,
+        x: 72,
+        first: 0,
+        moves: [
+          { t: "attack", v: 11, name: "멈추지 못한 출발", role: "normalAttack" },
+          { t: "attack", v: 12, name: "비틀린 보폭", role: "normalAttack" },
+          { t: "debuff", v: 1, name: "잃어버린 트랙", role: "debuff" },
+          { t: "defend", v: 10, name: "다시 서려는 마음", role: "defense" },
+          { t: "attack", v: 22, name: "마지막 질주", role: "burst", requiresPrevious: "defend" }
+        ]
+      }
     }
   ];
 
@@ -141,9 +296,16 @@
     { id: "stage_runner_spirit", label: "마지막 주자", monsterIds: ["runner_spirit"] }
   ];
 
+  const cloneMoveList = moves => Array.isArray(moves) ? moves.map(move => ({ ...move })) : [];
+  const clonePhase = phase => phase ? ({
+    ...phase,
+    moves: cloneMoveList(phase.moves)
+  }) : null;
   const cloneMonster = monster => ({
     ...monster,
-    moves: Array.isArray(monster.moves) ? monster.moves.map(move => ({ ...move })) : []
+    moves: cloneMoveList(monster.moves),
+    phases: Array.isArray(monster.phases) ? monster.phases.map(clonePhase) : undefined,
+    nextPhase: clonePhase(monster.nextPhase)
   });
 
   data.monsterCatalog = MONSTER_DEFS.reduce((catalog, monster) => {
@@ -187,6 +349,92 @@
 
   data.getMonstersByGrade = function getMonstersByGrade(grade){
     return this.getMonstersByIds(this.monsterGroups[grade] || []);
+  };
+
+  data.monsterPlacementRules = {
+    normal: {
+      label: "일반 몬스터 맵",
+      grades: ["normal"]
+    },
+    elite: {
+      label: "엘리트 몬스터 포함 맵",
+      grades: ["normal", "elite"],
+      defaultGradeCounts: {
+        normal: 2,
+        elite: 1
+      }
+    },
+    boss: {
+      label: "보스 맵",
+      grades: ["normal", "elite", "boss"],
+      defaultGradeCounts: {
+        boss: 1
+      }
+    }
+  };
+
+  data.getMonsterPoolByStageType = function getMonsterPoolByStageType(stageType){
+    const rule = this.monsterPlacementRules[stageType];
+    if(!rule) return [];
+
+    return rule.grades.flatMap(grade => this.getMonstersByGrade(grade));
+  };
+
+  data.getRandomMonsterByStageType = function getRandomMonsterByStageType(stageType){
+    const pool = this.getMonsterPoolByStageType(stageType);
+    if(pool.length === 0) return null;
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  data.getRandomMonsterByGrade = function getRandomMonsterByGrade(grade){
+    const pool = this.getMonstersByGrade(grade);
+    if(pool.length === 0) return null;
+
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  data.getAutoStageMonstersByGradeCounts = function getAutoStageMonstersByGradeCounts(stageType, gradeCounts){
+    const rule = this.monsterPlacementRules[stageType];
+    if(!rule || !gradeCounts || typeof gradeCounts !== "object") return [];
+
+    const allowedGrades = new Set(rule.grades);
+    const monsters = [];
+
+    Object.entries(gradeCounts).forEach(([grade, count]) => {
+      if(!allowedGrades.has(grade)) return;
+
+      const monsterCount = Math.max(0, Number(count) || 0);
+      for(let i = 0; i < monsterCount; i += 1){
+        const monster = this.getRandomMonsterByGrade(grade);
+        if(monster) monsters.push(monster);
+      }
+    });
+
+    return monsters;
+  };
+
+  data.getAutoStageMonsters = function getAutoStageMonsters(stageType, count){
+    const rule = this.monsterPlacementRules[stageType];
+    if(!rule) return [];
+
+    if(count === undefined && rule.defaultGradeCounts){
+      return this.getAutoStageMonstersByGradeCounts(stageType, rule.defaultGradeCounts);
+    }
+
+    if(count && typeof count === "object"){
+      return this.getAutoStageMonstersByGradeCounts(stageType, count);
+    }
+
+    const monsterCount = Math.max(1, Number(count) || 1);
+    const monsters = [];
+
+    for(let i = 0; i < monsterCount; i += 1){
+      const monster = this.getRandomMonsterByStageType(stageType);
+      if(monster) monsters.push(monster);
+    }
+
+    return monsters;
   };
 
   data.getEncounterMonsters = function getEncounterMonsters(encounterId){
