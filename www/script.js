@@ -839,7 +839,7 @@ function updateContinueButtonInfo(){
   button.classList.add("has-save");
   const floor = formatSavedFloor(saved);
   const turn = saved.state && saved.state.turn ? saved.state.turn : 1;
-  status.innerHTML = "<b>현재 위치</b><span>" + floor + " " + turn + "턴</span>";
+  status.textContent = floor + " " + turn + "턴";
 }
 
 function formatSavedFloor(saved){
