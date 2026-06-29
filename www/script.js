@@ -354,6 +354,9 @@ function ensureRewardOverlay(){
 }
 
 function renderRewardOverlay(keys){
+  if(typeof window.BOHYUN_MARK_CARDS_ENCOUNTERED === "function"){
+    window.BOHYUN_MARK_CARDS_ENCOUNTERED(keys);
+  }
   const overlay = ensureRewardOverlay();
   const wrap = overlay.querySelector(".reward-cards");
   wrap.innerHTML = keys.map(key => rewardCardHtml(key)).join("");
@@ -446,6 +449,7 @@ function endGame(result){
   S.busy = false;
   $("#overTitle").textContent = result==="win" ? "🎉 승리!" : "💀 패배...";
   $("#overDesc").textContent  = result==="win" ? "모든 영혼을 성불시켰습니다." : PLAYER_DEF.name + "이 쓰러졌습니다.";
+  $("#returnStart").style.display = result==="lose" ? "block" : "none";
   $("#over").classList.add("show");
   return true;
 }
@@ -700,6 +704,150 @@ function toast(msg){
 function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeout(()=>e.classList.remove("flash"),350); }
 const wait = ms=>new Promise(r=>setTimeout(r,ms));
 
+function startNewGameFromMenu(){
+  try {
+    if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
+  } catch(error) {}
+
+  if(typeof generateMap === "function") generateMap();
+  if(window.MAP_STATE){
+    window.MAP_STATE.currentStage = 0;
+    window.MAP_STATE.proceedMode = false;
+  }
+  if(typeof loadStageMonsters === "function") loadStageMonsters(0);
+  if(typeof updateHudFloor === "function") updateHudFloor();
+  $("#over").classList.remove("show");
+  newGame();
+  const startScreen = $("#startScreen");
+  if(startScreen) startScreen.classList.add("hidden");
+  updateContinueButtonInfo();
+}
+
+function returnToStartScreen(){
+  try {
+    if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
+  } catch(error) {}
+
+  STARTER_DECK = [...BASE_STARTER_DECK];
+  if(typeof generateMap === "function") generateMap();
+  if(window.MAP_STATE){
+    window.MAP_STATE.currentStage = 0;
+    window.MAP_STATE.proceedMode = false;
+  }
+  if(typeof loadStageMonsters === "function") loadStageMonsters(0);
+  if(typeof updateHudFloor === "function") updateHudFloor();
+
+  closeRewardOverlay();
+  $("#over").classList.remove("show");
+  const startScreen = $("#startScreen");
+  if(startScreen) startScreen.classList.remove("hidden");
+  updateContinueButtonInfo();
+}
+
+function continueGameFromMenu(){
+  const saved = readSavedProgress();
+  if(!saved){
+    showStartNotice("저장 지점이 없습니다.");
+    return;
+  }
+
+  S = saved.state;
+  STARTER_DECK = [...saved.starterDeck];
+  S.busy = false;
+  if(window.MAP_STATE && saved.mapState){
+    window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
+    window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
+  }
+  if(typeof updateHudFloor === "function") updateHudFloor();
+  $("#over").classList.remove("show");
+  closeRewardOverlay();
+  renderAll();
+  const startScreen = $("#startScreen");
+  if(startScreen) startScreen.classList.add("hidden");
+  updateContinueButtonInfo();
+}
+
+function readSavedProgress(){
+  if(typeof localStorage === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("viberunSaveState");
+    if(!raw) return null;
+    const saved = JSON.parse(raw);
+    if(!isUsableSavedProgress(saved)) return null;
+    return saved;
+  } catch(error) {
+    localStorage.removeItem("viberunSaveState");
+    return null;
+  }
+}
+
+function isUsableSavedProgress(saved){
+  return !!(
+    saved &&
+    saved.state &&
+    saved.state.player &&
+    typeof saved.state.player.hp === "number" &&
+    typeof saved.state.player.maxHp === "number" &&
+    Array.isArray(saved.state.hand) &&
+    Array.isArray(saved.state.draw) &&
+    Array.isArray(saved.state.discard) &&
+    Array.isArray(saved.starterDeck) &&
+    saved.starterDeck.length > 0
+  );
+}
+
+function showStartNotice(message){
+  let notice = document.querySelector("#startNotice");
+  if(!notice){
+    notice = document.createElement("div");
+    notice.id = "startNotice";
+    notice.className = "start-notice";
+    notice.innerHTML =
+      '<div class="start-notice-panel">' +
+        '<p></p>' +
+      '</div>';
+  }
+  const host = document.querySelector("#startScreen") || document.querySelector(".start-continue-game");
+  if(notice.parentNode !== host) host.appendChild(notice);
+  notice.querySelector("p").textContent = message;
+  notice.classList.add("show");
+  clearTimeout(notice._hideTimer);
+  notice._hideTimer = setTimeout(() => notice.classList.remove("show"), 1500);
+}
+
+function showStartScreenAfterSave(){
+  $("#over").classList.remove("show");
+  closeRewardOverlay();
+  updateContinueButtonInfo();
+  const startScreen = $("#startScreen");
+  if(startScreen) startScreen.classList.remove("hidden");
+}
+
+function updateContinueButtonInfo(){
+  const button = document.querySelector(".start-continue-game");
+  if(!button) return;
+  const status = button.querySelector(".continue-status");
+  if(!status) return;
+
+  const saved = readSavedProgress();
+  if(!saved){
+    button.classList.remove("has-save");
+    status.textContent = "메인 로비";
+    return;
+  }
+
+  button.classList.add("has-save");
+  const floor = formatSavedFloor(saved);
+  const turn = saved.state && saved.state.turn ? saved.state.turn : 1;
+  status.innerHTML = "<b>현재 위치</b><span>" + floor + " " + turn + "턴</span>";
+}
+
+function formatSavedFloor(saved){
+  const label = saved.mapState && saved.mapState.floorLabel ? saved.mapState.floorLabel : "";
+  const match = label.match(/(\d+)\s*F/i);
+  if(match) return match[1] + "층";
+  return "메인 로비";
+}
 
 function injectRewardStyles(){
   if(document.querySelector("#rewardStyle")) return;
@@ -728,7 +876,14 @@ function injectRewardStyles(){
 /* ----- 버튼 바인딩 ----- */
 $("#endTurn").addEventListener("click", endTurn);
 $("#restart").addEventListener("click", ()=>{ $("#over").classList.remove("show"); newGame(); });
+$("#returnStart").addEventListener("click", returnToStartScreen);
+document.querySelectorAll(".start-new-game").forEach(button => {
+  button.addEventListener("click", startNewGameFromMenu);
+});
+document.querySelectorAll(".start-continue-game").forEach(button => {
+  button.addEventListener("click", continueGameFromMenu);
+});
 
 /* 시작 */
 injectRewardStyles();
-newGame();
+updateContinueButtonInfo();

@@ -2,16 +2,21 @@
 
 (function(){
   const SAVE_KEY = "viberunSaveState";
+  const VOLUME_KEY = "viberunVolumeSettings";
+  const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80 };
   let els = null;
   let pauseState = null;
+  let settingsMode = "combat";
 
   function initSettingsViewer(){
     const trigger = findSettingsTrigger();
-    if(!trigger) return;
+    const startTrigger = document.querySelector(".start-settings-button");
+    if(!trigger && !startTrigger) return;
 
     els = createSettingsViewer();
     restoreSavedProgress();
-    bindOpenTrigger(trigger);
+    if(trigger) bindOpenTrigger(trigger, openSettingsViewer);
+    if(startTrigger) bindOpenTrigger(startTrigger, openStartSettingsViewer);
   }
 
   function findSettingsTrigger(){
@@ -19,14 +24,14 @@
     return buttons.find(button => button.textContent.includes("⚙️") || button.textContent.includes("⚙"));
   }
 
-  function bindOpenTrigger(trigger){
-    trigger.addEventListener("click", openSettingsViewer);
+  function bindOpenTrigger(trigger, openFn){
+    trigger.addEventListener("click", openFn);
     trigger.setAttribute("role", "button");
     trigger.setAttribute("tabindex", "0");
     trigger.addEventListener("keydown", event => {
       if(event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
-      openSettingsViewer();
+      openFn();
     });
   }
 
@@ -101,6 +106,8 @@
       if(!event.target.matches(".settings-viewer-volume input")) return;
       const output = event.target.closest(".settings-viewer-volume").querySelector("output");
       if(output) output.textContent = event.target.value;
+      saveVolumeSettings();
+      applyVolumeSettings();
     });
     overlay.querySelector(".settings-viewer-close").addEventListener("click", closeSettingsViewer);
     overlay.querySelector(".settings-viewer-help").addEventListener("click", openHelp);
@@ -141,6 +148,8 @@
       close: overlay.querySelector(".settings-viewer-close"),
       confirm: overlay.querySelector(".settings-viewer-confirm"),
       confirmNo: overlay.querySelector(".settings-viewer-confirm-no"),
+      actions: overlay.querySelector(".settings-viewer-actions"),
+      volumeInputs: Array.from(overlay.querySelectorAll(".settings-viewer-volume input")),
     };
   }
 
@@ -152,6 +161,43 @@
     '</label>';
   }
 
+  function getVolumeSettings(){
+    if(typeof localStorage === "undefined") return { ...DEFAULT_VOLUMES };
+    try {
+      const saved = JSON.parse(localStorage.getItem(VOLUME_KEY) || "{}");
+      return {
+        master: Number.isFinite(saved.master) ? saved.master : DEFAULT_VOLUMES.master,
+        music: Number.isFinite(saved.music) ? saved.music : DEFAULT_VOLUMES.music,
+        effect: Number.isFinite(saved.effect) ? saved.effect : DEFAULT_VOLUMES.effect,
+      };
+    } catch(error) {
+      localStorage.removeItem(VOLUME_KEY);
+      return { ...DEFAULT_VOLUMES };
+    }
+  }
+
+  function saveVolumeSettings(){
+    if(typeof localStorage === "undefined" || !els) return;
+    const volumes = {};
+    els.volumeInputs.forEach(input => {
+      const key = input.id.replace("settingsVolume", "");
+      volumes[key] = Number(input.value);
+    });
+    localStorage.setItem(VOLUME_KEY, JSON.stringify(volumes));
+  }
+
+  function applyVolumeSettings(){
+    if(!els) return;
+    const volumes = getVolumeSettings();
+    els.volumeInputs.forEach(input => {
+      const key = input.id.replace("settingsVolume", "");
+      const value = volumes[key] ?? DEFAULT_VOLUMES[key] ?? 80;
+      input.value = value;
+      const output = input.closest(".settings-viewer-volume").querySelector("output");
+      if(output) output.textContent = value;
+    });
+  }
+
   function restoreSavedProgress(){
     if(typeof localStorage === "undefined") return;
     try {
@@ -161,7 +207,12 @@
       if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
       if(typeof S !== "undefined") S = saved.state;
       if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
+      if(window.MAP_STATE && saved.mapState){
+        window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
+        window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
+      }
       if(S) S.busy = false;
+      if(typeof updateHudFloor === "function") updateHudFloor();
       if(typeof renderAll === "function") renderAll();
     } catch(error) {
       localStorage.removeItem(SAVE_KEY);
@@ -174,15 +225,25 @@
     const state = JSON.parse(JSON.stringify(S));
     state.busy = pauseState ? pauseState.busy : !!S.busy;
     const starterDeck = typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
+    const mapState = window.MAP_STATE ? {
+      currentStage: window.MAP_STATE.currentStage || 0,
+      proceedMode: !!window.MAP_STATE.proceedMode,
+      floorLabel: (document.querySelector("#hudFloor") || {}).textContent || "",
+    } : null;
 
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         savedAt: Date.now(),
         state,
         starterDeck,
+        mapState,
       }));
       closeSettingsViewer();
-      if(typeof toast === "function") toast("진행 상태가 저장되었습니다.");
+      if(typeof showStartScreenAfterSave === "function"){
+        showStartScreenAfterSave();
+      } else if(typeof toast === "function") {
+        toast("진행 상태가 저장되었습니다.");
+      }
     } catch(error) {
       if(typeof toast === "function") toast("저장에 실패했습니다.");
     }
@@ -196,6 +257,7 @@
     style.textContent =
       ".settings-viewer{position:absolute;inset:0;z-index:96;display:none;place-items:center;background:rgba(20,35,60,.45);backdrop-filter:blur(3px);}" +
       ".settings-viewer.show{display:grid;}" +
+      ".settings-viewer.start-mode{z-index:240;}" +
       ".settings-viewer-panel{position:relative;width:min(54cqw,72cqh);max-height:72cqh;display:flex;flex-direction:column;background:var(--c-panel);border:0.3cqh solid var(--c-gold);border-radius:var(--r);box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:2cqh 2cqw;}" +
       ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding-bottom:1.2cqh;border-bottom:0.15cqh solid var(--c-panel-line);}" +
       ".settings-viewer-head h2{font-size:3cqh;line-height:1;flex:1;}" +
@@ -238,7 +300,24 @@
 
   function openSettingsViewer(){
     if(!els) return;
+    settingsMode = "combat";
+    els.overlay.classList.remove("start-mode");
+    if(els.actions) els.actions.style.display = "";
+    applyVolumeSettings();
     pauseCombat();
+    els.overlay.classList.add("show");
+    els.overlay.setAttribute("aria-hidden", "false");
+    els.close.focus();
+  }
+
+  function openStartSettingsViewer(){
+    if(!els) return;
+    settingsMode = "start";
+    els.overlay.classList.add("start-mode");
+    if(els.actions) els.actions.style.display = "none";
+    closeSaveConfirm();
+    closeGiveUpConfirm();
+    applyVolumeSettings();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
     els.close.focus();
@@ -251,7 +330,9 @@
     closeGiveUpConfirm();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
-    resumeCombat();
+    els.overlay.classList.remove("start-mode");
+    if(settingsMode === "combat") resumeCombat();
+    settingsMode = "combat";
   }
 
   function openHelp(){

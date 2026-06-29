@@ -1,8 +1,11 @@
 "use strict";
 
 (function(){
+  const CODEX_KEY = "viberunCardCodex";
   let els = null;
   let activeTab = "all";
+  let viewerMode = "deck";
+  let codexSection = "cards";
   let detailEntries = [];
   let activeDetailIndex = -1;
   let showUpgradePreview = false;
@@ -22,6 +25,9 @@
     all: { type: "order", direction: "desc" },
     hand: { type: "order", direction: "desc" },
     discard: { type: "order", direction: "desc" },
+    codexCards: { type: "order", direction: "desc" },
+    codexRelics: { type: "order", direction: "desc" },
+    codexPotions: { type: "order", direction: "desc" },
   };
 
   const TYPE_FILTERS = [
@@ -42,12 +48,18 @@
     all: { type: "all", attribute: "all" },
     hand: { type: "all", attribute: "all" },
     discard: { type: "all", attribute: "all" },
+    codexCards: { type: "all", attribute: "all" },
+    codexRelics: { type: "all", attribute: "all" },
+    codexPotions: { type: "all", attribute: "all" },
   };
 
   const searchState = {
     all: "",
     hand: "",
     discard: "",
+    codexCards: "",
+    codexRelics: "",
+    codexPotions: "",
   };
 
   const EMPTY_TEXT = {
@@ -62,17 +74,28 @@
     { id: "discard", label: "버린 카드", getCards: () => getDiscard() },
   ];
 
+  const CODEX_SECTIONS = [
+    { id: "cards", tabId: "codexCards", label: "카드", title: "카드 도감", icon: "🃏" },
+    { id: "relics", tabId: "codexRelics", label: "유물", title: "유물 도감", icon: "🏺" },
+    { id: "potions", tabId: "codexPotions", label: "포션", title: "포션 도감", icon: "🧪" },
+  ];
+
   function initDeckViewer(){
+    markEncounteredCards(getStarterDeckKeys());
+
     const triggers = [
       { el: document.querySelector("#deckViewerButton"), tab: "all" },
       { el: document.querySelector("#deckPile"), tab: "hand" },
       { el: document.querySelector("#discardPile"), tab: "discard" },
     ].filter(trigger => trigger.el);
+    const codexTrigger = document.querySelector(".start-codex-button");
 
-    if(triggers.length === 0) return;
+    if(triggers.length === 0 && !codexTrigger) return;
 
     els = createDeckViewer();
     triggers.forEach(bindOpenTrigger);
+    if(codexTrigger) bindCodexTrigger(codexTrigger);
+    window.BOHYUN_MARK_CARDS_ENCOUNTERED = markEncounteredCards;
   }
 
   function bindOpenTrigger(trigger){
@@ -83,6 +106,17 @@
       if(event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
       openDeckViewer(trigger.tab);
+    });
+  }
+
+  function bindCodexTrigger(trigger){
+    trigger.addEventListener("click", openCodexHome);
+    trigger.setAttribute("role", "button");
+    trigger.setAttribute("tabindex", "0");
+    trigger.addEventListener("keydown", event => {
+      if(event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openCodexHome();
     });
   }
 
@@ -102,6 +136,22 @@
     return typeof CARD_DB === "undefined" ? null : CARD_DB[key];
   }
 
+  function getStarterDeckKeys(){
+    return typeof BASE_STARTER_DECK === "undefined" ? getDeck() : [...new Set(BASE_STARTER_DECK)];
+  }
+
+  function getAllCardKeys(){
+    return typeof CARD_DB === "undefined" ? [] : Object.keys(CARD_DB);
+  }
+
+  function getAllRelics(){
+    return typeof RELIC_DB === "undefined" ? [] : [...RELIC_DB];
+  }
+
+  function getAllPotions(){
+    return typeof POTION_DB === "undefined" ? [] : [...POTION_DB];
+  }
+
   function getTypeLabel(type){
     return typeof typeLabel === "undefined" ? type : typeLabel(type);
   }
@@ -119,6 +169,12 @@
         '<div class="deck-viewer-head">' +
           '<h2 id="deckViewerTitle">보유 카드</h2>' +
           '<button type="button" class="deck-viewer-close" aria-label="닫기">×</button>' +
+        '</div>' +
+        '<div class="codex-section-tabs" role="tablist" aria-label="도감 종류 선택">' +
+          CODEX_SECTIONS.map(codexTabButtonHtml).join("") +
+        '</div>' +
+        '<div class="codex-home-grid">' +
+          CODEX_SECTIONS.map(codexHomeButtonHtml).join("") +
         '</div>' +
         '<div class="deck-viewer-tabs" role="tablist" aria-label="카드 더미 선택">' +
           TABS.map(tabButtonHtml).join("") +
@@ -154,6 +210,12 @@
         activeTab = button.dataset.tab;
         renderDeckViewer();
       });
+    });
+    overlay.querySelectorAll(".codex-section-tab").forEach(button => {
+      button.addEventListener("click", () => openCodexSection(button.dataset.codexSection));
+    });
+    overlay.querySelectorAll(".codex-home-card").forEach(button => {
+      button.addEventListener("click", () => openCodexSection(button.dataset.codexSection));
     });
     overlay.querySelector(".deck-viewer-sort-type").addEventListener("change", event => {
       sortState[activeTab].type = event.target.value;
@@ -221,8 +283,15 @@
 
     return {
       overlay,
+      title: overlay.querySelector("#deckViewerTitle"),
+      codexTabsWrap: overlay.querySelector(".codex-section-tabs"),
+      codexTabs: Array.from(overlay.querySelectorAll(".codex-section-tab")),
+      codexHome: overlay.querySelector(".codex-home-grid"),
+      tabsWrap: overlay.querySelector(".deck-viewer-tabs"),
       tabs: Array.from(overlay.querySelectorAll(".deck-viewer-tab")),
       summary: overlay.querySelector(".deck-viewer-summary"),
+      controls: overlay.querySelector(".deck-viewer-controls"),
+      filterWrap: overlay.querySelector(".deck-viewer-filter"),
       sortType: overlay.querySelector(".deck-viewer-sort-type"),
       sortDirection: overlay.querySelector(".deck-viewer-sort-direction"),
       filterType: overlay.querySelector(".deck-viewer-filter-type"),
@@ -255,6 +324,24 @@
       ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}" +
       ".deck-viewer-card{font:inherit;color:var(--c-ink);cursor:pointer;text-align:inherit;transition:transform .14s ease,box-shadow .14s ease;}" +
       ".deck-viewer-card:hover,.deck-viewer-card:focus-visible{transform:translateY(-.6cqh);box-shadow:0 .9cqh 1.8cqh rgba(40,70,120,.28);outline:none;}" +
+      ".deck-viewer.codex-mode{z-index:240;}" +
+      ".codex-section-tabs{display:none;gap:.8cqw;margin:0 0 1.1cqh;}" +
+      ".codex-section-tab{height:4.2cqh;min-width:8.5cqw;border-radius:1cqh;border:.2cqh solid var(--c-panel-line);background:rgba(255,255,255,.78);color:var(--c-ink);font-size:1.75cqh;font-weight:900;cursor:pointer;}" +
+      ".codex-section-tab.active{background:linear-gradient(180deg,#fff8db,#ffe8a6);border-color:var(--c-gold);color:#79530c;}" +
+      ".codex-home-grid{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4cqw;min-height:37cqh;align-items:center;}" +
+      ".codex-home-card{height:29cqh;border-radius:1.2cqh;border:.28cqh solid var(--c-panel-line);background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(233,244,255,.86));box-shadow:0 .7cqh 1.5cqh rgba(40,70,120,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6cqh;color:var(--c-ink);font:inherit;font-weight:900;cursor:pointer;}" +
+      ".codex-home-card:hover,.codex-home-card:focus-visible{transform:translateY(-.5cqh);box-shadow:0 1cqh 2cqh rgba(40,70,120,.24);outline:none;border-color:var(--c-gold);}" +
+      ".codex-home-icon{width:13cqh;height:13cqh;border-radius:2cqh;display:grid;place-items:center;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.22cqh solid #d6e6f5;font-size:7.5cqh;}" +
+      ".codex-home-label{font-size:2.4cqh;}" +
+      ".deck-viewer-filter.disabled{opacity:.45;pointer-events:none;}" +
+      ".codex-item-card .cost,.codex-item-card .type{display:none;}" +
+      ".codex-item-card .art{height:16cqh;font-size:8cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);}" +
+      ".deck-viewer.codex-mode .deck-viewer-card .deck-viewer-count{display:none;}" +
+      ".deck-viewer-card.codex-locked{justify-content:center;gap:1cqh;filter:saturate(.45);cursor:default;background:linear-gradient(180deg,#edf2f7,#d9e3ec);border-style:dashed;color:var(--c-ink-soft);}" +
+      ".deck-viewer-card.codex-locked:hover,.deck-viewer-card.codex-locked:focus-visible{transform:none;box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18);}" +
+      ".deck-viewer-card.codex-locked .art{font-size:6.2cqh;background:linear-gradient(160deg,#f8fbff,#d6e3ef);filter:grayscale(.85);}" +
+      ".deck-viewer-card.codex-locked .codex-lock{width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;background:rgba(40,60,85,.78);color:#fff;font-size:2.3cqh;font-weight:900;}" +
+      ".codex-locked-text{font-size:1.55cqh;font-weight:900;text-align:center;}" +
       ".card-detail-backdrop{position:absolute;inset:0;z-index:2;display:none;place-items:center;background:rgba(35,55,85,.34);border-radius:var(--r);backdrop-filter:blur(2px);}" +
       ".card-detail-backdrop.show{display:grid;}" +
       ".card-detail-panel{position:relative;width:min(72cqw,104cqh);max-height:70cqh;overflow:visible;background:linear-gradient(180deg,#fffdf6,#eef8ff);border:.35cqh solid var(--c-gold);border-radius:1.4cqh;box-shadow:0 1.6cqh 3.2cqh rgba(20,35,60,.3);padding:2.4cqh 2.2cqw;}" +
@@ -298,7 +385,54 @@
 
   function openDeckViewer(tabId){
     if(!els) return;
+    viewerMode = "deck";
     if(tabId) activeTab = tabId;
+    els.overlay.classList.remove("codex-mode");
+    els.title.textContent = "보유 카드";
+    els.tabsWrap.style.display = "";
+    if(els.codexTabsWrap) els.codexTabsWrap.style.display = "none";
+    if(els.codexHome) els.codexHome.style.display = "none";
+    if(els.controls) els.controls.style.display = "";
+    if(els.grid) els.grid.style.display = "";
+    els.filterType.disabled = false;
+    els.filterAttribute.disabled = false;
+    if(els.filterWrap) els.filterWrap.classList.remove("disabled");
+    renderDeckViewer();
+    els.overlay.classList.add("show");
+    els.overlay.setAttribute("aria-hidden", "false");
+    els.close.focus();
+  }
+
+  function openCodexHome(){
+    if(!els) return;
+    viewerMode = "codexHome";
+    els.overlay.classList.add("codex-mode");
+    els.title.textContent = "도감";
+    els.tabsWrap.style.display = "none";
+    if(els.codexTabsWrap) els.codexTabsWrap.style.display = "none";
+    if(els.codexHome) els.codexHome.style.display = "grid";
+    if(els.controls) els.controls.style.display = "none";
+    if(els.grid) els.grid.style.display = "none";
+    detailEntries = [];
+    closeCardDetail();
+    els.overlay.classList.add("show");
+    els.overlay.setAttribute("aria-hidden", "false");
+    els.close.focus();
+  }
+
+  function openCodexSection(sectionId){
+    if(!els) return;
+    const section = getCodexSection(sectionId) || CODEX_SECTIONS[0];
+    viewerMode = "codex";
+    codexSection = section.id;
+    activeTab = section.tabId;
+    els.overlay.classList.add("codex-mode");
+    els.title.textContent = section.title;
+    els.tabsWrap.style.display = "none";
+    if(els.codexTabsWrap) els.codexTabsWrap.style.display = "flex";
+    if(els.codexHome) els.codexHome.style.display = "none";
+    if(els.controls) els.controls.style.display = "";
+    if(els.grid) els.grid.style.display = "";
     renderDeckViewer();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -310,12 +444,15 @@
     closeCardDetail();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
+    els.overlay.classList.remove("codex-mode");
+    viewerMode = "deck";
   }
 
   function openCardDetail(key){
     if(!els) return;
     const index = detailEntries.findIndex(entry => entry.key === key);
     if(index < 0) return;
+    if(detailEntries[index].locked) return;
 
     activeDetailIndex = index;
     showUpgradePreview = false;
@@ -349,13 +486,21 @@
   function renderCardDetail(){
     const entry = detailEntries[activeDetailIndex];
     if(!entry) return;
+    if(entry.kind && entry.kind !== "card"){
+      els.detailBody.innerHTML = codexItemDetailHtml(entry, activeDetailIndex, detailEntries.length);
+      return;
+    }
     els.detailBody.innerHTML = cardDetailHtml(entry, activeDetailIndex, detailEntries.length, showUpgradePreview);
   }
 
   function renderDeckViewer(){
+    if(viewerMode === "codex"){
+      renderCodexViewer();
+      return;
+    }
     const tab = TABS.find(item => item.id === activeTab) || TABS[0];
     const cards = tab.getCards();
-    const entries = sortEntries(filterEntries(buildCardEntries(cards), tab.id), tab.id);
+    const entries = sortEntries(filterEntries(buildCardEntries(cards, tab.id), tab.id), tab.id);
     detailEntries = entries;
     const visibleCount = entries.reduce((total, entry) => total + entry.count, 0);
 
@@ -380,22 +525,115 @@
     }
   }
 
+  function renderCodexViewer(){
+    const section = getCodexSection(codexSection) || CODEX_SECTIONS[0];
+    const tabId = section.tabId;
+    const sourceItems = getCodexSourceItems(codexSection);
+    const entries = sortEntries(filterEntries(buildEntries(sourceItems, tabId), tabId), tabId);
+    const filterDisabled = codexSection !== "cards";
+    detailEntries = entries;
+
+    if(els.codexTabs){
+      els.codexTabs.forEach(button => {
+        const selected = button.dataset.codexSection === codexSection;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-selected", selected ? "true" : "false");
+      });
+    }
+    els.sortType.value = sortState[tabId].type;
+    els.sortDirection.value = sortState[tabId].direction;
+    els.filterType.value = "all";
+    els.filterAttribute.value = "all";
+    els.filterType.disabled = filterDisabled;
+    els.filterAttribute.disabled = filterDisabled;
+    if(els.filterWrap) els.filterWrap.classList.toggle("disabled", filterDisabled);
+    if(!filterDisabled){
+      els.filterType.value = filterState[tabId].type;
+      els.filterAttribute.value = filterState[tabId].attribute;
+    }
+    els.search.value = searchState[tabId];
+    els.summary.textContent = getCodexSummaryText(codexSection, entries, sourceItems.length);
+    els.grid.innerHTML = entries.length
+      ? entries.map(deckCardHtml).join("")
+      : '<div class="deck-viewer-empty">' + escapeHtml(getCodexEmptyText(codexSection, sourceItems.length)) + '</div>';
+  }
+
   function tabButtonHtml(tab){
     return '<button type="button" class="deck-viewer-tab" role="tab" aria-selected="false" data-tab="' +
       escapeAttr(tab.id) + '">' + escapeHtml(tab.label) + '</button>';
+  }
+
+  function codexTabButtonHtml(section){
+    return '<button type="button" class="codex-section-tab" role="tab" aria-selected="false" data-codex-section="' +
+      escapeAttr(section.id) + '">' + escapeHtml(section.label) + '</button>';
+  }
+
+  function codexHomeButtonHtml(section){
+    return '<button type="button" class="codex-home-card" data-codex-section="' + escapeAttr(section.id) + '">' +
+      '<span class="codex-home-icon" aria-hidden="true">' + escapeHtml(section.icon) + '</span>' +
+      '<span class="codex-home-label">' + escapeHtml(section.title) + '</span>' +
+    '</button>';
+  }
+
+  function getCodexSection(sectionId){
+    return CODEX_SECTIONS.find(section => section.id === sectionId);
   }
 
   function optionHtml(option){
     return '<option value="' + escapeAttr(option.id) + '">' + escapeHtml(option.label) + '</option>';
   }
 
-  function buildCardEntries(cards){
+  function getCodexSourceItems(sectionId){
+    if(sectionId === "relics") return getAllRelics();
+    if(sectionId === "potions") return getAllPotions();
+    return getAllCardKeys();
+  }
+
+  function buildEntries(items, tabId){
+    if(tabId === "codexRelics") return buildItemEntries(items, "relic");
+    if(tabId === "codexPotions") return buildItemEntries(items, "potion");
+    return buildCardEntries(items, tabId);
+  }
+
+  function buildItemEntries(items, kind){
+    return items.map((item, index) => {
+      if(!item) return null;
+      const key = item.id || item.key || kind + "-" + index;
+      return { key, count: 1, item, order: index, kind };
+    }).filter(Boolean);
+  }
+
+  function getCodexSummaryText(sectionId, entries, total){
+    if(sectionId === "cards"){
+      return "전체 카드 " + entries.filter(entry => !entry.locked).length + "장 발견 / " + total + "장";
+    }
+    if(sectionId === "relics") return "전체 유물 " + entries.length + "개 / " + total + "개";
+    return "전체 포션 " + entries.length + "개 / " + total + "개";
+  }
+
+  function getCodexEmptyText(sectionId, total){
+    if(total > 0) return "조건에 맞는 항목이 없습니다.";
+    if(sectionId === "relics") return "등록된 유물이 없습니다.";
+    if(sectionId === "potions") return "등록된 포션이 없습니다.";
+    return "표시할 카드가 없습니다.";
+  }
+
+  function buildCardEntries(cards, tabId){
+    if(tabId === "codexCards"){
+      const encountered = getEncounteredCardSet();
+      return cards.map((key, index) => {
+        const card = getCard(key);
+        if(!card) return null;
+        return { key, count: 1, card, order: index, kind: "card", locked: !encountered.has(key) };
+      }).filter(Boolean);
+    }
+
     const entriesByKey = {};
     cards.forEach((key, index) => {
       const card = getCard(key);
       if(!card) return;
       if(!entriesByKey[key]){
-        entriesByKey[key] = { key, count: 0, card, order: index };
+        entriesByKey[key] = { key, count: 0, card, order: index, kind: "card" };
       }
       entriesByKey[key].count += 1;
       entriesByKey[key].order = index;
@@ -407,6 +645,13 @@
     const state = filterState[tabId] || filterState.all;
     const query = searchState[tabId].trim().toLowerCase();
     return entries.filter(entry => {
+      if(entry.kind && entry.kind !== "card"){
+        const itemText = (String(entry.item.name || "") + " " + String(entry.item.desc || "")).toLowerCase();
+        return !query || itemText.includes(query);
+      }
+      if(entry.locked){
+        return !query && state.type === "all" && state.attribute === "all";
+      }
       const typeMatches = state.type === "all" || getCardFilterType(entry.card) === state.type;
       const attributeMatches = state.attribute === "all" || getCardFilterAttribute(entry.card) === state.attribute;
       const nameMatches = !query || String(entry.card.name).toLowerCase().includes(query);
@@ -435,6 +680,9 @@
     const direction = state.direction === "asc" ? 1 : -1;
 
     return [...entries].sort((a, b) => {
+      if(tabId === "codexCards" && a.locked !== b.locked){
+        return a.locked ? 1 : -1;
+      }
       const compared = compareEntries(a, b, state.type);
       if(compared !== 0) return compared * direction;
       return a.order - b.order;
@@ -442,11 +690,16 @@
   }
 
   function compareEntries(a, b, type){
+    const aData = a.card || a.item || {};
+    const bData = b.card || b.item || {};
     if(type === "name"){
-      return a.card.name.localeCompare(b.card.name, "ko");
+      return String(aData.name || "").localeCompare(String(bData.name || ""), "ko");
     }
     if(type === "cost"){
-      return a.card.cost - b.card.cost;
+      const aCost = typeof aData.cost === "number" ? aData.cost : null;
+      const bCost = typeof bData.cost === "number" ? bData.cost : null;
+      if(aCost === null || bCost === null) return a.order - b.order;
+      return aCost - bCost;
     }
     return a.order - b.order;
   }
@@ -458,8 +711,46 @@
     }, {});
   }
 
+  function getEncounteredCardSet(){
+    if(typeof localStorage === "undefined") return new Set(getStarterDeckKeys());
+    try {
+      const saved = JSON.parse(localStorage.getItem(CODEX_KEY) || "[]");
+      const keys = Array.isArray(saved) ? saved : [];
+      return new Set([...getStarterDeckKeys(), ...keys]);
+    } catch(error) {
+      localStorage.removeItem(CODEX_KEY);
+      return new Set(getStarterDeckKeys());
+    }
+  }
+
+  function markEncounteredCards(keys){
+    if(!Array.isArray(keys) || keys.length === 0) return;
+    if(typeof localStorage === "undefined") return;
+    const encountered = getEncounteredCardSet();
+    keys.forEach(key => {
+      if(getCard(key)) encountered.add(key);
+    });
+    localStorage.setItem(CODEX_KEY, JSON.stringify([...encountered]));
+  }
+
   function deckCardHtml(entry){
+    if(entry.kind && entry.kind !== "card"){
+      const item = entry.item || {};
+      return '<button type="button" class="deck-viewer-card codex-item-card" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="1">' +
+        '<div class="deck-viewer-count">x1</div>' +
+        '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
+        '<div class="art">' + escapeHtml(item.emoji || "?") + '</div>' +
+        '<div class="desc">' + escapeHtml(item.desc || "") + '</div>' +
+      '</button>';
+    }
     const card = entry.card;
+    if(entry.locked){
+      return '<button type="button" class="deck-viewer-card codex-locked cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" aria-label="잠긴 카드">' +
+        '<div class="codex-lock">?</div>' +
+        '<div class="art">' + escapeHtml(card.emoji) + '</div>' +
+        '<div class="codex-locked-text">미발견 카드</div>' +
+      '</button>';
+    }
     return '<button type="button" class="deck-viewer-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="' + entry.count + '">' +
       '<div class="deck-viewer-count">x' + entry.count + '</div>' +
       '<div class="cost">' + card.cost + '</div>' +
@@ -468,6 +759,29 @@
       '<div class="type ' + escapeAttr(card.type) + '">' + escapeHtml(getTypeLabel(card.type)) + '</div>' +
       '<div class="desc">' + escapeHtml(card.desc) + '</div>' +
     '</button>';
+  }
+
+  function codexItemDetailHtml(entry, index, total){
+    const item = entry.item || {};
+    const label = entry.kind === "relic" ? "유물 정보" : "포션 정보";
+    return '<button type="button" class="card-detail-nav card-detail-prev" data-card-detail-nav="prev" aria-label="이전 항목">‹</button>' +
+      '<div class="card-detail-spread">' +
+        '<div class="card-detail-front">' +
+          '<div class="card-detail-card codex-item-card">' +
+            '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
+            '<div class="art">' + escapeHtml(item.emoji || "?") + '</div>' +
+            '<div class="desc">' + escapeHtml(item.desc || "") + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="card-detail-back">' +
+          '<div class="card-detail-title">' +
+            '<div class="card-detail-kicker">' + escapeHtml(label) + ' ' + escapeHtml(index + 1) + ' / ' + escapeHtml(total) + '</div>' +
+            '<h3 id="cardDetailTitle">' + escapeHtml(item.name || "") + '</h3>' +
+          '</div>' +
+          '<div class="card-detail-desc">' + escapeHtml(item.desc || "") + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="card-detail-nav card-detail-next" data-card-detail-nav="next" aria-label="다음 항목">›</button>';
   }
 
   function cardDetailHtml(entry, index, total, isUpgrade){
