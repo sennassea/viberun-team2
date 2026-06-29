@@ -543,7 +543,7 @@ function setupWinInterception(){
     // 맵 생성 및 1층 몬스터로 게임 시작
     generateMap();
     loadStageMonsters(0);
-    if(typeof newGame === "function") newGame();
+    if(typeof newGame === "function" && !(typeof S !== "undefined" && S && S._restoredFromSave)) newGame();
 
     document.querySelectorAll(".hud-btn").forEach(btn => {
       if(btn.textContent.includes("병원 지도") && !btn.dataset.mapBound){
