@@ -10,22 +10,23 @@
   const MONSTER_DEFS = [
     {
       id: "child_spirit",
-      name: "이름없는 아이",
+      name: "이름을 잊은 아이",
       family: "튜토리얼",
       emoji: "👼",
       grade: "tutorial",
-      maxHp: 32,
+      maxHp: 30,
       x: 72,
       first: 0,
       moves: [
-        { t: "attack", v: 5, name: "작은 울음", role: "normalAttack" },
-        { t: "attack", v: 6, name: "손 내밀기", role: "normalAttack" },
-        { t: "defend", v: 5, name: "이불 속 숨기", role: "defense" }
+        { t: "attack", v: 4, name: "작은 울음", role: "normalAttack" },
+        { t: "debuff", v: 1, name: "낯선 시선", role: "debuff" },
+        { t: "defend", v: 4, name: "이불 속 숨기", role: "defense" },
+        { t: "attack", v: 7, name: "손 내밀기", role: "specialAttack" }
       ]
     },
     {
       id: "child_spirit_lost",
-      name: "길을 잃은 아이",
+      name: "병동을 헤매는 아이",
       family: "아이",
       emoji: "👼",
       grade: "normal",
@@ -40,7 +41,7 @@
     },
     {
       id: "child_spirit_night",
-      name: "밤을 걷는 아이",
+      name: "밤 복도를 걷는 아이",
       family: "아이",
       emoji: "👼",
       grade: "normal",
@@ -55,7 +56,7 @@
     },
     {
       id: "child_spirit_window",
-      name: "창가의 아이",
+      name: "창가 침대의 아이",
       family: "아이",
       emoji: "👼",
       grade: "normal",
@@ -70,7 +71,7 @@
     },
     {
       id: "grandmother_spirit",
-      name: "회상자",
+      name: "기억을 붙든 노인",
       family: "노인",
       emoji: "👵",
       grade: "normal",
@@ -86,7 +87,7 @@
     },
     {
       id: "grandmother_spirit_memory",
-      name: "메모리를 지키는 노인",
+      name: "사진을 품은 노인",
       family: "노인",
       emoji: "👵",
       grade: "normal",
@@ -102,7 +103,7 @@
     },
     {
       id: "grandmother_spirit_dream",
-      name: "꿈을 간직한 노인",
+      name: "퇴원을 기다린 노인",
       family: "노인",
       emoji: "👵",
       grade: "normal",
@@ -118,7 +119,7 @@
     },
     {
       id: "grandmother_spirit_echo",
-      name: "메아리의 노인",
+      name: "자장가를 흥얼대는 노인",
       family: "노인",
       emoji: "👵",
       grade: "normal",
@@ -134,7 +135,7 @@
     },
     {
       id: "nurse_spirit",
-      name: "야간 간호사",
+      name: "야간 병동 간호사",
       family: "간호사",
       emoji: "👩‍⚕️",
       grade: "normal",
@@ -150,7 +151,7 @@
     },
     {
       id: "nurse_spirit_lamp",
-      name: "등불 아래 간호사",
+      name: "스테이션의 간호사",
       family: "간호사",
       emoji: "👩‍⚕️",
       grade: "normal",
@@ -166,7 +167,7 @@
     },
     {
       id: "nurse_spirit_soft",
-      name: "따뜻한 손길의 간호사",
+      name: "처치를 망설이는 간호사",
       family: "간호사",
       emoji: "👩‍⚕️",
       grade: "normal",
@@ -182,7 +183,7 @@
     },
     {
       id: "nurse_spirit_watch",
-      name: "침묵을 지키는 간호사",
+      name: "마지막 순찰의 간호사",
       family: "간호사",
       emoji: "👩‍⚕️",
       grade: "normal",
@@ -198,7 +199,8 @@
     },
     {
       id: "mother_spirit",
-      name: "보호자",
+      name: "아이를 기다린 환자",
+      family: "환자",
       emoji: "👩",
       grade: "elite",
       maxHp: 52,
@@ -213,7 +215,8 @@
     },
     {
       id: "grandfather_spirit",
-      name: "낡은 약속",
+      name: "약속을 남긴 환자",
+      family: "환자",
       emoji: "👴",
       grade: "elite",
       maxHp: 58,
@@ -228,7 +231,8 @@
     },
     {
       id: "doctor_spirit",
-      name: "미련의 의사",
+      name: "회진을 멈추지 못한 의사",
+      family: "의사",
       emoji: "👨‍⚕️",
       grade: "elite",
       maxHp: 46,
@@ -243,7 +247,8 @@
     },
     {
       id: "ward_wraith",
-      name: "병실의 망령",
+      name: "빈 병상의 환자",
+      family: "환자",
       emoji: "🛏️",
       grade: "elite",
       maxHp: 54,
@@ -258,7 +263,8 @@
     },
     {
       id: "runner_spirit",
-      name: "마지막 주자",
+      name: "복도를 달리던 환자",
+      family: "환자",
       emoji: "🏃",
       grade: "boss",
       maxHp: 70,
@@ -270,7 +276,7 @@
         { t: "defend", v: 8, name: "다시 서려는 마음", role: "defense" }
       ],
       nextPhase: {
-        name: "마지막 주자",
+        name: "복도를 달리던 환자",
         maxHp: 80,
         x: 72,
         first: 0,
@@ -286,14 +292,14 @@
   ];
 
   const ENCOUNTERS = [
-    { id: "stage_tutorial_child_spirit", label: "튜토리얼 - 이름없는 아이", monsterIds: ["child_spirit"] },
-    { id: "stage_grandmother_spirit", label: "회상자", monsterIds: ["grandmother_spirit"] },
-    { id: "stage_nurse_spirit", label: "야간 간호사", monsterIds: ["nurse_spirit"] },
-    { id: "stage_mother_spirit", label: "보호자", monsterIds: ["mother_spirit"] },
-    { id: "stage_grandfather_spirit", label: "낡은 약속", monsterIds: ["grandfather_spirit"] },
-    { id: "stage_doctor_spirit", label: "미련의 의사", monsterIds: ["doctor_spirit"] },
-    { id: "stage_ward_wraith", label: "병실의 망령", monsterIds: ["ward_wraith"] },
-    { id: "stage_runner_spirit", label: "마지막 주자", monsterIds: ["runner_spirit"] }
+    { id: "stage_tutorial_child_spirit", label: "튜토리얼 - 이름을 잊은 아이", monsterIds: ["child_spirit"] },
+    { id: "stage_grandmother_spirit", label: "기억을 붙든 노인", monsterIds: ["grandmother_spirit"] },
+    { id: "stage_nurse_spirit", label: "야간 병동 간호사", monsterIds: ["nurse_spirit"] },
+    { id: "stage_mother_spirit", label: "아이를 기다린 환자", monsterIds: ["mother_spirit"] },
+    { id: "stage_grandfather_spirit", label: "약속을 남긴 환자", monsterIds: ["grandfather_spirit"] },
+    { id: "stage_doctor_spirit", label: "회진을 멈추지 못한 의사", monsterIds: ["doctor_spirit"] },
+    { id: "stage_ward_wraith", label: "빈 병상의 환자", monsterIds: ["ward_wraith"] },
+    { id: "stage_runner_spirit", label: "복도를 달리던 환자", monsterIds: ["runner_spirit"] }
   ];
 
   const cloneMoveList = moves => Array.isArray(moves) ? moves.map(move => ({ ...move })) : [];
