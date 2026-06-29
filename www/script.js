@@ -700,6 +700,19 @@ function toast(msg){
 function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeout(()=>e.classList.remove("flash"),350); }
 const wait = ms=>new Promise(r=>setTimeout(r,ms));
 
+function startNewGameFromMenu(){
+  if(typeof generateMap === "function") generateMap();
+  if(window.MAP_STATE){
+    window.MAP_STATE.currentStage = 0;
+    window.MAP_STATE.proceedMode = false;
+  }
+  if(typeof loadStageMonsters === "function") loadStageMonsters(0);
+  if(typeof updateHudFloor === "function") updateHudFloor();
+  $("#over").classList.remove("show");
+  newGame();
+  const startScreen = $("#startScreen");
+  if(startScreen) startScreen.classList.add("hidden");
+}
 
 function injectRewardStyles(){
   if(document.querySelector("#rewardStyle")) return;
@@ -728,7 +741,9 @@ function injectRewardStyles(){
 /* ----- 버튼 바인딩 ----- */
 $("#endTurn").addEventListener("click", endTurn);
 $("#restart").addEventListener("click", ()=>{ $("#over").classList.remove("show"); newGame(); });
+document.querySelectorAll(".start-new-game").forEach(button => {
+  button.addEventListener("click", startNewGameFromMenu);
+});
 
 /* 시작 */
 injectRewardStyles();
-newGame();

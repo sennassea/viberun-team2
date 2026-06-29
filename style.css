@@ -35,6 +35,41 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .bokeh{position:absolute; border-radius:50%; background:rgba(255,255,255,.35);
   filter:blur(2cqh); pointer-events:none;}
 
+.start-screen{
+  position:absolute; inset:0; z-index:180; display:flex; flex-direction:column; align-items:center;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(184,223,255,.38) 0%, rgba(58,132,205,0) 28%),
+    linear-gradient(180deg, #4ca6e8 0%, #2f7ec3 58%, #1d5d98 100%);
+}
+.start-screen.hidden{display:none;}
+.start-logo{
+  margin-top:17cqh; text-align:center; color:#f7fbff; text-shadow:0 .45cqh 1.2cqh rgba(8,35,68,.34);
+}
+.start-logo-main{
+  font-size:9cqh; line-height:.92; font-weight:900; letter-spacing:0;
+}
+.start-logo-sub{
+  margin-top:1.1cqh; font-size:2.8cqh; font-weight:800; letter-spacing:0;
+  color:rgba(247,251,255,.86);
+}
+.start-menu{
+  width:38cqw; margin-top:22cqh; display:grid; gap:1.4cqh;
+}
+.start-menu-row{display:grid; gap:1.2cqw;}
+.start-menu-row.split{grid-template-columns:1fr 1fr;}
+.start-menu-button{
+  width:100%; height:6.8cqh; border:0.28cqh solid var(--c-panel-line); border-radius:1.2cqh;
+  background:rgba(255,255,255,.94); color:var(--c-ink); cursor:pointer;
+  font:inherit; font-size:2.45cqh; font-weight:900; letter-spacing:0;
+  box-shadow:0 .6cqh 1.4cqh rgba(60,90,140,.18); backdrop-filter:blur(4px);
+  transition:transform .12s, box-shadow .12s, border-color .12s;
+}
+.start-menu-button:hover{
+  border-color:var(--c-gold); box-shadow:0 .9cqh 1.8cqh rgba(60,90,140,.25);
+  transform:translateY(-.25cqh);
+}
+.start-menu-button:active{transform:scale(.97);}
+
 /* =========================== ?곷떒 HUD =========================== */
 #hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:9cqh;
   display:flex; align-items:center; gap:1.2cqw; z-index:30;}
