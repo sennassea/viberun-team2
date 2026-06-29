@@ -446,6 +446,7 @@ function endGame(result){
   S.busy = false;
   $("#overTitle").textContent = result==="win" ? "🎉 승리!" : "💀 패배...";
   $("#overDesc").textContent  = result==="win" ? "모든 영혼을 성불시켰습니다." : PLAYER_DEF.name + "이 쓰러졌습니다.";
+  $("#returnStart").style.display = result==="lose" ? "block" : "none";
   $("#over").classList.add("show");
   return true;
 }
@@ -714,6 +715,26 @@ function startNewGameFromMenu(){
   if(startScreen) startScreen.classList.add("hidden");
 }
 
+function returnToStartScreen(){
+  try {
+    if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
+  } catch(error) {}
+
+  STARTER_DECK = [...BASE_STARTER_DECK];
+  if(typeof generateMap === "function") generateMap();
+  if(window.MAP_STATE){
+    window.MAP_STATE.currentStage = 0;
+    window.MAP_STATE.proceedMode = false;
+  }
+  if(typeof loadStageMonsters === "function") loadStageMonsters(0);
+  if(typeof updateHudFloor === "function") updateHudFloor();
+
+  closeRewardOverlay();
+  $("#over").classList.remove("show");
+  const startScreen = $("#startScreen");
+  if(startScreen) startScreen.classList.remove("hidden");
+}
+
 function injectRewardStyles(){
   if(document.querySelector("#rewardStyle")) return;
   const style = document.createElement("style");
@@ -741,6 +762,7 @@ function injectRewardStyles(){
 /* ----- 버튼 바인딩 ----- */
 $("#endTurn").addEventListener("click", endTurn);
 $("#restart").addEventListener("click", ()=>{ $("#over").classList.remove("show"); newGame(); });
+$("#returnStart").addEventListener("click", returnToStartScreen);
 document.querySelectorAll(".start-new-game").forEach(button => {
   button.addEventListener("click", startNewGameFromMenu);
 });

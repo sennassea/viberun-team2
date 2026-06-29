@@ -222,6 +222,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .over-box p{font-size:2.2cqh; color:var(--c-ink-soft); margin-bottom:2.4cqh;}
 .over-box button{font-size:2.4cqh; font-weight:800; color:#fff; padding:1.4cqh 3cqw; cursor:pointer;
   border:none; border-radius:1.2cqh; background:linear-gradient(180deg,#5fa0e8,#2f6fc0);}
+#returnStart{display:block; margin:1.2cqh auto 0; background:linear-gradient(180deg,#8aa3bd,#5d748d);}
 
 /* 紐⑤컮???몃줈 吏꾩엯 ???뚯쟾 ?덈궡 */
 #rotate{position:fixed; inset:0; z-index:200; display:none; place-items:center; text-align:center;
