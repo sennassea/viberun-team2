@@ -17,7 +17,14 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   user-select:none; -webkit-user-select:none;}
 
 /* 16:9 臾대?: 酉고룷?몄뿉 苑?留욎텛??鍮꾩쑉 ?좎?(?덊꽣諛뺤뒪) */
-#stageWrap{position:fixed; inset:0; display:flex; align-items:center; justify-content:center;}
+#stageWrap{
+  position:fixed;
+  top:env(safe-area-inset-top, 0);
+  right:env(safe-area-inset-right, 0);
+  bottom:env(safe-area-inset-bottom, 0);
+  left:env(safe-area-inset-left, 0);
+  display:flex; align-items:center; justify-content:center;
+}
 #game{
   position:relative;
   width:min(100vw, calc(100vh * 16 / 9));
@@ -194,4 +201,4 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 #rotate .ico{font-size:14vw; animation:spin 2s ease-in-out infinite;}
 #rotate p{font-size:5vw; margin-top:3vh; font-weight:700;}
 @keyframes spin{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
-@media (orientation:portrait) and (max-width:1000px){ #rotate{display:grid;} }
+@media (orientation:portrait) and (max-width:1000px){ #rotate{display:none;} }
