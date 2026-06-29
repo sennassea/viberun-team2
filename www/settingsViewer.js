@@ -161,7 +161,12 @@
       if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
       if(typeof S !== "undefined") S = saved.state;
       if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
+      if(window.MAP_STATE && saved.mapState){
+        window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
+        window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
+      }
       if(S) S.busy = false;
+      if(typeof updateHudFloor === "function") updateHudFloor();
       if(typeof renderAll === "function") renderAll();
     } catch(error) {
       localStorage.removeItem(SAVE_KEY);
@@ -174,15 +179,25 @@
     const state = JSON.parse(JSON.stringify(S));
     state.busy = pauseState ? pauseState.busy : !!S.busy;
     const starterDeck = typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
+    const mapState = window.MAP_STATE ? {
+      currentStage: window.MAP_STATE.currentStage || 0,
+      proceedMode: !!window.MAP_STATE.proceedMode,
+      floorLabel: (document.querySelector("#hudFloor") || {}).textContent || "",
+    } : null;
 
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         savedAt: Date.now(),
         state,
         starterDeck,
+        mapState,
       }));
       closeSettingsViewer();
-      if(typeof toast === "function") toast("진행 상태가 저장되었습니다.");
+      if(typeof showStartScreenAfterSave === "function"){
+        showStartScreenAfterSave();
+      } else if(typeof toast === "function") {
+        toast("진행 상태가 저장되었습니다.");
+      }
     } catch(error) {
       if(typeof toast === "function") toast("저장에 실패했습니다.");
     }
