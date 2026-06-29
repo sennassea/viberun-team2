@@ -702,6 +702,10 @@ function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeo
 const wait = ms=>new Promise(r=>setTimeout(r,ms));
 
 function startNewGameFromMenu(){
+  try {
+    if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
+  } catch(error) {}
+
   if(typeof generateMap === "function") generateMap();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = 0;
