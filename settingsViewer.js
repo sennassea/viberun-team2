@@ -153,50 +153,34 @@
   }
 
   function restoreSavedProgress(){
-    if(typeof localStorage !== "undefined"){
-      try {
-        const raw = localStorage.getItem(SAVE_KEY);
-        if(raw) applySavedProgress(JSON.parse(raw));
-      } catch(error) {
-        localStorage.removeItem(SAVE_KEY);
-      }
-    }
-
-    if(window.ViberunMobile && typeof window.ViberunMobile.loadBackup === "function"){
-      window.ViberunMobile.loadBackup().then(applySavedProgress);
+    if(typeof localStorage === "undefined") return;
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if(!raw) return;
+      const saved = JSON.parse(raw);
+      if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
+      if(typeof S !== "undefined") S = saved.state;
+      if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
+      if(S) S.busy = false;
+      if(typeof renderAll === "function") renderAll();
+    } catch(error) {
+      localStorage.removeItem(SAVE_KEY);
     }
   }
 
-  function applySavedProgress(saved){
-    if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
-    if(typeof S !== "undefined") S = saved.state;
-    if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
-    if(S){
-      S.busy = false;
-      S._restoredFromSave = true;
-    }
-    if(typeof renderAll === "function") renderAll();
-  }
-
-  async function saveProgressAndExit(){
-    if(typeof S === "undefined" || !S || S.over) return;
+  function saveProgressAndExit(){
+    if(typeof localStorage === "undefined" || typeof S === "undefined" || !S || S.over) return;
 
     const state = JSON.parse(JSON.stringify(S));
     state.busy = pauseState ? pauseState.busy : !!S.busy;
     const starterDeck = typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
-    const payload = {
-      savedAt: Date.now(),
-      state,
-      starterDeck,
-    };
 
     try {
-      if(typeof localStorage !== "undefined"){
-        localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
-      }
-      if(window.ViberunMobile && typeof window.ViberunMobile.saveBackup === "function"){
-        await window.ViberunMobile.saveBackup(payload);
-      }
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        state,
+        starterDeck,
+      }));
       closeSettingsViewer();
       if(typeof toast === "function") toast("진행 상태가 저장되었습니다.");
     } catch(error) {
@@ -320,10 +304,8 @@
   }
 
   function clearSavedProgress(){
-    if(typeof localStorage !== "undefined") localStorage.removeItem(SAVE_KEY);
-    if(window.ViberunMobile && typeof window.ViberunMobile.clearBackup === "function"){
-      window.ViberunMobile.clearBackup();
-    }
+    if(typeof localStorage === "undefined") return;
+    localStorage.removeItem(SAVE_KEY);
   }
 
   function pauseCombat(){
