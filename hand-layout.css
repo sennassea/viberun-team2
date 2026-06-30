@@ -53,3 +53,11 @@
   padding: 1cqh 1.2cqw;
   font-size: 2cqh;
 }
+
+.right-bottom-actions #endTurn {
+  position: relative;
+  right: auto;
+  left: auto;
+  bottom: auto;
+  width: 100%;
+}

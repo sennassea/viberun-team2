@@ -104,40 +104,58 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 }
 
 /* =========================== ?곷떒 HUD =========================== */
-#hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:9cqh;
-  display:flex; align-items:center; gap:1.2cqw; z-index:30;}
+.top-hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:10.5cqh; z-index:30;}
+#hud{position:relative; width:100%; height:100%;
+  display:flex; align-items:center; gap:1.2cqw;}
 .hud-card{display:flex; align-items:center; gap:.7cqw; background:var(--c-panel);
   border:0.2cqh solid var(--c-panel-line); border-radius:var(--r);
   padding:.8cqh 1.1cqw; backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);}
-.portrait{width:5.4cqh; height:5.4cqh; border-radius:50%; display:grid; place-items:center;
-  font-size:3.4cqh; background:linear-gradient(160deg,#fff,#dcecff);
+.player-info-card{width:26cqw; min-width:30cqh; height:100%; align-items:center; gap:1cqw;
+  padding:.8cqh 1cqw;}
+.player-info-body{min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:.45cqh;}
+.portrait{width:7cqh; height:7cqh; border-radius:50%; display:grid; place-items:center;
+  font-size:4.2cqh; background:linear-gradient(160deg,#fff,#dcecff);
   border:0.25cqh solid var(--c-gold); box-shadow:0 0 1cqh rgba(231,181,74,.6);}
-.who b{font-size:2.3cqh;} .who span{display:block; font-size:1.5cqh; color:var(--c-ink-soft);}
+.who b{font-size:2.3cqh;} .who span{display:none;}
+.hud-hp-row{display:flex; align-items:center; justify-content:space-between; gap:.8cqw;
+  font-size:1.55cqh; font-weight:800; color:var(--c-ink);}
+.hud-hp-label{color:var(--c-red-deep);}
+.hud-hpbar{position:relative; width:100%; height:1.45cqh; border-radius:.8cqh; overflow:hidden;
+  background:rgba(122,42,42,.62); border:.12cqh solid rgba(0,0,0,.14);}
+#hudHpFill{position:absolute; left:0; top:0; bottom:0; width:100%;
+  background:linear-gradient(180deg,#ff8079,var(--c-hp)); transition:width .35s ease;}
 .stat{font-size:2.2cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw;}
 .spacer{flex:1;}
 .hud-btn{cursor:pointer; transition:transform .12s;} .hud-btn:active{transform:scale(.94);}
 #hudTurn{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);}
 
 /* =================== 醫뚯륫: ?꾩옱 ?④낵 / ?곗륫: ???섎룄 =================== */
+.left-side-hud{position:absolute; left:1.4cqh; top:12cqh; bottom:31cqh; width:14cqw; z-index:22;
+  display:flex; flex-direction:column; align-items:center; gap:1.4cqh;}
+.battle-field{position:absolute; left:16.5cqw; right:1.4cqw; top:11cqh; bottom:31cqh; z-index:10;}
 .side{position:absolute; top:12cqh; width:21cqw; z-index:20;
   background:var(--c-panel); border:0.2cqh solid var(--c-panel-line);
   border-radius:var(--r); padding:1.2cqh 1cqw; backdrop-filter:blur(4px);
   box-shadow:0 .5cqh 1.4cqh rgba(60,90,140,.15);}
-#effects{left:1.4cqh;} #intents{right:1.4cqh;}
+#effects{position:relative; top:auto; left:auto; width:100%;}
+#intents{top:1cqh; right:0; width:21cqw;}
 .side h3{font-size:1.9cqh; text-align:center; color:var(--c-ink-soft);
   padding-bottom:.7cqh; margin-bottom:.7cqh; border-bottom:0.15cqh solid var(--c-panel-line);}
 
 /* =========================== ?꾪닾 ?ㅽ뀒?댁? =========================== */
-#field{position:absolute; left:0; right:0; top:11cqh; bottom:36cqh; z-index:10;}
+#field{position:absolute; inset:0; z-index:10;}
 
 /* =========================== ?섎떒: ?몃뱶/議곗옉 =========================== */
-#dock{position:absolute; left:0; right:0; bottom:0; height:36cqh; z-index:25;}
+#dock{position:absolute; left:0; right:0; bottom:0; height:31cqh; z-index:25;}
+.card-hand-area{position:absolute; left:18cqw; right:19cqw; bottom:0; height:31cqh;}
+.right-bottom-actions{position:absolute; right:1.4cqw; bottom:3cqh; width:16cqw; height:21cqh;
+  display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:flex-end; gap:1.2cqh 1cqw;}
 /* ?먮꼫吏 ?ㅻ툕 */
-#energy{position:absolute; left:2cqw; bottom:5cqh; width:13cqh; height:13cqh; border-radius:50%;
+#energy{position:relative; left:auto; bottom:auto; width:10.5cqh; height:10.5cqh; border-radius:50%; flex:none;
   display:grid; place-items:center; cursor:default;
   background:radial-gradient(circle at 35% 30%, #bfe6ff, #3f8fe0 60%, #1f5fa5);
   border:0.5cqh solid #cfeaff; box-shadow:0 0 2cqh rgba(80,170,255,.7), inset 0 0 1.5cqh rgba(255,255,255,.5);}
-#energy .val{color:#fff; font-size:4cqh; font-weight:800; text-shadow:0 .2cqh .4cqh rgba(0,40,90,.6);}
+#energy .val{color:#fff; font-size:3.2cqh; font-weight:800; text-shadow:0 .2cqh .4cqh rgba(0,40,90,.6);}
 #energy .lbl{position:absolute; bottom:-3.4cqh; left:50%; transform:translateX(-50%);
   font-size:1.7cqh; font-weight:700; color:var(--c-blue-deep);
   background:var(--c-panel); padding:.2cqh 1cqw; border-radius:1cqh; border:0.15cqh solid var(--c-panel-line);}
@@ -167,14 +185,14 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .card .desc{font-size:1.45cqh; text-align:center; color:var(--c-ink); line-height:1.3; white-space:pre-line;}
 
 /* ??醫낅즺 / ?붾? */
-#endTurn{position:absolute; right:14cqw; bottom:9cqh; padding:1.6cqh 2.6cqw; cursor:pointer;
+#endTurn{position:relative; right:auto; bottom:auto; width:100%; padding:1.6cqh 1.2cqw; cursor:pointer;
   font-size:2.6cqh; font-weight:800; color:#fff; border-radius:1.4cqh;
   background:linear-gradient(180deg,#5fa0e8,#2f6fc0); border:0.3cqh solid var(--c-gold);
   box-shadow:0 .6cqh 1.4cqh rgba(40,70,120,.35); transition:transform .12s;}
 #endTurn:active{transform:scale(.95);}
 #endTurn[disabled]{filter:grayscale(.6) brightness(.85); cursor:default;}
-.pile{position:absolute; bottom:4cqh; width:7cqh; text-align:center; cursor:default;}
-#deckPile{right:6.5cqw;} #discardPile{right:1cqw;}
+.pile{position:relative; bottom:auto; width:7cqh; text-align:center; cursor:default;}
+#deckPile{right:auto;} #discardPile{right:auto;}
 #deckPile,#discardPile{cursor:pointer;}
 .pile .stack{width:7cqh; height:9.5cqh; margin:0 auto; border-radius:1cqh;
   background:linear-gradient(180deg,#eef4fb,#cfe0f2); border:0.3cqh solid #b9d0ea;

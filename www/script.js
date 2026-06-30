@@ -466,6 +466,7 @@ function renderHud(){
   $("#hudName").textContent = S.player.name;
   $("#hudTitle").textContent = S.player.title || "";
   $("#hudHp").textContent = S.player.hp+"/"+S.player.maxHp;
+  $("#hudHpFill").style.width = Math.max(0, Math.min(100, (S.player.hp / S.player.maxHp) * 100)) + "%";
   $("#hudDeck").textContent = STARTER_DECK.length;
   $("#hudTurnNum").textContent = S.turn;
   const relics = document.querySelector(".relics");
