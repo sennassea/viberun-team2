@@ -131,7 +131,15 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .stat{font-size:2.2cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw;}
 .spacer{flex:1;}
 .hud-btn{cursor:pointer; transition:transform .12s;} .hud-btn:active{transform:scale(.94);}
-#hudTurn{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);}
+.progress-center-hud{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  min-width:18cqw; height:100%; display:flex; align-items:center; justify-content:center; gap:.8cqw;
+  padding:.8cqh 1.5cqw; background:var(--c-panel); border:0.2cqh solid var(--c-panel-line);
+  border-radius:var(--r); backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);
+  font-size:2.05cqh; font-weight:900; color:var(--c-ink);}
+.progress-region,.progress-floor,.progress-turn{display:inline-flex; align-items:center; white-space:nowrap;}
+.progress-icon{font-size:2.15cqh; line-height:1; margin-right:.25cqw;}
+.progress-separator{width:.18cqh; height:2.6cqh; border-radius:.2cqh; background:var(--c-panel-line);}
+#hudTurn{position:relative; left:auto; top:auto; transform:none;}
 
 /* =================== 醫뚯륫: ?꾩옱 ?④낵 / ?곗륫: ???섎룄 =================== */
 .left-side-hud{position:absolute; left:1.4cqh; top:14cqh; bottom:31cqh; width:14cqw; z-index:22;

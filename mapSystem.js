@@ -190,7 +190,7 @@ function getCurrentNodeId(){
 function updateHudFloor(){
   const el = document.getElementById("hudFloor"); if(!el) return;
   const fi = nodeFloorIdx(getCurrentNodeId());
-  el.textContent = "🏥 " + (fi > 0 ? fi + "F" : "1F");
+  el.textContent = fi > 0 ? fi + "F" : "1F";
 }
 
 function hasNextTier(){
