@@ -279,12 +279,19 @@
     var gRect   = game.getBoundingClientRect();
     var cbRect  = cbEl.getBoundingClientRect();
     var tipRect = tooltip.getBoundingClientRect();
-    var pad = 8;
+    var pad = 4;
     var relLeft  = cbRect.left  - gRect.left;
     var relRight = cbRect.right - gRect.left;
     var relTop   = cbRect.top   - gRect.top;
-    var tx = isPlayer ? relRight + pad : relLeft - tipRect.width - pad;
-    var ty = relTop + cbRect.height * 0.1;
+    var playerEdge = relLeft + cbRect.width * 0.68;
+    var profileRect = isPlayer && document.querySelector(".player-info-card")
+      ? document.querySelector(".player-info-card").getBoundingClientRect()
+      : null;
+    var statusRect = isPlayer && document.querySelector("#profileStatusEffects")
+      ? document.querySelector("#profileStatusEffects").getBoundingClientRect()
+      : null;
+    var tx = isPlayer && profileRect ? (profileRect.right - gRect.left + pad) : (isPlayer ? playerEdge + pad : relLeft - tipRect.width - pad);
+    var ty = isPlayer && statusRect ? (statusRect.bottom - gRect.top + pad) : (relTop + cbRect.height * 0.18);
     tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
     ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
     tooltip.style.left = tx + "px";
