@@ -41,38 +41,84 @@
     </div>
 
     <!-- 상단 HUD -->
-    <div id="hud">
-      <div class="hud-card">
-        <div class="portrait" id="hudPortrait">👼</div>
-        <div class="who"><b id="hudName">빛솔이</b><span id="hudTitle">신입 액소시스트</span></div>
+    <div class="top-hud">
+      <div id="hud">
+        <div class="hud-card player-info-card">
+          <div class="portrait" id="hudPortrait">👼</div>
+          <div class="player-info-body">
+            <div class="who"><b id="hudName">빛솔이</b><span id="hudTitle">신입 액소시스트</span></div>
+            <div class="hud-hp-row"><span class="hud-hp-label">정신력</span><span id="hudHp">60/60</span></div>
+            <div class="hud-hpbar"><div id="hudHpFill"></div></div>
+            <div class="hud-resource-row" aria-label="보유 자원">
+              <span class="hud-resource"><span class="hud-resource-icon">🏺</span><span id="hudRelicCount">0</span></span>
+              <span class="hud-resource"><span class="hud-resource-icon">🧪</span><span id="hudPotionCount">0</span></span>
+              <span class="hud-resource"><span class="hud-resource-icon">🪙</span><span id="hudGold">120</span></span>
+              <span class="hud-resource"><span class="hud-resource-icon">🌙</span><span id="hudMoonShard">0</span></span>
+            </div>
+          </div>
+        </div>
+        <div id="profileStatusEffects" class="profile-status-effects" aria-label="플레이어 상태이상"></div>
+        <div class="progress-center-hud" aria-label="진행 정보">
+          <div class="progress-region"><span class="progress-icon">🏥</span><span>병원</span></div>
+          <div class="progress-separator"></div>
+          <div class="progress-floor" id="hudFloor">1F</div>
+          <div class="progress-separator"></div>
+          <div class="progress-turn" id="hudTurn"><span id="hudTurnNum">1</span>턴</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="top-right-menu" aria-label="상단 메뉴">
+          <div class="hud-card hud-btn top-menu-button">🗺️<span class="sr-only">병원 지도</span></div>
+          <div class="hud-card hud-btn stat top-menu-button" id="deckViewerButton">📖 <span id="hudDeck">18</span></div>
+          <div class="hud-card hud-btn top-menu-button">⚙️</div>
+        </div>
       </div>
-      <div class="hud-card stat">❤️ <span id="hudHp">60/60</span></div>
-      <div class="hud-card stat">🪙 120</div>
-      <div class="hud-card stat" id="hudTurn">⚔️ <span id="hudTurnNum">1</span>턴</div>
-      <div class="spacer"></div>
-      <div class="hud-card stat" id="hudFloor">🏥 1F</div>
-      <div class="hud-card hud-btn">🗺️ 병원 지도</div>
-      <div class="hud-card hud-btn stat" id="deckViewerButton">📖 <span id="hudDeck">18</span></div>
-      <div class="hud-card hud-btn">⚙️</div>
+    </div>
+    <div class="left-side-hud">
+      <div class="left-side-main">
+        <div id="energy" class="vertical-energy-panel">
+          <span class="lbl">신통력</span>
+          <div class="energy-orbs" aria-hidden="true">
+            <span class="energy-slot active"></span>
+            <span class="energy-slot active"></span>
+            <span class="energy-slot active"></span>
+            <span class="energy-slot empty"></span>
+            <span class="energy-slot empty"></span>
+            <span class="energy-slot empty"></span>
+            <span class="energy-slot empty"></span>
+            <span class="energy-slot empty"></span>
+          </div>
+          <span class="val">3/3</span>
+        </div>
+        <div class="side-item-panel" aria-label="유물과 포션">
+          <div class="side-item-section">
+            <div class="side-item-title">유물</div>
+            <div id="sideRelicSlots" class="side-item-slots" aria-label="보유 유물"></div>
+          </div>
+          <div class="side-item-section">
+            <div class="side-item-title">포션</div>
+            <div id="sidePotionSlots" class="side-item-slots" aria-label="보유 포션"></div>
+          </div>
+        </div>
+      </div>
+      <div id="effects" class="side"><h3>현재 효과</h3><div id="effList"></div></div>
     </div>
 
-    <!-- 좌: 현재 효과 -->
-    <div id="effects" class="side"><h3>현재 효과</h3><div id="effList"></div></div>
-    <!-- 우: 적 행동 의도 -->
-    <div id="intents" class="side"><h3>적 행동 의도</h3><div id="intentList"></div></div>
-
-    <!-- 전투 스테이지 -->
-    <div id="field"></div>
+    <div class="battle-field">
+      <div id="intents" class="side"><h3>적 행동 의도</h3><div id="intentList"></div></div>
+      <div id="field"></div>
+    </div>
 
     <!-- 하단 도크 -->
     <div id="dock">
-      <div id="energy"><span class="val">3/3</span><span class="lbl">에너지</span></div>
-      <div id="hand"></div>
-      <button id="endTurn">턴 종료</button>
-      <div class="pile" id="deckPile"><div class="stack" id="deckCount">18</div><div class="plbl">덱</div></div>
-      <div class="pile" id="discardPile"><div class="stack" id="discardCount">0</div><div class="plbl">버린 카드</div></div>
+      <div class="card-hand-area">
+        <div id="hand"></div>
+      </div>
+      <div class="right-bottom-actions">
+        <button id="endTurn">턴 종료</button>
+        <div class="pile" id="deckPile"><div class="stack" id="deckCount">18</div><div class="plbl">덱</div></div>
+        <div class="pile" id="discardPile"><div class="stack" id="discardCount">0</div><div class="plbl">버린 카드</div></div>
+      </div>
     </div>
-
     <div id="hint">✦ 카드를 드래그하여 <span class="r">적</span> 또는 <span class="b">자신</span>에게 사용하세요!</div>
 
     <div id="fx"></div>

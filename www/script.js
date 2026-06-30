@@ -28,7 +28,7 @@ const CARD_DB = {
   charm:{name:"오색부적", cost:1, type:"defense", emoji:"🎀", target:"self", attr:"희망", rarity:"starter",
           desc:"마음의 결계 6\n동요 1 제거", fx:[{t:"block",v:6},{t:"removeWeak",v:1}]},
   pray:{name:"기도", cost:1, type:"skill", emoji:"🙏", target:"self", attr:"희망", rarity:"starter",
-          desc:"스트레스 6 회복\n정신력 +1", fx:[{t:"heal",v:6},{t:"energy",v:1}]},
+          desc:"스트레스 6 회복\n신통력 +1", fx:[{t:"heal",v:6},{t:"energy",v:1}]},
 
   reaching_hand:{name:"손 내밀기", cost:1, type:"attack", emoji:"🤝", target:"enemy", attr:"희망", rarity:"common",
           desc:"정화 7\n마음의 결계 5", fx:[{t:"damage",v:7},{t:"block",v:5}]},
@@ -43,11 +43,11 @@ const CARD_DB = {
   comforting_light:{name:"위로의 빛", cost:1, type:"skill", emoji:"✨", target:"self", attr:"희망", rarity:"common",
           desc:"스트레스 8 회복", fx:[{t:"heal",v:8}]},
   small_promise:{name:"작은 약속", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"희망", rarity:"uncommon",
-          desc:"마음의 결계 4\n정신력 +1", fx:[{t:"block",v:4},{t:"energy",v:1}]},
+          desc:"마음의 결계 4\n신통력 +1", fx:[{t:"block",v:4},{t:"energy",v:1}]},
   guardian_prayer:{name:"수호 기도", cost:2, type:"defense", emoji:"🛡️", target:"self", attr:"희망", rarity:"uncommon",
           desc:"마음의 결계 14\n동요 1 제거", fx:[{t:"block",v:14},{t:"removeWeak",v:1}]},
   dawn_of_hope:{name:"희망의 새벽", cost:2, type:"skill", emoji:"🌅", target:"self", attr:"희망", rarity:"rare",
-          desc:"스트레스 10 회복\n정신력 +1\n카드 1장 뽑기", fx:[{t:"heal",v:10},{t:"energy",v:1},{t:"draw",v:1}]},
+          desc:"스트레스 10 회복\n신통력 +1\n카드 1장 뽑기", fx:[{t:"heal",v:10},{t:"energy",v:1},{t:"draw",v:1}]},
 
   photo_album:{name:"사진첩", cost:1, type:"attack", emoji:"📷", target:"enemy", attr:"추억", rarity:"uncommon",
           desc:"정화 6\n카드 2장 뽑기", fx:[{t:"damage",v:6},{t:"draw",v:2}]},
@@ -62,7 +62,7 @@ const CARD_DB = {
   familiar_song:{name:"익숙한 노래", cost:1, type:"skill", emoji:"🎶", target:"enemy", attr:"추억", rarity:"common",
           desc:"동요 1 부여\n카드 2장 뽑기", fx:[{t:"applyWeak",v:1},{t:"draw",v:2}]},
   memory_fragment:{name:"기억 조각", cost:0, type:"skill", emoji:"🧩", target:"self", attr:"추억", rarity:"uncommon",
-          desc:"카드 1장 뽑기\n정신력 +1", fx:[{t:"draw",v:1},{t:"energy",v:1}]},
+          desc:"카드 1장 뽑기\n신통력 +1", fx:[{t:"draw",v:1},{t:"energy",v:1}]},
   old_diary:{name:"낡은 일기장", cost:2, type:"attack", emoji:"📔", target:"enemy", attr:"추억", rarity:"uncommon",
           desc:"정화 8\n동요 2 부여", fx:[{t:"damage",v:8},{t:"applyWeak",v:2}]},
   day_we_met:{name:"처음 만난 날", cost:2, type:"attack", emoji:"🌸", target:"enemy", attr:"추억", rarity:"rare",
@@ -101,12 +101,15 @@ const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => CARD_DB[key].rarity 
 const RELIC_DB = [
   { id:"incense_burner", name:"향로", emoji:"🏺", desc:"전투 시작 시 마음의 결계 +6" },
   { id:"spirit_tablet", name:"위령패", emoji:"🪦", desc:"정화 카드 수치 +1 (표시용)" },
-  { id:"charm_box", name:"부적함", emoji:"📦", desc:"첫 턴 정신력 +1 (표시용)" },
+  { id:"charm_box", name:"부적함", emoji:"📦", desc:"첫 턴 신통력 +1 (표시용)" },
 ];
 
 const MAX_ENERGY = 3;
+const ENERGY_SLOT_COUNT = 8;
 const DRAW_PER_TURN = 5;
 const RUN_RECORD_KEY = "viberunRunRecords";
+const STARTING_GOLD = 120;
+const STARTING_MOON_SHARDS = 0;
 
 /* 전역 상태 */
 let S;
@@ -126,6 +129,9 @@ function newGame(){
     over: null,
     rewardOpen: false,
     relics: [],
+    potions: [],
+    gold: STARTING_GOLD,
+    moonShards: STARTING_MOON_SHARDS,
     turn: 1,
   };
 
@@ -181,7 +187,7 @@ function playCard(handIndex, targetEnemy){
   const key = S.hand[handIndex];
   const card = CARD_DB[key];
   if(!card) return false;
-  if(S.energy < card.cost){ flashEnergy(); toast("에너지가 부족합니다"); return false; }
+  if(S.energy < card.cost){ flashEnergy(); toast("신통력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
 
   S.energy -= card.cost;
@@ -334,6 +340,7 @@ function grantRelic(){
   const relic = RELIC_DB[Math.floor(Math.random() * RELIC_DB.length)];
   S.relics.push(relic);
   toast("유물 획득: " + relic.emoji + " " + relic.name);
+  renderHud();
 }
 
 function ensureRewardOverlay(){
@@ -462,16 +469,61 @@ function endGame(result){
 function renderAll(){ renderHud(); renderEffects(); renderIntents(); renderField(); renderHand(); renderDock(); updateEndBtn(); }
 
 function renderHud(){
+  normalizeRunResources();
   $("#hudPortrait").textContent = S.player.emoji || "👼";
   $("#hudName").textContent = S.player.name;
   $("#hudTitle").textContent = S.player.title || "";
   $("#hudHp").textContent = S.player.hp+"/"+S.player.maxHp;
+  $("#hudHpFill").style.width = Math.max(0, Math.min(100, (S.player.hp / S.player.maxHp) * 100)) + "%";
+  $("#hudRelicCount").textContent = resourceCount(S.relics);
+  $("#hudPotionCount").textContent = resourceCount(S.potions);
+  $("#hudGold").textContent = S.gold;
+  $("#hudMoonShard").textContent = S.moonShards;
   $("#hudDeck").textContent = STARTER_DECK.length;
   $("#hudTurnNum").textContent = S.turn;
-  const relics = document.querySelector(".relics");
-  if(relics){
-    relics.textContent = S.relics && S.relics.length ? S.relics.map(r => r.emoji).join(" ") : "🍀 ✝️ 🧸";
+  renderSideItemSlots();
+  renderProfileStatuses();
+}
+
+function renderProfileStatuses(){
+  const host = $("#profileStatusEffects");
+  if(!host) return;
+  host.innerHTML = LIFE.renderStatuses(S.player);
+}
+
+function renderSideItemSlots(){
+  renderItemSlots("#sideRelicSlots", S.relics, 3, "🏺");
+  renderItemSlots("#sidePotionSlots", S.potions, 3, "🧪");
+}
+
+function renderItemSlots(selector, items, maxSlots, fallbackIcon){
+  const host = document.querySelector(selector);
+  if(!host) return;
+  const list = Array.isArray(items) ? items : [];
+  const count = Array.isArray(items) ? items.length : resourceCount(items);
+  host.innerHTML = "";
+  for(let i=0; i<maxSlots; i++){
+    const item = list[i];
+    const filled = i < count;
+    const slot = document.createElement("span");
+    slot.className = "side-item-slot " + (filled ? "filled" : "empty");
+    slot.textContent = filled && item && item.emoji ? item.emoji : fallbackIcon;
+    if(filled && item && item.name) slot.title = item.name;
+    host.appendChild(slot);
   }
+}
+
+function normalizeRunResources(){
+  if(!S) return;
+  if(!Array.isArray(S.relics)) S.relics = [];
+  if(S.potions === undefined) S.potions = [];
+  if(typeof S.gold !== "number") S.gold = STARTING_GOLD;
+  if(typeof S.moonShards !== "number") S.moonShards = STARTING_MOON_SHARDS;
+}
+
+function resourceCount(value){
+  if(Array.isArray(value)) return value.length;
+  return typeof value === "number" ? value : 0;
 }
 
 function renderEffects(){
@@ -508,16 +560,20 @@ function renderField(){
 
   // 플레이어(좌측)
   f.appendChild(combatantEl({
-    cls:"player", emoji:S.player.emoji || "👼", name:S.player.name,
+    cls:"player", emoji:S.player.emoji || "👼", sprite:"assets/characters/player-temp-cutout.png", name:S.player.name,
     hp:S.player.hp, maxHp:S.player.maxHp,
-    block:S.player.block, weak:S.player.weak, healingAura:S.player.healingAura, x:18, intent:null,
+    block:S.player.block, weak:S.player.weak, healingAura:S.player.healingAura,
+    x:18, bottom:"0", intent:null, hideHud:true,
   }));
 
   // 현재 몬스터 1명만 우측에 표시
-  S.enemies.forEach((e)=>{
+  S.enemies.forEach((e, i)=>{
     const el=combatantEl({
       cls:"enemy ghost"+(e.id===S.selectedId?" selected":""), emoji:e.emoji, name:e.name,
-      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, x:e.x || 72, intent:e.intent, id:e.id,
+      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak,
+      x:S.enemies.length > 1 ? 62 + (i * 10) : (e.x || 73),
+      bottom:S.enemies.length > 1 ? (35 + (i % 2) * 3)+"cqh" : "36cqh",
+      intent:e.intent, id:e.id,
     });
     if(e.hp<=0) el.classList.add("dead");
     el.addEventListener("pointerdown",()=>{ if(e.hp>0){ S.selectedId=e.id; renderField(); } });
@@ -530,15 +586,18 @@ function combatantEl(o){
   const el=document.createElement("div");
   el.className="combatant "+o.cls;
   el.style.left=o.x+"%";
-  el.style.bottom="2cqh";
+  el.style.bottom=o.bottom || "2cqh";
   el.style.transform="translateX(-50%)";
   if(o.id) el.dataset.id=o.id;
   const intentHtml = o.intent ? intentBubble(o.intent,o.weak) : "";
+  const avatarHtml = o.sprite
+    ? '<div class="avatar sprite-avatar"><img src="'+o.sprite+'" alt=""></div>'
+    : '<div class="avatar">'+o.emoji+'</div>';
+  const infoHtml = o.hideHud ? "" : '<div class="name">'+o.name+'</div>' + LIFE.renderCombatantStats(o);
   el.innerHTML =
     intentHtml +
-    '<div class="avatar">'+o.emoji+'</div>'+
-    '<div class="name">'+o.name+'</div>'+ 
-    LIFE.renderCombatantStats(o) +
+    avatarHtml +
+    infoHtml +
     '<div class="hit"></div>';
   return el;
 }
@@ -570,8 +629,22 @@ const typeLabel = t=> t==="attack"?"정화":t==="defense"?"결계":"스킬";
 
 function renderDock(){
   $("#energy .val").textContent = S.energy+"/"+MAX_ENERGY;
+  renderEnergyOrbs();
   $("#deckCount").textContent = S.draw.length;
   $("#discardCount").textContent = S.discard.length;
+}
+
+function renderEnergyOrbs(){
+  const wrap = document.querySelector("#energy .energy-orbs");
+  if(!wrap) return;
+  wrap.innerHTML = "";
+  for(let i = 0; i < ENERGY_SLOT_COUNT; i++){
+    const orb = document.createElement("span");
+    let state = "empty";
+    if(i < MAX_ENERGY) state = i < S.energy ? "active" : "used";
+    orb.className = "energy-slot " + state;
+    wrap.appendChild(orb);
+  }
 }
 function updateEndBtn(){ $("#endTurn").disabled = !!(S.busy||S.over); }
 
@@ -754,6 +827,7 @@ function continueGameFromMenu(){
   }
 
   S = saved.state;
+  normalizeRunResources();
   STARTER_DECK = [...saved.starterDeck];
   S.busy = false;
   if(window.MAP_STATE && saved.mapState){

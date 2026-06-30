@@ -12,29 +12,37 @@
 .eff-empty{font-size:1.6cqh; color:var(--c-ink-soft); text-align:center; padding:1cqh 0;}
 
 /* Combatant HP / status display */
-.combatant{position:absolute; display:flex; flex-direction:column; align-items:center; gap:.5cqh;}
-.avatar{font-size:11cqh; line-height:1; cursor:default; filter:drop-shadow(0 1cqh 1.2cqh rgba(40,70,120,.25));
+.combatant{position:absolute; display:flex; flex-direction:column; align-items:center; gap:.45cqh; min-width:17cqw;}
+.avatar{font-size:13cqh; line-height:1; cursor:default; filter:drop-shadow(0 1cqh 1.2cqh rgba(40,70,120,.25));
   animation:float 3.4s ease-in-out infinite;}
 @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-1.4cqh)}}
 .ghost .avatar{opacity:.92; filter:drop-shadow(0 0 1.4cqh rgba(150,200,255,.8));}
-.name{font-size:1.9cqh; font-weight:700; color:var(--c-ink);}
-.hpbar{position:relative; width:15cqw; height:2.6cqh; border-radius:1.3cqh; overflow:hidden;
+.player{min-width:42cqw; z-index:3; pointer-events:auto;}
+.player .sprite-avatar{width:49cqh; height:65cqh; display:grid; place-items:end center; overflow:visible;}
+.player .sprite-avatar img{max-width:100%; max-height:100%; object-fit:contain; display:block;
+  filter:drop-shadow(0 1.4cqh 1.6cqh rgba(40,70,120,.32));}
+.enemy{min-width:16cqw; z-index:2; pointer-events:auto;}
+.enemy .avatar{font-size:12.8cqh;}
+.name{font-size:2cqh; font-weight:800; color:var(--c-ink); text-align:center; line-height:1.1;}
+.hpbar{position:relative; width:12.5cqw; height:2.35cqh; border-radius:1.3cqh; overflow:hidden;
   background:var(--c-hp-bg); border:0.2cqh solid rgba(0,0,0,.15);}
+.player .hpbar{width:13.5cqw;}
 .hpfill{position:absolute; inset:0; background:linear-gradient(180deg,#ff6a63,var(--c-hp));
   transition:width .35s ease;}
 .hptxt{position:absolute; inset:0; display:grid; place-items:center; color:#fff;
   font-size:1.6cqh; font-weight:700; text-shadow:0 .1cqh .2cqh rgba(0,0,0,.5);}
-.blockbar{position:relative; width:15cqw; height:2.6cqh; border-radius:1.3cqh; overflow:hidden;
+.blockbar{position:relative; width:12.5cqw; height:2.35cqh; border-radius:1.3cqh; overflow:hidden;
   display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800;
   background:#254b70; border:0.2cqh solid rgba(0,0,0,.15);
   box-shadow:0 .25cqh .8cqh rgba(31,95,165,.22), inset 0 .18cqh .25cqh rgba(255,255,255,.16);}
+.player .blockbar{width:13.5cqw;}
 .blockfill{position:absolute; left:0; top:0; bottom:0; background:linear-gradient(180deg,#7fd2ff,#2f83d7);
   transition:width .35s ease;}
 .block-icon{position:absolute; left:.25cqh; top:50%; transform:translateY(-50%); width:2.15cqh; height:2.15cqh;
   display:grid; place-items:center; border-radius:50%; background:rgba(255,255,255,.92);
   font-size:1.45cqh; line-height:1; box-shadow:0 .12cqh .3cqh rgba(0,45,90,.28); z-index:1;}
 .blockbar b{position:relative; z-index:1; font-size:1.85cqh; line-height:1; text-shadow:0 .1cqh .2cqh rgba(0,0,0,.45);}
-.badges{display:flex; gap:.55cqw; align-items:center; justify-content:center; min-height:4.2cqh;}
+.badges{display:flex; gap:.45cqw; align-items:center; justify-content:center; min-height:3.8cqh;}
 .status-icon{position:relative; width:4cqh; height:4cqh; display:grid; place-items:center;
   border-radius:.65cqh; border:0.2cqh solid rgba(255,255,255,.78);
   box-shadow:0 .25cqh .55cqh rgba(20,35,60,.28), inset 0 .16cqh .22cqh rgba(255,255,255,.25);}
@@ -54,13 +62,13 @@
 
 /* Enemy targeting / defeat state */
 .enemy{cursor:pointer;}
-.enemy .hit{position:absolute; left:50%; transform:translateX(-50%); width:15cqw; top:3cqh; height:14cqh; border-radius:2cqh;}
+.enemy .hit{position:absolute; left:50%; transform:translateX(-50%); width:14cqw; top:3cqh; height:14cqh; border-radius:2cqh;}
 .enemy.targetable .avatar{animation:float 3.4s ease-in-out infinite, pulseT 1s ease-in-out infinite;}
 @keyframes pulseT{0%,100%{filter:drop-shadow(0 0 1.4cqh rgba(255,220,120,.5))}
   50%{filter:drop-shadow(0 0 2.6cqh rgba(255,200,60,1))}}
 .enemy.hovered .avatar{transform:scale(1.06);}
 .enemy.hovered::after{content:""; position:absolute; top:3cqh; left:50%; transform:translateX(-50%);
-  width:15cqw; height:14cqh;
+  width:14cqw; height:14cqh;
   background:
     linear-gradient(var(--c-gold),var(--c-gold)) 0    0   /0.35cqh 28% no-repeat,
     linear-gradient(var(--c-gold),var(--c-gold)) 0    0   /28%  0.35cqh no-repeat,
