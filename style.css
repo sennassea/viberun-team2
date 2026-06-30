@@ -105,12 +105,12 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 
 /* =========================== ?곷떒 HUD =========================== */
 .top-hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:12cqh; z-index:30;}
-#hud{position:relative; width:100%; height:100%;
-  display:flex; align-items:center; gap:1.2cqw;}
+#hud{position:relative; width:100%; height:100%;}
 .hud-card{display:flex; align-items:center; gap:.7cqw; background:var(--c-panel);
   border:0.2cqh solid var(--c-panel-line); border-radius:var(--r);
   padding:.8cqh 1.1cqw; backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);}
-.player-info-card{width:24cqw; min-width:30cqh; height:100%; align-items:center; gap:1.15cqw;
+.player-info-card{position:absolute; left:0; top:0; width:24cqw; min-width:30cqh; max-width:calc(50% - 11cqw);
+  height:100%; align-items:center; gap:1.15cqw;
   padding:.8cqh 1cqw;}
 .player-info-body{min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:.42cqh;}
 .portrait{width:11cqh; height:7cqh; border-radius:1.5cqh; display:grid; place-items:center;
@@ -129,7 +129,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   font-size:1.45cqh; font-weight:900; color:var(--c-ink);}
 .hud-resource-icon{font-size:1.75cqh; line-height:1;}
 .stat{font-size:2.2cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw;}
-.spacer{flex:1;}
+.spacer{display:none;}
 .hud-btn{cursor:pointer; transition:transform .12s;} .hud-btn:active{transform:scale(.94);}
 .top-right-menu{position:absolute; top:0; right:0; height:100%; display:flex; align-items:center; gap:.8cqw;}
 .top-menu-button{width:8.2cqh; height:100%; justify-content:center; padding:0; font-size:3.1cqh;}
@@ -138,10 +138,12 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
   clip:rect(0,0,0,0); white-space:nowrap; border:0;}
 .progress-center-hud{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-  min-width:18cqw; height:100%; display:flex; align-items:center; justify-content:center; gap:.8cqw;
+  width:clamp(18cqw, 21cqw, calc(100% - 56cqw)); height:100%;
+  display:flex; align-items:center; justify-content:center; gap:.8cqw;
   padding:.8cqh 1.5cqw; background:var(--c-panel); border:0.2cqh solid var(--c-panel-line);
   border-radius:var(--r); backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);
   font-size:2.05cqh; font-weight:900; color:var(--c-ink);}
+.progress-center-hud,.top-right-menu,.player-info-card{z-index:1;}
 .progress-region,.progress-floor,.progress-turn{display:inline-flex; align-items:center; white-space:nowrap;}
 .progress-icon{font-size:2.15cqh; line-height:1; margin-right:.25cqw;}
 .progress-separator{width:.18cqh; height:2.6cqh; border-radius:.2cqh; background:var(--c-panel-line);}
