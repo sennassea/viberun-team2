@@ -15,14 +15,14 @@
       emoji: "👼",
       grade: "tutorial",
       roles: ["tutorial", "allRounder"],
-      maxHp: 30,
+      maxHp: 34,
       x: 72,
       first: 0,
       moves: [
-        { t: "attack", v: 4, name: "작은 울음", role: "normalAttack" },
+        { t: "attack", v: 5, name: "작은 울음", role: "normalAttack" },
         { t: "debuff", v: 1, name: "낯선 시선", role: "debuff" },
         { t: "defend", v: 4, name: "이불 속 숨기", role: "defense" },
-        { t: "attack", v: 7, name: "손 내밀기", role: "specialAttack" }
+        { t: "attack", v: 8, name: "손 내밀기", role: "specialAttack" }
       ]
     },
     {
@@ -32,13 +32,13 @@
       emoji: "👼",
       grade: "normal",
       roles: ["attacker"],
-      maxHp: 30,
+      maxHp: 28,
       x: 72,
       first: 0,
       moves: [
         { t: "attack", v: 5, name: "작은 울음", role: "normalAttack" },
-        { t: "attack", v: 5, name: "손 내밀기", role: "normalAttack" },
-        { t: "defend", v: 4, name: "이불 속 숨기", role: "defense" }
+        { t: "attack", v: 6, name: "손 내밀기", role: "normalAttack" },
+        { t: "defend", v: 3, name: "이불 속 숨기", role: "defense" }
       ]
     },
     {
@@ -65,11 +65,11 @@
       emoji: "👼",
       grade: "normal",
       roles: ["protector"],
-      maxHp: 34,
+      maxHp: 36,
       x: 72,
       first: 0,
       moves: [
-        { t: "defend", v: 7, name: "침대 밑 숨기", role: "defense" },
+        { t: "defend", v: 8, name: "침대 밑 숨기", role: "defense" },
         { t: "attack", v: 4, name: "작은 발소리", role: "normalAttack" },
         { t: "attack", v: 7, name: "갑작스런 울음", role: "specialAttack" },
         { t: "defend", v: 5, name: "담요 끌어당기기", role: "defense" }
@@ -82,13 +82,13 @@
       emoji: "👼",
       grade: "normal",
       roles: ["slowScaler"],
-      maxHp: 31,
+      maxHp: 32,
       x: 72,
       first: 0,
       moves: [
-        { t: "attack", v: 4, name: "참은 훌쩍임", role: "normalAttack" },
-        { t: "defend", v: 4, name: "입술 깨물기", role: "defense" },
-        { t: "attack", v: 8, name: "터져 나온 울음", role: "specialAttack" }
+        { t: "attack", v: 3, name: "참은 훌쩍임", role: "normalAttack" },
+        { t: "defend", v: 5, name: "입술 깨물기", role: "defense" },
+        { t: "attack", v: 10, name: "터져 나온 울음", role: "specialAttack" }
       ]
     },
     {
@@ -98,14 +98,14 @@
       emoji: "👼",
       grade: "elite",
       roles: ["burst", "attacker"],
-      maxHp: 48,
+      maxHp: 52,
       x: 72,
       first: 0,
       moves: [
-        { t: "attack", v: 8, name: "작은 울음", role: "normalAttack" },
-        { t: "attack", v: 9, name: "손 내밀기", role: "normalAttack" },
-        { t: "attack", v: 13, name: "창밖을 부르는 손", role: "specialAttack" },
-        { t: "defend", v: 7, name: "이불 속 숨기", role: "defense" }
+        { t: "attack", v: 9, name: "작은 울음", role: "normalAttack" },
+        { t: "attack", v: 10, name: "손 내밀기", role: "normalAttack" },
+        { t: "attack", v: 15, name: "창밖을 부르는 손", role: "specialAttack" },
+        { t: "defend", v: 6, name: "이불 속 숨기", role: "defense" }
       ]
     },
     {
@@ -115,14 +115,14 @@
       emoji: "👵",
       grade: "normal",
       roles: ["tank", "debuffer"],
-      maxHp: 46,
+      maxHp: 50,
       x: 72,
       first: 0,
       moves: [
         { t: "debuff", v: 1, name: "잊혀진 이름", role: "debuff" },
-        { t: "attack", v: 6, name: "오래된 자장가", role: "normalAttack" },
-        { t: "attack", v: 9, name: "그리움의 빛", role: "specialAttack" },
-        { t: "defend", v: 7, name: "빛바랜 사진", role: "defense" }
+        { t: "attack", v: 5, name: "오래된 자장가", role: "normalAttack" },
+        { t: "attack", v: 8, name: "그리움의 빛", role: "specialAttack" },
+        { t: "defend", v: 9, name: "빛바랜 사진", role: "defense" }
       ]
     },
     {
@@ -132,13 +132,13 @@
       emoji: "👵",
       grade: "normal",
       roles: ["debuffer"],
-      maxHp: 42,
+      maxHp: 40,
       x: 72,
       first: 0,
       moves: [
         { t: "debuff", v: 1, name: "낡은 사진 건네기", role: "anxiety" },
         { t: "attack", v: 5, name: "오래된 자장가", role: "normalAttack" },
-        { t: "attack", v: 8, name: "잊힌 장면", role: "specialAttack" },
+        { t: "attack", v: 7, name: "잊힌 장면", role: "specialAttack", statusCard: "intrusive_thought" },
         { t: "defend", v: 6, name: "사진 속으로 숨기", role: "defense" }
       ]
     },
@@ -149,14 +149,14 @@
       emoji: "👵",
       grade: "normal",
       roles: ["debuffer"],
-      maxHp: 43,
+      maxHp: 44,
       x: 72,
       first: 0,
       moves: [
         { t: "debuff", v: 1, name: "잊혀진 이름", role: "debuff" },
         { t: "attack", v: 6, name: "오래된 자장가", role: "normalAttack" },
         { t: "attack", v: 9, name: "그리움의 빛", role: "specialAttack" },
-        { t: "defend", v: 6, name: "빛바랜 사진", role: "defense" }
+        { t: "defend", v: 7, name: "빛바랜 사진", role: "defense" }
       ]
     },
     {
@@ -166,13 +166,13 @@
       emoji: "👵",
       grade: "normal",
       roles: ["debuffer"],
-      maxHp: 41,
+      maxHp: 39,
       x: 72,
       first: 0,
       moves: [
         { t: "debuff", v: 1, name: "오지 않는 발걸음", role: "anxiety" },
         { t: "attack", v: 5, name: "낮은 한숨", role: "normalAttack" },
-        { t: "attack", v: 8, name: "외로운 손짓", role: "specialAttack" },
+        { t: "attack", v: 7, name: "외로운 손짓", role: "specialAttack" },
         { t: "defend", v: 5, name: "문가에 기대기", role: "defense" }
       ]
     },
@@ -183,14 +183,14 @@
       emoji: "👵",
       grade: "elite",
       roles: ["tank", "debuffer"],
-      maxHp: 60,
+      maxHp: 66,
       x: 72,
       first: 0,
       moves: [
         { t: "debuff", v: 1, name: "잊혀진 이름", role: "debuff" },
         { t: "attack", v: 8, name: "오래된 자장가", role: "normalAttack" },
-        { t: "attack", v: 12, name: "그리움의 빛", role: "specialAttack" },
-        { t: "defend", v: 10, name: "빛바랜 사진", role: "defense" }
+        { t: "attack", v: 11, name: "그리움의 빛", role: "specialAttack" },
+        { t: "defend", v: 12, name: "빛바랜 사진", role: "defense" }
       ]
     },
     {
@@ -200,14 +200,14 @@
       emoji: "👩‍⚕️",
       grade: "normal",
       roles: ["attacker"],
-      maxHp: 38,
+      maxHp: 36,
       x: 72,
       first: 0,
       moves: [
         { t: "attack", v: 7, name: "분주한 호출", role: "normalAttack" },
         { t: "attack", v: 6, name: "조심스런 처치", role: "normalAttack" },
-        { t: "attack", v: 9, name: "긴급 돌봄", role: "specialAttack" },
-        { t: "defend", v: 6, name: "차트 정리", role: "defense" }
+        { t: "attack", v: 10, name: "긴급 돌봄", role: "specialAttack" },
+        { t: "defend", v: 4, name: "차트 정리", role: "defense" }
       ]
     },
     {
@@ -217,14 +217,14 @@
       emoji: "👩‍⚕️",
       grade: "normal",
       roles: ["support"],
-      maxHp: 42,
+      maxHp: 44,
       x: 72,
       first: 0,
       moves: [
-        { t: "defend", v: 7, name: "차트 정리", role: "defense" },
+        { t: "defend", v: 8, name: "차트 정리", role: "defense" },
         { t: "attack", v: 6, name: "조심스런 처치", role: "normalAttack" },
-        { t: "attack", v: 9, name: "긴급 돌봄", role: "specialAttack" },
-        { t: "defend", v: 7, name: "스테이션 정비", role: "defense" }
+        { t: "attack", v: 9, name: "긴급 돌봄", role: "specialAttack", statusCard: "hesitation" },
+        { t: "defend", v: 9, name: "스테이션 정비", role: "defense" }
       ]
     },
     {
@@ -251,14 +251,14 @@
       emoji: "👩‍⚕️",
       grade: "normal",
       roles: ["summoner", "support"],
-      maxHp: 36,
+      maxHp: 34,
       x: 72,
       first: 0,
       moves: [
-        { t: "debuff", v: 1, name: "호출벨 울리기", role: "anxiety" },
-        { t: "defend", v: 6, name: "급히 둘러보기", role: "defense" },
-        { t: "attack", v: 6, name: "분주한 발걸음", role: "normalAttack" },
-        { t: "attack", v: 9, name: "응급 호출", role: "specialAttack" }
+        { t: "summon", v: 1, name: "호출벨 울리기", role: "summon" },
+        { t: "defend", v: 5, name: "급히 둘러보기", role: "defense" },
+        { t: "attack", v: 5, name: "분주한 발걸음", role: "normalAttack" },
+        { t: "attack", v: 8, name: "응급 호출", role: "specialAttack", statusCard: "hesitation" }
       ]
     },
     {
@@ -268,13 +268,13 @@
       emoji: "👩‍⚕️",
       grade: "elite",
       roles: ["support", "attacker"],
-      maxHp: 56,
+      maxHp: 58,
       x: 72,
       first: 0,
       moves: [
-        { t: "defend", v: 9, name: "차트 정리", role: "defense" },
-        { t: "attack", v: 9, name: "조심스런 처치", role: "normalAttack" },
-        { t: "attack", v: 13, name: "긴급 돌봄", role: "specialAttack" },
+        { t: "defend", v: 10, name: "차트 정리", role: "defense" },
+        { t: "attack", v: 10, name: "조심스런 처치", role: "normalAttack" },
+        { t: "attack", v: 14, name: "긴급 돌봄", role: "specialAttack" },
         { t: "debuff", v: 1, name: "야간 호출", role: "debuff" }
       ]
     },
@@ -285,13 +285,13 @@
       emoji: "😷",
       grade: "normal",
       roles: ["debuffer", "attacker"],
-      maxHp: 40,
+      maxHp: 38,
       x: 72,
       first: 0,
       moves: [
         { t: "attack", v: 6, name: "불안한 중얼거림", role: "normalAttack" },
         { t: "debuff", v: 1, name: "번지는 불안", role: "anxiety" },
-        { t: "attack", v: 9, name: "떨리는 손짓", role: "specialAttack" },
+        { t: "attack", v: 8, name: "떨리는 손짓", role: "specialAttack" },
         { t: "defend", v: 6, name: "담요 끌어안기", role: "defense" }
       ]
     },
@@ -302,13 +302,13 @@
       emoji: "😷",
       grade: "normal",
       roles: ["debuffer"],
-      maxHp: 39,
+      maxHp: 41,
       x: 72,
       first: 0,
       moves: [
         { t: "debuff", v: 1, name: "엉킨 링거줄", role: "anxiety" },
         { t: "attack", v: 6, name: "흔들리는 걸음", role: "normalAttack" },
-        { t: "attack", v: 9, name: "차가운 수액", role: "specialAttack" },
+        { t: "attack", v: 8, name: "차가운 수액", role: "specialAttack", statusCard: "intrusive_thought" },
         { t: "defend", v: 5, name: "링거대 붙잡기", role: "defense" }
       ]
     },
@@ -319,13 +319,13 @@
       emoji: "👩",
       grade: "elite",
       roles: ["burst", "attacker"],
-      maxHp: 54,
+      maxHp: 56,
       x: 72,
       first: 0,
       moves: [
         { t: "attack", v: 9, name: "애타는 부름", role: "normalAttack" },
         { t: "attack", v: 10, name: "놓지 못한 손", role: "normalAttack" },
-        { t: "attack", v: 14, name: "못다 한 약속", role: "specialAttack" },
+        { t: "attack", v: 15, name: "못다 한 약속", role: "specialAttack", statusCard: "regret" },
         { t: "defend", v: 6, name: "품 안의 기억", role: "defense" }
       ]
     },
@@ -336,14 +336,14 @@
       emoji: "👴",
       grade: "elite",
       roles: ["tank", "attacker"],
-      maxHp: 62,
+      maxHp: 68,
       x: 72,
       first: 0,
       moves: [
         { t: "attack", v: 9, name: "추억의 메아리", role: "normalAttack" },
         { t: "attack", v: 8, name: "오래된 이야기", role: "normalAttack" },
-        { t: "attack", v: 12, name: "가족을 부르는 주문", role: "specialAttack" },
-        { t: "defend", v: 10, name: "낡은 약속", role: "defense" }
+        { t: "attack", v: 11, name: "가족을 부르는 주문", role: "specialAttack" },
+        { t: "defend", v: 12, name: "낡은 약속", role: "defense" }
       ]
     },
     {
@@ -353,13 +353,13 @@
       emoji: "👨‍⚕️",
       grade: "normal",
       roles: ["attacker"],
-      maxHp: 37,
+      maxHp: 36,
       x: 72,
       first: 0,
       moves: [
         { t: "attack", v: 7, name: "서툰 진찰", role: "normalAttack" },
         { t: "attack", v: 7, name: "빠른 문진", role: "normalAttack" },
-        { t: "attack", v: 10, name: "급한 처방", role: "specialAttack" },
+        { t: "attack", v: 11, name: "급한 처방", role: "specialAttack" },
         { t: "defend", v: 6, name: "차트 확인", role: "defense" }
       ]
     },
@@ -370,13 +370,13 @@
       emoji: "👨‍⚕️",
       grade: "elite",
       roles: ["burst", "attacker"],
-      maxHp: 52,
+      maxHp: 54,
       x: 72,
       first: 0,
       moves: [
         { t: "attack", v: 10, name: "다급한 회진", role: "normalAttack" },
         { t: "attack", v: 9, name: "살피는 손길", role: "normalAttack" },
-        { t: "attack", v: 13, name: "집중 진료", role: "specialAttack" },
+        { t: "attack", v: 15, name: "집중 진료", role: "specialAttack" },
         { t: "defend", v: 7, name: "진료 준비", role: "defense" }
       ]
     },
@@ -386,15 +386,15 @@
       family: "공간",
       emoji: "🚪",
       grade: "boss",
-      roles: ["boss", "debuffer", "tank"],
-      maxHp: 80,
+      roles: ["boss", "summoner", "debuffer", "tank"],
+      maxHp: 92,
       x: 72,
       first: 0,
       moves: [
         { t: "debuff", v: 1, name: "꺼지지 않는 형광등", role: "anxiety" },
-        { t: "defend", v: 10, name: "빈 침대의 그림자", role: "defense" },
-        { t: "attack", v: 11, name: "커튼 뒤의 인기척", role: "normalAttack" },
-        { t: "attack", v: 16, name: "병실이 닫히는 소리", role: "specialAttack" }
+        { t: "summon", v: 1, name: "빈 침대의 그림자", role: "summon" },
+        { t: "attack", v: 10, name: "커튼 뒤의 인기척", role: "normalAttack" },
+        { t: "attack", v: 15, name: "병실이 닫히는 소리", role: "specialAttack", statusCard: "intrusive_thought" }
       ]
     },
     {
@@ -404,44 +404,27 @@
       emoji: "🏃",
       grade: "boss",
       roles: ["boss", "burst", "attacker"],
-      maxHp: 76,
-      x: 72,
-      first: 0,
-      moves: [
-        { t: "attack", v: 10, name: "멈추지 못한 출발", role: "normalAttack" },
-        { t: "defend", v: 8, name: "숨 고르기", role: "charge" },
-        { t: "attack", v: 14, name: "복도 끝 질주", role: "specialAttack" }
-      ],
-      nextPhase: {
-        name: "복도를 달리던 환자",
-        maxHp: 82,
-        x: 72,
-        first: 0,
-        moves: [
-          { t: "attack", v: 11, name: "멈추지 못한 출발", role: "normalAttack" },
-          { t: "attack", v: 12, name: "비틀린 보폭", role: "normalAttack" },
-          { t: "debuff", v: 1, name: "잃어버린 트랙", role: "anxiety" },
-          { t: "defend", v: 9, name: "다시 서려는 마음", role: "charge" },
-          { t: "attack", v: 19, name: "마지막 질주", role: "burst", requiresPrevious: "defend" }
-        ]
-      }
-    },
-    {
-      id: "surgery_doctor_spirit",
-      name: "닫힌 수술실의 의사",
-      family: "의사",
-      emoji: "👨‍⚕️",
-      grade: "boss",
-      roles: ["boss", "counter", "attacker"],
       maxHp: 84,
       x: 72,
       first: 0,
       moves: [
-        { t: "attack", v: 11, name: "차가운 지시", role: "normalAttack" },
-        { t: "debuff", v: 1, name: "마취의 압박", role: "counter" },
-        { t: "defend", v: 10, name: "수술 준비", role: "defense" },
-        { t: "attack", v: 17, name: "닫힌 수술등", role: "specialAttack" }
-      ]
+        { t: "attack", v: 11, name: "멈추지 못한 출발", role: "normalAttack" },
+        { t: "defend", v: 8, name: "숨 고르기", role: "charge" },
+        { t: "attack", v: 15, name: "복도 끝 질주", role: "specialAttack" }
+      ],
+      nextPhase: {
+        name: "복도를 달리던 환자",
+        maxHp: 88,
+        x: 72,
+        first: 0,
+        moves: [
+          { t: "attack", v: 12, name: "멈추지 못한 출발", role: "normalAttack" },
+          { t: "attack", v: 13, name: "비틀린 보폭", role: "normalAttack" },
+          { t: "debuff", v: 1, name: "잃어버린 트랙", role: "anxiety" },
+          { t: "defend", v: 9, name: "다시 서려는 마음", role: "charge" },
+          { t: "attack", v: 20, name: "마지막 질주", role: "burst", requiresPrevious: "defend", statusCard: "regret" }
+        ]
+      }
     }
   ];
 
@@ -453,8 +436,7 @@
     { id: "stage_grandfather_spirit", label: "약속을 남긴 환자", monsterIds: ["grandfather_spirit"] },
     { id: "stage_doctor_spirit", label: "회진을 멈추지 못한 의사", monsterIds: ["doctor_spirit"] },
     { id: "stage_ward_wraith", label: "비어 있는 404호", monsterIds: ["ward_wraith"] },
-    { id: "stage_runner_spirit", label: "복도를 달리던 환자", monsterIds: ["runner_spirit"] },
-    { id: "stage_surgery_doctor_spirit", label: "닫힌 수술실의 의사", monsterIds: ["surgery_doctor_spirit"] }
+    { id: "stage_runner_spirit", label: "복도를 달리던 환자", monsterIds: ["runner_spirit"] }
   ];
 
   const cloneMoveList = moves => Array.isArray(moves) ? moves.map(move => ({ ...move })) : [];

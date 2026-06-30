@@ -126,6 +126,18 @@ function discardCard(key, options = {}){
   S.discard.push(key);
 }
 
+function addStatusCardToDiscard(cardKey, count = 1){
+  const card = CARD_DB[cardKey];
+  if(!card || card.rarity !== "status") return 0;
+
+  const amount = Math.max(1, count || 1);
+  for(let i = 0; i < amount; i++){
+    S.discard.push(cardKey);
+  }
+  toast(card.name + " " + amount + "장 추가");
+  return amount;
+}
+
 /* =========================================================================
    카드 사용
    ========================================================================= */
@@ -343,8 +355,10 @@ async function endTurn(){
   S.busy = true;
   updateEndBtn();
 
-  // 플레이어 턴 종료: 자신의 동요 1 감소
+  // 플레이어 턴 종료: 이번 턴 동안 적용된 디버프 1 감소
   LIFE.reduceWeak(S.player, 1);
+  LIFE.reduceAnxiety(S.player, 1);
+  LIFE.reduceLethargy(S.player, 1);
 
   // 남은 손패 버림. 일부 상태 카드는 버려질 때 피해를 주거나 소멸한다.
   S.hand.forEach(key => discardCard(key, { source: "turnEnd" }));
@@ -364,10 +378,17 @@ async function endTurn(){
 
     if(mv.t==="attack"){
       applyDamageWithFeedback(S.player, mv.v, e.weak);
+      if(mv.statusCard){
+        const added = addStatusCardToDiscard(mv.statusCard, mv.statusCount || 1);
+        if(added > 0) spawnFloat('.player', CARD_DB[mv.statusCard].name, 'dmg');
+      }
     }
     else if(mv.t==="defend"){
       LIFE.addBlock(e, mv.v);
       spawnFloat('[data-id="'+e.id+'"]', '+'+mv.v, 'blk');
+    }
+    else if(mv.t==="summon"){
+      spawnFloat('[data-id="'+e.id+'"]', '소환', 'heal');
     }
     else if(mv.t==="debuff"){
       if(mv.role === "anxiety"){
@@ -396,8 +417,8 @@ async function endTurn(){
 
   // 새 플레이어 턴 준비
   LIFE.prepareNextPlayerTurn(S.player);
-  const anxietyPenalty = LIFE.consumeAnxiety(S.player);
-  const lethargyPenalty = LIFE.consumeLethargy(S.player);
+  const anxietyPenalty = (S.player.anxiety || 0) > 0 ? 1 : 0;
+  const lethargyPenalty = (S.player.lethargy || 0) > 0 ? 1 : 0;
   S.energy = Math.max(0, MAX_ENERGY - lethargyPenalty);
   const drawCount = Math.max(0, DRAW_PER_TURN - anxietyPenalty);
   if(anxietyPenalty > 0) toast("불안으로 카드 뽑기 -1");
@@ -507,8 +528,14 @@ function renderIntents(){
     const m=e.intent;
     if(!m) return "";
     let ico,txt,cls;
-    if(m.t==="attack"){ico="💢";txt=(m.name ? m.name+" / " : "")+"스트레스 "+m.v+(e.weak>0?" (동요)":"");cls="atk";}
+    if(m.t==="attack"){
+      const statusName = m.statusCard && CARD_DB[m.statusCard] ? " + " + CARD_DB[m.statusCard].name : "";
+      ico="💢";
+      txt=(m.name ? m.name+" / " : "")+"스트레스 "+m.v+(e.weak>0?" (동요)":"")+statusName;
+      cls="atk";
+    }
     else if(m.t==="defend"){ico="🛡️";txt=(m.name ? m.name+" / " : "")+"결계 "+m.v+" 획득";cls="def";}
+    else if(m.t==="summon"){ico="🚪";txt=(m.name ? m.name+" / " : "")+"소환";cls="sum";}
     else {
       const isAnxiety = m.role === "anxiety";
       const isLethargy = m.role === "counter";
@@ -518,7 +545,7 @@ function renderIntents(){
     }
     return '<div class="eff-row"><div class="eff-ico">'+ico+'</div>'
          +'<div class="eff-txt"><b style="color:'
-         +(cls==="atk"?"var(--c-red-deep)":cls==="def"?"var(--c-blue-deep)":"#8a5cc0")
+         +(cls==="atk"?"var(--c-red-deep)":cls==="def"?"var(--c-blue-deep)":cls==="sum"?"#6a5270":"#8a5cc0")
          +'">'+e.name+'</b><span>'+txt+'</span></div></div>';
   }).join("");
   $("#intentList").innerHTML = html || '<div class="eff-empty">성불 완료</div>';
@@ -572,8 +599,12 @@ function combatantEl(o){
   return el;
 }
 function intentBubble(m,weak){
-  if(m.t==="attack") return '<div class="intent atk">💢 '+m.v+(weak>0?'↓':'')+'</div>';
+  if(m.t==="attack"){
+    const statusName = m.statusCard && CARD_DB[m.statusCard] ? ' +' + CARD_DB[m.statusCard].name : '';
+    return '<div class="intent atk">💢 '+m.v+(weak>0?'↓':'')+statusName+'</div>';
+  }
   if(m.t==="defend") return '<div class="intent def">🛡️ 보호</div>';
+  if(m.t==="summon") return '<div class="intent deb">🚪 소환</div>';
   if(m.role==="anxiety") return '<div class="intent deb">💭 불안</div>';
   if(m.role==="counter") return '<div class="intent deb">🌫️ 무기력</div>';
   return '<div class="intent deb">🌀 동요</div>';
