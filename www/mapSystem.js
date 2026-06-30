@@ -7,9 +7,9 @@
 
 /* ── SVG 좌표 상수 ─────────────────────────────────────────────────────── */
 const MAP_W          = 360;
-const MAP_FULL_H     = 980;
+let   MAP_FULL_H     = 980;
 const MAP_VIEW_H     = 480;
-const MAP_MAX_SCROLL = MAP_FULL_H - MAP_VIEW_H;  // 500
+let   MAP_MAX_SCROLL = MAP_FULL_H - MAP_VIEW_H;  // 500
 const PT = 80, PB = 60, PX = 65;                  // top/bottom/x 패딩
 
 let mapScrollY = 0;  // 0=하단(입구) → MAP_MAX_SCROLL=상단(보스)
@@ -48,6 +48,19 @@ function cloneMonsterList(list){
 
 /* ── 지도 생성 ──────────────────────────────────────────────────────────── */
 function generateMap(){
+  /* ACT1 노드 로직이 있으면 외부 생성 로직 사용 (mapNodeLogic.js) */
+  if(typeof window.ACT1_MAP_GENERATE === "function"){
+    window.ACT1_MAP_GENERATE(function(floors, paths, stages, popupGetters, dims){
+      MAP_FLOORS    = floors;
+      MAP_PATHS     = paths;
+      MAP_STAGES    = stages;
+      POPUP_GETTERS = popupGetters;
+      if(dims && dims.mapFullH){ MAP_FULL_H = dims.mapFullH; MAP_MAX_SCROLL = MAP_FULL_H - MAP_VIEW_H; }
+      mapScrollY = 0;
+    });
+    return;
+  }
+
   const d = window.BOHYUN_COMBAT_DATA;
   if(!d || !d.monsterGroups) return;
 
@@ -231,6 +244,20 @@ function loadStageMonsters(idx){
 
 /* ── 스테이지 시작 ─────────────────────────────────────────────────────── */
 function startStage(stageIdx){
+  /* 딤드 노드(이벤트/상점/휴식): 자동 통과 처리 (기획서 9-2) */
+  if(MAP_STAGES[stageIdx] && MAP_STAGES[stageIdx].isDimmed){
+    window.MAP_STATE.currentStage = stageIdx;
+    window.MAP_STATE.proceedMode  = true;
+    window.MAP_STATE.startMapMode = false;
+    updateHudFloor();
+    console.log("[ACT1] 딤드 노드 자동 통과:", MAP_STAGES[stageIdx].label);
+    /* 맵 캔버스 현재 위치 갱신 (이미 열린 맵 오버레이 내에서 리렌더) */
+    renderCanvas(getCurrentNodeId());
+    const footer = document.getElementById("mapFooter");
+    if(footer) footer.textContent = "⬆️ 다음 스테이지를 클릭하여 진행하세요";
+    return;
+  }
+
   window.MAP_STATE.currentStage = stageIdx;
   window.MAP_STATE.proceedMode  = false;
   window.MAP_STATE.startMapMode = false;
@@ -289,6 +316,9 @@ function buildOverlay(){
           <div class="legend-item"><span class="leg-ico enemy">👺</span>적</div>
           <div class="legend-item"><span class="leg-ico elite">👹</span>엘리트</div>
           <div class="legend-item"><span class="leg-ico boss">💀</span>보스</div>
+          <div class="legend-item"><span class="leg-ico event">❓</span>이벤트</div>
+          <div class="legend-item"><span class="leg-ico shop">🛒</span>상점</div>
+          <div class="legend-item"><span class="leg-ico rest">🛖</span>휴식</div>
         </div>
       </div>
       <div class="map-footer" id="mapFooter"></div>
@@ -403,13 +433,19 @@ function renderCanvas(currentNodeId){
       cur  ? "mnode-current" : "",
       past ? "mnode-past"    : "",
       next ? "mnode-next"    : "",
+      (node.isDimmed && !past) ? "mnode-dimmed" : "",
     ].filter(Boolean).join(" ");
 
     const attrs = [];
     if(node.stageIndex !== undefined){
       attrs.push(`data-stage="${node.stageIndex}"`, `data-nodeid="${node.id}"`);
     }
-    if(next) attrs.push(`data-nextstage="${node.stageIndex}"`);
+    if(next && node.stageIndex !== undefined) attrs.push(`data-nextstage="${node.stageIndex}"`);
+
+    /* 딤드 노드: "준비중" 배지 표시 */
+    const dimmedBadge = (node.isDimmed && !past && !cur)
+      ? `<text text-anchor="middle" y="${-(r + 5)}" font-size="8" class="mnode-dimmed-badge">준비중</text>`
+      : "";
 
     nodes += `<g class="${cls}" transform="translate(${x},${y})" ${attrs.join(" ")}>
       ${cur  ? `<circle r="32" class="mnode-pulse"/>` : ""}
@@ -418,6 +454,7 @@ function renderCanvas(currentNodeId){
       <text text-anchor="middle" dominant-baseline="central"
             font-size="${cur ? 16 : 13}" class="mnode-emoji">${node.emoji}</text>
       <text text-anchor="middle" y="${r + 14}" font-size="10" class="mnode-lbl">${node.label}</text>
+      ${dimmedBadge}
     </g>`;
   }));
 
