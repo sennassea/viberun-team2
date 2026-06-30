@@ -73,19 +73,31 @@
       </div>
     </div>
     <div class="left-side-hud">
-      <div id="energy" class="vertical-energy-panel">
-        <span class="lbl">신통력</span>
-        <div class="energy-orbs" aria-hidden="true">
-          <span class="energy-slot active"></span>
-          <span class="energy-slot active"></span>
-          <span class="energy-slot active"></span>
-          <span class="energy-slot empty"></span>
-          <span class="energy-slot empty"></span>
-          <span class="energy-slot empty"></span>
-          <span class="energy-slot empty"></span>
-          <span class="energy-slot empty"></span>
+      <div class="left-side-main">
+        <div id="energy" class="vertical-energy-panel">
+          <span class="lbl">신통력</span>
+          <div class="energy-orbs" aria-hidden="true">
+            <span class="energy-slot active"></span>
+            <span class="energy-slot active"></span>
+            <span class="energy-slot active"></span>
+            <span class="energy-slot empty"></span>
+            <span class="energy-slot empty"></span>
+            <span class="energy-slot empty"></span>
+            <span class="energy-slot empty"></span>
+            <span class="energy-slot empty"></span>
+          </div>
+          <span class="val">3/3</span>
         </div>
-        <span class="val">3/3</span>
+        <div class="side-item-panel" aria-label="유물과 포션">
+          <div class="side-item-section">
+            <div class="side-item-title">유물</div>
+            <div id="sideRelicSlots" class="side-item-slots" aria-label="보유 유물"></div>
+          </div>
+          <div class="side-item-section">
+            <div class="side-item-title">포션</div>
+            <div id="sidePotionSlots" class="side-item-slots" aria-label="보유 포션"></div>
+          </div>
+        </div>
       </div>
       <div id="effects" class="side"><h3>현재 효과</h3><div id="effList"></div></div>
     </div>

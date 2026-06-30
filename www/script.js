@@ -481,9 +481,28 @@ function renderHud(){
   $("#hudMoonShard").textContent = S.moonShards;
   $("#hudDeck").textContent = STARTER_DECK.length;
   $("#hudTurnNum").textContent = S.turn;
-  const relics = document.querySelector(".relics");
-  if(relics){
-    relics.textContent = S.relics && S.relics.length ? S.relics.map(r => r.emoji).join(" ") : "🍀 ✝️ 🧸";
+  renderSideItemSlots();
+}
+
+function renderSideItemSlots(){
+  renderItemSlots("#sideRelicSlots", S.relics, 3, "🏺");
+  renderItemSlots("#sidePotionSlots", S.potions, 3, "🧪");
+}
+
+function renderItemSlots(selector, items, maxSlots, fallbackIcon){
+  const host = document.querySelector(selector);
+  if(!host) return;
+  const list = Array.isArray(items) ? items : [];
+  const count = Array.isArray(items) ? items.length : resourceCount(items);
+  host.innerHTML = "";
+  for(let i=0; i<maxSlots; i++){
+    const item = list[i];
+    const filled = i < count;
+    const slot = document.createElement("span");
+    slot.className = "side-item-slot " + (filled ? "filled" : "empty");
+    slot.textContent = filled && item && item.emoji ? item.emoji : fallbackIcon;
+    if(filled && item && item.name) slot.title = item.name;
+    host.appendChild(slot);
   }
 }
 
