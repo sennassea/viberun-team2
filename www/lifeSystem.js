@@ -1,14 +1,56 @@
 "use strict";
 /* =========================================================================
    라이프 시스템
-   - HP, 보호막, 약화, 피해 계산만 담당
+   - HP, 보호막, 동요, 상태 카드, 피해 계산 담당
    - 카드/드래그/UI 코드는 건드리지 않음
    ========================================================================= */
 (function attachLifeSystem(global){
   const WEAK_MULT = 0.75;
   const STATUS_META = {
-    weak: { kind: "debuff", icon: "🌀", label: "약화", showCount: true },
+    weak: { kind: "debuff", icon: "🌀", label: "동요", showCount: true },
+    anxiety: { kind: "debuff", icon: "💭", label: "불안", showCount: true },
+    lethargy: { kind: "debuff", icon: "🌫️", label: "무기력", showCount: true },
     healingAura: { kind: "buff", icon: "💚", label: "치유의 향기", showCount: false }
+  };
+  const STATUS_CARD_DB = {
+    intrusive_thought: {
+      name: "잡념",
+      cost: 0,
+      type: "status",
+      emoji: "💭",
+      target: "none",
+      attr: "상태",
+      rarity: "status",
+      desc: "사용 불가\n덱에 남아 손패 자리를 차지합니다",
+      fx: [],
+      unplayable: true
+    },
+    hesitation: {
+      name: "망설임",
+      cost: 0,
+      type: "status",
+      emoji: "…",
+      target: "none",
+      attr: "상태",
+      rarity: "status",
+      desc: "사용 불가\n턴 종료 시 소멸합니다",
+      fx: [],
+      unplayable: true,
+      exhaustOnTurnEnd: true
+    },
+    regret: {
+      name: "후회",
+      cost: 0,
+      type: "status",
+      emoji: "💧",
+      target: "none",
+      attr: "상태",
+      rarity: "status",
+      desc: "사용 불가\n버려지면 스트레스 3을 받고 소멸합니다",
+      fx: [],
+      unplayable: true,
+      damageOnDiscard: 3
+    }
   };
 
   const LifeSystem = {
@@ -17,6 +59,12 @@
       // true: 슬더스식 턴 종료 후 보호막 제거
       // false: 보호막이 0이 되기 전까지 유지
       resetPlayerBlockEachTurn: false
+    },
+
+    getStatusCardDb(){
+      return Object.fromEntries(
+        Object.entries(STATUS_CARD_DB).map(([key, card]) => [key, { ...card, fx: [...card.fx] }])
+      );
     },
 
     createPlayer(characterData){
@@ -29,6 +77,8 @@
         maxHp: characterData.maxHp,
         block: Math.min(characterData.maxHp, characterData.block || 0),
         weak: characterData.weak || 0,
+        anxiety: characterData.anxiety || 0,
+        lethargy: characterData.lethargy || 0,
         healingAura: characterData.healingAura === false ? 0 : 1
       };
     },
@@ -38,10 +88,13 @@
         id: monsterData.id || `enemy_${index}`,
         name: monsterData.name,
         emoji: monsterData.emoji,
+        roles: Array.isArray(monsterData.roles) ? [...monsterData.roles] : [],
         hp: monsterData.maxHp,
         maxHp: monsterData.maxHp,
         block: Math.min(monsterData.maxHp, monsterData.block || 0),
         weak: monsterData.weak || 0,
+        anxiety: monsterData.anxiety || 0,
+        lethargy: monsterData.lethargy || 0,
         grade: monsterData.grade || "normal",
         x: monsterData.x || 72,
         moves: monsterData.moves || [],
@@ -97,6 +150,73 @@
       return before - target.weak;
     },
 
+    addAnxiety(target, value){
+      if(!target || value <= 0) return 0;
+      target.anxiety = (target.anxiety || 0) + value;
+      return value;
+    },
+
+    consumeAnxiety(target){
+      if(!target || (target.anxiety || 0) <= 0) return 0;
+      target.anxiety = Math.max(0, (target.anxiety || 0) - 1);
+      return 1;
+    },
+
+    reduceAnxiety(target, value){
+      if(!target || value <= 0) return 0;
+      const before = target.anxiety || 0;
+      target.anxiety = Math.max(0, before - value);
+      return before - target.anxiety;
+    },
+
+    addLethargy(target, value){
+      if(!target || value <= 0) return 0;
+      target.lethargy = (target.lethargy || 0) + value;
+      return value;
+    },
+
+    consumeLethargy(target){
+      if(!target || (target.lethargy || 0) <= 0) return 0;
+      target.lethargy = Math.max(0, (target.lethargy || 0) - 1);
+      return 1;
+    },
+
+    reduceLethargy(target, value){
+      if(!target || value <= 0) return 0;
+      const before = target.lethargy || 0;
+      target.lethargy = Math.max(0, before - value);
+      return before - target.lethargy;
+    },
+
+    resolveStatusCardDiscard(card, player, options = {}){
+      if(!card || card.rarity !== "status"){
+        return { handled: false };
+      }
+
+      if(card.damageOnDiscard){
+        const damage = this.applyDamage(player, card.damageOnDiscard, 0);
+        return {
+          handled: true,
+          discard: false,
+          damage,
+          message: card.name + "이 마음을 찔렀습니다"
+        };
+      }
+
+      if(card.exhaustOnTurnEnd && options.source === "turnEnd"){
+        return {
+          handled: true,
+          discard: false,
+          message: card.name + " 소멸"
+        };
+      }
+
+      return {
+        handled: true,
+        discard: true
+      };
+    },
+
     prepareNextPlayerTurn(player){
       if(this.config.resetPlayerBlockEachTurn){
         player.block = 0;
@@ -137,6 +257,12 @@
       const statuses = [];
       if((unit.weak || 0) > 0){
         statuses.push(this.renderStatusIcon("weak", unit.weak));
+      }
+      if((unit.anxiety || 0) > 0){
+        statuses.push(this.renderStatusIcon("anxiety", unit.anxiety));
+      }
+      if((unit.lethargy || 0) > 0){
+        statuses.push(this.renderStatusIcon("lethargy", unit.lethargy));
       }
       if((unit.healingAura || 0) > 0){
         statuses.push(this.renderStatusIcon("healingAura", unit.healingAura));

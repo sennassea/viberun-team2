@@ -229,6 +229,8 @@
 .leg-ico.rest     { background: #c05010; }
 .leg-ico.merchant { background: #357040; }
 .leg-ico.unknown  { background: #4a5070; }
+.leg-ico.event    { background: #4a5070; }
+.leg-ico.shop     { background: #357040; }
 
 /* ── 푸터 ─────────────────────────────────────────────────────────────── */
 .map-footer {
@@ -278,3 +280,34 @@
   color: #e08080;
   font-weight: 600;
 }
+
+/* =========================================================================
+   ACT1 확장 노드 타입 (mapNodeLogic.js 연동)
+   ========================================================================= */
+
+/* ── 이벤트 노드 ─────────────────────────────────────────────────────── */
+.mnode-event .mnode-bg  { fill: #4a5070; stroke: #252d45; }
+.mnode-event .mnode-lbl { fill: #b0c0e0; }
+
+/* ── 상점 노드 ───────────────────────────────────────────────────────── */
+.mnode-shop .mnode-bg  { fill: #357040; stroke: #1a4020; }
+.mnode-shop .mnode-lbl { fill: #a0e0b0; }
+
+/* ── 딤드(미구현) 노드: 흐리게 표시 ────────────────────────────────── */
+.mnode-dimmed .mnode-bg    { opacity: 0.55; filter: saturate(0.6); }
+.mnode-dimmed .mnode-emoji { opacity: 0.75; }
+.mnode-dimmed .mnode-lbl   { opacity: 0.75; }
+
+/* 선택 가능한 딤드 노드: 약간 밝게 (mnode-next 와 함께 적용됨) */
+.mnode-next.mnode-dimmed .mnode-bg { opacity: 0.8; filter: saturate(0.8); }
+
+/* "준비중" 배지 */
+.mnode-dimmed-badge {
+  fill: rgba(255, 230, 80, 0.88);
+  font-weight: 800;
+  font-family: "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+}
+
+/* 로비 노드 (항상 딤드) */
+.mnode-lobby .mnode-bg  { fill: #3a5090; stroke: #1a2d60; opacity: 0.5; }
+.mnode-lobby .mnode-lbl { fill: #b0c0e0; opacity: 0.5; }

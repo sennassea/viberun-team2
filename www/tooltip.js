@@ -22,6 +22,16 @@
       name: "동요",
       desc: function (v) { return "정화 피해가 25% 감소합니다. (" + v + "턴 남음)"; }
     },
+    anxiety: {
+      icon: "💭",
+      name: "불안",
+      desc: function (v) { return "다음 턴 시작 시 카드 뽑기가 1 감소합니다. (" + v + "턴 남음)"; }
+    },
+    lethargy: {
+      icon: "🌫️",
+      name: "무기력",
+      desc: function (v) { return "다음 턴 시작 시 정신력이 1 감소합니다. (" + v + "턴 남음)"; }
+    },
     healingAura: {
       icon: "💚",
       name: "치유의 향기",
@@ -212,6 +222,14 @@
       var w = EFFECT_INFO.weak;
       rows.push(makeRow(w.icon, w.name, w.desc(player.weak)));
     }
+    if ((player.anxiety || 0) > 0) {
+      var a = EFFECT_INFO.anxiety;
+      rows.push(makeRow(a.icon, a.name, a.desc(player.anxiety)));
+    }
+    if ((player.lethargy || 0) > 0) {
+      var l = EFFECT_INFO.lethargy;
+      rows.push(makeRow(l.icon, l.name, l.desc(player.lethargy)));
+    }
     if ((player.healingAura || 0) > 0) {
       var h = EFFECT_INFO.healingAura;
       rows.push(makeRow(h.icon, h.name, h.desc()));
@@ -237,6 +255,14 @@
     if ((enemy.weak || 0) > 0) {
       var wk = EFFECT_INFO.weak;
       statusRows.push(makeRow(wk.icon, wk.name, wk.desc(enemy.weak)));
+    }
+    if ((enemy.anxiety || 0) > 0) {
+      var ea = EFFECT_INFO.anxiety;
+      statusRows.push(makeRow(ea.icon, ea.name, ea.desc(enemy.anxiety)));
+    }
+    if ((enemy.lethargy || 0) > 0) {
+      var el = EFFECT_INFO.lethargy;
+      statusRows.push(makeRow(el.icon, el.name, el.desc(enemy.lethargy)));
     }
     /* 새 적 상태이상 추가 시 위와 같은 패턴으로 statusRows.push */
     if (statusRows.length > 0) {
