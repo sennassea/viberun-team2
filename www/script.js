@@ -107,6 +107,8 @@ const RELIC_DB = [
 const MAX_ENERGY = 3;
 const DRAW_PER_TURN = 5;
 const RUN_RECORD_KEY = "viberunRunRecords";
+const STARTING_GOLD = 120;
+const STARTING_MOON_SHARDS = 0;
 
 /* 전역 상태 */
 let S;
@@ -126,6 +128,9 @@ function newGame(){
     over: null,
     rewardOpen: false,
     relics: [],
+    potions: [],
+    gold: STARTING_GOLD,
+    moonShards: STARTING_MOON_SHARDS,
     turn: 1,
   };
 
@@ -334,6 +339,7 @@ function grantRelic(){
   const relic = RELIC_DB[Math.floor(Math.random() * RELIC_DB.length)];
   S.relics.push(relic);
   toast("유물 획득: " + relic.emoji + " " + relic.name);
+  renderHud();
 }
 
 function ensureRewardOverlay(){
@@ -462,17 +468,35 @@ function endGame(result){
 function renderAll(){ renderHud(); renderEffects(); renderIntents(); renderField(); renderHand(); renderDock(); updateEndBtn(); }
 
 function renderHud(){
+  normalizeRunResources();
   $("#hudPortrait").textContent = S.player.emoji || "👼";
   $("#hudName").textContent = S.player.name;
   $("#hudTitle").textContent = S.player.title || "";
   $("#hudHp").textContent = S.player.hp+"/"+S.player.maxHp;
   $("#hudHpFill").style.width = Math.max(0, Math.min(100, (S.player.hp / S.player.maxHp) * 100)) + "%";
+  $("#hudRelicCount").textContent = resourceCount(S.relics);
+  $("#hudPotionCount").textContent = resourceCount(S.potions);
+  $("#hudGold").textContent = S.gold;
+  $("#hudMoonShard").textContent = S.moonShards;
   $("#hudDeck").textContent = STARTER_DECK.length;
   $("#hudTurnNum").textContent = S.turn;
   const relics = document.querySelector(".relics");
   if(relics){
     relics.textContent = S.relics && S.relics.length ? S.relics.map(r => r.emoji).join(" ") : "🍀 ✝️ 🧸";
   }
+}
+
+function normalizeRunResources(){
+  if(!S) return;
+  if(!Array.isArray(S.relics)) S.relics = [];
+  if(S.potions === undefined) S.potions = [];
+  if(typeof S.gold !== "number") S.gold = STARTING_GOLD;
+  if(typeof S.moonShards !== "number") S.moonShards = STARTING_MOON_SHARDS;
+}
+
+function resourceCount(value){
+  if(Array.isArray(value)) return value.length;
+  return typeof value === "number" ? value : 0;
 }
 
 function renderEffects(){
@@ -755,6 +779,7 @@ function continueGameFromMenu(){
   }
 
   S = saved.state;
+  normalizeRunResources();
   STARTER_DECK = [...saved.starterDeck];
   S.busy = false;
   if(window.MAP_STATE && saved.mapState){

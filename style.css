@@ -104,16 +104,16 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 }
 
 /* =========================== ?곷떒 HUD =========================== */
-.top-hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:10.5cqh; z-index:30;}
+.top-hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:12cqh; z-index:30;}
 #hud{position:relative; width:100%; height:100%;
   display:flex; align-items:center; gap:1.2cqw;}
 .hud-card{display:flex; align-items:center; gap:.7cqw; background:var(--c-panel);
   border:0.2cqh solid var(--c-panel-line); border-radius:var(--r);
   padding:.8cqh 1.1cqw; backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);}
-.player-info-card{width:26cqw; min-width:30cqh; height:100%; align-items:center; gap:1cqw;
+.player-info-card{width:24cqw; min-width:30cqh; height:100%; align-items:center; gap:1.15cqw;
   padding:.8cqh 1cqw;}
-.player-info-body{min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:.45cqh;}
-.portrait{width:7cqh; height:7cqh; border-radius:50%; display:grid; place-items:center;
+.player-info-body{min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:.42cqh;}
+.portrait{width:11cqh; height:7cqh; border-radius:1.5cqh; display:grid; place-items:center;
   font-size:4.2cqh; background:linear-gradient(160deg,#fff,#dcecff);
   border:0.25cqh solid var(--c-gold); box-shadow:0 0 1cqh rgba(231,181,74,.6);}
 .who b{font-size:2.3cqh;} .who span{display:none;}
@@ -124,15 +124,19 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   background:rgba(122,42,42,.62); border:.12cqh solid rgba(0,0,0,.14);}
 #hudHpFill{position:absolute; left:0; top:0; bottom:0; width:100%;
   background:linear-gradient(180deg,#ff8079,var(--c-hp)); transition:width .35s ease;}
+.hud-resource-row{display:flex; align-items:center; gap:.65cqw; min-width:0; padding-top:.1cqh;}
+.hud-resource{display:inline-flex; align-items:center; gap:.22cqw; min-width:0;
+  font-size:1.45cqh; font-weight:900; color:var(--c-ink);}
+.hud-resource-icon{font-size:1.75cqh; line-height:1;}
 .stat{font-size:2.2cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw;}
 .spacer{flex:1;}
 .hud-btn{cursor:pointer; transition:transform .12s;} .hud-btn:active{transform:scale(.94);}
 #hudTurn{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);}
 
 /* =================== 醫뚯륫: ?꾩옱 ?④낵 / ?곗륫: ???섎룄 =================== */
-.left-side-hud{position:absolute; left:1.4cqh; top:12cqh; bottom:31cqh; width:14cqw; z-index:22;
+.left-side-hud{position:absolute; left:1.4cqh; top:14cqh; bottom:31cqh; width:14cqw; z-index:22;
   display:flex; flex-direction:column; align-items:center; gap:1.4cqh;}
-.battle-field{position:absolute; left:16.5cqw; right:1.4cqw; top:11cqh; bottom:31cqh; z-index:10;}
+.battle-field{position:absolute; left:16.5cqw; right:1.4cqw; top:13.5cqh; bottom:31cqh; z-index:10;}
 .side{position:absolute; top:12cqh; width:21cqw; z-index:20;
   background:var(--c-panel); border:0.2cqh solid var(--c-panel-line);
   border-radius:var(--r); padding:1.2cqh 1cqw; backdrop-filter:blur(4px);
