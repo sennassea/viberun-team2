@@ -556,10 +556,19 @@ function renderIntents(){
 
 function renderField(){
   const f=$("#field");
-  f.innerHTML="";
+  const playerLayer=$("#playerLayer");
+  const monsterLayer=$("#monsterLayer");
+  if(playerLayer && monsterLayer){
+    playerLayer.innerHTML="";
+    monsterLayer.innerHTML="";
+  }else{
+    f.innerHTML="";
+  }
+  const playerTarget=playerLayer || f;
+  const monsterTarget=monsterLayer || f;
 
   // 플레이어(좌측)
-  f.appendChild(combatantEl({
+  playerTarget.appendChild(combatantEl({
     cls:"player", layer:"foreground", emoji:S.player.emoji || "👼", sprite:"assets/characters/player-temp-cutout.png", name:S.player.name,
     hp:S.player.hp, maxHp:S.player.maxHp,
     block:S.player.block, weak:S.player.weak, healingAura:S.player.healingAura,
@@ -577,7 +586,7 @@ function renderField(){
     });
     if(e.hp<=0) el.classList.add("dead");
     el.addEventListener("pointerdown",()=>{ if(e.hp>0){ S.selectedId=e.id; renderField(); } });
-    f.appendChild(el);
+    monsterTarget.appendChild(el);
   });
 }
 

@@ -10,7 +10,7 @@
   /* 카드 간격에 사용할 게임 폭 비율
      - 0.68 → 손패가 게임 폭의 68% 안에 들어옴
      - 중앙 기준: 좌 34%~우 34%, 에너지(9cqw)·덱파일(89cqw) 모두 여유 확보 */
-  var AVAIL_W_FRAC    = 0.68;
+  var AVAIL_W_FRAC    = 0.38;
   /* 카드 폭: 11.5cqw */
   var CARD_W_PCT      = 0.115;
   /* 카드당 최대 간격: 카드 폭의 85% */
@@ -33,12 +33,13 @@
     if (!game || game.offsetWidth === 0) return;
 
     var gameW  = game.offsetWidth;
-    var cqw    = gameW / 100;
     var cardW  = CARD_W_PCT * gameW;          /* 카드 1장 픽셀 폭 */
-    var availW = AVAIL_W_FRAC * gameW;        /* 허용 전체 폭 (px) */
+    var handArea = hand.parentElement;
+    var areaW = handArea ? handArea.offsetWidth : 0;
+    var availW = areaW > 0 ? areaW * 0.92 : AVAIL_W_FRAC * gameW;        /* 허용 전체 폭 (px) */
 
     /* 카드 중심 간격: availW 안에 모든 카드가 들어오도록 */
-    var maxStep  = n > 1 ? availW / (n - 1) : availW;
+    var maxStep  = n > 1 ? Math.max(cardW * 0.42, (availW - cardW) / (n - 1)) : availW;
     var spacing  = Math.min(cardW * MAX_SPACING_R, maxStep);
 
     /* 부채꼴 각도: 카드 수에 비례, 최대값으로 제한 */

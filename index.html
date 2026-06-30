@@ -105,7 +105,12 @@
 
     <div class="battle-field">
       <div id="intents" class="side"><h3>적 행동 의도</h3><div id="intentList"></div></div>
-      <div id="field"></div>
+      <div class="player-foreground-zone" aria-hidden="true"></div>
+      <div class="monster-spawn-zone" aria-hidden="true"></div>
+      <div id="field">
+        <div id="monsterLayer" class="combatant-layer monster-combatant-layer"></div>
+        <div id="playerLayer" class="combatant-layer player-combatant-layer"></div>
+      </div>
     </div>
 
     <!-- 하단 도크 -->
