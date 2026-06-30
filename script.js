@@ -1,114 +1,35 @@
 ﻿"use strict";
 /* =========================================================================
-   카드 데이터베이스
-   - 캐릭터/몬스터/라이프 데이터는 별도 파일에서 관리
-   - 이 파일은 카드, 턴 흐름, 렌더링, 드래그 조작만 담당
+   Combat Controller
+   - Card data is loaded from cardData.js.
+   - This file handles combat state, turn flow, rendering, and drag controls.
    ========================================================================= */
 
 const COMBAT_DATA = window.BOHYUN_COMBAT_DATA || {};
 const LIFE = window.BOHYUN_LIFE_SYSTEM;
 const MONSTER_PATTERN = COMBAT_DATA.monsterPatternSystem;
 
-if(!COMBAT_DATA.character || !Array.isArray(COMBAT_DATA.monsters) || !LIFE || !MONSTER_PATTERN){
-  throw new Error("캐릭터/몬스터/라이프 데이터 파일이 먼저 로드되어야 합니다.");
+if(
+  !COMBAT_DATA.character ||
+  !Array.isArray(COMBAT_DATA.monsters) ||
+  !LIFE ||
+  !MONSTER_PATTERN ||
+  typeof CARD_DB === "undefined" ||
+  typeof BASE_STARTER_DECK === "undefined" ||
+  typeof STARTER_DECK === "undefined" ||
+  typeof CARD_REWARD_POOL === "undefined" ||
+  typeof RELIC_DB === "undefined" ||
+  typeof typeLabel === "undefined"
+){
+  throw new Error("캐릭터/몬스터/라이프/카드 데이터 파일이 먼저 로드되어야 합니다.");
 }
 
 const PLAYER_DEF = COMBAT_DATA.character;
 const MONSTER_DEFS = COMBAT_DATA.monsters;
 
-const CARD_DB = {
-  rosary:{name:"염주", cost:1, type:"attack", emoji:"📿", target:"enemy", attr:"성불", rarity:"starter",
-          desc:"정화 6\n가장 기본적인 정화 카드", fx:[{t:"damage",v:6}]},
-  bell:{name:"방울", cost:1, type:"attack", emoji:"🔔", target:"enemy", attr:"희망", rarity:"starter",
-          desc:"정화 5\n카드 1장 뽑기", fx:[{t:"damage",v:5},{t:"draw",v:1}]},
-  doll:{name:"인형", cost:1, type:"attack", emoji:"🧸", target:"enemy", attr:"추억", rarity:"starter",
-          desc:"정화 8\n동요 1 부여", fx:[{t:"damage",v:8},{t:"applyWeak",v:1}]},
-  bible:{name:"성경", cost:1, type:"defense", emoji:"📖", target:"self", attr:"희망", rarity:"starter",
-          desc:"마음의 결계 8\n카드 1장 뽑기", fx:[{t:"block",v:8},{t:"draw",v:1}]},
-  charm:{name:"오색부적", cost:1, type:"defense", emoji:"🎀", target:"self", attr:"희망", rarity:"starter",
-          desc:"마음의 결계 6\n동요 1 제거", fx:[{t:"block",v:6},{t:"removeWeak",v:1}]},
-  pray:{name:"기도", cost:1, type:"skill", emoji:"🙏", target:"self", attr:"희망", rarity:"starter",
-          desc:"스트레스 6 회복\n신통력 +1", fx:[{t:"heal",v:6},{t:"energy",v:1}]},
-
-  reaching_hand:{name:"손 내밀기", cost:1, type:"attack", emoji:"🤝", target:"enemy", attr:"희망", rarity:"common",
-          desc:"정화 7\n마음의 결계 5", fx:[{t:"damage",v:7},{t:"block",v:5}]},
-  its_okay:{name:"괜찮아", cost:1, type:"skill", emoji:"🌱", target:"self", attr:"희망", rarity:"common",
-          desc:"스트레스 6 회복\n카드 1장 뽑기", fx:[{t:"heal",v:6},{t:"draw",v:1}]},
-  hope_lantern:{name:"희망의 등불", cost:2, type:"attack", emoji:"🏮", target:"enemy", attr:"희망", rarity:"common",
-          desc:"모든 적에게 정화 6", fx:[{t:"damageAll",v:6}]},
-  warm_word:{name:"따뜻한 말", cost:0, type:"skill", emoji:"💬", target:"self", attr:"희망", rarity:"common",
-          desc:"마음의 결계 3\n카드 1장 뽑기", fx:[{t:"block",v:3},{t:"draw",v:1}]},
-  steady_breath:{name:"고른 숨", cost:1, type:"defense", emoji:"🌬️", target:"self", attr:"희망", rarity:"common",
-          desc:"마음의 결계 9", fx:[{t:"block",v:9}]},
-  comforting_light:{name:"위로의 빛", cost:1, type:"skill", emoji:"✨", target:"self", attr:"희망", rarity:"common",
-          desc:"스트레스 8 회복", fx:[{t:"heal",v:8}]},
-  small_promise:{name:"작은 약속", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"희망", rarity:"uncommon",
-          desc:"마음의 결계 4\n신통력 +1", fx:[{t:"block",v:4},{t:"energy",v:1}]},
-  guardian_prayer:{name:"수호 기도", cost:2, type:"defense", emoji:"🛡️", target:"self", attr:"희망", rarity:"uncommon",
-          desc:"마음의 결계 14\n동요 1 제거", fx:[{t:"block",v:14},{t:"removeWeak",v:1}]},
-  dawn_of_hope:{name:"희망의 새벽", cost:2, type:"skill", emoji:"🌅", target:"self", attr:"희망", rarity:"rare",
-          desc:"스트레스 10 회복\n신통력 +1\n카드 1장 뽑기", fx:[{t:"heal",v:10},{t:"energy",v:1},{t:"draw",v:1}]},
-
-  photo_album:{name:"사진첩", cost:1, type:"attack", emoji:"📷", target:"enemy", attr:"추억", rarity:"uncommon",
-          desc:"정화 6\n카드 2장 뽑기", fx:[{t:"damage",v:6},{t:"draw",v:2}]},
-  old_letter:{name:"오래된 편지", cost:1, type:"attack", emoji:"✉️", target:"enemy", attr:"추억", rarity:"uncommon",
-          desc:"정화 4\n동요 1 부여", fx:[{t:"damage",v:4},{t:"applyWeak",v:1}]},
-  lullaby:{name:"자장가", cost:2, type:"skill", emoji:"🎵", target:"enemy", attr:"추억", rarity:"uncommon",
-          desc:"모든 적에게 동요 1", fx:[{t:"applyWeakAll",v:1}]},
-  old_clock:{name:"낡은 시계", cost:1, type:"skill", emoji:"⏰", target:"enemy", attr:"추억", rarity:"rare",
-          desc:"동요 2 부여", fx:[{t:"applyWeak",v:2}]},
-  faded_photo:{name:"빛바랜 사진", cost:1, type:"attack", emoji:"🖼️", target:"enemy", attr:"추억", rarity:"common",
-          desc:"정화 5\n동요 1 부여\n카드 1장 뽑기", fx:[{t:"damage",v:5},{t:"applyWeak",v:1},{t:"draw",v:1}]},
-  familiar_song:{name:"익숙한 노래", cost:1, type:"skill", emoji:"🎶", target:"enemy", attr:"추억", rarity:"common",
-          desc:"동요 1 부여\n카드 2장 뽑기", fx:[{t:"applyWeak",v:1},{t:"draw",v:2}]},
-  memory_fragment:{name:"기억 조각", cost:0, type:"skill", emoji:"🧩", target:"self", attr:"추억", rarity:"uncommon",
-          desc:"카드 1장 뽑기\n신통력 +1", fx:[{t:"draw",v:1},{t:"energy",v:1}]},
-  old_diary:{name:"낡은 일기장", cost:2, type:"attack", emoji:"📔", target:"enemy", attr:"추억", rarity:"uncommon",
-          desc:"정화 8\n동요 2 부여", fx:[{t:"damage",v:8},{t:"applyWeak",v:2}]},
-  day_we_met:{name:"처음 만난 날", cost:2, type:"attack", emoji:"🌸", target:"enemy", attr:"추억", rarity:"rare",
-          desc:"정화 12\n카드 2장 뽑기", fx:[{t:"damage",v:12},{t:"draw",v:2}]},
-
-  chant:{name:"염불", cost:1, type:"attack", emoji:"🪷", target:"enemy", attr:"성불", rarity:"common",
-          desc:"정화 9", fx:[{t:"damage",v:9}]},
-  guiding_rite:{name:"천도재", cost:2, type:"attack", emoji:"🕯️", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"모든 적에게 정화 10", fx:[{t:"damageAll",v:10}]},
-  nirvana:{name:"극락왕생", cost:3, type:"attack", emoji:"🌸", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"정화 22\n사용 후 소멸", fx:[{t:"damage",v:22}], exhaust:true},
-  last_goodbye:{name:"마지막 인사", cost:2, type:"attack", emoji:"👋", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"정화 12\n미련 절반 이하 추가 정화 10", fx:[{t:"damage",v:12},{t:"bonusLowHpDamage",v:10}]},
-  talisman_strike:{name:"부적 던지기", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"성불", rarity:"common",
-          desc:"정화 8", fx:[{t:"damage",v:8}]},
-  purification_wave:{name:"정화의 파동", cost:2, type:"attack", emoji:"〰️", target:"enemy", attr:"성불", rarity:"uncommon",
-          desc:"모든 적에게 정화 8", fx:[{t:"damageAll",v:8}]},
-  final_rite:{name:"마지막 의식", cost:2, type:"attack", emoji:"🕯️", target:"enemy", attr:"성불", rarity:"uncommon",
-          desc:"정화 14", fx:[{t:"damage",v:14}]},
-  soul_release:{name:"혼백 해방", cost:3, type:"attack", emoji:"🕊️", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"정화 18\n동요 2 부여", fx:[{t:"damage",v:18},{t:"applyWeak",v:2}]},
-  lotus_path:{name:"연꽃길", cost:3, type:"attack", emoji:"🪷", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"모든 적에게 정화 14\n사용 후 소멸", fx:[{t:"damageAll",v:14}], exhaust:true}
-};
-Object.assign(CARD_DB, LIFE.getStatusCardDb());
-
-/* 시작 덱(여러 장 복제) */
-const BASE_STARTER_DECK = [
-  "rosary","rosary","rosary","rosary",
-  "bell","bell","doll","doll",
-  "bible","bible","bible","charm","charm","pray",
-];
-let STARTER_DECK = [...BASE_STARTER_DECK];
-
-const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => !["starter", "status"].includes(CARD_DB[key].rarity));
-
-const RELIC_DB = [
-  { id:"incense_burner", name:"향로", emoji:"🏺", desc:"전투 시작 시 마음의 결계 +6" },
-  { id:"spirit_tablet", name:"위령패", emoji:"🪦", desc:"정화 카드 수치 +1 (표시용)" },
-  { id:"charm_box", name:"부적함", emoji:"📦", desc:"첫 턴 신통력 +1 (표시용)" },
-];
-
 const MAX_ENERGY = 3;
 const ENERGY_SLOT_COUNT = 8;
 const DRAW_PER_TURN = 5;
-const RUN_RECORD_KEY = "viberunRunRecords";
 const STARTING_GOLD = 120;
 const STARTING_MOON_SHARDS = 0;
 
@@ -676,8 +597,6 @@ function renderHand(){
     h.appendChild(el);
   });
 }
-const typeLabel = t=> t==="attack"?"정화":t==="defense"?"결계":t==="status"?"상태":"스킬";
-
 function renderDock(){
   $("#energy .val").textContent = S.energy+"/"+MAX_ENERGY;
   renderEnergyOrbs();
@@ -830,280 +749,6 @@ function toast(msg){
 function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeout(()=>e.classList.remove("flash"),350); }
 const wait = ms=>new Promise(r=>setTimeout(r,ms));
 
-function startNewGameFromMenu(){
-  /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
-  if(typeof window.ACT1_START_NEW_GAME === "function"){
-    window.ACT1_START_NEW_GAME();
-    return;
-  }
-
-  try {
-    if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
-  } catch(error) {}
-
-  if(typeof generateMap === "function") generateMap();
-  if(window.MAP_STATE){
-    window.MAP_STATE.currentStage = -1;
-    window.MAP_STATE.proceedMode = true;
-    window.MAP_STATE.startMapMode = true;
-  }
-  if(typeof updateHudFloor === "function") updateHudFloor();
-  $("#over").classList.remove("show");
-  const startScreen = $("#startScreen");
-  if(startScreen) startScreen.classList.add("hidden");
-  if(typeof openMap === "function") openMap();
-  updateContinueButtonInfo();
-}
-
-function returnToStartScreen(){
-  try {
-    if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
-  } catch(error) {}
-
-  STARTER_DECK = [...BASE_STARTER_DECK];
-  if(typeof generateMap === "function") generateMap();
-  if(window.MAP_STATE){
-    window.MAP_STATE.currentStage = 0;
-    window.MAP_STATE.proceedMode = false;
-  }
-  if(typeof loadStageMonsters === "function") loadStageMonsters(0);
-  if(typeof updateHudFloor === "function") updateHudFloor();
-
-  closeRewardOverlay();
-  $("#over").classList.remove("show");
-  const startScreen = $("#startScreen");
-  if(startScreen) startScreen.classList.remove("hidden");
-  updateContinueButtonInfo();
-}
-
-function continueGameFromMenu(){
-  const saved = readSavedProgress();
-  if(!saved){
-    showStartNotice("저장 지점이 없습니다.");
-    return;
-  }
-
-  S = saved.state;
-  normalizeRunResources();
-  STARTER_DECK = [...saved.starterDeck];
-  S.busy = false;
-  if(window.MAP_STATE && saved.mapState){
-    window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
-    window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
-  }
-  if(typeof updateHudFloor === "function") updateHudFloor();
-  $("#over").classList.remove("show");
-  closeRewardOverlay();
-  renderAll();
-  const startScreen = $("#startScreen");
-  if(startScreen) startScreen.classList.add("hidden");
-  updateContinueButtonInfo();
-}
-
-function readSavedProgress(){
-  if(typeof localStorage === "undefined") return null;
-  try {
-    const raw = localStorage.getItem("viberunSaveState");
-    if(!raw) return null;
-    const saved = JSON.parse(raw);
-    if(!isUsableSavedProgress(saved)) return null;
-    return saved;
-  } catch(error) {
-    localStorage.removeItem("viberunSaveState");
-    return null;
-  }
-}
-
-function isUsableSavedProgress(saved){
-  return !!(
-    saved &&
-    saved.state &&
-    saved.state.player &&
-    typeof saved.state.player.hp === "number" &&
-    typeof saved.state.player.maxHp === "number" &&
-    Array.isArray(saved.state.hand) &&
-    Array.isArray(saved.state.draw) &&
-    Array.isArray(saved.state.discard) &&
-    Array.isArray(saved.starterDeck) &&
-    saved.starterDeck.length > 0
-  );
-}
-
-function showStartNotice(message){
-  let notice = document.querySelector("#startNotice");
-  if(!notice){
-    notice = document.createElement("div");
-    notice.id = "startNotice";
-    notice.className = "start-notice";
-    notice.innerHTML =
-      '<div class="start-notice-panel">' +
-        '<p></p>' +
-      '</div>';
-  }
-  const host = document.querySelector("#startScreen") || document.querySelector(".start-continue-game");
-  if(notice.parentNode !== host) host.appendChild(notice);
-  notice.querySelector("p").textContent = message;
-  notice.classList.add("show");
-  clearTimeout(notice._hideTimer);
-  notice._hideTimer = setTimeout(() => notice.classList.remove("show"), 1500);
-}
-
-function showStartScreenAfterSave(){
-  $("#over").classList.remove("show");
-  closeRewardOverlay();
-  updateContinueButtonInfo();
-  const startScreen = $("#startScreen");
-  if(startScreen) startScreen.classList.remove("hidden");
-}
-
-function updateContinueButtonInfo(){
-  const button = document.querySelector(".start-continue-game");
-  if(!button) return;
-  const status = button.querySelector(".continue-status");
-  if(!status) return;
-
-  const saved = readSavedProgress();
-  if(!saved){
-    button.classList.remove("has-save");
-    status.textContent = "메인 로비";
-    return;
-  }
-
-  button.classList.add("has-save");
-  const floor = formatSavedFloor(saved);
-  const turn = saved.state && saved.state.turn ? saved.state.turn : 1;
-  status.textContent = floor + " " + turn + "턴";
-}
-
-function formatSavedFloor(saved){
-  const label = saved.mapState && saved.mapState.floorLabel ? saved.mapState.floorLabel : "";
-  const match = label.match(/(\d+)\s*F/i);
-  if(match) return match[1] + "층";
-  return "메인 로비";
-}
-
-function saveCompletedRunRecord(result){
-  if(!S || S.recordSaved) return;
-  const completed = result === "lose" || (result === "win" && typeof hasNextTier === "function" && !hasNextTier());
-  if(!completed) return;
-
-  S.recordSaved = true;
-  if(typeof localStorage === "undefined") return;
-
-  try {
-    const records = readRunRecords();
-    records.unshift({
-      id: Date.now(),
-      result,
-      floor: getRunRecordFloor(),
-      turn: S.turn || 1,
-      createdAt: new Date().toISOString()
-    });
-    localStorage.setItem(RUN_RECORD_KEY, JSON.stringify(records));
-  } catch(error) {}
-}
-
-function readRunRecords(){
-  if(typeof localStorage === "undefined") return [];
-  try {
-    const parsed = JSON.parse(localStorage.getItem(RUN_RECORD_KEY) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch(error) {
-    return [];
-  }
-}
-
-function getRunRecordFloor(){
-  if(typeof getCurrentNodeId === "function" && typeof nodeFloorIdx === "function"){
-    const floorIndex = nodeFloorIdx(getCurrentNodeId());
-    if(floorIndex > 0) return floorIndex + "층";
-  }
-
-  const hudFloor = document.getElementById("hudFloor");
-  const match = hudFloor ? hudFloor.textContent.match(/(\d+)\s*F/i) : null;
-  if(match) return match[1] + "층";
-  return "메인 로비";
-}
-
-function openRecordPage(){
-  let overlay = document.getElementById("recordPageOverlay");
-  if(!overlay) overlay = buildRecordPage();
-  renderRecordPage(overlay);
-  overlay.classList.add("show");
-  overlay.setAttribute("aria-hidden", "false");
-}
-
-function closeRecordPage(){
-  const overlay = document.getElementById("recordPageOverlay");
-  if(!overlay) return;
-  overlay.classList.remove("show");
-  overlay.setAttribute("aria-hidden", "true");
-}
-
-function buildRecordPage(){
-  injectRecordPageStyles();
-  const overlay = document.createElement("div");
-  overlay.id = "recordPageOverlay";
-  overlay.className = "record-page-overlay";
-  overlay.setAttribute("aria-hidden", "true");
-  overlay.innerHTML =
-    '<div class="record-page-panel" role="dialog" aria-modal="true" aria-labelledby="recordPageTitle">' +
-      '<div class="record-page-head">' +
-        '<h2 id="recordPageTitle">기록</h2>' +
-        '<button type="button" class="record-page-close" aria-label="닫기">×</button>' +
-      '</div>' +
-      '<div class="record-page-body"></div>' +
-    '</div>';
-  overlay.querySelector(".record-page-close").addEventListener("click", closeRecordPage);
-  overlay.addEventListener("click", event => {
-    if(event.target === overlay) closeRecordPage();
-  });
-  document.getElementById("game").appendChild(overlay);
-  return overlay;
-}
-
-function renderRecordPage(overlay){
-  const body = overlay.querySelector(".record-page-body");
-  const records = readRunRecords();
-  if(!records.length){
-    body.innerHTML = '<p class="record-page-empty">아직 완료된 기록이 없습니다.</p>';
-    return;
-  }
-
-  body.innerHTML = records.map((record, index) => {
-    const resultLabel = record.result === "win" ? "클리어" : "패배";
-    const date = record.createdAt ? new Date(record.createdAt).toLocaleDateString("ko-KR") : "";
-    return '<div class="record-page-item">' +
-      '<div class="record-page-rank">' + (index + 1) + '</div>' +
-      '<div class="record-page-main">' +
-        '<strong>' + (record.floor || "메인 로비") + ' ' + (record.turn || 1) + '턴</strong>' +
-        '<span>' + resultLabel + (date ? ' · ' + date : '') + '</span>' +
-      '</div>' +
-    '</div>';
-  }).join("");
-}
-
-function injectRecordPageStyles(){
-  if(document.getElementById("recordPageStyle")) return;
-  const style = document.createElement("style");
-  style.id = "recordPageStyle";
-  style.textContent =
-    '.record-page-overlay{position:absolute;inset:0;z-index:230;display:none;place-items:center;background:rgba(10,20,40,.58);backdrop-filter:blur(.5cqh);}' +
-    '.record-page-overlay.show{display:grid;}' +
-    '.record-page-panel{width:min(54cqw,78cqh);max-height:78cqh;display:flex;flex-direction:column;background:rgba(255,255,255,.96);border:.28cqh solid var(--c-panel-line);border-radius:1.4cqh;box-shadow:0 2cqh 6cqh rgba(0,0,0,.34);overflow:hidden;color:var(--c-ink);}' +
-    '.record-page-head{display:flex;align-items:center;justify-content:space-between;padding:1.6cqh 1.8cqw;border-bottom:.18cqh solid var(--c-panel-line);}' +
-    '.record-page-head h2{font-size:2.8cqh;margin:0;font-weight:900;}' +
-    '.record-page-close{width:4cqh;height:4cqh;border-radius:50%;border:.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);font-size:2.2cqh;font-weight:900;cursor:pointer;line-height:1;}' +
-    '.record-page-body{padding:1.4cqh 1.5cqw;overflow:auto;display:grid;gap:1cqh;}' +
-    '.record-page-empty{padding:6cqh 1cqw;text-align:center;font-size:2cqh;font-weight:900;color:var(--c-ink-soft);}' +
-    '.record-page-item{display:flex;align-items:center;gap:1cqw;padding:1.1cqh 1cqw;border:.18cqh solid var(--c-panel-line);border-radius:1cqh;background:linear-gradient(180deg,#fff,#eef6ff);}' +
-    '.record-page-rank{width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;background:var(--c-blue);color:#fff;font-size:1.8cqh;font-weight:900;}' +
-    '.record-page-main{min-width:0;display:grid;gap:.25cqh;}' +
-    '.record-page-main strong{font-size:2.2cqh;line-height:1.1;}' +
-    '.record-page-main span{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);}';
-  document.head.appendChild(style);
-}
-
 function injectRewardStyles(){
   if(document.querySelector("#rewardStyle")) return;
   const style = document.createElement("style");
@@ -1131,19 +776,8 @@ function injectRewardStyles(){
 /* ----- 버튼 바인딩 ----- */
 $("#endTurn").addEventListener("click", endTurn);
 $("#restart").addEventListener("click", ()=>{ $("#over").classList.remove("show"); newGame(); });
-$("#returnStart").addEventListener("click", returnToStartScreen);
-document.querySelectorAll(".start-new-game").forEach(button => {
-  button.addEventListener("click", startNewGameFromMenu);
-});
-document.querySelectorAll(".start-continue-game").forEach(button => {
-  button.addEventListener("click", continueGameFromMenu);
-});
-document.querySelectorAll(".start-record-button").forEach(button => {
-  button.addEventListener("click", openRecordPage);
-});
 
 /* 시작 */
 injectRewardStyles();
-updateContinueButtonInfo();
 
 
