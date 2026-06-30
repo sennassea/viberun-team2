@@ -9,14 +9,14 @@
    ========================================================================= */
 
 /* ── 대각선 맵 좌표 상수 ─────────────────────────────────────────────────── */
-const DMAP_W      = 1500;   // 가상 맵 전체 너비
-const DMAP_H      = 1400;   // 가상 맵 전체 높이
+const DMAP_W      = 1470;   // 가상 맵 전체 너비
+const DMAP_H      = 1310;   // 가상 맵 전체 높이 (하단 여백 최소화)
 const DMAP_VIEW_W = 820;    // SVG viewBox 너비 (가상 좌표계)
 const DMAP_VIEW_H = 510;    // SVG viewBox 높이 (가상 좌표계)
 
-const DMAP_START_X = 160;   // 로비(시작) 노드 기준 X
-const DMAP_START_Y = 1200;  // 로비(시작) 노드 기준 Y
-const DMAP_END_X   = 1240;  // 보스 노드 기준 X
+const DMAP_START_X = 260;   // 로비(시작) 노드 기준 X  (좌측 여백 확보)
+const DMAP_START_Y = 1100;  // 로비(시작) 노드 기준 Y  (하단 단축)
+const DMAP_END_X   = 1340;  // 보스 노드 기준 X
 const DMAP_END_Y   = 290;   // 보스 노드 기준 Y
 
 const DMAP_SPREAD  = 170;   // 같은 층 노드 간 간격 (가상 좌표)
@@ -26,8 +26,8 @@ const DMAP_SPREAD  = 170;   // 같은 층 노드 간 간격 (가상 좌표)
 let mapScrollX = 0;
 let mapZoom    = 1.0;   // >1 = 확대, <1 = 축소
 
-const DMAP_ZOOM_MIN = 0.35;  // 전체 맵이 보이는 수준
-const DMAP_ZOOM_MAX = 3.0;
+const DMAP_ZOOM_MIN = 0.558; // 전체 노드 가로가 딱 맞는 최대 축소 (820/1470)
+const DMAP_ZOOM_MAX = 1.5;   // 이미지1 수준의 적당한 확대까지만 허용
 
 function dmapViewW() { return DMAP_VIEW_W / mapZoom; }
 function dmapViewH() { return DMAP_VIEW_H / mapZoom; }
@@ -73,6 +73,9 @@ function getDiagNodePos(floors) {
 
 /* ── centerScrollOnFloor 오버라이드 (2D) ────────────────────────────────── */
 function centerScrollOnFloor(fi) {
+  // 맵 열 때 기본 줌 1.0 (최소줌 0.558에서 휠 5번 확대한 수준)
+  mapZoom = 1.0;
+
   const pos   = getDiagNodePos(MAP_FLOORS);
   const floor = MAP_FLOORS[fi];
   if (!floor || !floor.length) return;
