@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 /* =========================================================================
    카드 데이터베이스
    - 캐릭터/몬스터/라이프 데이터는 별도 파일에서 관리
@@ -85,8 +85,9 @@ const CARD_DB = {
   soul_release:{name:"혼백 해방", cost:3, type:"attack", emoji:"🕊️", target:"enemy", attr:"성불", rarity:"rare",
           desc:"정화 18\n동요 2 부여", fx:[{t:"damage",v:18},{t:"applyWeak",v:2}]},
   lotus_path:{name:"연꽃길", cost:3, type:"attack", emoji:"🪷", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"모든 적에게 정화 14\n사용 후 소멸", fx:[{t:"damageAll",v:14}], exhaust:true},
+          desc:"모든 적에게 정화 14\n사용 후 소멸", fx:[{t:"damageAll",v:14}], exhaust:true}
 };
+Object.assign(CARD_DB, LIFE.getStatusCardDb());
 
 /* 시작 덱(여러 장 복제) */
 const BASE_STARTER_DECK = [
@@ -96,7 +97,7 @@ const BASE_STARTER_DECK = [
 ];
 let STARTER_DECK = [...BASE_STARTER_DECK];
 
-const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => CARD_DB[key].rarity !== "starter");
+const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => !["starter", "status"].includes(CARD_DB[key].rarity));
 
 const RELIC_DB = [
   { id:"incense_burner", name:"향로", emoji:"🏺", desc:"전투 시작 시 마음의 결계 +6" },
@@ -173,11 +174,35 @@ function drawCards(n){
     }
     const drawn = S.draw.pop();
     if(S.hand.length >= 10){
-      S.discard.push(drawn);
+      discardCard(drawn, { source: "drawOverflow" });
     } else {
       S.hand.push(drawn);
     }
   }
+}
+
+function discardCard(key, options = {}){
+  const card = CARD_DB[key];
+  if(!card) return;
+
+  const statusResult = LIFE.resolveStatusCardDiscard(card, S.player, options);
+  if(statusResult.handled){
+    if(statusResult.damage){
+      const sel = '.player';
+      if(statusResult.damage.absorbed > 0) spawnFloat(sel, '-'+statusResult.damage.absorbed, 'blk');
+      if(statusResult.damage.hpLoss > 0) spawnFloat(sel, '-'+statusResult.damage.hpLoss, 'dmg');
+    }
+    if(statusResult.message) toast(statusResult.message);
+    if(statusResult.discard) S.discard.push(key);
+    return;
+  }
+
+  if(card.exhaust){
+    toast(card.name + " 소멸");
+    return;
+  }
+
+  S.discard.push(key);
 }
 
 /* =========================================================================
@@ -187,7 +212,8 @@ function playCard(handIndex, targetEnemy){
   const key = S.hand[handIndex];
   const card = CARD_DB[key];
   if(!card) return false;
-  if(S.energy < card.cost){ flashEnergy(); toast("신통력이 부족합니다"); return false; }
+  if(card.unplayable){ toast(card.name + "은 사용할 수 없습니다"); return false; }
+  if(S.energy < card.cost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
 
   S.energy -= card.cost;
@@ -234,11 +260,7 @@ function playCard(handIndex, targetEnemy){
 
   // 손패 → 버린 더미. 소멸 카드는 이번 전투에서 제거
   S.hand.splice(handIndex,1);
-  if(!card.exhaust){
-    S.discard.push(key);
-  } else {
-    toast(card.name + " 소멸");
-  }
+  discardCard(key, { source: "played" });
 
   if(livingEnemies().length===0){
     advanceEnemyOrWin();
@@ -400,14 +422,18 @@ async function endTurn(){
   S.busy = true;
   updateEndBtn();
 
-  // 플레이어 턴 종료: 자신의 약화 1 감소
+  // 플레이어 턴 종료: 자신의 동요 1 감소
   LIFE.reduceWeak(S.player, 1);
 
-  // 남은 손패 버림
-  S.discard.push(...S.hand);
+  // 남은 손패 버림. 일부 상태 카드는 버려질 때 피해를 주거나 소멸한다.
+  S.hand.forEach(key => discardCard(key, { source: "turnEnd" }));
   S.hand = [];
   renderAll();
   await wait(250);
+
+  if(S.player.hp<=0){
+    return endGame("lose");
+  }
 
   // 현재 몬스터 행동
   for(const e of S.enemies){
@@ -423,8 +449,18 @@ async function endTurn(){
       spawnFloat('[data-id="'+e.id+'"]', '+'+mv.v, 'blk');
     }
     else if(mv.t==="debuff"){
-      LIFE.addWeak(S.player, mv.v);
-      spawnFloat('.player', '약화', 'dmg');
+      if(mv.role === "anxiety"){
+        LIFE.addAnxiety(S.player, mv.v);
+        spawnFloat('.player', '불안', 'dmg');
+      }
+      else if(mv.role === "counter"){
+        LIFE.addLethargy(S.player, mv.v);
+        spawnFloat('.player', '무기력', 'dmg');
+      }
+      else {
+        LIFE.addWeak(S.player, mv.v);
+        spawnFloat('.player', '동요', 'dmg');
+      }
     }
 
     LIFE.reduceWeak(e, 1);
@@ -439,9 +475,14 @@ async function endTurn(){
 
   // 새 플레이어 턴 준비
   LIFE.prepareNextPlayerTurn(S.player);
-  S.energy = MAX_ENERGY;
+  const anxietyPenalty = LIFE.consumeAnxiety(S.player);
+  const lethargyPenalty = LIFE.consumeLethargy(S.player);
+  S.energy = Math.max(0, MAX_ENERGY - lethargyPenalty);
+  const drawCount = Math.max(0, DRAW_PER_TURN - anxietyPenalty);
+  if(anxietyPenalty > 0) toast("불안으로 카드 뽑기 -1");
+  if(lethargyPenalty > 0) toast("무기력으로 정신력 -1");
   S.turn += 1;
-  drawCards(DRAW_PER_TURN);
+  drawCards(drawCount);
   S.enemies.forEach(planIntent);
   S.busy = false;
   renderAll();
@@ -530,6 +571,8 @@ function renderEffects(){
   const rows=[];
   if(S.player.block>0) rows.push(eff("🛡️","마음의 결계","결계 "+S.player.block));
   if(S.player.weak>0)  rows.push(eff("🌀","동요","정화 피해 25% 감소 ("+S.player.weak+"턴)"));
+  if((S.player.anxiety||0)>0) rows.push(eff("💭","불안","다음 턴 카드 뽑기 -1 ("+S.player.anxiety+"턴)"));
+  if((S.player.lethargy||0)>0) rows.push(eff("🌫️","무기력","다음 턴 정신력 -1 ("+S.player.lethargy+"턴)"));
   rows.push(eff("💚","치유의 향기","회복 카드 보유"));
   $("#effList").innerHTML = rows.join("") || '<div class="eff-empty">효과 없음</div>';
 }
@@ -545,7 +588,13 @@ function renderIntents(){
     let ico,txt,cls;
     if(m.t==="attack"){ico="💢";txt=(m.name ? m.name+" / " : "")+"스트레스 "+m.v+(e.weak>0?" (동요)":"");cls="atk";}
     else if(m.t==="defend"){ico="🛡️";txt=(m.name ? m.name+" / " : "")+"결계 "+m.v+" 획득";cls="def";}
-    else {ico="🌀";txt=(m.name ? m.name+" / " : "")+"동요 "+m.v+" 부여";cls="deb";}
+    else {
+      const isAnxiety = m.role === "anxiety";
+      const isLethargy = m.role === "counter";
+      ico = isAnxiety ? "💭" : isLethargy ? "🌫️" : "🌀";
+      txt = (m.name ? m.name+" / " : "") + (isAnxiety ? "불안 " : isLethargy ? "무기력 " : "동요 ") + m.v + " 부여";
+      cls = "deb";
+    }
     return '<div class="eff-row"><div class="eff-ico">'+ico+'</div>'
          +'<div class="eff-txt"><b style="color:'
          +(cls==="atk"?"var(--c-red-deep)":cls==="def"?"var(--c-blue-deep)":"#8a5cc0")
@@ -562,7 +611,7 @@ function renderField(){
   f.appendChild(combatantEl({
     cls:"player", emoji:S.player.emoji || "👼", sprite:"assets/characters/player-temp-cutout.png", name:S.player.name,
     hp:S.player.hp, maxHp:S.player.maxHp,
-    block:S.player.block, weak:S.player.weak, healingAura:S.player.healingAura,
+    block:S.player.block, weak:S.player.weak, anxiety:S.player.anxiety, lethargy:S.player.lethargy, healingAura:S.player.healingAura,
     x:18, bottom:"0", intent:null, hideHud:true,
   }));
 
@@ -570,7 +619,7 @@ function renderField(){
   S.enemies.forEach((e, i)=>{
     const el=combatantEl({
       cls:"enemy ghost"+(e.id===S.selectedId?" selected":""), emoji:e.emoji, name:e.name,
-      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak,
+      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, anxiety:e.anxiety, lethargy:e.lethargy,
       x:S.enemies.length > 1 ? 62 + (i * 10) : (e.x || 73),
       bottom:S.enemies.length > 1 ? (35 + (i % 2) * 3)+"cqh" : "36cqh",
       intent:e.intent, id:e.id,
@@ -604,6 +653,8 @@ function combatantEl(o){
 function intentBubble(m,weak){
   if(m.t==="attack") return '<div class="intent atk">💢 '+m.v+(weak>0?'↓':'')+'</div>';
   if(m.t==="defend") return '<div class="intent def">🛡️ 보호</div>';
+  if(m.role==="anxiety") return '<div class="intent deb">💭 불안</div>';
+  if(m.role==="counter") return '<div class="intent deb">🌫️ 무기력</div>';
   return '<div class="intent deb">🌀 동요</div>';
 }
 
@@ -625,7 +676,7 @@ function renderHand(){
     h.appendChild(el);
   });
 }
-const typeLabel = t=> t==="attack"?"정화":t==="defense"?"결계":"스킬";
+const typeLabel = t=> t==="attack"?"정화":t==="defense"?"결계":t==="status"?"상태":"스킬";
 
 function renderDock(){
   $("#energy .val").textContent = S.energy+"/"+MAX_ENERGY;
@@ -1094,3 +1145,5 @@ document.querySelectorAll(".start-record-button").forEach(button => {
 /* 시작 */
 injectRewardStyles();
 updateContinueButtonInfo();
+
+
