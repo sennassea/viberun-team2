@@ -20,7 +20,7 @@
 
 /* 호버: 카드 직립 + 적당히 확대 + 살짝 들어올림 */
 #hand .card:hover {
-  transform: rotate(0deg) translateY(-4cqh) scale(1.2);
+  transform: rotate(0deg) translateY(-1.4cqh) scale(1.06);
   z-index: 99 !important;
   box-shadow: 0 1.5cqh 3cqh rgba(40,70,120,.45);
   transition: transform .2s ease, box-shadow .2s ease;
@@ -34,7 +34,7 @@
 
 /* 공격 카드 타겟팅 중: 직립·확대·앞으로 (카드는 손패에 고정) */
 #hand .card.targeting {
-  transform: rotate(0deg) translateY(-5cqh) scale(1.15);
+  transform: rotate(0deg) translateY(-2cqh) scale(1.06);
   z-index: 200 !important;
   opacity: 1;
   box-shadow: 0 2cqh 4cqh rgba(231,181,74,.6);
