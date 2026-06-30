@@ -553,37 +553,28 @@ function renderIntents(){
 
 function renderField(){
   const f=$("#field");
-  const playerLayer=$("#playerLayer");
-  const monsterLayer=$("#monsterLayer");
-  if(playerLayer && monsterLayer){
-    playerLayer.innerHTML="";
-    monsterLayer.innerHTML="";
-  }else{
-    f.innerHTML="";
-  }
-  const playerTarget=playerLayer || f;
-  const monsterTarget=monsterLayer || f;
+  f.innerHTML="";
 
   // 플레이어(좌측)
-  playerTarget.appendChild(combatantEl({
-    cls:"player", layer:"foreground", emoji:S.player.emoji || "👼", sprite:"assets/characters/player-temp-cutout.png", name:S.player.name,
+  f.appendChild(combatantEl({
+    cls:"player", emoji:S.player.emoji || "👼", sprite:"assets/characters/player-temp-cutout.png", name:S.player.name,
     hp:S.player.hp, maxHp:S.player.maxHp,
-block:S.player.block, weak:S.player.weak, anxiety:S.player.anxiety, lethargy:S.player.lethargy, healingAura:S.player.healingAura,
-x:20, bottom:"2cqh", intent:null, hideHud:true,
+    block:S.player.block, weak:S.player.weak, anxiety:S.player.anxiety, lethargy:S.player.lethargy, healingAura:S.player.healingAura,
+    x:18, bottom:"0", intent:null, hideHud:true,
   }));
 
   // 현재 몬스터 1명만 우측에 표시
   S.enemies.forEach((e, i)=>{
     const el=combatantEl({
-cls:"enemy ghost"+(e.id===S.selectedId?" selected":""), layer:"background", emoji:e.emoji, name:e.name,
-hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, anxiety:e.anxiety, lethargy:e.lethargy,
+      cls:"enemy ghost"+(e.id===S.selectedId?" selected":""), emoji:e.emoji, name:e.name,
+      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, anxiety:e.anxiety, lethargy:e.lethargy,
       x:S.enemies.length > 1 ? 62 + (i * 10) : (e.x || 73),
       bottom:S.enemies.length > 1 ? (35 + (i % 2) * 3)+"cqh" : "36cqh",
       intent:e.intent, id:e.id,
     });
     if(e.hp<=0) el.classList.add("dead");
     el.addEventListener("pointerdown",()=>{ if(e.hp>0){ S.selectedId=e.id; renderField(); } });
-    monsterTarget.appendChild(el);
+    f.appendChild(el);
   });
 }
 
@@ -594,7 +585,6 @@ function combatantEl(o){
   el.style.left=o.x+"%";
   el.style.bottom=o.bottom || "2cqh";
   el.style.transform="translateX(-50%)";
-  if(o.layer) el.dataset.layer = o.layer;
   if(o.id) el.dataset.id=o.id;
   const intentHtml = o.intent ? intentBubble(o.intent,o.weak) : "";
   const avatarHtml = o.sprite
