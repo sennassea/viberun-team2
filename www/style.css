@@ -177,7 +177,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 
 /* =========================== ?섎떒: ?몃뱶/議곗옉 =========================== */
 #dock{position:absolute; left:0; right:0; bottom:0; height:29cqh; z-index:25;}
-.card-hand-area{position:absolute; left:21cqw; right:calc(14cqh + 3.2cqw); bottom:0; height:28cqh; overflow:hidden;}
+.card-hand-area{position:absolute; left:21cqw; right:calc(14cqh + 3.2cqw); bottom:0; height:28cqh; overflow:visible; z-index:2;}
 .right-bottom-actions{position:absolute; right:1.4cqh; bottom:3cqh; width:max-content;
   display:grid; grid-template-columns:repeat(2, 7cqh); grid-auto-rows:max-content;
   align-items:end; justify-content:end; gap:1.2cqh 1cqw;}
