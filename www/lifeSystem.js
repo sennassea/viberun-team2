@@ -162,6 +162,13 @@
       return 1;
     },
 
+    reduceAnxiety(target, value){
+      if(!target || value <= 0) return 0;
+      const before = target.anxiety || 0;
+      target.anxiety = Math.max(0, before - value);
+      return before - target.anxiety;
+    },
+
     addLethargy(target, value){
       if(!target || value <= 0) return 0;
       target.lethargy = (target.lethargy || 0) + value;
@@ -172,6 +179,13 @@
       if(!target || (target.lethargy || 0) <= 0) return 0;
       target.lethargy = Math.max(0, (target.lethargy || 0) - 1);
       return 1;
+    },
+
+    reduceLethargy(target, value){
+      if(!target || value <= 0) return 0;
+      const before = target.lethargy || 0;
+      target.lethargy = Math.max(0, before - value);
+      return before - target.lethargy;
     },
 
     resolveStatusCardDiscard(card, player, options = {}){
