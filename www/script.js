@@ -491,9 +491,15 @@ function renderIntents(){
 function renderField(){
   const f = $("#field");
   f.innerHTML = "";
+  const playerLayer = document.createElement("div");
+  playerLayer.className = "player-layer";
+  const monsterField = document.createElement("div");
+  monsterField.className = "monster-field";
+  f.appendChild(playerLayer);
+  f.appendChild(monsterField);
 
   // 플레이어 (좌측 고정)
-  f.appendChild(combatantEl({
+  playerLayer.appendChild(combatantEl({
     cls:"player", emoji:S.player.emoji||"👼",
     sprite:"assets/characters/player-temp-cutout.png",
     name:S.player.name, hp:S.player.hp, maxHp:S.player.maxHp,
@@ -503,7 +509,7 @@ function renderField(){
   }));
 
   // 몬스터 수별 X 배치 (기획서 §9-1)
-  const X_POS = { 1:[72], 2:[60,82], 3:[54,70,86], 4:[50,63,76,89] };
+  const X_POS = { 1:[55], 2:[42,68], 3:[33,55,78], 4:[24,45,66,87] };
   const xList = X_POS[Math.min(S.enemies.length, 4)] || X_POS[4];
 
   S.enemies.forEach((e, i) => {
@@ -512,12 +518,12 @@ function renderField(){
       emoji:e.emoji, name:e.name,
       hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak,
       anxiety:e.anxiety, lethargy:e.lethargy,
-      x: xList[i] ?? 72, bottom:"36cqh",
+      x: xList[i] ?? 55, bottom:"4cqh",
       intent:e.intent, id:e.id,
     });
     if(e.hp<=0) el.classList.add("dead");
     el.addEventListener("pointerdown", () => { if(e.hp>0){ S.selectedId=e.id; renderField(); } });
-    f.appendChild(el);
+    monsterField.appendChild(el);
   });
 }
 
