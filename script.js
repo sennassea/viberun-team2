@@ -482,6 +482,13 @@ function renderHud(){
   $("#hudDeck").textContent = STARTER_DECK.length;
   $("#hudTurnNum").textContent = S.turn;
   renderSideItemSlots();
+  renderProfileStatuses();
+}
+
+function renderProfileStatuses(){
+  const host = $("#profileStatusEffects");
+  if(!host) return;
+  host.innerHTML = LIFE.renderStatuses(S.player);
 }
 
 function renderSideItemSlots(){
@@ -553,16 +560,20 @@ function renderField(){
 
   // 플레이어(좌측)
   f.appendChild(combatantEl({
-    cls:"player", emoji:S.player.emoji || "👼", name:S.player.name,
+    cls:"player", emoji:S.player.emoji || "👼", sprite:"assets/characters/player-temp-cutout.png", name:S.player.name,
     hp:S.player.hp, maxHp:S.player.maxHp,
-    block:S.player.block, weak:S.player.weak, healingAura:S.player.healingAura, x:18, intent:null,
+    block:S.player.block, weak:S.player.weak, healingAura:S.player.healingAura,
+    x:18, bottom:"0", intent:null, hideHud:true,
   }));
 
   // 현재 몬스터 1명만 우측에 표시
-  S.enemies.forEach((e)=>{
+  S.enemies.forEach((e, i)=>{
     const el=combatantEl({
       cls:"enemy ghost"+(e.id===S.selectedId?" selected":""), emoji:e.emoji, name:e.name,
-      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, x:e.x || 72, intent:e.intent, id:e.id,
+      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak,
+      x:S.enemies.length > 1 ? 62 + (i * 10) : (e.x || 73),
+      bottom:S.enemies.length > 1 ? (35 + (i % 2) * 3)+"cqh" : "36cqh",
+      intent:e.intent, id:e.id,
     });
     if(e.hp<=0) el.classList.add("dead");
     el.addEventListener("pointerdown",()=>{ if(e.hp>0){ S.selectedId=e.id; renderField(); } });
@@ -575,15 +586,18 @@ function combatantEl(o){
   const el=document.createElement("div");
   el.className="combatant "+o.cls;
   el.style.left=o.x+"%";
-  el.style.bottom="2cqh";
+  el.style.bottom=o.bottom || "2cqh";
   el.style.transform="translateX(-50%)";
   if(o.id) el.dataset.id=o.id;
   const intentHtml = o.intent ? intentBubble(o.intent,o.weak) : "";
+  const avatarHtml = o.sprite
+    ? '<div class="avatar sprite-avatar"><img src="'+o.sprite+'" alt=""></div>'
+    : '<div class="avatar">'+o.emoji+'</div>';
+  const infoHtml = o.hideHud ? "" : '<div class="name">'+o.name+'</div>' + LIFE.renderCombatantStats(o);
   el.innerHTML =
     intentHtml +
-    '<div class="avatar">'+o.emoji+'</div>'+
-    '<div class="name">'+o.name+'</div>'+ 
-    LIFE.renderCombatantStats(o) +
+    avatarHtml +
+    infoHtml +
     '<div class="hit"></div>';
   return el;
 }
