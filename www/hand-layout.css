@@ -47,9 +47,12 @@
    - 기존: right:14cqw; bottom:9cqh  →  right:1cqw; bottom:17.5cqh
    ================================================================ */
 #endTurn {
-  right: 1cqw;
+  position: relative;
+  grid-column: 1 / -1;
+  width: 100%;
+  right: auto;
   left: auto;
-  bottom: 17.5cqh;
+  bottom: auto;
   padding: 1cqh 1.2cqw;
   font-size: 2cqh;
 }
