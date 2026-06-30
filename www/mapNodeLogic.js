@@ -94,8 +94,6 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
 
   const floors = [], paths = [], stages = [], popupGetters = [];
   const normalIds = (d.monsterGroups && d.monsterGroups.normal) || [];
-  const eliteIds  = (d.monsterGroups && d.monsterGroups.elite)  || [];
-  const bossIds   = (d.monsterGroups && d.monsterGroups.boss)   || [];
 
   function pickMons(ids, count) {
     const shuffled = [...ids].sort(() => Math.random() - 0.5);
@@ -109,7 +107,16 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
     }));
   }
 
+  /* 패키지로 몬스터 목록 반환, 실패 시 폴백 */
+  function getMonsFromPackage(pkg, type) {
+    if (!pkg) return null;
+    const mons = d.getMonstersByIds(pkg.monsterIds);
+    return mons.length ? mons : null;
+  }
+
   let stageIdx = 0;
+  /* 이번 맵 생성에서 사용한 패키지 ID 추적 */
+  const usedPkgIds = new Set();
 
   /* ── Floor 0: 로비 (딤드 / 자동 스킵 / stageIndex 없음) ── */
   floors.push([{
@@ -154,21 +161,25 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
       const nodeId = `node_${fi}_${ni}`;
 
       if (!info.isDimmed) {
-        /* 구현된 전투 노드 (enemy / elite) */
-        let mons;
-        if (type === "elite") {
-          mons = pickMons(eliteIds, 1);
-          if (!mons.length) mons = pickMons(normalIds, 1);
-        } else {
+        /* 전투 노드: 패키지 선택 → 몬스터 로드 */
+        const pkg = typeof window.ACT1_PICK_PACKAGE === "function"
+          ? window.ACT1_PICK_PACKAGE(type, fi, usedPkgIds)
+          : null;
+
+        let mons = getMonsFromPackage(pkg, type);
+        /* 폴백: 패키지 없으면 기존 방식 */
+        if (!mons || !mons.length) {
           mons = pickMons(normalIds, act1RandInt(1, 2));
         }
         if (!mons.length) mons = pickMons(normalIds, 1);
+
         const ms  = mons.slice();
         const lbl = type === "elite"
           ? `${fi}층 엘리트`
           : `${fi}층 적 ${"ABCD"[ni] || (ni + 1)}`;
         stages.push({
           label: lbl, type, isDimmed: false,
+          packageId: pkg ? pkg.id : null,
           getMonsters: (m => () => cloneMons(m))(ms),
         });
         popupGetters.push((m => () => m)(ms));
@@ -176,6 +187,7 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
         /* 딤드 노드 (event / shop / rest): 전투 없음 */
         stages.push({
           label: `${fi}층 ${info.label}`, type, isDimmed: true,
+          packageId: null,
           getMonsters: null,
         });
         popupGetters.push(() => []);
@@ -191,13 +203,15 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
     floors.push(floorNodes);
   }
 
-  /* ── Boss Floor (16번째) ── */
-  const bossMs = bossIds.length
-    ? bossIds.map(id => d.getMonsterById(id)).filter(Boolean)
-    : pickMons(normalIds, 1);
-  if (!bossMs.length) bossMs.push(...pickMons(normalIds, 1));
+  /* ── Boss Floor (16번째): 보스 패키지에서 1개 선택 ── */
+  const bossPkg = typeof window.ACT1_PICK_PACKAGE === "function"
+    ? window.ACT1_PICK_PACKAGE("boss", 16, usedPkgIds)
+    : null;
+  let bossMs = bossPkg ? d.getMonstersByIds(bossPkg.monsterIds) : [];
+  if (!bossMs.length) bossMs = pickMons(normalIds, 1);
   stages.push({
     label: "보스 스테이지", type: "boss", isDimmed: false,
+    packageId: bossPkg ? bossPkg.id : null,
     getMonsters: (m => () => cloneMons(m))(bossMs.slice()),
   });
   popupGetters.push((m => () => m)(bossMs.slice()));
@@ -214,6 +228,8 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
 
   /* ── 데이터 주입 ── */
   setMapData(floors, paths, stages, popupGetters, { mapFullH: ACT1_MAP_FULL_H });
+  /* 전투 로직에서 스테이지 타입·패키지 참조용으로 전역 노출 */
+  window.ACT1_MAP_STAGES = stages;
   console.log(`[ACT1] 맵 생성 완료: ${floors.length}층 (로비+${ACT1_TOTAL_FLOORS}층+보스), ${stages.length}스테이지`);
 };
 
