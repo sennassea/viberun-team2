@@ -780,6 +780,12 @@ function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeo
 const wait = ms=>new Promise(r=>setTimeout(r,ms));
 
 function startNewGameFromMenu(){
+  /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
+  if(typeof window.ACT1_START_NEW_GAME === "function"){
+    window.ACT1_START_NEW_GAME();
+    return;
+  }
+
   try {
     if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
   } catch(error) {}
