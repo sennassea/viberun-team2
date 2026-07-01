@@ -273,7 +273,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 #dragClone .card{box-shadow:0 0 2cqh rgba(231,181,74,.9); border-color:var(--c-gold);}
 
 /* ?좎뒪??*/
-#toast{position:absolute; left:50%; top:18cqh; transform:translateX(-50%); z-index:90;
+#toast{position:absolute; left:50%; top:18cqh; transform:translateX(-50%); z-index:260;
   background:rgba(40,55,80,.92); color:#fff; font-size:2cqh; font-weight:700;
   padding:1cqh 2cqw; border-radius:1.2cqh; opacity:0; transition:opacity .2s; pointer-events:none;}
 #toast.show{opacity:1;}
