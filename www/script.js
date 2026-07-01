@@ -476,7 +476,7 @@ function renderHud(){
 function renderProfileStatuses(){
   const host = $("#profileStatusEffects");
   if(!host) return;
-  host.innerHTML = LIFE.renderStatuses(S.player);
+  host.innerHTML = LIFE.renderStatuses(S.player, { includeBlock: true });
 }
 
 function renderSideItemSlots(){

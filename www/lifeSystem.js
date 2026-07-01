@@ -7,6 +7,7 @@
 (function attachLifeSystem(global){
   const WEAK_MULT = 0.75;
   const STATUS_META = {
+    block: { kind: "buff", icon: "&#128737;&#65039;", label: "마음의 결계", showCount: true },
     weak: { kind: "debuff", icon: "🌀", label: "동요", showCount: true },
     anxiety: { kind: "debuff", icon: "💭", label: "불안", showCount: true },
     lethargy: { kind: "debuff", icon: "🌫️", label: "무기력", showCount: true },
@@ -245,7 +246,7 @@
 
     renderBlockBar(unit){
       const block = unit.block || 0;
-      if(block <= 0) return "";
+      if(block <= 0) return '<div class="blockbar" style="visibility:hidden" aria-hidden="true"></div>';
 
       const blockPct = this.percent(block, unit.maxHp);
       return '<div class="blockbar">' +
@@ -254,8 +255,11 @@
         '</div>';
     },
 
-    renderStatuses(unit){
+    renderStatuses(unit, options = {}){
       const statuses = [];
+      if(options.includeBlock && (unit.block || 0) > 0){
+        statuses.push(this.renderStatusIcon("block", unit.block));
+      }
       if((unit.weak || 0) > 0){
         statuses.push(this.renderStatusIcon("weak", unit.weak));
       }
