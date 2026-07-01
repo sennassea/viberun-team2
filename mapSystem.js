@@ -318,7 +318,7 @@ function buildOverlay(){
           <div class="legend-item"><span class="leg-ico boss">💀</span>보스</div>
           <div class="legend-item"><span class="leg-ico event">❓</span>이벤트</div>
           <div class="legend-item"><span class="leg-ico shop">🛒</span>상점</div>
-          <div class="legend-item"><span class="leg-ico rest">🛖</span>휴식</div>
+          <div class="legend-item"><span class="leg-ico rest">🛖</span>기도터</div>
         </div>
       </div>
       <div class="map-footer" id="mapFooter"></div>

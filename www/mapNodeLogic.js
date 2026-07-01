@@ -20,15 +20,18 @@ const ACT1_WEIGHTS = {
   late_high:  { enemy: 25, elite:  0, event:  5, shop: 35, rest: 35 }, // 14층 (15층은 휴식 전용 고정으로 이 가중치를 사용하지 않음)
 };
 
-/* ── 노드 표시 정보 ────────────────────────────────────────────────────── */
+/* ── 노드 표시 정보 ─────────────────────────────────────────────────────
+   isDimmed  : 아직 구현되지 않아 맵에서 흐리게 표시하고 자동 통과시킬지 여부
+   hasCombat : 맵 생성 시 전투 패키지(몬스터)를 배정해야 하는 노드인지 여부
+   ── ──────────────────────────────────────────────────────────────────── */
 const ACT1_NODE_INFO = {
-  lobby: { emoji: "🚪", label: "로비",   isDimmed: true  },
-  enemy: { emoji: "👺", label: "적",     isDimmed: false },
-  elite: { emoji: "👹", label: "엘리트", isDimmed: false },
-  boss:  { emoji: "💀", label: "보스",   isDimmed: false },
-  event: { emoji: "❓", label: "이벤트", isDimmed: true  },
-  shop:  { emoji: "🛒", label: "상점",   isDimmed: true  },
-  rest:  { emoji: "🛖", label: "휴식",   isDimmed: true  },
+  lobby: { emoji: "🚪", label: "로비",   isDimmed: true,  hasCombat: false },
+  enemy: { emoji: "👺", label: "적",     isDimmed: false, hasCombat: true  },
+  elite: { emoji: "👹", label: "엘리트", isDimmed: false, hasCombat: true  },
+  boss:  { emoji: "💀", label: "보스",   isDimmed: false, hasCombat: true  },
+  event: { emoji: "❓", label: "이벤트", isDimmed: true,  hasCombat: false },
+  shop:  { emoji: "🛒", label: "상점",   isDimmed: true,  hasCombat: false },
+  rest:  { emoji: "🛖", label: "기도터", isDimmed: false, hasCombat: false },
 };
 
 /* ── 딤드 노드 툴팁 (기획서 8장) ─────────────────────────────────────── */
@@ -36,7 +39,6 @@ const ACT1_DIMMED_TOOLTIPS = {
   lobby: "로비 노드 - 현재 테스트 빌드에서는 로비 기능이 준비 중입니다. 새 게임 시작 시 자동으로 건너뜁니다.",
   event: "이벤트 노드 - 현재 테스트 빌드에서는 이벤트 기능이 준비 중입니다. 선택 시 자동으로 통과됩니다.",
   shop:  "상점 노드 - 현재 테스트 빌드에서는 상점 기능이 준비 중입니다. 선택 시 자동으로 통과됩니다.",
-  rest:  "휴식 노드 - 현재 테스트 빌드에서는 휴식 기능이 준비 중입니다. 선택 시 자동으로 통과됩니다.",
 };
 
 /* ── 유틸 ──────────────────────────────────────────────────────────────── */
@@ -195,7 +197,7 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
       const info = ACT1_NODE_INFO[type];
       const nodeId = `node_${fi}_${ni}`;
 
-      if (!info.isDimmed) {
+      if (info.hasCombat) {
         /* 전투 노드: 패키지 선택 → 몬스터 로드 */
         const pkg = typeof window.ACT1_PICK_PACKAGE === "function"
           ? window.ACT1_PICK_PACKAGE(type, fi, usedPkgIds)
@@ -213,15 +215,15 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
           ? `${fi}층 엘리트`
           : `${fi}층 적 ${"ABCD"[ni] || (ni + 1)}`;
         stages.push({
-          label: lbl, type, isDimmed: false,
+          label: lbl, type, isDimmed: info.isDimmed,
           packageId: pkg ? pkg.id : null,
           getMonsters: (m => () => cloneMons(m))(ms),
         });
         popupGetters.push((m => () => m)(ms));
       } else {
-        /* 딤드 노드 (event / shop / rest): 전투 없음 */
+        /* 전투 없는 노드 (event / shop / rest): 몬스터 없음 */
         stages.push({
-          label: `${fi}층 ${info.label}`, type, isDimmed: true,
+          label: `${fi}층 ${info.label}`, type, isDimmed: info.isDimmed,
           packageId: null,
           getMonsters: null,
         });
