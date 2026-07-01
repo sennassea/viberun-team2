@@ -581,7 +581,7 @@ function renderField(){
   S.enemies.forEach((e, i) => {
     const el = combatantEl({
       cls:"enemy ghost"+(e.id===S.selectedId ? " selected" : ""),
-      emoji:e.emoji, name:e.name,
+      emoji:e.emoji, sprite:e.image, name:e.name,
       hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak,
       anxiety:e.anxiety, lethargy:e.lethargy,
       x: xList[i] ?? 55, bottom:"4cqh",
