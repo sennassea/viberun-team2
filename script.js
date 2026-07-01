@@ -359,10 +359,11 @@ function ensureBattleVictoryOverlay(){
         '</div>' +
       '</div>' +
       '<div class="victory-button-area">' +
-        '<button type="button" class="victory-next" disabled>다음층으로</button>' +
+        '<button type="button" class="victory-next" aria-disabled="true">다음층으로</button>' +
       '</div>' +
     '</div>';
   document.querySelector("#game").appendChild(ov);
+  ov.querySelector(".victory-next").addEventListener("click", onBattleVictoryNextClick);
   return ov;
 }
 
@@ -373,12 +374,29 @@ function renderBattleVictoryOverlay(){
   const location = ov.querySelector(".victory-meta-location");
   const floor = ov.querySelector(".victory-meta-floor");
   const turn = ov.querySelector(".victory-meta-turn");
+  const info = getBattleVictoryInfo();
   if(rewardRow) renderBattleVictoryRewardSlots(rewardRow);
-  if(enemyName) enemyName.textContent = S.enemies.map(e => e.name).join(", ");
-  if(location) location.textContent = "위치";
-  if(floor) floor.textContent = ($("#hudFloor") && $("#hudFloor").textContent) || "층";
-  if(turn) turn.textContent = "TURN " + S.turn;
+  if(enemyName) enemyName.textContent = info.enemyNames;
+  if(location) location.textContent = info.location;
+  if(floor) floor.textContent = info.floor;
+  if(turn) turn.textContent = info.turn;
+  updateBattleVictoryNextButton(ov);
   ov.classList.add("show");
+}
+
+function getBattleVictoryInfo(){
+  const stageIdx = window.MAP_STATE ? window.MAP_STATE.currentStage : -1;
+  const stage = window.ACT1_MAP_STAGES && stageIdx >= 0 ? window.ACT1_MAP_STAGES[stageIdx] : null;
+  const stageLabel = stage && stage.label ? stage.label : "";
+  const floorMatch = stageLabel.match(/(\d+)\s*층/);
+  const hudFloor = $("#hudFloor") ? $("#hudFloor").textContent.trim() : "";
+  const floor = floorMatch ? floorMatch[1] + "층" : hudFloor.replace(/F$/, "층") || "1층";
+  return {
+    enemyNames: S.enemies.map(e => e.name).join(", ") || "악령",
+    location: stageLabel ? "병원 " + stageLabel : "병원 " + floor,
+    floor,
+    turn: "TURN " + (S.turn || 1),
+  };
 }
 
 function renderBattleVictoryRewardSlots(host){
@@ -401,6 +419,31 @@ function completeBattleVictoryReward(id, host){
   if(!S.victoryRewardDone) S.victoryRewardDone = {};
   S.victoryRewardDone[id] = true;
   renderBattleVictoryRewardSlots(host);
+  updateBattleVictoryNextButton(host.closest("#battleVictoryOverlay"));
+}
+
+function areBattleVictoryRewardsDone(){
+  return !!(S && S.victoryRewardDone && BATTLE_VICTORY_BASE_REWARDS.every(item => S.victoryRewardDone[item.id]));
+}
+
+function updateBattleVictoryNextButton(ov){
+  if(!ov) return;
+  const btn = ov.querySelector(".victory-next");
+  if(!btn) return;
+  const ready = areBattleVictoryRewardsDone();
+  btn.classList.toggle("active", ready);
+  btn.setAttribute("aria-disabled", ready ? "false" : "true");
+}
+
+function onBattleVictoryNextClick(){
+  if(!areBattleVictoryRewardsDone()){
+    toast("모든 보상을 확인해주세요.");
+    return;
+  }
+  S.rewardOpen = false; S.busy = false;
+  closeRewardOverlay();
+  window.MAP_STATE.proceedMode = true;
+  if(typeof openMap==="function") openMap();
 }
 
 function ensureRewardOverlay(){
@@ -920,6 +963,7 @@ function injectRewardStyles(){
     .victory-battle-meta span{min-width:7cqw;padding:.55cqh .9cqw;border-radius:.8cqh;background:#eef4fb;border:.15cqh solid #d6e6f5;font-size:1.4cqh;font-weight:800;color:var(--c-ink-soft);}
     .victory-button-area{display:flex;justify-content:center;}
     .victory-next{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#f3f5f8;color:#9aa5b2;cursor:not-allowed;opacity:.72;}
+    .victory-next.active{background:#fff;color:var(--c-ink);cursor:pointer;opacity:1;box-shadow:0 .45cqh 1cqh rgba(40,70,120,.15);}
   `;
   document.head.appendChild(style);
 }
