@@ -307,9 +307,9 @@ const BATTLE_VICTORY_BASE_REWARDS = [
 const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
 const BATTLE_VICTORY_POTION_CHANCE = 0.5;
 const BATTLE_VICTORY_POTION_CANDIDATES = [
-  { id:"calming_draft", name:"진정 약병", icon:"藥", desc:"임시 약병 보상입니다. 마음을 가라앉히는 약병입니다." },
-  { id:"clear_water", name:"맑은 물병", icon:"水", desc:"임시 약병 보상입니다. 정신을 맑게 하는 물병입니다." },
-  { id:"warm_tea", name:"따뜻한 차", icon:"茶", desc:"임시 약병 보상입니다. 긴장을 풀어주는 차입니다." },
+  { id:"heal_potion", name:"회복 약병", icon:"藥", desc:"플레이어 정신력(HP) 10 회복", type:"heal", effect:"healPlayerHp", value:10, target:"player" },
+  { id:"cleanse_potion", name:"단일 공격 약병", icon:"水", desc:"선택한 적 1명에게 데미지 5", type:"attackSingle", effect:"damageEnemy", value:5, target:"enemy" },
+  { id:"power_potion", name:"전체 공격 약병", icon:"茶", desc:"살아있는 모든 적에게 각각 데미지 3", type:"attackAll", effect:"damageAllEnemies", value:3, target:"allEnemies" },
 ];
 
 function chooseRewardCard(key){
@@ -899,6 +899,7 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
   if(!host) return;
   const list  = Array.isArray(items) ? items : [];
   const count = Array.isArray(items) ? items.length : resourceCount(items);
+  const isPotionSlots = selector === "#sidePotionSlots";
   host.innerHTML = "";
   for(let i=0; i<maxSlots; i++){
     const item   = list[i];
@@ -907,8 +908,214 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
     slot.className   = "side-item-slot "+(filled ? "filled" : "empty");
     slot.textContent = filled && item && item.emoji ? item.emoji : fallbackIcon;
     if(filled && item && item.name) slot.title = item.name;
+    if(isPotionSlots && filled && item){
+      slot.dataset.potionIndex = String(i);
+      if(isAttackPotion(item)) attachPotionDrag(slot, item, i);
+      slot.addEventListener("click", ev => {
+        ev.stopPropagation();
+        onPotionSlotClick(item, i);
+      });
+    }
     host.appendChild(slot);
   }
+}
+
+function canUsePotionNow(){
+  return !!(S && !S.busy && !S.over && !S.rewardOpen && !S.encounterCleared);
+}
+
+function isHealPotion(item){
+  return !!(item && (item.type === "heal" || item.effect === "healPlayerHp"));
+}
+
+function isAttackPotion(item){
+  return !!(item && (item.type === "attackSingle" || item.type === "attackAll"));
+}
+
+function onPotionSlotClick(item, index){
+  hidePotionUseButton();
+  if(!isHealPotion(item)) return;
+  if(!canUsePotionNow()){
+    toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
+    return;
+  }
+  showHealPotionUseButton(index);
+}
+
+function ensurePotionUseButton(){
+  let btn = document.querySelector("#potionUseButton");
+  if(btn) return btn;
+  btn = document.createElement("button");
+  btn.id = "potionUseButton";
+  btn.type = "button";
+  btn.textContent = "사용";
+  btn.addEventListener("click", ev => {
+    ev.stopPropagation();
+    if(btn.disabled) return;
+    btn.disabled = true;
+    const index = Number(btn.dataset.potionIndex);
+    useHealPotion(index);
+  });
+  document.querySelector("#game").appendChild(btn);
+  document.addEventListener("click", hidePotionUseButton);
+  return btn;
+}
+
+function showHealPotionUseButton(index){
+  const btn = ensurePotionUseButton();
+  const anchor = document.querySelector("#sideRelicSlots .side-item-slot") || document.querySelector("#sideRelicSlots");
+  const game = document.querySelector("#game");
+  if(!anchor || !game) return;
+  const anchorRect = anchor.getBoundingClientRect();
+  const gameRect = game.getBoundingClientRect();
+  btn.dataset.potionIndex = String(index);
+  btn.disabled = false;
+  btn.style.left = (anchorRect.right - gameRect.left + 6) + "px";
+  btn.style.top = (anchorRect.top - gameRect.top) + "px";
+  btn.style.height = anchorRect.height + "px";
+  btn.classList.add("show");
+}
+
+function hidePotionUseButton(){
+  const btn = document.querySelector("#potionUseButton");
+  if(!btn) return;
+  btn.classList.remove("show");
+  btn.dataset.potionIndex = "";
+  btn.disabled = false;
+}
+
+function useHealPotion(index){
+  if(!canUsePotionNow()) return;
+  if(!Array.isArray(S.potions)) return;
+  const potion = S.potions[index];
+  if(!isHealPotion(potion)) return;
+  const amount = typeof potion.value === "number" ? potion.value : 10;
+  const healed = LIFE.heal(S.player, amount);
+  S.potions.splice(index, 1);
+  syncRunStateFromCombat();
+  hidePotionUseButton();
+  if(healed>0) spawnFloat(".player", "+"+healed, "heal");
+  renderAll();
+}
+
+let potionDragState = null;
+function attachPotionDrag(slot, item, index){
+  let startX=0, startY=0, dragging=false, pid=null;
+  slot.addEventListener("pointerdown", down);
+  function down(ev){
+    hidePotionUseButton();
+    if(!canUsePotionNow()){
+      toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
+      return;
+    }
+    pid = ev.pointerId; startX = ev.clientX; startY = ev.clientY; dragging = false;
+    slot.setPointerCapture(pid);
+    slot.addEventListener("pointermove", move);
+    slot.addEventListener("pointerup", up);
+    slot.addEventListener("pointercancel", cancel);
+  }
+  function move(ev){
+    const dx = ev.clientX - startX, dy = ev.clientY - startY;
+    if(!dragging && Math.hypot(dx, dy) > DRAG_THRESHOLD){
+      dragging = true;
+      beginPotionDrag(slot, item, index);
+    }
+    if(dragging) updatePotionDrag(ev.clientX, ev.clientY);
+  }
+  function up(ev){ cleanup(); if(dragging) dropPotionDrag(ev.clientX, ev.clientY); }
+  function cancel(){ cleanup(); if(dragging) endPotionDrag(); }
+  function cleanup(){
+    try{ slot.releasePointerCapture(pid); }catch(e){}
+    slot.removeEventListener("pointermove", move);
+    slot.removeEventListener("pointerup", up);
+    slot.removeEventListener("pointercancel", cancel);
+  }
+}
+
+function ensurePotionDragGhost(){
+  let ghost = document.querySelector("#potionDragGhost");
+  if(ghost) return ghost;
+  ghost = document.createElement("div");
+  ghost.id = "potionDragGhost";
+  document.querySelector("#game").appendChild(ghost);
+  return ghost;
+}
+
+function beginPotionDrag(slot, item, index){
+  const ghost = ensurePotionDragGhost();
+  ghost.innerHTML =
+    '<div class="potion-drag-icon">' + (item.emoji || item.icon || "藥") + '</div>' +
+    '<div class="potion-drag-name"></div>';
+  ghost.querySelector(".potion-drag-name").textContent = item.name || "약병";
+  ghost.classList.add("show");
+  slot.classList.add("potion-dragging");
+  potionDragState = { slot, item, index, type:item.type, effect:item.effect };
+}
+
+function updatePotionDrag(x, y){
+  if(!potionDragState) return;
+  const ghost = ensurePotionDragGhost();
+  ghost.style.left = x + "px";
+  ghost.style.top = y + "px";
+}
+
+function dropPotionDrag(x, y){
+  const state = potionDragState;
+  if(state && (state.type === "attackSingle" || state.type === "attackAll")){
+    const en = enemyUnder(x, y);
+    if(en){
+      if(state.type === "attackSingle") useSingleAttackPotion(state.index, en.enemy);
+      if(state.type === "attackAll") useAllAttackPotion(state.index, en.enemy);
+    }
+  }
+  endPotionDrag();
+}
+
+function useSingleAttackPotion(index, targetEnemy){
+  if(!canUsePotionNow()) return false;
+  if(!Array.isArray(S.potions)) return false;
+  const potion = S.potions[index];
+  if(!potion || potion.type !== "attackSingle") return false;
+  if(!targetEnemy || targetEnemy.hp <= 0) return false;
+  const damage = typeof potion.value === "number" ? potion.value : 5;
+  applyDamageWithFeedback(targetEnemy, damage, S.player.weak);
+  S.potions.splice(index, 1);
+  syncRunStateFromCombat();
+  autoSelectTarget();
+  if(livingEnemies().length === 0){
+    nodeClear();
+    renderAll();
+    return true;
+  }
+  renderAll();
+  return true;
+}
+
+function useAllAttackPotion(index, targetEnemy){
+  if(!canUsePotionNow()) return false;
+  if(!Array.isArray(S.potions)) return false;
+  const potion = S.potions[index];
+  if(!potion || potion.type !== "attackAll") return false;
+  if(!targetEnemy || targetEnemy.hp <= 0) return false;
+  const damage = typeof potion.value === "number" ? potion.value : 3;
+  livingEnemies().forEach(enemy => applyDamageWithFeedback(enemy, damage, S.player.weak));
+  S.potions.splice(index, 1);
+  syncRunStateFromCombat();
+  autoSelectTarget();
+  if(livingEnemies().length === 0){
+    nodeClear();
+    renderAll();
+    return true;
+  }
+  renderAll();
+  return true;
+}
+
+function endPotionDrag(){
+  const ghost = document.querySelector("#potionDragGhost");
+  if(ghost) ghost.classList.remove("show");
+  if(potionDragState && potionDragState.slot) potionDragState.slot.classList.remove("potion-dragging");
+  potionDragState = null;
 }
 
 function normalizeRunResources(){

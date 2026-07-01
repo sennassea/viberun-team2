@@ -24,9 +24,9 @@ const SHOP_RELIC_PRICE = { incense_burner: 90, spirit_tablet: 110, charm_box: 13
    deckViewer.js(보유 카드 도감)와 cheatConsole.js(CHEAT.give.potion)가 이미
    window.POTION_DB를 찾도록 되어 있어, 그대로 사용하면 자동으로 연결된다. */
 const POTION_DB = [
-  { id: "heal_potion",    name: "치유 약병", emoji: "💧", desc: "아군 1명 HP 30 회복",  price: 50 },
-  { id: "cleanse_potion", name: "정화 약병", emoji: "🌿", desc: "해로운 효과 2개 제거", price: 60 },
-  { id: "power_potion",   name: "기운 약병", emoji: "🔥", desc: "공격력 2 증가 (2턴)",  price: 70 },
+  { id: "heal_potion",    name: "회복 약병",      emoji: "💧", desc: "플레이어 정신력(HP) 10 회복",       type: "heal",         effect: "healPlayerHp",     value: 10, target: "player",     price: 50 },
+  { id: "cleanse_potion", name: "단일 공격 약병", emoji: "🌿", desc: "선택한 적 1명에게 데미지 5",         type: "attackSingle", effect: "damageEnemy",       value: 5,  target: "enemy",      price: 60 },
+  { id: "power_potion",   name: "전체 공격 약병", emoji: "🔥", desc: "살아있는 모든 적에게 각각 데미지 3", type: "attackAll",    effect: "damageAllEnemies", value: 3,  target: "allEnemies", price: 70 },
 ];
 const SHOP_POTION_SLOT_LIMIT = 3;
 const SHOP_REFRESH_COST      = 20;
