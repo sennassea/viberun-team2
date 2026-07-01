@@ -424,7 +424,9 @@ function getBattleVictoryRewards(){
 function buildBattleVictoryOptionalReward(type, chance){
   if(Math.random() >= chance) return null;
   if(type === "relic"){
-    const relic = pickBattleVictoryCandidate(typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+    const ownedRelicIds = new Set((S && Array.isArray(S.relics) ? S.relics : []).map(relic => relic && relic.id).filter(Boolean));
+    const relicCandidates = (typeof RELIC_DB !== "undefined" ? RELIC_DB : []).filter(relic => relic && !ownedRelicIds.has(relic.id));
+    const relic = pickBattleVictoryCandidate(relicCandidates);
     if(!relic) return null;
     return {
       id:"relic", itemId:relic.id, name:relic.name, icon:relic.emoji || "具",
