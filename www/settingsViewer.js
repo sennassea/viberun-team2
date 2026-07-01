@@ -300,6 +300,7 @@
 
   function openSettingsViewer(){
     if(!els) return;
+    if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
     settingsMode = "combat";
     els.overlay.classList.remove("start-mode");
     if(els.actions) els.actions.style.display = "";

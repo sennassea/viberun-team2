@@ -41,7 +41,7 @@
     style.id = "bagUIStyles";
     style.textContent =
       ".bag-ui-overlay{--bg-cream:#faf2e2;--bg-beige:#ece0c6;--bg-beige-deep:#cbb480;--bg-gold:#dba53f;--bg-gold-deep:#a97a1f;--bg-ink:#4a3a26;--bg-ink-soft:#8a765a;" +
-        "position:absolute;left:0;right:0;top:12.9cqh;bottom:0;z-index:70;display:none;place-items:center;" +
+        "position:absolute;inset:0;z-index:95;display:none;place-items:center;" +
         "background:rgba(30,20,10,.45);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s ease;}" +
       ".bag-ui-overlay.show{display:grid;opacity:1;}" +
       ".bag-ui-overlay.map-mode{top:0;z-index:210;}" +

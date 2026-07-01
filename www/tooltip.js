@@ -334,13 +334,12 @@
 
   /* ── 전투원 이벤트 위임 ───────────────────────────────────────────────── */
   field.addEventListener("mouseover", function (e) {
-    return;
     var cb = e.target.closest(".combatant");
-    if (!cb || cb.classList.contains("dead")) {
+    if (!cb || cb.classList.contains("dead") || !cb.classList.contains("enemy")) {
       if (activeId !== null) hideCombatantTooltip();
       return;
     }
-    var newId = cb.dataset.id || "player";
+    var newId = cb.dataset.id;
     if (newId === activeId) return;
     activeId = newId;
     showCombatantFor(cb);

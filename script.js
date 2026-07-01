@@ -827,5 +827,12 @@ function injectRewardStyles(){
    ========================================================================= */
 $("#endTurn").addEventListener("click", endTurn);
 $("#restart").addEventListener("click", () => { $("#over").classList.remove("show"); newGame({ resetRun:true }); });
+const bagViewerButton = $("#bagViewerButton");
+if(bagViewerButton){
+  bagViewerButton.addEventListener("click", () => {
+    if(typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
+    else toast("가방을 불러올 수 없습니다.");
+  });
+}
 
 injectRewardStyles();

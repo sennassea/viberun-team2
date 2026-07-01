@@ -385,6 +385,7 @@
 
   function openDeckViewer(tabId){
     if(!els) return;
+    if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
     viewerMode = "deck";
     if(tabId) activeTab = tabId;
     els.overlay.classList.remove("codex-mode");
