@@ -387,6 +387,7 @@ function ensureBattleVictoryOverlay(){
           '<button type="button" class="victory-confirm-skip">건너뛰기</button>' +
         '</div>' +
       '</div>' +
+      '<div class="victory-potion-replace-panel" aria-hidden="true"></div>' +
     '</div>';
   document.querySelector("#game").appendChild(ov);
   ov.querySelector(".victory-next").addEventListener("click", onBattleVictoryNextClick);
@@ -515,6 +516,7 @@ function openBattleVictoryConfirm(id, host){
   modal.dataset.rewardId = id;
   modal.querySelector(".victory-confirm-title").textContent = item.name;
   modal.querySelector(".victory-confirm-desc").textContent = item.desc || item.value || "";
+  closeBattleVictoryPotionReplacePanel(modal);
   modal.classList.add("show");
   modal.setAttribute("aria-hidden", "false");
   modal.querySelector(".victory-confirm-take").onclick = () => finishBattleVictoryOptionalReward(id, host, "수령 완료");
@@ -528,6 +530,112 @@ function closeBattleVictoryConfirm(ov){
   modal.classList.remove("show");
   modal.setAttribute("aria-hidden", "true");
   modal.dataset.rewardId = "";
+  closeBattleVictoryPotionReplacePanel(modal);
+}
+
+function closeBattleVictoryPotionReplacePanel(modal){
+  if(!modal) return;
+  const panel = modal.querySelector(".victory-potion-replace-panel");
+  if(!panel) return;
+  panel.classList.remove("show");
+  panel.setAttribute("aria-hidden", "true");
+  panel.innerHTML = "";
+}
+
+function openBattleVictoryPotionReplacePanel(host){
+  const ov = host && host.closest("#battleVictoryOverlay");
+  const modal = ov && ov.querySelector(".victory-confirm-modal");
+  const panel = modal && modal.querySelector(".victory-potion-replace-panel");
+  if(!panel) return;
+  const potions = Array.isArray(S.potions) ? S.potions.slice(0, 3) : [];
+  panel.innerHTML =
+    '<div class="victory-potion-replace-title">교체할 약병 선택</div>' +
+    '<div class="victory-potion-replace-desc">약병은 최대 3개까지 보유할 수 있습니다. 교체할 약병을 선택해주세요.</div>' +
+    '<div class="victory-potion-replace-slots"></div>' +
+    '<div class="victory-potion-replace-detail" aria-hidden="true"></div>';
+  const slots = panel.querySelector(".victory-potion-replace-slots");
+  const newPotion = getBattleVictoryRewards().find(item => item.id === "potion");
+  potions.forEach((potion, index) => {
+    const slot = document.createElement("button");
+    slot.type = "button";
+    slot.className = "victory-potion-replace-slot";
+    slot.innerHTML =
+      '<span class="victory-potion-replace-icon">' + (potion.emoji || potion.icon || "藥") + '</span>' +
+      '<span class="victory-potion-replace-name"></span>';
+    slot.querySelector(".victory-potion-replace-name").textContent = potion.name || ("약병 " + (index + 1));
+    slot.addEventListener("click", () => {
+      slots.querySelectorAll(".victory-potion-replace-slot").forEach(item => item.classList.remove("selected"));
+      slot.classList.add("selected");
+      renderBattleVictoryPotionReplaceDetail(panel, slots, slot, potion, newPotion, index, host);
+    });
+    slots.appendChild(slot);
+  });
+  panel.classList.add("show");
+  panel.setAttribute("aria-hidden", "false");
+}
+
+function renderBattleVictoryPotionReplaceDetail(panel, slots, selectedSlot, oldPotion, newPotion, potionIndex, host){
+  const detail = panel && panel.querySelector(".victory-potion-replace-detail");
+  if(!detail) return;
+  detail.innerHTML =
+    '<div class="victory-potion-detail-row">' +
+      '<div class="victory-potion-detail-label">보유 약병</div>' +
+      '<div class="victory-potion-detail-name old"></div>' +
+      '<div class="victory-potion-detail-desc old"></div>' +
+    '</div>' +
+    '<div class="victory-potion-detail-row">' +
+      '<div class="victory-potion-detail-label">새 약병</div>' +
+      '<div class="victory-potion-detail-name new"></div>' +
+      '<div class="victory-potion-detail-desc new"></div>' +
+    '</div>' +
+    '<div class="victory-potion-detail-question">이 약병을 새 약병으로 교체하시겠습니까?</div>' +
+    '<div class="victory-potion-detail-actions">' +
+      '<button type="button" class="victory-potion-replace-confirm">교체</button>' +
+      '<button type="button" class="victory-potion-replace-cancel">취소</button>' +
+    '</div>';
+  detail.querySelector(".victory-potion-detail-name.old").textContent = oldPotion.name || "약병";
+  detail.querySelector(".victory-potion-detail-desc.old").textContent = oldPotion.desc || oldPotion.value || "임시 약병 효과 설명입니다.";
+  detail.querySelector(".victory-potion-detail-name.new").textContent = (newPotion && newPotion.name) || "새 약병";
+  detail.querySelector(".victory-potion-detail-desc.new").textContent = (newPotion && (newPotion.desc || newPotion.value)) || "임시 약병 효과 설명입니다.";
+  detail.querySelector(".victory-potion-replace-confirm").addEventListener("click", (ev) => {
+    finishBattleVictoryPotionReplace(host, potionIndex, newPotion, ev.currentTarget);
+  });
+  detail.querySelector(".victory-potion-replace-cancel").addEventListener("click", () => {
+    if(selectedSlot) selectedSlot.classList.remove("selected");
+    if(slots) slots.querySelectorAll(".victory-potion-replace-slot").forEach(item => item.classList.remove("selected"));
+    detail.classList.remove("show");
+    detail.setAttribute("aria-hidden", "true");
+    detail.innerHTML = "";
+  });
+  detail.classList.add("show");
+  detail.setAttribute("aria-hidden", "false");
+}
+
+function finishBattleVictoryPotionReplace(host, potionIndex, reward, button){
+  if(S.victoryRewardDone && S.victoryRewardDone.potion) return;
+  if(!S.potions) S.potions = [];
+  if(potionIndex < 0 || potionIndex >= S.potions.length) return;
+  if(button){
+    if(button.disabled) return;
+    button.disabled = true;
+  }
+  const potionId = reward && reward.itemId;
+  const potion = potionId
+    ? ((typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES).find(item => item && item.id === potionId) || {
+        id: potionId, name: reward.name, emoji: reward.icon, desc: reward.desc
+      })
+    : { name:(reward && reward.name) || "새 약병", emoji:reward && reward.icon, desc:reward && reward.desc };
+  S.potions[potionIndex] = { ...potion };
+  if(S.potions.length > 3) S.potions = S.potions.slice(0, 3);
+  if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  S.victoryRewardDone.potion = true;
+  S.victoryRewardDoneText.potion = "수령 완료";
+  renderHud();
+  const ov = host && host.closest("#battleVictoryOverlay");
+  closeBattleVictoryConfirm(ov);
+  if(host) renderBattleVictoryRewardSlots(host);
+  updateBattleVictoryNextButton(ov);
 }
 
 function finishBattleVictoryOptionalReward(id, host, doneText){
@@ -547,6 +655,21 @@ function finishBattleVictoryOptionalReward(id, host, doneText){
         id: relicId, name: reward.name, emoji: reward.icon, desc: reward.desc
       };
       S.relics.push({ ...relic });
+      renderHud();
+    }
+  }
+  if(id === "potion" && doneText === "수령 완료"){
+    if(!S.potions) S.potions = [];
+    if(S.potions.length >= 3){
+      openBattleVictoryPotionReplacePanel(host);
+      return;
+    }
+    const potionId = reward && reward.itemId;
+    if(potionId){
+      const potion = (typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES).find(item => item && item.id === potionId) || {
+        id: potionId, name: reward.name, emoji: reward.icon, desc: reward.desc
+      };
+      S.potions.push({ ...potion });
       renderHud();
     }
   }
@@ -1119,13 +1242,32 @@ function injectRewardStyles(){
     .victory-next{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#f3f5f8;color:#9aa5b2;cursor:not-allowed;opacity:.72;}
     .victory-next.active{background:#fff;color:var(--c-ink);cursor:pointer;opacity:1;box-shadow:0 .45cqh 1cqh rgba(40,70,120,.15);}
     .victory-confirm-modal{position:absolute;inset:0;z-index:230;display:none;place-items:center;background:rgba(10,20,40,.18);}
-    .victory-confirm-modal.show{display:grid;}
+    .victory-confirm-modal.show{display:flex;align-items:center;justify-content:center;gap:1cqw;}
     .victory-confirm-box{width:min(28cqw,42cqh);padding:2cqh 2cqw;border-radius:1.4cqh;background:#fff;border:.25cqh solid var(--c-panel-line);box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.32);text-align:center;}
     .victory-confirm-title{font-size:2.1cqh;font-weight:900;color:var(--c-ink);margin-bottom:.8cqh;}
     .victory-confirm-desc{font-size:1.45cqh;font-weight:700;color:var(--c-ink-soft);line-height:1.35;margin-bottom:1.6cqh;}
     .victory-confirm-actions{display:flex;justify-content:center;gap:.8cqw;}
     .victory-confirm-actions button{font:inherit;font-size:1.55cqh;font-weight:900;padding:.75cqh 1.2cqw;border-radius:.9cqh;border:.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);cursor:pointer;}
     .victory-confirm-take{box-shadow:0 .35cqh .8cqh rgba(40,70,120,.13);}
+    .victory-potion-replace-panel{display:none;width:min(25cqw,38cqh);padding:1.6cqh 1.4cqw;border-radius:1.2cqh;background:#fff;border:.25cqh solid var(--c-panel-line);box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.28);text-align:left;}
+    .victory-potion-replace-panel.show{display:block;}
+    .victory-potion-replace-title{font-size:1.75cqh;font-weight:900;color:var(--c-ink);margin-bottom:.7cqh;text-align:center;}
+    .victory-potion-replace-desc{font-size:1.25cqh;font-weight:700;color:var(--c-ink-soft);line-height:1.35;margin-bottom:1.2cqh;text-align:center;}
+    .victory-potion-replace-slots{display:flex;flex-direction:column;gap:.7cqh;}
+    .victory-potion-replace-slot{width:100%;min-height:5.2cqh;padding:.75cqh .8cqw;border-radius:.9cqh;border:.2cqh solid #d6e6f5;background:linear-gradient(180deg,#fbfcff,#eef4fb);display:flex;align-items:center;gap:.7cqw;color:var(--c-ink);font:inherit;cursor:pointer;text-align:left;}
+    .victory-potion-replace-slot.selected{border-color:#5d9f78;background:linear-gradient(180deg,#eef9f3,#dcefe6);box-shadow:0 0 0 .2cqh rgba(93,159,120,.18) inset;}
+    .victory-potion-replace-icon{flex:0 0 3.2cqh;width:3.2cqh;height:3.2cqh;border-radius:.8cqh;display:grid;place-items:center;background:#fff;border:.16cqh solid var(--c-panel-line);font-size:1.65cqh;font-weight:900;color:var(--c-blue-deep);}
+    .victory-potion-replace-name{font-size:1.35cqh;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .victory-potion-replace-detail{display:none;margin-top:1cqh;padding:1cqh .9cqw;border-radius:.9cqh;border:.18cqh solid #d6e6f5;background:#f7fafc;}
+    .victory-potion-replace-detail.show{display:block;}
+    .victory-potion-detail-row{padding:.65cqh 0;border-bottom:.12cqh solid rgba(160,180,200,.45);}
+    .victory-potion-detail-row:last-of-type{border-bottom:0;}
+    .victory-potion-detail-label{font-size:1.05cqh;font-weight:900;color:#6f7d8a;margin-bottom:.25cqh;}
+    .victory-potion-detail-name{font-size:1.35cqh;font-weight:900;color:var(--c-ink);margin-bottom:.2cqh;}
+    .victory-potion-detail-desc{font-size:1.15cqh;font-weight:700;color:var(--c-ink-soft);line-height:1.3;}
+    .victory-potion-detail-question{font-size:1.2cqh;font-weight:900;color:var(--c-ink);text-align:center;margin:1cqh 0 .8cqh;}
+    .victory-potion-detail-actions{display:flex;justify-content:center;gap:.6cqw;}
+    .victory-potion-detail-actions button{font:inherit;font-size:1.25cqh;font-weight:900;padding:.55cqh .9cqw;border-radius:.75cqh;border:.18cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);cursor:pointer;}
   `;
   document.head.appendChild(style);
 }
