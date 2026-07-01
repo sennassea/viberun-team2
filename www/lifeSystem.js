@@ -88,6 +88,7 @@
         id: monsterData.id || `enemy_${index}`,
         name: monsterData.name,
         emoji: monsterData.emoji,
+        image: monsterData.image,
         roles: Array.isArray(monsterData.roles) ? [...monsterData.roles] : [],
         hp: monsterData.maxHp,
         maxHp: monsterData.maxHp,

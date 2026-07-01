@@ -45,7 +45,7 @@
       id: "child_spirit_night",
       name: "밤 교실을 걷는 아이",
       family: "아이",
-      emoji: "👼",
+      image: "assets/monster/child_spirit_night.png",
       grade: "normal",
       roles: ["anxietyDebuffer", "basicAttacker"],
       maxHp: 28,
