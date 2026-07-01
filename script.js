@@ -36,9 +36,8 @@ const STARTING_MOON_SHARDS = 0;
 /* 전역 상태 */
 let S;
 
-function newGame(){
-  STARTER_DECK = [...BASE_STARTER_DECK];
-  S = {
+function createInitialRunState(){
+  return {
     player: LIFE.createPlayer(PLAYER_DEF),
     enemyIndex: 0,
     enemies: [],
@@ -56,6 +55,49 @@ function newGame(){
     moonShards: STARTING_MOON_SHARDS,
     turn: 1,
   };
+}
+
+function createBattlePlayerFromRun(runState){
+  const player = LIFE.createPlayer(PLAYER_DEF);
+  if(runState && runState.player){
+    player.maxHp = runState.player.maxHp;
+    player.hp = Math.max(0, Math.min(runState.player.hp, player.maxHp));
+  }
+  return player;
+}
+
+function resetRunState(){
+  STARTER_DECK = [...BASE_STARTER_DECK];
+  S = createInitialRunState();
+}
+
+function startNewRun(){
+  resetRunState();
+  startBattle();
+}
+
+function startBattle(){
+  if(!S) S = createInitialRunState();
+  const runState = S;
+  S = {
+    ...runState,
+    player: createBattlePlayerFromRun(runState),
+    enemyIndex: 0,
+    enemies: [],
+    energy: MAX_ENERGY,
+    hand: [],
+    draw: [],
+    discard: [],
+    selectedId: null,
+    busy: false,
+    over: null,
+    rewardOpen: false,
+    turn: 1,
+  };
+  normalizeRunResources();
+  if(typeof closeRewardOverlay === "function") closeRewardOverlay();
+  const over = $("#over");
+  if(over) over.classList.remove("show");
 
   spawnCurrentEnemy();
 
@@ -63,6 +105,10 @@ function newGame(){
   S.draw = shuffle([...STARTER_DECK]);
   drawCards(DRAW_PER_TURN);
   renderAll();
+}
+
+function newGame(){
+  startNewRun();
 }
 
 function spawnCurrentEnemy(){
@@ -810,5 +856,4 @@ $("#restart").addEventListener("click", ()=>{ $("#over").classList.remove("show"
 
 /* 시작 */
 injectRewardStyles();
-
 

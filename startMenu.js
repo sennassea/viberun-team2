@@ -15,6 +15,7 @@ function startNewGameFromMenu(){
     if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
   } catch(error) {}
 
+  if(typeof resetRunState === "function") resetRunState();
   if(typeof generateMap === "function") generateMap();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = -1;
@@ -34,7 +35,8 @@ function returnToStartScreen(){
     if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
   } catch(error) {}
 
-  STARTER_DECK = [...BASE_STARTER_DECK];
+  if(typeof resetRunState === "function") resetRunState();
+  else STARTER_DECK = [...BASE_STARTER_DECK];
   if(typeof generateMap === "function") generateMap();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = 0;

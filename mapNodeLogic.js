@@ -220,6 +220,7 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
 /* ── 새 게임 시작: 로비 자동 스킵 → 1층 전투 즉시 진입 ────────────────── */
 window.ACT1_START_NEW_GAME = function() {
   try { localStorage.removeItem("viberunSaveState"); } catch (e) {}
+  if (typeof resetRunState === "function") resetRunState();
 
   /* ACT1 15층 맵 생성 */
   if (typeof generateMap === "function") generateMap();

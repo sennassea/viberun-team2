@@ -264,7 +264,8 @@ function startStage(stageIdx){
   loadStageMonsters(stageIdx);
   updateHudFloor();
   closeMap();
-  if(typeof newGame === "function") newGame();
+  if(typeof startBattle === "function") startBattle();
+  else if(typeof newGame === "function") newGame();
 }
 
 /* ── 지도 열기/닫기 ────────────────────────────────────────────────────── */
