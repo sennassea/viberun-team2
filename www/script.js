@@ -306,9 +306,10 @@ const BATTLE_VICTORY_BASE_REWARDS = [
 ];
 const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
 const BATTLE_VICTORY_POTION_CHANCE = 0.5;
-const BATTLE_VICTORY_OPTIONAL_REWARDS = [
-  { id:"relic", name:"법구", icon:"具", value:"임시 법구", doneText:"선택 완료", desc:"임시 법구 보상입니다.", chance:BATTLE_VICTORY_RELIC_CHANCE },
-  { id:"potion", name:"약병", icon:"藥", value:"임시 약병", doneText:"선택 완료", desc:"임시 약병 보상입니다.", chance:BATTLE_VICTORY_POTION_CHANCE },
+const BATTLE_VICTORY_POTION_CANDIDATES = [
+  { id:"calming_draft", name:"진정 약병", icon:"藥", desc:"임시 약병 보상입니다. 마음을 가라앉히는 약병입니다." },
+  { id:"clear_water", name:"맑은 물병", icon:"水", desc:"임시 약병 보상입니다. 정신을 맑게 하는 물병입니다." },
+  { id:"warm_tea", name:"따뜻한 차", icon:"茶", desc:"임시 약병 보상입니다. 긴장을 풀어주는 차입니다." },
 ];
 
 function chooseRewardCard(key){
@@ -411,11 +412,40 @@ function renderBattleVictoryOverlay(){
 
 function getBattleVictoryRewards(){
   if(!S.victoryRewards){
-    S.victoryRewards = BATTLE_VICTORY_BASE_REWARDS.concat(
-      BATTLE_VICTORY_OPTIONAL_REWARDS.filter(item => Math.random() < item.chance)
-    );
+    S.victoryRewards = BATTLE_VICTORY_BASE_REWARDS.slice();
+    const relicReward = buildBattleVictoryOptionalReward("relic", BATTLE_VICTORY_RELIC_CHANCE);
+    const potionReward = buildBattleVictoryOptionalReward("potion", BATTLE_VICTORY_POTION_CHANCE);
+    if(relicReward) S.victoryRewards.push(relicReward);
+    if(potionReward) S.victoryRewards.push(potionReward);
   }
   return S.victoryRewards;
+}
+
+function buildBattleVictoryOptionalReward(type, chance){
+  if(Math.random() >= chance) return null;
+  if(type === "relic"){
+    const relic = pickBattleVictoryCandidate(typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+    if(!relic) return null;
+    return {
+      id:"relic", itemId:relic.id, name:relic.name, icon:relic.emoji || "具",
+      value:relic.name, doneText:"선택 완료", desc:relic.desc || "임시 법구 보상입니다."
+    };
+  }
+  if(type === "potion"){
+    const potionDb = typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES;
+    const potion = pickBattleVictoryCandidate(potionDb);
+    if(!potion) return null;
+    return {
+      id:"potion", itemId:potion.id, name:potion.name, icon:potion.emoji || potion.icon || "藥",
+      value:potion.name, doneText:"선택 완료", desc:potion.desc || "임시 약병 보상입니다."
+    };
+  }
+  return null;
+}
+
+function pickBattleVictoryCandidate(list){
+  if(!Array.isArray(list) || list.length === 0) return null;
+  return list[Math.floor(Math.random() * list.length)];
 }
 
 function getBattleVictoryInfo(){
