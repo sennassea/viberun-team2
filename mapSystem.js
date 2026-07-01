@@ -281,6 +281,7 @@ function openMap(){
 }
 
 function closeMap(){
+  if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
   const ov = document.getElementById("mapOverlay"); if(!ov) return;
   const returnToStart = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
   ov.style.opacity = "0";
