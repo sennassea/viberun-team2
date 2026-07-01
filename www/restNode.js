@@ -18,14 +18,12 @@ const PRAYER_REST_HEAL_RATIO = 0.25;
 
 let prayerOverlayEl   = null;
 let prayerSelected    = null;
-let prayerPrevStageId = 0;
 
 /* ── startStage 재정의: rest 타입 노드는 기도터 화면으로 진입 ───────────── */
 function startStage(stageIdx){
   const stage = MAP_STAGES[stageIdx];
 
   if(stage && stage.type === "rest"){
-    prayerPrevStageId = window.MAP_STATE.currentStage;
     window.MAP_STATE.currentStage = stageIdx;
     window.MAP_STATE.proceedMode  = false;
     window.MAP_STATE.startMapMode = false;
@@ -80,14 +78,6 @@ function resolvePrayerNode(){
   if(typeof openMap === "function") openMap();
 }
 
-/* 취소: 이번 기도터 선택을 취소하고 이전 위치 기준으로 맵에 복귀 */
-function cancelPrayerNode(){
-  closePrayerNode();
-  window.MAP_STATE.currentStage = prayerPrevStageId;
-  window.MAP_STATE.proceedMode  = true;
-  if(typeof openMap === "function") openMap();
-}
-
 function hidePrayerChrome(){
   PRAYER_HIDE_SELECTORS.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
@@ -135,9 +125,17 @@ function confirmPrayerChoice(){
     return;
   }
 
-  /* 받아들이기(카드 추가) / 정리하기(카드 제거)는 별도 UI로 후속 구현 예정 */
-  const label = prayerSelected === "accept" ? "받아들이기(카드 추가)" : "정리하기(카드 제거)";
-  if(typeof toast === "function") toast(label + " 기능은 다음 업데이트에서 제공됩니다.");
+  if(prayerSelected === "accept"){
+    if(typeof window.PRAYER_CARD_ADD_OPEN === "function") window.PRAYER_CARD_ADD_OPEN();
+    else if(typeof toast === "function") toast("카드 추가 기능을 불러올 수 없습니다.");
+    return;
+  }
+
+  if(prayerSelected === "cleanse"){
+    if(typeof window.PRAYER_CARD_REMOVE_OPEN === "function") window.PRAYER_CARD_REMOVE_OPEN();
+    else if(typeof toast === "function") toast("카드 제거 기능을 불러올 수 없습니다.");
+    return;
+  }
 }
 
 function applyPrayerRest(){
@@ -166,8 +164,11 @@ function ensurePrayerOverlay(){
     card.addEventListener("click", () => selectPrayerCard(card));
   });
   overlay.querySelector("#prayerConfirmBtn").addEventListener("click", confirmPrayerChoice);
-  overlay.querySelector("#prayerCancelBtn").addEventListener("click", cancelPrayerNode);
 
+  overlay.querySelector("#prayerMapBtn").addEventListener("click", () => {
+    if(typeof openMap === "function") openMap();
+    else if(typeof toast === "function") toast("지도를 열 수 없습니다.");
+  });
   overlay.querySelector("#prayerDeckBtn").addEventListener("click", () => {
     const deckBtn = document.getElementById("deckViewerButton");
     if(deckBtn) deckBtn.click();
@@ -210,6 +211,7 @@ function prayerOverlayHtml(){
         '<div class="prayer-title-sub">잠시 머물러 몸과 마음을 가다듬으세요.</div>' +
       '</div>' +
       '<div class="prayer-header-buttons">' +
+        '<button type="button" class="prayer-header-btn" id="prayerMapBtn"><span class="ico">🗺️</span><span>지도</span></button>' +
         '<button type="button" class="prayer-header-btn" id="prayerDeckBtn"><span class="ico">📖</span><span>보유카드</span></button>' +
         '<button type="button" class="prayer-header-btn" id="prayerBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
         '<button type="button" class="prayer-header-btn" id="prayerSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
@@ -231,7 +233,6 @@ function prayerOverlayHtml(){
       '</div>' +
     '</div>' +
     '<div class="prayer-actions">' +
-      '<button type="button" class="prayer-btn prayer-btn-cancel" id="prayerCancelBtn">취소</button>' +
       '<button type="button" class="prayer-btn prayer-btn-confirm" id="prayerConfirmBtn" disabled>선택하고 다음으로</button>' +
     '</div>'
   );
@@ -370,8 +371,6 @@ function ensurePrayerStyles(){
     ".prayer-actions{flex:none;display:flex;justify-content:center;gap:1.2cqw;}" +
     ".prayer-btn{min-width:16cqw;height:5.6cqh;border-radius:1.3cqh;font-size:2cqh;font-weight:900;cursor:pointer;" +
       "font:inherit;border:.22cqh solid rgba(178,140,80,.5);}" +
-    ".prayer-btn-cancel{background:rgba(255,251,240,.88);color:#6b4a20;}" +
-    ".prayer-btn-cancel:hover{background:#fff;}" +
     ".prayer-btn-confirm{background:linear-gradient(180deg,#7fbf8a,#4f9c62);color:#fff;border-color:#3f7c4e;}" +
     ".prayer-btn-confirm:disabled{filter:grayscale(.5) brightness(.92);cursor:default;opacity:.7;}" +
     "@media (max-width:900px){.prayer-cards{flex-direction:column;align-items:stretch;}.prayer-card{max-width:none;min-height:auto;}" +
