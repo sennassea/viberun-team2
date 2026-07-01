@@ -76,8 +76,8 @@
 
   const CODEX_SECTIONS = [
     { id: "cards", tabId: "codexCards", label: "카드", title: "카드 도감", icon: "🃏" },
-    { id: "relics", tabId: "codexRelics", label: "유물", title: "유물 도감", icon: "🏺" },
-    { id: "potions", tabId: "codexPotions", label: "포션", title: "포션 도감", icon: "🧪" },
+    { id: "relics", tabId: "codexRelics", label: "법구", title: "법구 도감", icon: "🏺" },
+    { id: "potions", tabId: "codexPotions", label: "약병", title: "약병 도감", icon: "🧪" },
   ];
 
   function initDeckViewer(){
@@ -607,14 +607,14 @@
     if(sectionId === "cards"){
       return "전체 카드 " + entries.filter(entry => !entry.locked).length + "장 발견 / " + total + "장";
     }
-    if(sectionId === "relics") return "전체 유물 " + entries.length + "개 / " + total + "개";
-    return "전체 포션 " + entries.length + "개 / " + total + "개";
+    if(sectionId === "relics") return "전체 법구 " + entries.length + "개 / " + total + "개";
+    return "전체 약병 " + entries.length + "개 / " + total + "개";
   }
 
   function getCodexEmptyText(sectionId, total){
     if(total > 0) return "조건에 맞는 항목이 없습니다.";
-    if(sectionId === "relics") return "등록된 유물이 없습니다.";
-    if(sectionId === "potions") return "등록된 포션이 없습니다.";
+    if(sectionId === "relics") return "등록된 법구가 없습니다.";
+    if(sectionId === "potions") return "등록된 약병이 없습니다.";
     return "표시할 카드가 없습니다.";
   }
 
@@ -763,7 +763,7 @@
 
   function codexItemDetailHtml(entry, index, total){
     const item = entry.item || {};
-    const label = entry.kind === "relic" ? "유물 정보" : "포션 정보";
+    const label = entry.kind === "relic" ? "법구 정보" : "약병 정보";
     return '<button type="button" class="card-detail-nav card-detail-prev" data-card-detail-nav="prev" aria-label="이전 항목">‹</button>' +
       '<div class="card-detail-spread">' +
         '<div class="card-detail-front">' +
