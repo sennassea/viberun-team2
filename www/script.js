@@ -304,6 +304,12 @@ const BATTLE_VICTORY_BASE_REWARDS = [
   { id:"gold", name:"복채", icon:"복", value:"+20", doneText:"수령 완료" },
   { id:"card", name:"카드 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
 ];
+const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
+const BATTLE_VICTORY_POTION_CHANCE = 0.5;
+const BATTLE_VICTORY_OPTIONAL_REWARDS = [
+  { id:"relic", name:"법구", icon:"具", value:"임시 법구", doneText:"선택 완료", chance:BATTLE_VICTORY_RELIC_CHANCE },
+  { id:"potion", name:"약병", icon:"藥", value:"임시 약병", doneText:"선택 완료", chance:BATTLE_VICTORY_POTION_CHANCE },
+];
 
 function chooseRewardCard(key){
   if(!S || !S.rewardOpen) return;
@@ -393,6 +399,15 @@ function renderBattleVictoryOverlay(){
   ov.classList.add("show");
 }
 
+function getBattleVictoryRewards(){
+  if(!S.victoryRewards){
+    S.victoryRewards = BATTLE_VICTORY_BASE_REWARDS.concat(
+      BATTLE_VICTORY_OPTIONAL_REWARDS.filter(item => Math.random() < item.chance)
+    );
+  }
+  return S.victoryRewards;
+}
+
 function getBattleVictoryInfo(){
   const stageIdx = window.MAP_STATE ? window.MAP_STATE.currentStage : -1;
   const stage = window.ACT1_MAP_STAGES && stageIdx >= 0 ? window.ACT1_MAP_STAGES[stageIdx] : null;
@@ -410,7 +425,7 @@ function getBattleVictoryInfo(){
 
 function renderBattleVictoryRewardSlots(host){
   if(!S.victoryRewardDone) S.victoryRewardDone = {};
-  host.innerHTML = BATTLE_VICTORY_BASE_REWARDS.map(item => {
+  host.innerHTML = getBattleVictoryRewards().map(item => {
     const done = !!S.victoryRewardDone[item.id];
     return '<button type="button" class="victory-reward-slot' + (done ? ' done' : '') + '" data-reward-id="' + item.id + '">' +
       '<div class="victory-reward-icon">' + item.icon + '</div>' +
@@ -454,7 +469,7 @@ function finishBattleVictoryCardReward(){
 }
 
 function areBattleVictoryRewardsDone(){
-  return !!(S && S.victoryRewardDone && BATTLE_VICTORY_BASE_REWARDS.every(item => S.victoryRewardDone[item.id]));
+  return !!(S && S.victoryRewardDone && getBattleVictoryRewards().every(item => S.victoryRewardDone[item.id]));
 }
 
 function updateBattleVictoryNextButton(ov){
