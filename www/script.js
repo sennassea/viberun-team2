@@ -536,6 +536,7 @@ function closeBattleVictoryConfirm(ov){
 function closeBattleVictoryPotionReplacePanel(modal){
   if(!modal) return;
   const panel = modal.querySelector(".victory-potion-replace-panel");
+  modal.classList.remove("replace-mode");
   if(!panel) return;
   panel.classList.remove("show");
   panel.setAttribute("aria-hidden", "true");
@@ -552,9 +553,15 @@ function openBattleVictoryPotionReplacePanel(host){
     '<div class="victory-potion-replace-title">교체할 약병 선택</div>' +
     '<div class="victory-potion-replace-desc">약병은 최대 3개까지 보유할 수 있습니다. 교체할 약병을 선택해주세요.</div>' +
     '<div class="victory-potion-replace-slots"></div>' +
-    '<div class="victory-potion-replace-detail" aria-hidden="true"></div>';
+    '<div class="victory-potion-replace-detail" aria-hidden="true"></div>' +
+    '<div class="victory-potion-replace-footer">' +
+      '<button type="button" class="victory-potion-replace-back">취소</button>' +
+    '</div>';
   const slots = panel.querySelector(".victory-potion-replace-slots");
   const newPotion = getBattleVictoryRewards().find(item => item.id === "potion");
+  panel.querySelector(".victory-potion-replace-back").addEventListener("click", () => {
+    closeBattleVictoryPotionReplacePanel(modal);
+  });
   potions.forEach((potion, index) => {
     const slot = document.createElement("button");
     slot.type = "button";
@@ -570,6 +577,7 @@ function openBattleVictoryPotionReplacePanel(host){
     });
     slots.appendChild(slot);
   });
+  modal.classList.add("replace-mode");
   panel.classList.add("show");
   panel.setAttribute("aria-hidden", "false");
 }
@@ -1243,6 +1251,8 @@ function injectRewardStyles(){
     .victory-next.active{background:#fff;color:var(--c-ink);cursor:pointer;opacity:1;box-shadow:0 .45cqh 1cqh rgba(40,70,120,.15);}
     .victory-confirm-modal{position:absolute;inset:0;z-index:230;display:none;place-items:center;background:rgba(10,20,40,.18);}
     .victory-confirm-modal.show{display:flex;align-items:center;justify-content:center;gap:1cqw;}
+    .victory-confirm-modal.replace-mode{background:rgba(10,20,40,.42);backdrop-filter:blur(.35cqh);}
+    .victory-confirm-modal.replace-mode .victory-confirm-box{display:none;}
     .victory-confirm-box{width:min(28cqw,42cqh);padding:2cqh 2cqw;border-radius:1.4cqh;background:#fff;border:.25cqh solid var(--c-panel-line);box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.32);text-align:center;}
     .victory-confirm-title{font-size:2.1cqh;font-weight:900;color:var(--c-ink);margin-bottom:.8cqh;}
     .victory-confirm-desc{font-size:1.45cqh;font-weight:700;color:var(--c-ink-soft);line-height:1.35;margin-bottom:1.6cqh;}
@@ -1268,6 +1278,8 @@ function injectRewardStyles(){
     .victory-potion-detail-question{font-size:1.2cqh;font-weight:900;color:var(--c-ink);text-align:center;margin:1cqh 0 .8cqh;}
     .victory-potion-detail-actions{display:flex;justify-content:center;gap:.6cqw;}
     .victory-potion-detail-actions button{font:inherit;font-size:1.25cqh;font-weight:900;padding:.55cqh .9cqw;border-radius:.75cqh;border:.18cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);cursor:pointer;}
+    .victory-potion-replace-footer{display:flex;justify-content:center;margin-top:1.1cqh;}
+    .victory-potion-replace-back{font:inherit;font-size:1.3cqh;font-weight:900;padding:.65cqh 1cqw;border-radius:.8cqh;border:.18cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink-soft);cursor:pointer;}
   `;
   document.head.appendChild(style);
 }
