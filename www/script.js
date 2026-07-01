@@ -301,7 +301,7 @@ function openBattleVictoryReward(){
 }
 
 const BATTLE_VICTORY_BASE_REWARDS = [
-  { id:"gold", name:"복채", icon:"복", value:"+20", doneText:"수령 완료" },
+  { id:"gold", name:"복채", icon:"복", value:"+20", amount:20, doneText:"수령 완료" },
   { id:"card", name:"카드 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
 ];
 const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
@@ -452,6 +452,7 @@ function renderBattleVictoryRewardSlots(host){
 }
 
 function completeBattleVictoryReward(id, host){
+  if(S.victoryRewardDone && S.victoryRewardDone[id]) return;
   if(id === "card" && !(S.victoryRewardDone && S.victoryRewardDone.card)){
     openBattleVictoryCardReward(host);
     return;
@@ -462,6 +463,11 @@ function completeBattleVictoryReward(id, host){
   }
   if(!S.victoryRewardDone) S.victoryRewardDone = {};
   if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  if(id === "gold"){
+    const reward = getBattleVictoryRewards().find(item => item.id === "gold");
+    S.gold = (typeof S.gold === "number" ? S.gold : STARTING_GOLD) + ((reward && reward.amount) || 0);
+    renderHud();
+  }
   S.victoryRewardDone[id] = true;
   S.victoryRewardDoneText[id] = "수령 완료";
   renderBattleVictoryRewardSlots(host);
