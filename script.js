@@ -278,7 +278,7 @@ function nodeClear(){
   const nodeType = S.battleNodeType || "enemy";
   if(nodeType==="boss")  return endGame("win");   // 보스 클리어 → 게임 승리 (기획서 §6)
   if(nodeType==="elite") grantRelic();             // 엘리트 → 유물 추가 (기획서 §10)
-  openCardReward();                                // 카드 보상 후 맵 복귀
+  openBattleVictoryReward();
 }
 
 /* =========================================================================
@@ -291,6 +291,12 @@ function getRandomRewardKeys(count){
 function openCardReward(){
   S.busy = true; S.rewardOpen = true;
   renderRewardOverlay(getRandomRewardKeys(3));
+  updateEndBtn();
+}
+
+function openBattleVictoryReward(){
+  S.busy = true; S.rewardOpen = true;
+  renderBattleVictoryOverlay();
   updateEndBtn();
 }
 
@@ -321,6 +327,51 @@ function grantRelic(){
   S.relics.push(relic);
   toast("법구 획득: "+relic.emoji+" "+relic.name);
   renderHud();
+}
+
+function ensureBattleVictoryOverlay(){
+  let ov = document.querySelector("#battleVictoryOverlay");
+  if(ov) return ov;
+  ov = document.createElement("div");
+  ov.id = "battleVictoryOverlay";
+  ov.innerHTML =
+    '<div class="victory-reward-panel">' +
+      '<div class="victory-title-area">' +
+        '<h2>전투 승리</h2>' +
+        '<p>한풀이가 조금 더 깊어졌습니다.</p>' +
+      '</div>' +
+      '<div class="victory-section victory-reward-section">' +
+        '<div class="victory-section-title">획득 보상</div>' +
+        '<div class="victory-reward-row" aria-label="획득 보상 목록"></div>' +
+      '</div>' +
+      '<div class="victory-section victory-kill-section">' +
+        '<div class="victory-section-title">처치한 악령</div>' +
+        '<div class="victory-enemy-name"></div>' +
+        '<div class="victory-battle-meta">' +
+          '<span class="victory-meta-location"></span>' +
+          '<span class="victory-meta-floor"></span>' +
+          '<span class="victory-meta-turn"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="victory-button-area">' +
+        '<button type="button" class="victory-next" disabled>다음층으로</button>' +
+      '</div>' +
+    '</div>';
+  document.querySelector("#game").appendChild(ov);
+  return ov;
+}
+
+function renderBattleVictoryOverlay(){
+  const ov = ensureBattleVictoryOverlay();
+  const enemyName = ov.querySelector(".victory-enemy-name");
+  const location = ov.querySelector(".victory-meta-location");
+  const floor = ov.querySelector(".victory-meta-floor");
+  const turn = ov.querySelector(".victory-meta-turn");
+  if(enemyName) enemyName.textContent = S.enemies.map(e => e.name).join(", ");
+  if(location) location.textContent = "위치";
+  if(floor) floor.textContent = ($("#hudFloor") && $("#hudFloor").textContent) || "층";
+  if(turn) turn.textContent = "TURN " + S.turn;
+  ov.classList.add("show");
 }
 
 function ensureRewardOverlay(){
@@ -368,6 +419,8 @@ function rewardCardHtml(key){
 function closeRewardOverlay(){
   const ov = document.querySelector("#cardRewardOverlay");
   if(ov) ov.classList.remove("show");
+  const victoryOv = document.querySelector("#battleVictoryOverlay");
+  if(victoryOv) victoryOv.classList.remove("show");
 }
 
 /* =========================================================================
@@ -818,6 +871,19 @@ function injectRewardStyles(){
     .reward-meta{font-size:1.25cqh;font-weight:800;color:var(--c-ink-soft);margin-bottom:.4cqh;}
     .reward-card .desc{font-size:1.45cqh;line-height:1.35;white-space:pre-line;}
     .reward-skip{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#fff;cursor:pointer;color:var(--c-ink-soft);}
+    #battleVictoryOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.64);backdrop-filter:blur(.5cqh);}
+    #battleVictoryOverlay.show{display:grid;}
+    .victory-reward-panel{width:min(62cqw,82cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.95);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;display:flex;flex-direction:column;gap:2cqh;}
+    .victory-title-area h2{font-size:3.2cqh;margin-bottom:.6cqh;color:var(--c-ink);}
+    .victory-title-area p{font-size:1.7cqh;color:var(--c-ink-soft);}
+    .victory-section{border:.2cqh solid var(--c-panel-line);border-radius:1.4cqh;background:rgba(255,255,255,.55);padding:1.6cqh 1.5cqw;}
+    .victory-section-title{font-size:1.8cqh;font-weight:900;color:var(--c-ink);margin-bottom:1.2cqh;}
+    .victory-reward-row{min-height:13cqh;border:.25cqh dashed var(--c-panel-line);border-radius:1.2cqh;display:flex;align-items:center;justify-content:center;gap:1cqw;background:rgba(255,255,255,.45);}
+    .victory-enemy-name{min-height:2.4cqh;font-size:1.85cqh;font-weight:900;color:var(--c-ink);margin-bottom:1cqh;}
+    .victory-battle-meta{display:flex;justify-content:center;gap:.8cqw;flex-wrap:wrap;}
+    .victory-battle-meta span{min-width:7cqw;padding:.55cqh .9cqw;border-radius:.8cqh;background:#eef4fb;border:.15cqh solid #d6e6f5;font-size:1.4cqh;font-weight:800;color:var(--c-ink-soft);}
+    .victory-button-area{display:flex;justify-content:center;}
+    .victory-next{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#f3f5f8;color:#9aa5b2;cursor:not-allowed;opacity:.72;}
   `;
   document.head.appendChild(style);
 }
