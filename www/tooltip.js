@@ -334,6 +334,7 @@
 
   /* ── 전투원 이벤트 위임 ───────────────────────────────────────────────── */
   field.addEventListener("mouseover", function (e) {
+    return;
     var cb = e.target.closest(".combatant");
     if (!cb || cb.classList.contains("dead")) {
       if (activeId !== null) hideCombatantTooltip();
@@ -363,6 +364,68 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   var cardActiveEl = null;
+  var activeStatusEl = null;
+
+  function buildStatusIconHtml(statusEl) {
+    var type = statusEl.dataset.status;
+    var info = EFFECT_INFO[type];
+    if (!info || typeof S === "undefined" || !S || !S.player) return "";
+    var count = S.player[type] || 0;
+    return makeRow(info.icon, info.name, info.desc(count));
+  }
+
+  function positionStatusIconTooltip(statusEl) {
+    var gRect   = game.getBoundingClientRect();
+    var sRect   = statusEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+
+    var tx = (sRect.left - gRect.left) + (sRect.width - tipRect.width) * 0.5;
+    var ty = (sRect.bottom - gRect.top) + pad;
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showStatusIconTooltip(statusEl) {
+    var html = buildStatusIconHtml(statusEl);
+    if (!html) return;
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = statusEl;
+    tooltip.innerHTML = html;
+    tooltip.classList.add("tt-show");
+    positionStatusIconTooltip(statusEl);
+  }
+
+  function hideStatusIconTooltip() {
+    activeStatusEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var statusEl = e.target.closest("#profileStatusEffects .status-icon");
+    if (!statusEl || statusEl === activeStatusEl) return;
+    showStatusIconTooltip(statusEl);
+  });
+
+  game.addEventListener("click", function (e) {
+    var statusEl = e.target.closest("#profileStatusEffects .status-icon");
+    if (!statusEl) return;
+    showStatusIconTooltip(statusEl);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeStatusEl) return;
+    var statusEl = e.target.closest("#profileStatusEffects .status-icon");
+    if (!statusEl) return;
+    var to = e.relatedTarget;
+    if (to && statusEl.contains(to)) return;
+    hideStatusIconTooltip();
+  });
 
   /* ── 카드 설명에서 용어 추출 후 HTML 빌드 ────────────────────────────── */
   function buildCardTermHtml(descText) {

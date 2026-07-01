@@ -132,7 +132,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   max-width:calc(50% - 11cqw); min-height:4.2cqh; display:flex; justify-content:flex-end; pointer-events:none; z-index:2;}
 .profile-status-effects .badges{width:100%; min-height:0; display:flex; flex-direction:row-reverse;
   justify-content:flex-start; align-items:center; gap:.45cqh;}
-.profile-status-effects .status-icon{width:3.35cqh; height:3.35cqh; border-radius:.75cqh;}
+.profile-status-effects .status-icon{width:3.35cqh; height:3.35cqh; border-radius:.75cqh; pointer-events:auto;}
 .profile-status-effects .status-symbol{font-size:1.85cqh;}
 .profile-status-effects .status-count{right:-.35cqh; bottom:-.45cqh; min-width:1.65cqh; height:1.65cqh; font-size:1.05cqh;}
 .stat{font-size:2.2cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw;}
