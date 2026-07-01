@@ -318,7 +318,7 @@ function buildOverlay(){
           <div class="legend-item"><span class="leg-ico boss">💀</span>보스</div>
           <div class="legend-item"><span class="leg-ico event">❓</span>이벤트</div>
           <div class="legend-item"><span class="leg-ico shop">🛒</span>상점</div>
-          <div class="legend-item"><span class="leg-ico rest">🛖</span>휴식</div>
+          <div class="legend-item"><span class="leg-ico rest">🛖</span>기도터</div>
         </div>
       </div>
       <div class="map-footer" id="mapFooter"></div>
@@ -395,10 +395,24 @@ function renderCanvas(currentNodeId){
   const myFloor = nodeFloorIdx(currentNodeId);
   const isPast  = id   => nodeFloorIdx(id) < myFloor;
   const isCur   = id   => id === currentNodeId;
+
+  // 현재 노드와 실제로 선(MAP_PATHS)으로 연결된 다음 노드만 선택 가능하도록 집합 구성
+  const nextNodeIds = new Set();
+  if(window.MAP_STATE.proceedMode && myFloor >= 0){
+    const myIdx = MAP_FLOORS[myFloor]?.findIndex(n => n.id === currentNodeId);
+    if(myIdx >= 0){
+      MAP_PATHS.forEach(([[f1, n1], [f2, n2]]) => {
+        if(f1 === myFloor && n1 === myIdx){
+          const target = MAP_FLOORS[f2]?.[n2];
+          if(target) nextNodeIds.add(target.id);
+        }
+      });
+    }
+  }
   const isNext  = node =>
     window.MAP_STATE.proceedMode &&
     node.stageIndex !== undefined &&
-    nodeFloorIdx(node.id) === myFloor + 1;
+    nextNodeIds.has(node.id);
 
   // 경로 선
   let paths = "";
