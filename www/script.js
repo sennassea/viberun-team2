@@ -300,6 +300,14 @@ function openBattleVictoryReward(){
   updateEndBtn();
 }
 
+const BATTLE_VICTORY_REWARD_TEST_COUNT = 2;
+const BATTLE_VICTORY_REWARD_TEST_ITEMS = [
+  { id:"gold", name:"복채", icon:"복" },
+  { id:"card", name:"카드 보상", icon:"札" },
+  { id:"relic", name:"법구", icon:"具" },
+  { id:"potion", name:"약병", icon:"藥" },
+];
+
 function chooseRewardCard(key){
   if(!S || !S.rewardOpen) return;
   const card = CARD_DB[key];
@@ -363,15 +371,28 @@ function ensureBattleVictoryOverlay(){
 
 function renderBattleVictoryOverlay(){
   const ov = ensureBattleVictoryOverlay();
+  const rewardRow = ov.querySelector(".victory-reward-row");
   const enemyName = ov.querySelector(".victory-enemy-name");
   const location = ov.querySelector(".victory-meta-location");
   const floor = ov.querySelector(".victory-meta-floor");
   const turn = ov.querySelector(".victory-meta-turn");
+  if(rewardRow) renderBattleVictoryRewardSlots(rewardRow);
   if(enemyName) enemyName.textContent = S.enemies.map(e => e.name).join(", ");
   if(location) location.textContent = "위치";
   if(floor) floor.textContent = ($("#hudFloor") && $("#hudFloor").textContent) || "층";
   if(turn) turn.textContent = "TURN " + S.turn;
   ov.classList.add("show");
+}
+
+function renderBattleVictoryRewardSlots(host){
+  const count = Math.max(2, Math.min(4, BATTLE_VICTORY_REWARD_TEST_COUNT));
+  host.innerHTML = BATTLE_VICTORY_REWARD_TEST_ITEMS.slice(0, count).map(item =>
+    '<div class="victory-reward-slot">' +
+      '<div class="victory-reward-icon">' + item.icon + '</div>' +
+      '<div class="victory-reward-name">' + item.name + '</div>' +
+      '<div class="victory-reward-state">확인 필요</div>' +
+    '</div>'
+  ).join("");
 }
 
 function ensureRewardOverlay(){
@@ -878,7 +899,11 @@ function injectRewardStyles(){
     .victory-title-area p{font-size:1.7cqh;color:var(--c-ink-soft);}
     .victory-section{border:.2cqh solid var(--c-panel-line);border-radius:1.4cqh;background:rgba(255,255,255,.55);padding:1.6cqh 1.5cqw;}
     .victory-section-title{font-size:1.8cqh;font-weight:900;color:var(--c-ink);margin-bottom:1.2cqh;}
-    .victory-reward-row{min-height:13cqh;border:.25cqh dashed var(--c-panel-line);border-radius:1.2cqh;display:flex;align-items:center;justify-content:center;gap:1cqw;background:rgba(255,255,255,.45);}
+    .victory-reward-row{min-height:15cqh;border:.25cqh dashed var(--c-panel-line);border-radius:1.2cqh;display:flex;align-items:center;justify-content:center;gap:1cqw;background:rgba(255,255,255,.45);}
+    .victory-reward-slot{flex:0 0 10cqw;width:10cqw;height:12.5cqh;border:.2cqh solid #d6e6f5;border-radius:1.1cqh;background:linear-gradient(180deg,#fbfcff,#eef4fb);box-shadow:0 .5cqh 1cqh rgba(40,70,120,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.65cqh;color:var(--c-ink);}
+    .victory-reward-icon{width:4.8cqh;height:4.8cqh;border-radius:1cqh;display:grid;place-items:center;background:#fff;border:.18cqh solid var(--c-panel-line);font-size:2.3cqh;font-weight:900;color:var(--c-blue-deep);}
+    .victory-reward-name{font-size:1.55cqh;font-weight:900;white-space:nowrap;}
+    .victory-reward-state{min-height:1.6cqh;font-size:1.15cqh;font-weight:800;color:var(--c-ink-soft);}
     .victory-enemy-name{min-height:2.4cqh;font-size:1.85cqh;font-weight:900;color:var(--c-ink);margin-bottom:1cqh;}
     .victory-battle-meta{display:flex;justify-content:center;gap:.8cqw;flex-wrap:wrap;}
     .victory-battle-meta span{min-width:7cqw;padding:.55cqh .9cqw;border-radius:.8cqh;background:#eef4fb;border:.15cqh solid #d6e6f5;font-size:1.4cqh;font-weight:800;color:var(--c-ink-soft);}
