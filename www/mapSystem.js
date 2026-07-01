@@ -269,6 +269,7 @@ function startStage(stageIdx){
 
 /* ── 지도 열기/닫기 ────────────────────────────────────────────────────── */
 function openMap(){
+  if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
   let ov = document.getElementById("mapOverlay");
   if(!ov){ ov = buildOverlay(); document.getElementById("game").appendChild(ov); }
   const isStartMap = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
