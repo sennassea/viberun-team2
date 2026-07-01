@@ -304,7 +304,7 @@
     const relic = { ...RELIC_DB[Math.floor(Math.random() * RELIC_DB.length)] };
     S.relics.push(relic);
     CHEAT_RUN_STATE.relics.push(relic);
-    safeToast("유물 획득: " + relic.emoji + " " + relic.name);
+    safeToast("법구 획득: " + relic.emoji + " " + relic.name);
     safeRenderHud();
   }
   function cheatGiveRelic(id){
@@ -314,7 +314,7 @@
     const relic = { ...found };
     S.relics.push(relic);
     CHEAT_RUN_STATE.relics.push(relic);
-    safeToast("유물 획득: " + relic.emoji + " " + relic.name);
+    safeToast("법구 획득: " + relic.emoji + " " + relic.name);
     safeRenderHud();
   }
   function cheatGivePotionObject(potion){
@@ -322,16 +322,16 @@
     if(S.potions.length >= 3){ cheatWarn("포션 슬롯이 가득 찼습니다. 기본 최대 3개입니다."); return; }
     S.potions.push(potion);
     CHEAT_RUN_STATE.potions.push(potion);
-    safeToast("포션 획득: " + (potion.emoji || "🧪") + " " + potion.name);
+    safeToast("약병 획득: " + (potion.emoji || "🧪") + " " + potion.name);
     safeRenderHud();
   }
   function cheatGivePotionTest(){
-    cheatGivePotionObject({ id: "cheat_test_potion", name: "테스트 포션", emoji: "🧪", desc: "치트로 지급한 테스트용 포션" });
+    cheatGivePotionObject({ id: "cheat_test_potion", name: "테스트 약병", emoji: "🧪", desc: "치트로 지급한 테스트용 약병" });
   }
   function cheatGivePotion(id){
     const db = typeof window.POTION_DB !== "undefined" ? window.POTION_DB : null;
     const found = db ? db.find(p => p.id === id) : null;
-    const potion = found ? { ...found } : { id, name: id, emoji: "🧪", desc: "치트로 지급한 테스트용 포션(" + id + ")" };
+    const potion = found ? { ...found } : { id, name: id, emoji: "🧪", desc: "치트로 지급한 테스트용 약병(" + id + ")" };
     cheatGivePotionObject(potion);
   }
 

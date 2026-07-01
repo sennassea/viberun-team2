@@ -174,7 +174,8 @@ function ensurePrayerOverlay(){
     else if(typeof toast === "function") toast("보유 카드 확인 기능은 준비 중입니다.");
   });
   overlay.querySelector("#prayerBagBtn").addEventListener("click", () => {
-    if(typeof toast === "function") toast("가방 확인 기능은 다음 업데이트에서 제공됩니다.");
+    if(typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
+    else if(typeof toast === "function") toast("가방 확인 기능은 다음 업데이트에서 제공됩니다.");
   });
   overlay.querySelector("#prayerSettingsBtn").addEventListener("click", () => {
     const settingsBtn = Array.from(document.querySelectorAll(".hud-btn"))

@@ -253,7 +253,7 @@ function grantRelic(){
   if(!S.relics) S.relics = [];
   const relic = RELIC_DB[Math.floor(Math.random()*RELIC_DB.length)];
   S.relics.push(relic);
-  toast("유물 획득: "+relic.emoji+" "+relic.name);
+  toast("법구 획득: "+relic.emoji+" "+relic.name);
   renderHud();
 }
 

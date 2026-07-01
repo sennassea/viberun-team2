@@ -386,7 +386,7 @@ const DMAP_LEGEND_DATA = [
     type: "shop",
     icon: "🛍️",
     label: "상점",
-    tip: "골드를 사용해 카드, 소모품, 장비를 구매할 수 있습니다.",
+    tip: "골드를 사용해 카드, 약병, 법구를 구매할 수 있습니다.",
   },
   {
     type: "rest",
