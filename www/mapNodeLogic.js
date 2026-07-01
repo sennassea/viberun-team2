@@ -120,11 +120,9 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   /* 이번 맵 생성에서 사용한 패키지 ID 추적 */
   const usedPkgIds = new Set();
 
-  /* 휴식 노드 연속 출현 방지 및 최소 출현 횟수 보장을 위한 추적 변수
-     - prevFloorHasRest: 직전 층에 휴식 노드가 있었는지 (있었다면 이번 층은 휴식 후보 제외)
-     - restFloorCountBeforeCap: 13층 진입 전까지(1~12층) 휴식 노드가 출현한 층 수 */
+  /* 휴식 노드 연속 출현 방지를 위한 추적 변수
+     - prevFloorHasRest: 직전 층에 휴식 노드가 있었는지 (있었다면 이번 층은 휴식 후보 제외) */
   let prevFloorHasRest = false;
-  let restFloorCountBeforeCap = 0;
 
   /* ── Floor 0: 로비 (딤드 / 자동 스킵 / stageIndex 없음) ── */
   floors.push([{
@@ -173,13 +171,7 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
           if (types[i] === "elite") { types[i] = "enemy"; replaced++; }
         }
       }
-      /* 보정 3 (기획서 v2 6장 "휴식 선택" 보완): 휴식은 15층(보스 직전) 포함 최소 2회 출현해야
-         하므로, 13층 진입 전까지 휴식이 한 번도 없었다면 13층에 강제 배치한다.
-         (prevFloorHasRest가 false일 때만 도달 - 직전 층이 휴식이면 연속 출현이 되므로 배치하지 않음) */
-      if (fi === ACT1_TOTAL_FLOORS - 2 && restFloorCountBeforeCap === 0 && !prevFloorHasRest && !types.includes("rest")) {
-        types[types.length - 1] = "rest";
-      }
-      /* 보정 4 (기획서 v2 5-3): 14층까지 정비 노드(상점) 없으면 마지막을 상점으로
+      /* 보정 3 (기획서 v2 5-3): 14층까지 정비 노드(상점) 없으면 마지막을 상점으로
          (14층은 휴식 후보에서 제외되므로 정비 노드는 상점만 사용) */
       if (isFloorBeforeFinalRest && !types.some(t => t === "shop")) {
         types[types.length - 1] = "shop";
@@ -187,9 +179,7 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
     }
 
     /* 다음 층 계산을 위해 이번 층의 휴식 출현 여부 기록 */
-    const floorHasRest = types.includes("rest");
-    if (fi <= ACT1_TOTAL_FLOORS - 3) restFloorCountBeforeCap += floorHasRest ? 1 : 0;
-    prevFloorHasRest = floorHasRest;
+    prevFloorHasRest = types.includes("rest");
 
     /* 노드 생성 */
     for (let ni = 0; ni < types.length; ni++) {
@@ -238,6 +228,54 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
       });
     }
     floors.push(floorNodes);
+  }
+
+  /* ── 1~10층 휴식 노드 최소 1개 보장 검사 (기획서 v3 6장) ─────────────────
+     맵 생성 후 1~10층에 휴식 노드가 0개면, 10→8→6→5→4층 순으로 전환 후보를
+     찾아 그중 1개 노드를 휴식으로 전환한다. 1층 일반 전투는 전환 대상에서
+     제외한다. 강제 통과 노드가 아니라 선택 가능한 노드 중 하나를 휴식으로
+     바꾸는 것이므로, 전투 노드보다 이벤트/상점 노드를 우선 전환 대상으로
+     삼아 해당 층의 전투 보상 흐름을 최대한 보존한다. */
+  const hasRestIn1to10 = floors.slice(1, 11).some(floorNodes =>
+    floorNodes.some(n => n.type === "rest")
+  );
+  if (!hasRestIn1to10) {
+    const REST_GUARANTEE_FLOOR_ORDER = [10, 8, 6, 5, 4];
+    for (const floorNum of REST_GUARANTEE_FLOOR_ORDER) {
+      const floorNodes = floors[floorNum];
+      if (!floorNodes) continue;
+
+      const combatIdxs = [];
+      const nonCombatIdxs = [];
+      floorNodes.forEach((n, idx) => {
+        if (n.type === "enemy" || n.type === "elite") combatIdxs.push(idx);
+        else if (n.type !== "rest") nonCombatIdxs.push(idx);
+      });
+
+      /* 이벤트/상점 노드 우선 전환, 없으면 전투 노드가 2개 이상일 때만
+         그중 1개를 전환 (해당 층의 유일한 전투 노드는 보존) */
+      let targetIdx = nonCombatIdxs.length
+        ? nonCombatIdxs[nonCombatIdxs.length - 1]
+        : (combatIdxs.length > 1 ? combatIdxs[combatIdxs.length - 1] : null);
+      if (targetIdx === null) continue;
+
+      const node = floorNodes[targetIdx];
+      const info = ACT1_NODE_INFO.rest;
+      node.type = "rest";
+      node.emoji = info.emoji;
+      node.label = info.label;
+      node.isDimmed = info.isDimmed;
+
+      const stage = stages[node.stageIndex];
+      stage.label = `${floorNum}층 ${info.label}`;
+      stage.type = "rest";
+      stage.isDimmed = info.isDimmed;
+      stage.packageId = null;
+      stage.getMonsters = null;
+      popupGetters[node.stageIndex] = () => [];
+
+      break;
+    }
   }
 
   /* ── Boss Floor (16번째): 보스 패키지에서 1개 선택 ── */
