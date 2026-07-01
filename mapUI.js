@@ -391,8 +391,8 @@ const DMAP_LEGEND_DATA = [
   {
     type: "rest",
     icon: "🛏️",
-    label: "휴식",
-    tip: "체력을 회복하거나 덱을 정비할 수 있습니다.",
+    label: "기도터",
+    tip: "정신력을 회복하거나 덱을 정비할 수 있습니다.",
   },
   {
     type: "boss",
