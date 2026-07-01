@@ -17,7 +17,7 @@ const ACT1_WEIGHTS = {
   early_high: { enemy: 50, elite: 15, event: 15, shop:  5, rest: 15 }, // 4~5층
   mid:        { enemy: 40, elite: 15, event: 20, shop: 15, rest: 10 }, // 6~10층
   late_low:   { enemy: 40, elite: 15, event: 20, shop: 10, rest: 15 }, // 11~13층
-  late_high:  { enemy: 25, elite:  0, event:  5, shop: 35, rest: 35 }, // 14~15층
+  late_high:  { enemy: 25, elite:  0, event:  5, shop: 35, rest: 35 }, // 14층 (15층은 휴식 전용 고정으로 이 가중치를 사용하지 않음)
 };
 
 /* ── 노드 표시 정보 ────────────────────────────────────────────────────── */
@@ -118,6 +118,12 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   /* 이번 맵 생성에서 사용한 패키지 ID 추적 */
   const usedPkgIds = new Set();
 
+  /* 휴식 노드 연속 출현 방지 및 최소 출현 횟수 보장을 위한 추적 변수
+     - prevFloorHasRest: 직전 층에 휴식 노드가 있었는지 (있었다면 이번 층은 휴식 후보 제외)
+     - restFloorCountBeforeCap: 13층 진입 전까지(1~12층) 휴식 노드가 출현한 층 수 */
+  let prevFloorHasRest = false;
+  let restFloorCountBeforeCap = 0;
+
   /* ── Floor 0: 로비 (딤드 / 자동 스킵 / stageIndex 없음) ── */
   floors.push([{
     id: "lobby_0", type: "lobby",
@@ -128,31 +134,60 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   /* ── Floors 1~15: 구간별 가중치 배치 ── */
   for (let fi = 1; fi <= ACT1_TOTAL_FLOORS; fi++) {
     const floorNodes = [];
-    const nodeCount  = fi === 1 ? 1 : act1RandInt(2, ACT1_MAX_NODES);
-    const weights    = act1GetWeights(fi);
 
-    /* 타입 배정 */
-    const types = [];
-    for (let ni = 0; ni < nodeCount; ni++) {
-      types.push(fi === 1 ? "enemy" : act1WeightedPick(weights));
-    }
+    /* 15층(보스 직전): 확률 테이블을 사용하지 않고 휴식 전용층으로 강제 지정
+       (기획서 v2 6장 "15층 휴식 전용 규칙" - 노드 타입 고정 / 랜덤 배치 제외 / 1~2개 권장) */
+    const isRestOnlyFloor = fi === ACT1_TOTAL_FLOORS;
+    /* 14층: 다음 층(15층)이 항상 휴식이므로, 휴식 연속 출현 방지를 위해 이 층은 휴식 후보에서 제외 */
+    const isFloorBeforeFinalRest = fi === ACT1_TOTAL_FLOORS - 1;
 
-    /* 보정 1 (기획서 12-1): 13층 이하 전투 노드 없으면 첫 노드를 enemy로 */
-    if (fi <= 13 && !types.some(t => t === "enemy" || t === "elite")) {
-      types[0] = "enemy";
-    }
-    /* 보정 2 (기획서 12-2): 같은 층 엘리트 2개 이상이면 1개만 유지 */
-    const eliteCnt = types.filter(t => t === "elite").length;
-    if (eliteCnt > 1) {
-      let replaced = 0;
-      for (let i = 0; i < types.length && replaced < eliteCnt - 1; i++) {
-        if (types[i] === "elite") { types[i] = "enemy"; replaced++; }
+    let types;
+    if (isRestOnlyFloor) {
+      const nodeCount = act1RandInt(1, 2);
+      types = Array(nodeCount).fill("rest");
+    } else {
+      const nodeCount = fi === 1 ? 1 : act1RandInt(2, ACT1_MAX_NODES);
+      const weights   = { ...act1GetWeights(fi) };
+
+      /* 휴식 노드 연속 출현 방지: 직전 층에 휴식이 있었거나, 다음 층이 항상 휴식인 14층이면
+         이번 층의 휴식 가중치를 0으로 만들어 후보에서 제외한다. */
+      if (prevFloorHasRest || isFloorBeforeFinalRest) weights.rest = 0;
+
+      /* 타입 배정 */
+      types = [];
+      for (let ni = 0; ni < nodeCount; ni++) {
+        types.push(fi === 1 ? "enemy" : act1WeightedPick(weights));
+      }
+
+      /* 보정 1 (기획서 12-1): 13층 이하 전투 노드 없으면 첫 노드를 enemy로 */
+      if (fi <= 13 && !types.some(t => t === "enemy" || t === "elite")) {
+        types[0] = "enemy";
+      }
+      /* 보정 2 (기획서 12-2): 같은 층 엘리트 2개 이상이면 1개만 유지 */
+      const eliteCnt = types.filter(t => t === "elite").length;
+      if (eliteCnt > 1) {
+        let replaced = 0;
+        for (let i = 0; i < types.length && replaced < eliteCnt - 1; i++) {
+          if (types[i] === "elite") { types[i] = "enemy"; replaced++; }
+        }
+      }
+      /* 보정 3 (기획서 v2 6장 "휴식 선택" 보완): 휴식은 15층(보스 직전) 포함 최소 2회 출현해야
+         하므로, 13층 진입 전까지 휴식이 한 번도 없었다면 13층에 강제 배치한다.
+         (prevFloorHasRest가 false일 때만 도달 - 직전 층이 휴식이면 연속 출현이 되므로 배치하지 않음) */
+      if (fi === ACT1_TOTAL_FLOORS - 2 && restFloorCountBeforeCap === 0 && !prevFloorHasRest && !types.includes("rest")) {
+        types[types.length - 1] = "rest";
+      }
+      /* 보정 4 (기획서 v2 5-3): 14층까지 정비 노드(상점) 없으면 마지막을 상점으로
+         (14층은 휴식 후보에서 제외되므로 정비 노드는 상점만 사용) */
+      if (isFloorBeforeFinalRest && !types.some(t => t === "shop")) {
+        types[types.length - 1] = "shop";
       }
     }
-    /* 보정 3 (기획서 12-1): 14~15층 정비 노드(휴식/상점) 없으면 마지막을 정비로 */
-    if (fi >= 14 && !types.some(t => t === "rest" || t === "shop")) {
-      types[types.length - 1] = Math.random() < 0.5 ? "rest" : "shop";
-    }
+
+    /* 다음 층 계산을 위해 이번 층의 휴식 출현 여부 기록 */
+    const floorHasRest = types.includes("rest");
+    if (fi <= ACT1_TOTAL_FLOORS - 3) restFloorCountBeforeCap += floorHasRest ? 1 : 0;
+    prevFloorHasRest = floorHasRest;
 
     /* 노드 생성 */
     for (let ni = 0; ni < types.length; ni++) {
