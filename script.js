@@ -33,25 +33,90 @@ const STARTING_GOLD     = 120;
 const STARTING_MOON_SHARDS = 0;
 
 let S;
+let RUN_STATE = null;
+
+function cloneRunArray(list){
+  return Array.isArray(list) ? list.map(item => (item && typeof item === "object") ? { ...item } : item) : [];
+}
+
+function createFreshRunState(){
+  const player = LIFE.createPlayer(PLAYER_DEF);
+  player.block = 0;
+  return {
+    player,
+    deck: [...BASE_STARTER_DECK],
+    relics: [],
+    potions: [],
+    gold: STARTING_GOLD,
+    moonShards: STARTING_MOON_SHARDS
+  };
+}
+
+function beginNewRun(){
+  RUN_STATE = createFreshRunState();
+  STARTER_DECK = [...RUN_STATE.deck];
+  S = null;
+  return RUN_STATE;
+}
+
+function syncRunStateFromCombat(){
+  if(!S || !S.player) return;
+  if(!RUN_STATE) RUN_STATE = createFreshRunState();
+  RUN_STATE.player = {
+    ...RUN_STATE.player,
+    hp: S.player.hp,
+    maxHp: S.player.maxHp
+  };
+  RUN_STATE.deck       = [...STARTER_DECK];
+  RUN_STATE.relics     = cloneRunArray(S.relics);
+  RUN_STATE.potions    = cloneRunArray(S.potions);
+  RUN_STATE.gold       = typeof S.gold === "number" ? S.gold : STARTING_GOLD;
+  RUN_STATE.moonShards = typeof S.moonShards === "number" ? S.moonShards : STARTING_MOON_SHARDS;
+}
+
+function hasRelic(id){
+  return !!(S && Array.isArray(S.relics) && S.relics.some(r => r && r.id === id));
+}
+
+function getMaxEnergy(){
+  return MAX_ENERGY + (hasRelic("charm_box") ? 1 : 0);
+}
+
+function getPlayerAttackDamage(rawDamage){
+  return Math.max(0, rawDamage + (hasRelic("spirit_tablet") ? 1 : 0));
+}
+
+function applyBattleStartRelics(){
+  if(!S || !S.player) return;
+  if(hasRelic("incense_burner")){
+    LIFE.addBlock(S.player, 6);
+  }
+}
 
 /* =========================================================================
    전투 초기화
    ========================================================================= */
-function newGame(){
-  STARTER_DECK = [...BASE_STARTER_DECK];
+function newGame(options={}){
+  if(options.resetRun || !RUN_STATE) beginNewRun();
+  else syncRunStateFromCombat();
 
   const stageIdx = window.MAP_STATE ? window.MAP_STATE.currentStage : 0;
   const curStage = window.ACT1_MAP_STAGES && window.ACT1_MAP_STAGES[stageIdx];
+  const runPlayer = RUN_STATE.player || LIFE.createPlayer(PLAYER_DEF);
+  const player = LIFE.createPlayer(PLAYER_DEF);
+  player.maxHp = runPlayer.maxHp || player.maxHp;
+  player.hp = Math.max(0, Math.min(player.maxHp, runPlayer.hp));
+  STARTER_DECK = [...RUN_STATE.deck];
 
   S = {
-    player:   LIFE.createPlayer(PLAYER_DEF),
+    player,
     enemies:  [],       // 패키지 전체 몬스터 (동시 배치)
     selectedId: null,   // 현재 선택된 적 ID
-    energy:   MAX_ENERGY,
+    energy:   getMaxEnergy(),
     hand: [], draw: [], discard: [],
     busy: false, over: null, rewardOpen: false,
-    relics: [], potions: [],
-    gold: STARTING_GOLD, moonShards: STARTING_MOON_SHARDS,
+    relics: cloneRunArray(RUN_STATE.relics), potions: cloneRunArray(RUN_STATE.potions),
+    gold: RUN_STATE.gold, moonShards: RUN_STATE.moonShards,
     turn: 1,
     // 노드 컨텍스트 (기획서 §2)
     battleNodeType:  curStage ? (curStage.type      || "enemy") : "enemy",
@@ -61,6 +126,7 @@ function newGame(){
 
   // 패키지 몬스터 전체 동시 배치 (기획서 §8-3)
   spawnPackageEnemies();
+  applyBattleStartRelics();
 
   S.draw = shuffle([...STARTER_DECK]);
   drawCards(DRAW_PER_TURN);
@@ -149,13 +215,13 @@ function playCard(handIndex, targetEnemy){
   for(const e of card.fx){
     switch(e.t){
       case "damage":
-        applyDamageWithFeedback(targetEnemy, e.v, S.player.weak); break;
+        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v), S.player.weak); break;
       case "bonusLowHpDamage":
         if(targetEnemy && targetEnemy.hp>0 && targetEnemy.hp<=Math.ceil(targetEnemy.maxHp/2))
-          applyDamageWithFeedback(targetEnemy, e.v, S.player.weak);
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v), S.player.weak);
         break;
       case "damageAll":
-        livingEnemies().forEach(en => applyDamageWithFeedback(en, e.v, S.player.weak)); break;
+        livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v), S.player.weak)); break;
       case "applyWeakAll":
         livingEnemies().forEach(en => LIFE.addWeak(en, e.v)); break;
       case "block":
@@ -363,7 +429,7 @@ async function endTurn(){
   LIFE.prepareNextPlayerTurn(S.player);
   const anxietyPenalty  = (S.player.anxiety||0)  > 0 ? 1 : 0;
   const lethargyPenalty = (S.player.lethargy||0) > 0 ? 1 : 0;
-  S.energy    = Math.max(0, MAX_ENERGY - lethargyPenalty);
+  S.energy    = Math.max(0, getMaxEnergy() - lethargyPenalty);
   const drawCount = Math.max(0, DRAW_PER_TURN - anxietyPenalty);
   if(anxietyPenalty>0)  toast("불안으로 카드 뽑기 -1");
   if(lethargyPenalty>0) toast("무기력으로 정신력 -1");
@@ -575,7 +641,7 @@ function renderHand(){
 }
 
 function renderDock(){
-  $("#energy .val").textContent  = S.energy+"/"+MAX_ENERGY;
+  $("#energy .val").textContent  = S.energy+"/"+getMaxEnergy();
   renderEnergyOrbs();
   $("#deckCount").textContent    = S.draw.length;
   $("#discardCount").textContent = S.discard.length;
@@ -588,7 +654,7 @@ function renderEnergyOrbs(){
   for(let i=0; i<ENERGY_SLOT_COUNT; i++){
     const orb = document.createElement("span");
     let state = "empty";
-    if(i < MAX_ENERGY) state = i < S.energy ? "active" : "used";
+    if(i < getMaxEnergy()) state = i < S.energy ? "active" : "used";
     orb.className = "energy-slot "+state;
     wrap.appendChild(orb);
   }
@@ -760,6 +826,6 @@ function injectRewardStyles(){
    버튼 바인딩
    ========================================================================= */
 $("#endTurn").addEventListener("click", endTurn);
-$("#restart").addEventListener("click", () => { $("#over").classList.remove("show"); newGame(); });
+$("#restart").addEventListener("click", () => { $("#over").classList.remove("show"); newGame({ resetRun:true }); });
 
 injectRewardStyles();

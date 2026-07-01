@@ -16,6 +16,7 @@ function startNewGameFromMenu(){
   } catch(error) {}
 
   if(typeof generateMap === "function") generateMap();
+  if(typeof beginNewRun === "function") beginNewRun();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = -1;
     window.MAP_STATE.proceedMode = true;
@@ -35,6 +36,7 @@ function returnToStartScreen(){
   } catch(error) {}
 
   STARTER_DECK = [...BASE_STARTER_DECK];
+  if(typeof beginNewRun === "function") beginNewRun();
   if(typeof generateMap === "function") generateMap();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = 0;
@@ -60,6 +62,7 @@ function continueGameFromMenu(){
   S = saved.state;
   normalizeRunResources();
   STARTER_DECK = [...saved.starterDeck];
+  if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
   S.busy = false;
   if(window.MAP_STATE && saved.mapState){
     window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
