@@ -50,6 +50,7 @@ function createInitialRunState(){
     hand: [],
     draw: [],
     discard: [],
+    deck: [...STARTER_DECK],
     busy: false,
     over: null,
     rewardOpen: false,
@@ -78,8 +79,22 @@ function resetRunState(){
   S = createInitialRunState();
 }
 
+function syncStarterDeckFromRun(){
+  if(!S) return;
+  if(!Array.isArray(S.deck)) S.deck = Array.isArray(STARTER_DECK) ? [...STARTER_DECK] : [...BASE_STARTER_DECK];
+  STARTER_DECK = [...S.deck];
+}
+
+function addCardToRunDeck(key){
+  if(!S) return;
+  if(!Array.isArray(S.deck)) S.deck = Array.isArray(STARTER_DECK) ? [...STARTER_DECK] : [...BASE_STARTER_DECK];
+  S.deck.push(key);
+  STARTER_DECK = [...S.deck];
+}
+
 function startBattle(){
   if(!S) S = createInitialRunState();
+  syncStarterDeckFromRun();
   const runState = S;
   const { curStage } = getBattleStageContext();
 
@@ -108,7 +123,7 @@ function startBattle(){
 
   spawnPackageEnemies();
 
-  S.draw = shuffle([...STARTER_DECK]);
+  S.draw = shuffle([...S.deck]);
   drawCards(DRAW_PER_TURN);
   renderAll();
 }
@@ -133,6 +148,7 @@ function newGame(){
     selectedId: null,   // 현재 선택된 적 ID
     energy:   MAX_ENERGY,
     hand: [], draw: [], discard: [],
+    deck: [...STARTER_DECK],
     busy: false, over: null, rewardOpen: false,
     relics: [], potions: [],
     gold: STARTING_GOLD, moonShards: STARTING_MOON_SHARDS,
@@ -316,7 +332,7 @@ function chooseRewardCard(key){
   if(!S || !S.rewardOpen) return;
   const card = CARD_DB[key];
   if(!card) return;
-  STARTER_DECK.push(key);
+  addCardToRunDeck(key);
   S.discard.push(key);
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
@@ -521,6 +537,8 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
 
 function normalizeRunResources(){
   if(!S) return;
+  if(!Array.isArray(S.deck))          S.deck       = Array.isArray(STARTER_DECK) ? [...STARTER_DECK] : [...BASE_STARTER_DECK];
+  STARTER_DECK = [...S.deck];
   if(!Array.isArray(S.relics))         S.relics     = [];
   if(S.potions === undefined)          S.potions    = [];
   if(typeof S.gold !== "number")       S.gold       = STARTING_GOLD;
