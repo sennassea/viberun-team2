@@ -314,6 +314,7 @@ window.ACT1_START_NEW_GAME = function() {
 
   /* ACT1 15층 맵 생성 */
   if (typeof generateMap === "function") generateMap();
+  if (typeof beginNewRun === "function") beginNewRun();
 
   if (window.MAP_STATE) {
     window.MAP_STATE.currentStage = 0;
