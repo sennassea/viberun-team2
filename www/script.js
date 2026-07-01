@@ -307,8 +307,8 @@ const BATTLE_VICTORY_BASE_REWARDS = [
 const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
 const BATTLE_VICTORY_POTION_CHANCE = 0.5;
 const BATTLE_VICTORY_OPTIONAL_REWARDS = [
-  { id:"relic", name:"법구", icon:"具", value:"임시 법구", doneText:"선택 완료", chance:BATTLE_VICTORY_RELIC_CHANCE },
-  { id:"potion", name:"약병", icon:"藥", value:"임시 약병", doneText:"선택 완료", chance:BATTLE_VICTORY_POTION_CHANCE },
+  { id:"relic", name:"법구", icon:"具", value:"임시 법구", doneText:"선택 완료", desc:"임시 법구 보상입니다.", chance:BATTLE_VICTORY_RELIC_CHANCE },
+  { id:"potion", name:"약병", icon:"藥", value:"임시 약병", doneText:"선택 완료", desc:"임시 약병 보상입니다.", chance:BATTLE_VICTORY_POTION_CHANCE },
 ];
 
 function chooseRewardCard(key){
@@ -376,6 +376,16 @@ function ensureBattleVictoryOverlay(){
       '<div class="victory-button-area">' +
         '<button type="button" class="victory-next" aria-disabled="true">다음층으로</button>' +
       '</div>' +
+    '</div>' +
+    '<div class="victory-confirm-modal" aria-hidden="true">' +
+      '<div class="victory-confirm-box">' +
+        '<div class="victory-confirm-title"></div>' +
+        '<div class="victory-confirm-desc"></div>' +
+        '<div class="victory-confirm-actions">' +
+          '<button type="button" class="victory-confirm-take">받기</button>' +
+          '<button type="button" class="victory-confirm-skip">건너뛰기</button>' +
+        '</div>' +
+      '</div>' +
     '</div>';
   document.querySelector("#game").appendChild(ov);
   ov.querySelector(".victory-next").addEventListener("click", onBattleVictoryNextClick);
@@ -425,12 +435,14 @@ function getBattleVictoryInfo(){
 
 function renderBattleVictoryRewardSlots(host){
   if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
   host.innerHTML = getBattleVictoryRewards().map(item => {
     const done = !!S.victoryRewardDone[item.id];
+    const doneText = S.victoryRewardDoneText[item.id] || item.doneText;
     return '<button type="button" class="victory-reward-slot' + (done ? ' done' : '') + '" data-reward-id="' + item.id + '">' +
       '<div class="victory-reward-icon">' + item.icon + '</div>' +
       '<div class="victory-reward-name">' + item.name + '</div>' +
-      '<div class="victory-reward-state">' + (done ? item.doneText : item.value) + '</div>' +
+      '<div class="victory-reward-state">' + (done ? doneText : item.value) + '</div>' +
       '<div class="victory-reward-check">✓</div>' +
     '</button>';
   }).join("");
@@ -444,10 +456,51 @@ function completeBattleVictoryReward(id, host){
     openBattleVictoryCardReward(host);
     return;
   }
+  if((id === "relic" || id === "potion") && !(S.victoryRewardDone && S.victoryRewardDone[id])){
+    openBattleVictoryConfirm(id, host);
+    return;
+  }
   if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
   S.victoryRewardDone[id] = true;
+  S.victoryRewardDoneText[id] = "수령 완료";
   renderBattleVictoryRewardSlots(host);
   updateBattleVictoryNextButton(host.closest("#battleVictoryOverlay"));
+}
+
+function openBattleVictoryConfirm(id, host){
+  const item = getBattleVictoryRewards().find(reward => reward.id === id);
+  const ov = host.closest("#battleVictoryOverlay");
+  if(!item || !ov) return;
+  const modal = ov.querySelector(".victory-confirm-modal");
+  if(!modal) return;
+  modal.dataset.rewardId = id;
+  modal.querySelector(".victory-confirm-title").textContent = item.name;
+  modal.querySelector(".victory-confirm-desc").textContent = item.desc || item.value || "";
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+  modal.querySelector(".victory-confirm-take").onclick = () => finishBattleVictoryOptionalReward(id, host, "수령 완료");
+  modal.querySelector(".victory-confirm-skip").onclick = () => finishBattleVictoryOptionalReward(id, host, "선택 완료");
+}
+
+function closeBattleVictoryConfirm(ov){
+  if(!ov) return;
+  const modal = ov.querySelector(".victory-confirm-modal");
+  if(!modal) return;
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+  modal.dataset.rewardId = "";
+}
+
+function finishBattleVictoryOptionalReward(id, host, doneText){
+  if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  S.victoryRewardDone[id] = true;
+  S.victoryRewardDoneText[id] = doneText;
+  const ov = host.closest("#battleVictoryOverlay");
+  closeBattleVictoryConfirm(ov);
+  renderBattleVictoryRewardSlots(host);
+  updateBattleVictoryNextButton(ov);
 }
 
 function openBattleVictoryCardReward(host){
@@ -1010,6 +1063,14 @@ function injectRewardStyles(){
     .victory-button-area{display:flex;justify-content:center;}
     .victory-next{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#f3f5f8;color:#9aa5b2;cursor:not-allowed;opacity:.72;}
     .victory-next.active{background:#fff;color:var(--c-ink);cursor:pointer;opacity:1;box-shadow:0 .45cqh 1cqh rgba(40,70,120,.15);}
+    .victory-confirm-modal{position:absolute;inset:0;z-index:230;display:none;place-items:center;background:rgba(10,20,40,.18);}
+    .victory-confirm-modal.show{display:grid;}
+    .victory-confirm-box{width:min(28cqw,42cqh);padding:2cqh 2cqw;border-radius:1.4cqh;background:#fff;border:.25cqh solid var(--c-panel-line);box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.32);text-align:center;}
+    .victory-confirm-title{font-size:2.1cqh;font-weight:900;color:var(--c-ink);margin-bottom:.8cqh;}
+    .victory-confirm-desc{font-size:1.45cqh;font-weight:700;color:var(--c-ink-soft);line-height:1.35;margin-bottom:1.6cqh;}
+    .victory-confirm-actions{display:flex;justify-content:center;gap:.8cqw;}
+    .victory-confirm-actions button{font:inherit;font-size:1.55cqh;font-weight:900;padding:.75cqh 1.2cqw;border-radius:.9cqh;border:.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);cursor:pointer;}
+    .victory-confirm-take{box-shadow:0 .35cqh .8cqh rgba(40,70,120,.13);}
   `;
   document.head.appendChild(style);
 }
