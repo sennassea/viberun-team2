@@ -166,7 +166,7 @@
     window.MAP_STATE.startMapMode = true;
     window.MAP_STATE.proceedMode  = false;
     if(typeof updateHudFloor === "function") updateHudFloor();
-    safeToast("로비 상태로 이동");
+    safeToast("신령의 은혜 상태로 이동");
   }
 
   function cheatNodeMap(){

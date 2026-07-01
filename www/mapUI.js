@@ -341,7 +341,7 @@ function renderCanvas(currentNodeId) {
   /* ── 현재 위치 배지 ── */
   const floorBadge = document.getElementById("mapCurrentFloor");
   if (floorBadge) {
-    floorBadge.textContent = myFloor > 0 ? `${myFloor}층` : "로비";
+    floorBadge.textContent = myFloor > 0 ? `${myFloor}층` : "신령의 은혜";
   }
 
   /* ── 푸터 텍스트 ── */
