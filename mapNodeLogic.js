@@ -230,17 +230,17 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
     floors.push(floorNodes);
   }
 
-  /* ── 1~10층 휴식 노드 최소 1개 보장 검사 (기획서 v3 6장) ─────────────────
-     맵 생성 후 1~10층에 휴식 노드가 0개면, 10→8→6→5→4층 순으로 전환 후보를
-     찾아 그중 1개 노드를 휴식으로 전환한다. 1층 일반 전투는 전환 대상에서
-     제외한다. 강제 통과 노드가 아니라 선택 가능한 노드 중 하나를 휴식으로
+  /* ── 3~7층 휴식 노드 최소 1개 보장 검사 (기획서 v5 6장) ─────────────────
+     맵 생성 후 3~7층에 휴식 노드가 0개면, 7→6→5→4→3층 순으로 전환 후보를
+     찾아 그중 1개 노드를 휴식으로 전환한다. 1~2층은 휴식 후보로 전환하지
+     않는다. 강제 통과 노드가 아니라 선택 가능한 노드 중 하나를 휴식으로
      바꾸는 것이므로, 전투 노드보다 이벤트/상점 노드를 우선 전환 대상으로
      삼아 해당 층의 전투 보상 흐름을 최대한 보존한다. */
-  const hasRestIn1to10 = floors.slice(1, 11).some(floorNodes =>
+  const hasRestIn3to7 = floors.slice(3, 8).some(floorNodes =>
     floorNodes.some(n => n.type === "rest")
   );
-  if (!hasRestIn1to10) {
-    const REST_GUARANTEE_FLOOR_ORDER = [10, 8, 6, 5, 4];
+  if (!hasRestIn3to7) {
+    const REST_GUARANTEE_FLOOR_ORDER = [7, 6, 5, 4, 3];
     for (const floorNum of REST_GUARANTEE_FLOOR_ORDER) {
       const floorNodes = floors[floorNum];
       if (!floorNodes) continue;
