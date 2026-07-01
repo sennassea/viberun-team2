@@ -278,7 +278,7 @@ function nodeClear(){
   const nodeType = S.battleNodeType || "enemy";
   if(nodeType==="boss")  return endGame("win");   // 보스 클리어 → 게임 승리 (기획서 §6)
   if(nodeType==="elite") grantRelic();             // 엘리트 → 유물 추가 (기획서 §10)
-  openCardReward();                                // 카드 보상 후 맵 복귀
+  openBattleVictoryReward();
 }
 
 /* =========================================================================
@@ -294,12 +294,34 @@ function openCardReward(){
   updateEndBtn();
 }
 
+function openBattleVictoryReward(){
+  S.busy = true; S.rewardOpen = true;
+  renderBattleVictoryOverlay();
+  updateEndBtn();
+}
+
+const BATTLE_VICTORY_BASE_REWARDS = [
+  { id:"gold", name:"복채", icon:"복", value:"+20", amount:20, doneText:"수령 완료" },
+  { id:"card", name:"카드 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
+];
+const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
+const BATTLE_VICTORY_POTION_CHANCE = 0.5;
+const BATTLE_VICTORY_OPTIONAL_REWARDS = [
+  { id:"relic", name:"법구", icon:"具", value:"임시 법구", doneText:"선택 완료", desc:"임시 법구 보상입니다.", chance:BATTLE_VICTORY_RELIC_CHANCE },
+  { id:"potion", name:"약병", icon:"藥", value:"임시 약병", doneText:"선택 완료", desc:"임시 약병 보상입니다.", chance:BATTLE_VICTORY_POTION_CHANCE },
+];
+
 function chooseRewardCard(key){
   if(!S || !S.rewardOpen) return;
   const card = CARD_DB[key];
   if(!card) return;
   STARTER_DECK.push(key);
   S.discard.push(key);
+  if(S.victoryCardRewardOpen){
+    toast(card.name+" 획득");
+    finishBattleVictoryCardReward();
+    return;
+  }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
   toast(card.name+" 획득");
@@ -309,6 +331,10 @@ function chooseRewardCard(key){
 
 function skipRewardCard(){
   if(!S || !S.rewardOpen) return;
+  if(S.victoryCardRewardOpen){
+    finishBattleVictoryCardReward();
+    return;
+  }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
   window.MAP_STATE.proceedMode = true;
@@ -321,6 +347,208 @@ function grantRelic(){
   S.relics.push(relic);
   toast("법구 획득: "+relic.emoji+" "+relic.name);
   renderHud();
+}
+
+function ensureBattleVictoryOverlay(){
+  let ov = document.querySelector("#battleVictoryOverlay");
+  if(ov) return ov;
+  ov = document.createElement("div");
+  ov.id = "battleVictoryOverlay";
+  ov.innerHTML =
+    '<div class="victory-reward-panel">' +
+      '<div class="victory-title-area">' +
+        '<h2>전투 승리</h2>' +
+        '<p>한풀이가 조금 더 깊어졌습니다.</p>' +
+      '</div>' +
+      '<div class="victory-section victory-reward-section">' +
+        '<div class="victory-section-title">획득 보상</div>' +
+        '<div class="victory-reward-row" aria-label="획득 보상 목록"></div>' +
+      '</div>' +
+      '<div class="victory-section victory-kill-section">' +
+        '<div class="victory-section-title">처치한 악령</div>' +
+        '<div class="victory-enemy-name"></div>' +
+        '<div class="victory-battle-meta">' +
+          '<span class="victory-meta-location"></span>' +
+          '<span class="victory-meta-floor"></span>' +
+          '<span class="victory-meta-turn"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="victory-button-area">' +
+        '<button type="button" class="victory-next" aria-disabled="true">다음층으로</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="victory-confirm-modal" aria-hidden="true">' +
+      '<div class="victory-confirm-box">' +
+        '<div class="victory-confirm-title"></div>' +
+        '<div class="victory-confirm-desc"></div>' +
+        '<div class="victory-confirm-actions">' +
+          '<button type="button" class="victory-confirm-take">받기</button>' +
+          '<button type="button" class="victory-confirm-skip">건너뛰기</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  document.querySelector("#game").appendChild(ov);
+  ov.querySelector(".victory-next").addEventListener("click", onBattleVictoryNextClick);
+  return ov;
+}
+
+function renderBattleVictoryOverlay(){
+  const ov = ensureBattleVictoryOverlay();
+  const rewardRow = ov.querySelector(".victory-reward-row");
+  const enemyName = ov.querySelector(".victory-enemy-name");
+  const location = ov.querySelector(".victory-meta-location");
+  const floor = ov.querySelector(".victory-meta-floor");
+  const turn = ov.querySelector(".victory-meta-turn");
+  const info = getBattleVictoryInfo();
+  if(rewardRow) renderBattleVictoryRewardSlots(rewardRow);
+  if(enemyName) enemyName.textContent = info.enemyNames;
+  if(location) location.textContent = info.location;
+  if(floor) floor.textContent = info.floor;
+  if(turn) turn.textContent = info.turn;
+  updateBattleVictoryNextButton(ov);
+  ov.classList.add("show");
+}
+
+function getBattleVictoryRewards(){
+  if(!S.victoryRewards){
+    S.victoryRewards = BATTLE_VICTORY_BASE_REWARDS.concat(
+      BATTLE_VICTORY_OPTIONAL_REWARDS.filter(item => Math.random() < item.chance)
+    );
+  }
+  return S.victoryRewards;
+}
+
+function getBattleVictoryInfo(){
+  const stageIdx = window.MAP_STATE ? window.MAP_STATE.currentStage : -1;
+  const stage = window.ACT1_MAP_STAGES && stageIdx >= 0 ? window.ACT1_MAP_STAGES[stageIdx] : null;
+  const stageLabel = stage && stage.label ? stage.label : "";
+  const floorMatch = stageLabel.match(/(\d+)\s*층/);
+  const hudFloor = $("#hudFloor") ? $("#hudFloor").textContent.trim() : "";
+  const floor = floorMatch ? floorMatch[1] + "층" : hudFloor.replace(/F$/, "층") || "1층";
+  return {
+    enemyNames: S.enemies.map(e => e.name).join(", ") || "악령",
+    location: stageLabel ? "병원 " + stageLabel : "병원 " + floor,
+    floor,
+    turn: "TURN " + (S.turn || 1),
+  };
+}
+
+function renderBattleVictoryRewardSlots(host){
+  if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  host.innerHTML = getBattleVictoryRewards().map(item => {
+    const done = !!S.victoryRewardDone[item.id];
+    const doneText = S.victoryRewardDoneText[item.id] || item.doneText;
+    return '<button type="button" class="victory-reward-slot' + (done ? ' done' : '') + '" data-reward-id="' + item.id + '">' +
+      '<div class="victory-reward-icon">' + item.icon + '</div>' +
+      '<div class="victory-reward-name">' + item.name + '</div>' +
+      '<div class="victory-reward-state">' + (done ? doneText : item.value) + '</div>' +
+      '<div class="victory-reward-check">✓</div>' +
+    '</button>';
+  }).join("");
+  host.querySelectorAll(".victory-reward-slot").forEach(slot => {
+    slot.addEventListener("click", () => completeBattleVictoryReward(slot.dataset.rewardId, host));
+  });
+}
+
+function completeBattleVictoryReward(id, host){
+  if(S.victoryRewardDone && S.victoryRewardDone[id]) return;
+  if(id === "card" && !(S.victoryRewardDone && S.victoryRewardDone.card)){
+    openBattleVictoryCardReward(host);
+    return;
+  }
+  if((id === "relic" || id === "potion") && !(S.victoryRewardDone && S.victoryRewardDone[id])){
+    openBattleVictoryConfirm(id, host);
+    return;
+  }
+  if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  if(id === "gold"){
+    const reward = getBattleVictoryRewards().find(item => item.id === "gold");
+    S.gold = (typeof S.gold === "number" ? S.gold : STARTING_GOLD) + ((reward && reward.amount) || 0);
+    renderHud();
+  }
+  S.victoryRewardDone[id] = true;
+  S.victoryRewardDoneText[id] = "수령 완료";
+  renderBattleVictoryRewardSlots(host);
+  updateBattleVictoryNextButton(host.closest("#battleVictoryOverlay"));
+}
+
+function openBattleVictoryConfirm(id, host){
+  const item = getBattleVictoryRewards().find(reward => reward.id === id);
+  const ov = host.closest("#battleVictoryOverlay");
+  if(!item || !ov) return;
+  const modal = ov.querySelector(".victory-confirm-modal");
+  if(!modal) return;
+  modal.dataset.rewardId = id;
+  modal.querySelector(".victory-confirm-title").textContent = item.name;
+  modal.querySelector(".victory-confirm-desc").textContent = item.desc || item.value || "";
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+  modal.querySelector(".victory-confirm-take").onclick = () => finishBattleVictoryOptionalReward(id, host, "수령 완료");
+  modal.querySelector(".victory-confirm-skip").onclick = () => finishBattleVictoryOptionalReward(id, host, "선택 완료");
+}
+
+function closeBattleVictoryConfirm(ov){
+  if(!ov) return;
+  const modal = ov.querySelector(".victory-confirm-modal");
+  if(!modal) return;
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+  modal.dataset.rewardId = "";
+}
+
+function finishBattleVictoryOptionalReward(id, host, doneText){
+  if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  S.victoryRewardDone[id] = true;
+  S.victoryRewardDoneText[id] = doneText;
+  const ov = host.closest("#battleVictoryOverlay");
+  closeBattleVictoryConfirm(ov);
+  renderBattleVictoryRewardSlots(host);
+  updateBattleVictoryNextButton(ov);
+}
+
+function openBattleVictoryCardReward(host){
+  S.victoryCardRewardOpen = true;
+  const ov = host.closest("#battleVictoryOverlay");
+  if(ov) ov.classList.remove("show");
+  renderRewardOverlay(getRandomRewardKeys(3));
+  updateEndBtn();
+}
+
+function finishBattleVictoryCardReward(){
+  S.victoryCardRewardOpen = false;
+  S.rewardOpen = true; S.busy = true;
+  if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  S.victoryRewardDone.card = true;
+  closeRewardOverlay();
+  renderBattleVictoryOverlay();
+  updateEndBtn();
+}
+
+function areBattleVictoryRewardsDone(){
+  return !!(S && S.victoryRewardDone && getBattleVictoryRewards().every(item => S.victoryRewardDone[item.id]));
+}
+
+function updateBattleVictoryNextButton(ov){
+  if(!ov) return;
+  const btn = ov.querySelector(".victory-next");
+  if(!btn) return;
+  const ready = areBattleVictoryRewardsDone();
+  btn.classList.toggle("active", ready);
+  btn.setAttribute("aria-disabled", ready ? "false" : "true");
+}
+
+function onBattleVictoryNextClick(){
+  if(!areBattleVictoryRewardsDone()){
+    toast("모든 보상을 확인해주세요.");
+    return;
+  }
+  S.rewardOpen = false; S.busy = false;
+  closeRewardOverlay();
+  window.MAP_STATE.proceedMode = true;
+  if(typeof openMap==="function") openMap();
 }
 
 function ensureRewardOverlay(){
@@ -368,6 +596,8 @@ function rewardCardHtml(key){
 function closeRewardOverlay(){
   const ov = document.querySelector("#cardRewardOverlay");
   if(ov) ov.classList.remove("show");
+  const victoryOv = document.querySelector("#battleVictoryOverlay");
+  if(victoryOv) victoryOv.classList.remove("show");
 }
 
 /* =========================================================================
@@ -818,6 +1048,35 @@ function injectRewardStyles(){
     .reward-meta{font-size:1.25cqh;font-weight:800;color:var(--c-ink-soft);margin-bottom:.4cqh;}
     .reward-card .desc{font-size:1.45cqh;line-height:1.35;white-space:pre-line;}
     .reward-skip{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#fff;cursor:pointer;color:var(--c-ink-soft);}
+    #battleVictoryOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.64);backdrop-filter:blur(.5cqh);}
+    #battleVictoryOverlay.show{display:grid;}
+    .victory-reward-panel{width:min(62cqw,82cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.95);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;display:flex;flex-direction:column;gap:2cqh;}
+    .victory-title-area h2{font-size:3.2cqh;margin-bottom:.6cqh;color:var(--c-ink);}
+    .victory-title-area p{font-size:1.7cqh;color:var(--c-ink-soft);}
+    .victory-section{border:.2cqh solid var(--c-panel-line);border-radius:1.4cqh;background:rgba(255,255,255,.55);padding:1.6cqh 1.5cqw;}
+    .victory-section-title{font-size:1.8cqh;font-weight:900;color:var(--c-ink);margin-bottom:1.2cqh;}
+    .victory-reward-row{min-height:15cqh;border:.25cqh dashed var(--c-panel-line);border-radius:1.2cqh;display:flex;align-items:center;justify-content:center;gap:1cqw;background:rgba(255,255,255,.45);}
+    .victory-reward-slot{position:relative;flex:0 0 10cqw;width:10cqw;height:12.5cqh;border:.2cqh solid #d6e6f5;border-radius:1.1cqh;background:linear-gradient(180deg,#fbfcff,#eef4fb);box-shadow:0 .5cqh 1cqh rgba(40,70,120,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.65cqh;color:var(--c-ink);font:inherit;cursor:pointer;}
+    .victory-reward-slot.done{filter:saturate(.65) brightness(.9);border-color:#b8c6d4;background:linear-gradient(180deg,#edf1f5,#dfe6ee);color:#6f7d8a;}
+    .victory-reward-check{position:absolute;top:.6cqh;right:.6cqw;width:2.3cqh;height:2.3cqh;border-radius:50%;display:none;place-items:center;background:#5d9f78;color:#fff;font-size:1.5cqh;font-weight:900;}
+    .victory-reward-slot.done .victory-reward-check{display:grid;}
+    .victory-reward-icon{width:4.8cqh;height:4.8cqh;border-radius:1cqh;display:grid;place-items:center;background:#fff;border:.18cqh solid var(--c-panel-line);font-size:2.3cqh;font-weight:900;color:var(--c-blue-deep);}
+    .victory-reward-name{font-size:1.55cqh;font-weight:900;white-space:nowrap;}
+    .victory-reward-state{min-height:1.6cqh;font-size:1.15cqh;font-weight:800;color:var(--c-ink-soft);}
+    .victory-enemy-name{min-height:2.4cqh;font-size:1.85cqh;font-weight:900;color:var(--c-ink);margin-bottom:1cqh;}
+    .victory-battle-meta{display:flex;justify-content:center;gap:.8cqw;flex-wrap:wrap;}
+    .victory-battle-meta span{min-width:7cqw;padding:.55cqh .9cqw;border-radius:.8cqh;background:#eef4fb;border:.15cqh solid #d6e6f5;font-size:1.4cqh;font-weight:800;color:var(--c-ink-soft);}
+    .victory-button-area{display:flex;justify-content:center;}
+    .victory-next{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#f3f5f8;color:#9aa5b2;cursor:not-allowed;opacity:.72;}
+    .victory-next.active{background:#fff;color:var(--c-ink);cursor:pointer;opacity:1;box-shadow:0 .45cqh 1cqh rgba(40,70,120,.15);}
+    .victory-confirm-modal{position:absolute;inset:0;z-index:230;display:none;place-items:center;background:rgba(10,20,40,.18);}
+    .victory-confirm-modal.show{display:grid;}
+    .victory-confirm-box{width:min(28cqw,42cqh);padding:2cqh 2cqw;border-radius:1.4cqh;background:#fff;border:.25cqh solid var(--c-panel-line);box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.32);text-align:center;}
+    .victory-confirm-title{font-size:2.1cqh;font-weight:900;color:var(--c-ink);margin-bottom:.8cqh;}
+    .victory-confirm-desc{font-size:1.45cqh;font-weight:700;color:var(--c-ink-soft);line-height:1.35;margin-bottom:1.6cqh;}
+    .victory-confirm-actions{display:flex;justify-content:center;gap:.8cqw;}
+    .victory-confirm-actions button{font:inherit;font-size:1.55cqh;font-weight:900;padding:.75cqh 1.2cqw;border-radius:.9cqh;border:.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);cursor:pointer;}
+    .victory-confirm-take{box-shadow:0 .35cqh .8cqh rgba(40,70,120,.13);}
   `;
   document.head.appendChild(style);
 }
