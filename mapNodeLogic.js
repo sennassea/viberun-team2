@@ -25,7 +25,7 @@ const ACT1_WEIGHTS = {
    hasCombat : 맵 생성 시 전투 패키지(몬스터)를 배정해야 하는 노드인지 여부
    ── ──────────────────────────────────────────────────────────────────── */
 const ACT1_NODE_INFO = {
-  lobby: { emoji: "🚪", label: "로비",   isDimmed: true,  hasCombat: false },
+  lobby: { emoji: "🚪", label: "신령의 은혜", isDimmed: false, hasCombat: false },
   enemy: { emoji: "👺", label: "적",     isDimmed: false, hasCombat: true  },
   elite: { emoji: "👹", label: "엘리트", isDimmed: false, hasCombat: true  },
   boss:  { emoji: "💀", label: "보스",   isDimmed: false, hasCombat: true  },
@@ -36,7 +36,6 @@ const ACT1_NODE_INFO = {
 
 /* ── 딤드 노드 툴팁 (기획서 8장) ─────────────────────────────────────── */
 const ACT1_DIMMED_TOOLTIPS = {
-  lobby: "로비 노드 - 현재 테스트 빌드에서는 로비 기능이 준비 중입니다. 새 게임 시작 시 자동으로 건너뜁니다.",
   event: "이벤트 노드 - 현재 테스트 빌드에서는 이벤트 기능이 준비 중입니다. 선택 시 자동으로 통과됩니다.",
   shop:  "상점 노드 - 현재 테스트 빌드에서는 상점 기능이 준비 중입니다. 선택 시 자동으로 통과됩니다.",
 };
@@ -124,11 +123,11 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
      - prevFloorHasRest: 직전 층에 휴식 노드가 있었는지 (있었다면 이번 층은 휴식 후보 제외) */
   let prevFloorHasRest = false;
 
-  /* ── Floor 0: 로비 (딤드 / 자동 스킵 / stageIndex 없음) ── */
+  /* ── Floor 0: 로비 (신령의 은혜 화면 / stageIndex 없음) ── */
   floors.push([{
     id: "lobby_0", type: "lobby",
-    emoji: "🚪", label: "로비",
-    isDimmed: true, isAutoSkip: true,
+    emoji: "🚪", label: "신령의 은혜",
+    isDimmed: false, isAutoSkip: false,
   }]);
 
   /* ── Floors 1~15: 구간별 가중치 배치 ── */
@@ -308,7 +307,7 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   console.log(`[ACT1] 맵 생성 완료: ${floors.length}층 (로비+${ACT1_TOTAL_FLOORS}층+보스), ${stages.length}스테이지`);
 };
 
-/* ── 새 게임 시작: 로비 자동 스킵 → 1층 전투 즉시 진입 ────────────────── */
+/* ── 새 게임 시작: 로비에서 신령의 은혜 화면을 먼저 연다 ─────────────── */
 window.ACT1_START_NEW_GAME = function() {
   try { localStorage.removeItem("viberunSaveState"); } catch (e) {}
 
@@ -317,7 +316,7 @@ window.ACT1_START_NEW_GAME = function() {
   if (typeof beginNewRun === "function") beginNewRun();
 
   if (window.MAP_STATE) {
-    window.MAP_STATE.currentStage = 0;
+    window.MAP_STATE.currentStage = -1;   // 로비(신령의 은혜) 위치
     window.MAP_STATE.proceedMode  = false;
     window.MAP_STATE.startMapMode = false;
   }
@@ -327,9 +326,11 @@ window.ACT1_START_NEW_GAME = function() {
   if (startScreen) startScreen.classList.add("hidden");
   if (typeof updateContinueButtonInfo === "function") updateContinueButtonInfo();
 
-  /* 로비 자동 스킵 로그 */
-  console.log("[ACT1] 로비 자동 스킵 → 1스테이지 전투 즉시 진입");
-
-  /* 1층 일반 전투(stageIndex=0) 즉시 시작 */
-  if (typeof startStage === "function") startStage(0);
+  /* 로비 → 신령의 은혜 화면 진입 (startBlessing.js) */
+  if (typeof window.OPEN_START_BLESSING === "function") {
+    window.OPEN_START_BLESSING();
+  } else {
+    console.warn("[ACT1] 신령의 은혜 UI가 없어 기존 1층 전투로 임시 진입합니다.");
+    if (typeof startStage === "function") startStage(0);
+  }
 };

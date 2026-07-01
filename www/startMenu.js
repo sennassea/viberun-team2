@@ -142,7 +142,7 @@ function updateContinueButtonInfo(){
   const saved = readSavedProgress();
   if(!saved){
     button.classList.remove("has-save");
-    status.textContent = "메인 로비";
+    status.textContent = "신령의 은혜";
     return;
   }
 
@@ -156,7 +156,7 @@ function formatSavedFloor(saved){
   const label = saved.mapState && saved.mapState.floorLabel ? saved.mapState.floorLabel : "";
   const match = label.match(/(\d+)\s*F/i);
   if(match) return match[1] + "층";
-  return "메인 로비";
+  return "신령의 은혜";
 }
 
 $("#returnStart").addEventListener("click", returnToStartScreen);
