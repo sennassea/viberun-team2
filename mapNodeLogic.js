@@ -30,14 +30,13 @@ const ACT1_NODE_INFO = {
   elite: { emoji: "👹", label: "엘리트", isDimmed: false, hasCombat: true  },
   boss:  { emoji: "💀", label: "보스",   isDimmed: false, hasCombat: true  },
   event: { emoji: "❓", label: "이벤트", isDimmed: true,  hasCombat: false },
-  shop:  { emoji: "🛒", label: "상점",   isDimmed: true,  hasCombat: false },
+  shop:  { emoji: "🛒", label: "상점",   isDimmed: false, hasCombat: false },
   rest:  { emoji: "🛖", label: "기도터", isDimmed: false, hasCombat: false },
 };
 
 /* ── 딤드 노드 툴팁 (기획서 8장) ─────────────────────────────────────── */
 const ACT1_DIMMED_TOOLTIPS = {
   event: "이벤트 노드 - 현재 테스트 빌드에서는 이벤트 기능이 준비 중입니다. 선택 시 자동으로 통과됩니다.",
-  shop:  "상점 노드 - 현재 테스트 빌드에서는 상점 기능이 준비 중입니다. 선택 시 자동으로 통과됩니다.",
 };
 
 /* ── 유틸 ──────────────────────────────────────────────────────────────── */
