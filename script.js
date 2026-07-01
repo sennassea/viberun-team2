@@ -533,6 +533,23 @@ function closeBattleVictoryConfirm(ov){
 function finishBattleVictoryOptionalReward(id, host, doneText){
   if(!S.victoryRewardDone) S.victoryRewardDone = {};
   if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  if(S.victoryRewardDone[id]) return;
+  const reward = getBattleVictoryRewards().find(item => item.id === id);
+  if(id === "relic" && doneText === "수령 완료"){
+    if(!S.relics) S.relics = [];
+    const relicId = reward && reward.itemId;
+    const alreadyOwned = relicId && S.relics.some(relic => relic && relic.id === relicId);
+    if(alreadyOwned){
+      toast("이미 보유 중인 법구입니다.");
+      doneText = "선택 완료";
+    } else if(relicId){
+      const relic = (typeof RELIC_DB !== "undefined" ? RELIC_DB : []).find(item => item && item.id === relicId) || {
+        id: relicId, name: reward.name, emoji: reward.icon, desc: reward.desc
+      };
+      S.relics.push({ ...relic });
+      renderHud();
+    }
+  }
   S.victoryRewardDone[id] = true;
   S.victoryRewardDoneText[id] = doneText;
   const ov = host.closest("#battleVictoryOverlay");
