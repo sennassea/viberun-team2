@@ -311,6 +311,11 @@ function chooseRewardCard(key){
   if(!card) return;
   STARTER_DECK.push(key);
   S.discard.push(key);
+  if(S.victoryCardRewardOpen){
+    toast(card.name+" 획득");
+    finishBattleVictoryCardReward();
+    return;
+  }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
   toast(card.name+" 획득");
@@ -320,6 +325,10 @@ function chooseRewardCard(key){
 
 function skipRewardCard(){
   if(!S || !S.rewardOpen) return;
+  if(S.victoryCardRewardOpen){
+    finishBattleVictoryCardReward();
+    return;
+  }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
   window.MAP_STATE.proceedMode = true;
@@ -416,10 +425,32 @@ function renderBattleVictoryRewardSlots(host){
 }
 
 function completeBattleVictoryReward(id, host){
+  if(id === "card" && !(S.victoryRewardDone && S.victoryRewardDone.card)){
+    openBattleVictoryCardReward(host);
+    return;
+  }
   if(!S.victoryRewardDone) S.victoryRewardDone = {};
   S.victoryRewardDone[id] = true;
   renderBattleVictoryRewardSlots(host);
   updateBattleVictoryNextButton(host.closest("#battleVictoryOverlay"));
+}
+
+function openBattleVictoryCardReward(host){
+  S.victoryCardRewardOpen = true;
+  const ov = host.closest("#battleVictoryOverlay");
+  if(ov) ov.classList.remove("show");
+  renderRewardOverlay(getRandomRewardKeys(3));
+  updateEndBtn();
+}
+
+function finishBattleVictoryCardReward(){
+  S.victoryCardRewardOpen = false;
+  S.rewardOpen = true; S.busy = true;
+  if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  S.victoryRewardDone.card = true;
+  closeRewardOverlay();
+  renderBattleVictoryOverlay();
+  updateEndBtn();
 }
 
 function areBattleVictoryRewardsDone(){
