@@ -246,7 +246,7 @@
 
     renderBlockBar(unit){
       const block = unit.block || 0;
-      if(block <= 0) return "";
+      if(block <= 0) return '<div class="blockbar" style="visibility:hidden" aria-hidden="true"></div>';
 
       const blockPct = this.percent(block, unit.maxHp);
       return '<div class="blockbar">' +
