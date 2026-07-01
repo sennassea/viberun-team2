@@ -285,6 +285,17 @@
     var relTop   = cbRect.top   - gRect.top;
     var tx = isPlayer ? relRight + pad : relLeft - tipRect.width - pad;
     var ty = relTop + cbRect.height * 0.1;
+    if (isPlayer) {
+      var profileCard = document.querySelector(".player-info-card");
+      if (profileCard) {
+        var profileRect = profileCard.getBoundingClientRect();
+        var profileRight = profileRect.right - gRect.left;
+        var profileBottom = profileRect.bottom - gRect.top;
+        var gapRight = relLeft + cbRect.width * 0.5;
+        tx = (profileRight + gapRight - tipRect.width) * 0.5 + pad * 16;
+        ty = (profileBottom + relTop - tipRect.height) * 0.5 + pad * 9;
+      }
+    }
     tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
     ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
     tooltip.style.left = tx + "px";
