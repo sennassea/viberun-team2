@@ -168,6 +168,10 @@ function ensurePrayerOverlay(){
   overlay.querySelector("#prayerConfirmBtn").addEventListener("click", confirmPrayerChoice);
   overlay.querySelector("#prayerCancelBtn").addEventListener("click", cancelPrayerNode);
 
+  overlay.querySelector("#prayerMapBtn").addEventListener("click", () => {
+    if(typeof openMap === "function") openMap();
+    else if(typeof toast === "function") toast("지도를 열 수 없습니다.");
+  });
   overlay.querySelector("#prayerDeckBtn").addEventListener("click", () => {
     const deckBtn = document.getElementById("deckViewerButton");
     if(deckBtn) deckBtn.click();
@@ -210,6 +214,7 @@ function prayerOverlayHtml(){
         '<div class="prayer-title-sub">잠시 머물러 몸과 마음을 가다듬으세요.</div>' +
       '</div>' +
       '<div class="prayer-header-buttons">' +
+        '<button type="button" class="prayer-header-btn" id="prayerMapBtn"><span class="ico">🗺️</span><span>지도</span></button>' +
         '<button type="button" class="prayer-header-btn" id="prayerDeckBtn"><span class="ico">📖</span><span>보유카드</span></button>' +
         '<button type="button" class="prayer-header-btn" id="prayerBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
         '<button type="button" class="prayer-header-btn" id="prayerSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
