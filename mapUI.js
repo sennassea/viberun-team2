@@ -442,8 +442,8 @@ function buildOverlay() {
       </div>
       <div class="dmap-bottom">
         <div class="dmap-action-bar">
-          <button class="dmap-action-btn" id="dMapDeckBtn">📖 덱 확인</button>
-          <button class="dmap-action-btn" id="dMapItemBtn">🎒 소지품</button>
+          <button class="dmap-action-btn" id="dMapDeckBtn">📖 보유 카드</button>
+          <button class="dmap-action-btn" id="dMapItemBtn">🎒 가방</button>
           <button class="dmap-action-btn" id="dMapSettingsBtn">⚙️ 설정</button>
         </div>
         <div class="map-footer dmap-footer" id="mapFooter"></div>
@@ -460,10 +460,19 @@ function buildOverlay() {
     if (deckBtn) deckBtn.click();
   });
 
-  /* 소지품 확인: 준비 중 */
-  div.querySelector("#dMapItemBtn").addEventListener("click", () => {
+  /* 소지품 확인: 기존 가방 UI 열기 */
+  div.querySelector("#dMapItemBtn").addEventListener("click", (e) => {
+    // 버튼 클릭이 맵 배경 클릭/노드 선택으로 번지지 않도록 차단
+    e.preventDefault();
+    e.stopPropagation();
+    // bagUI.js 에서 제공하는 가방 열기 함수 호출
+    if (typeof window.BAG_UI_OPEN === "function") {
+      window.BAG_UI_OPEN({ mode: "map" });
+      return;
+    }
+    // 예외 상황: bagUI.js 로드 실패 또는 전역 함수 누락
     const footer = document.getElementById("mapFooter");
-    if (footer) footer.textContent = "소지품 확인 기능은 준비 중입니다.";
+    if (footer) footer.textContent = "가방 기능을 불러올 수 없습니다. bagUI.js 로드 상태를 확인하세요.";
   });
 
   /* 설정: 기존 설정 버튼 트리거 */
