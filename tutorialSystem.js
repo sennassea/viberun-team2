@@ -7,6 +7,7 @@
 (function(){
   const TUTORIAL_COMPLETED_KEY = "viberunTutorialCompleted";
   const TUTORIAL_WAS_SKIPPED_KEY = "viberunTutorialWasSkipped";
+  const TUTORIAL_IN_PROGRESS_KEY = "viberunTutorialInProgress";
   const HAS_PLAYED_KEY = "viberunHasPlayedBefore";
   const SAVE_KEY = "viberunSaveState";
 
@@ -199,7 +200,7 @@
 
   function startTutorialFlow(){
     console.log("[Tutorial] startTutorialFlow");
-    markHasPlayedBefore();
+    markTutorialStarted();
     closeTutorialGuidePopup();
     if(window.TUTORIAL_MAP_SYSTEM && typeof window.TUTORIAL_MAP_SYSTEM.open === "function"){
       window.TUTORIAL_MAP_SYSTEM.open();
@@ -226,14 +227,13 @@
   function shouldShowNewbieStart(){
     return !(
       isTutorialCompleted() ||
-      wasTutorialSkipped() ||
-      hasPlayedBefore() ||
-      hasSavedProgress()
+      wasTutorialSkipped()
     );
   }
 
   function markTutorialStarted(){
-    markHasPlayedBefore();
+    if(typeof localStorage === "undefined") return;
+    try { localStorage.setItem(TUTORIAL_IN_PROGRESS_KEY, "true"); } catch(error) {}
   }
 
   function markTutorialComplete(){
@@ -249,8 +249,10 @@
         localStorage.setItem(TUTORIAL_WAS_SKIPPED_KEY, "true");
       } else {
         localStorage.setItem(TUTORIAL_COMPLETED_KEY, "true");
+        localStorage.setItem(TUTORIAL_WAS_SKIPPED_KEY, "false");
       }
       localStorage.setItem(HAS_PLAYED_KEY, "true");
+      localStorage.removeItem(TUTORIAL_IN_PROGRESS_KEY);
     } catch(error) {}
   }
 
@@ -346,6 +348,10 @@
   }
 
   function finishTutorialBattle(result){
+    if(result === "win"){
+      completeTutorialBattle();
+      return true;
+    }
     if(typeof S !== "undefined" && S){
       S.over = result || "lose";
       S.busy = false;
@@ -371,7 +377,6 @@
       S.over = "tutorial";
       S.busy = false;
     }
-    markTutorialComplete();
     finishTutorialMode();
     showTutorialCompleteOverlay();
   }
@@ -393,14 +398,96 @@
   }
 
   function showTutorialCompleteOverlay(){
-    const title = document.getElementById("overTitle");
-    const desc = document.getElementById("overDesc");
-    const returnStart = document.getElementById("returnStart");
+    ensureTutorialCompletePopup();
+    const rewardOverlay = document.getElementById("battleVictoryOverlay");
     const over = document.getElementById("over");
-    if(title) title.textContent = "튜토리얼 완료";
-    if(desc) desc.textContent = "기본 전투 흐름을 익혔습니다.";
-    if(returnStart) returnStart.style.display = "block";
-    if(over) over.classList.add("show");
+    const popup = document.getElementById("tutorialCompletePopup");
+    if(rewardOverlay) rewardOverlay.classList.remove("show");
+    if(over) over.classList.remove("show");
+    if(popup) popup.classList.add("show");
+  }
+
+  function ensureTutorialCompletePopup(){
+    ensureTutorialCompleteStyles();
+    if(document.getElementById("tutorialCompletePopup")) return;
+
+    const popup = document.createElement("div");
+    popup.id = "tutorialCompletePopup";
+    popup.className = "tutorial-complete-popup";
+    popup.innerHTML = `
+      <div class="tutorial-complete-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialCompleteTitle">
+        <h2 id="tutorialCompleteTitle">튜토리얼 완료</h2>
+        <p>전투의 기본을 모두 배웠어요. 이제 새 게임을 시작할 수 있어요.</p>
+        <button type="button" class="tutorial-complete-confirm">확인</button>
+      </div>
+    `;
+
+    popup.querySelector(".tutorial-complete-confirm").addEventListener("click", confirmTutorialComplete);
+    document.body.appendChild(popup);
+  }
+
+  function ensureTutorialCompleteStyles(){
+    if(document.getElementById("tutorialCompleteStyles")) return;
+    const style = document.createElement("style");
+    style.id = "tutorialCompleteStyles";
+    style.textContent = `
+      .tutorial-complete-popup{
+        position:fixed;
+        inset:0;
+        z-index:2700;
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+        background:rgba(15, 31, 51, .48);
+      }
+      .tutorial-complete-popup.show{display:flex;}
+      .tutorial-complete-dialog{
+        width:min(480px, 100%);
+        border:2px solid rgba(255, 255, 255, .85);
+        border-radius:8px;
+        background:#f4f8fc;
+        color:#243247;
+        box-shadow:0 18px 38px rgba(0, 0, 0, .22);
+        padding:28px;
+        text-align:center;
+      }
+      .tutorial-complete-dialog h2{
+        margin:0 0 16px;
+        font-size:28px;
+      }
+      .tutorial-complete-dialog p{
+        margin:0 0 24px;
+        font-size:17px;
+        line-height:1.45;
+      }
+      .tutorial-complete-confirm{
+        width:100%;
+        min-height:52px;
+        border-radius:8px;
+        border:1px solid #2f66a8;
+        background:#4b8bd8;
+        color:#ffffff;
+        font:inherit;
+        font-size:18px;
+        font-weight:800;
+        cursor:pointer;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function confirmTutorialComplete(){
+    markTutorialComplete();
+    const popup = document.getElementById("tutorialCompletePopup");
+    if(popup) popup.classList.remove("show");
+    if(typeof S !== "undefined" && S){
+      S.over = null;
+      S.busy = false;
+    }
+    const startScreen = document.getElementById("startScreen");
+    if(startScreen) startScreen.classList.remove("hidden");
+    if(typeof updateStartScreenMode === "function") updateStartScreenMode();
   }
 
   function cloneMonster(monster){
@@ -417,6 +504,7 @@
     keys: {
       tutorialCompleted: TUTORIAL_COMPLETED_KEY,
       tutorialWasSkipped: TUTORIAL_WAS_SKIPPED_KEY,
+      tutorialInProgress: TUTORIAL_IN_PROGRESS_KEY,
       hasPlayedBefore: HAS_PLAYED_KEY,
       tutorialComplete: TUTORIAL_COMPLETED_KEY,
       hasPlayed: HAS_PLAYED_KEY,
@@ -432,6 +520,7 @@
     showGuide: showTutorialGuidePopup,
     startTutorialFlow,
     startTutorialBattle,
+    endTutorialMode: finishTutorialMode,
     start: startTutorialFromMenu,
     isActive: isTutorialBattle
   };

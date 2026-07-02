@@ -339,6 +339,12 @@
 
   function openSettingsViewer(){
     if(!els) return;
+    if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" && window.TUTORIAL_BATTLE.isTutorialBattle()){
+      if(typeof window.TUTORIAL_BATTLE.openTutorialSettings === "function"){
+        window.TUTORIAL_BATTLE.openTutorialSettings();
+      }
+      return;
+    }
     if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
     settingsMode = "combat";
     els.overlay.classList.remove("start-mode");
