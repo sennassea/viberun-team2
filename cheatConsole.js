@@ -300,8 +300,11 @@
 
   function cheatGiveRelicRandom(){
     if(!requireBattle()) return;
-    if(typeof RELIC_DB === "undefined" || !RELIC_DB.length){ cheatWarn("유물 데이터를 찾을 수 없습니다."); return; }
-    const relic = { ...RELIC_DB[Math.floor(Math.random() * RELIC_DB.length)] };
+    const relicDb = Array.isArray(window.RELIC_DB)
+      ? window.RELIC_DB
+      : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+    if(!relicDb.length){ cheatWarn("유물 데이터를 찾을 수 없습니다."); return; }
+    const relic = { ...relicDb[Math.floor(Math.random() * relicDb.length)] };
     S.relics.push(relic);
     CHEAT_RUN_STATE.relics.push(relic);
     safeToast("법구 획득: " + relic.emoji + " " + relic.name);
@@ -309,7 +312,10 @@
   }
   function cheatGiveRelic(id){
     if(!requireBattle()) return;
-    const found = (typeof RELIC_DB !== "undefined" ? RELIC_DB : []).find(r => r.id === id);
+    const relicDb = Array.isArray(window.RELIC_DB)
+      ? window.RELIC_DB
+      : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+    const found = relicDb.find(r => r.id === id);
     if(!found){ cheatWarn("존재하지 않는 유물 ID입니다. CHEAT.give.relicRandom()으로 목록을 확인하세요."); return; }
     const relic = { ...found };
     S.relics.push(relic);

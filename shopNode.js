@@ -20,7 +20,7 @@ const SHOP_CARD_PRICE_BY_RARITY = { common: 50, uncommon: 70, rare: 90 };
 const SHOP_DEFAULT_CARD_PRICE   = 60;
 const SHOP_RELIC_PRICE = { common: 80, uncommon: 110, rare: 145 };
 
-/* 약병 DB는 PotionData.js의 POTION_DB를 사용합니다. */
+/* 약병 DB는 potion.js의 POTION_DB를 사용합니다. */
 const SHOP_POTION_DB = (typeof window.POTION_DB !== "undefined") ? window.POTION_DB : [];
 const SHOP_POTION_SLOT_LIMIT = (typeof window.POTION_SLOT_LIMIT === "number") ? window.POTION_SLOT_LIMIT : 3;
 const SHOP_REFRESH_COST      = 20;
@@ -153,13 +153,25 @@ function buildCardStock() {
 }
 
 function buildPotionStock() {
-  return SHOP_POTION_DB.map((p) => ({ ...p, category: "potion", soldOut: false }));
+  const db = typeof window.getPotionCandidatesBySource === "function"
+    ? window.getPotionCandidatesBySource("shop")
+    : SHOP_POTION_DB;
+  return db.map((p) => ({
+    ...p,
+    category: "potion",
+    price: p.shopPrice || p.price || 0,
+    soldOut: false
+  }));
 }
 
 function buildRelicStock() {
-  return RELIC_DB.map((r) => ({
-    ...r, category: "relic",
-    price: r.price || SHOP_RELIC_PRICE[r.rarity] || 100,
+  const db = typeof window.getRelicCandidatesBySource === "function"
+    ? window.getRelicCandidatesBySource("shop")
+    : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+  return db.map((r) => ({
+    ...r,
+    category: "relic",
+    price: r.shopPrice || r.price || SHOP_RELIC_PRICE[r.rarity] || 100,
     soldOut: false,
   }));
 }
