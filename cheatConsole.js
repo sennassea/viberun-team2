@@ -48,7 +48,7 @@
 
   function requireCard(id){
     if(typeof CARD_DB === "undefined" || !CARD_DB[id]){
-      cheatWarn('존재하지 않는 카드 ID입니다. CHEAT.card.find("검색어")를 사용하세요.');
+      cheatWarn('존재하지 않는 주문 ID입니다. CHEAT.card.find("검색어")를 사용하세요.');
       return false;
     }
     return true;
@@ -76,7 +76,7 @@
     moonDelta: 0,
     relics: [],   // 치트로 지급한 유물 객체 (참조 유지 → take.relic에서 역추적)
     potions: [],  // 치트로 지급한 포션 객체
-    deckAdds: []  // 치트로 STARTER_DECK에 추가한 카드 ID 목록
+    deckAdds: []  // 치트로 STARTER_DECK에 추가한 주문 ID 목록
   };
 
   function cheatReapplyRunState(){
@@ -103,7 +103,7 @@
 
   /* =========================================================================
      4-4. 공격력/피해량 변경 – applyDamageWithFeedback()을 감싸 플레이어
-     "정화(공격) 카드"가 적에게 주는 최종 피해량만 보정한다.
+     "정화(공격) 주문"이 적에게 주는 최종 피해량만 보정한다.
      (block/heal/draw 등은 이 함수를 거치지 않으므로 영향받지 않는다.)
      ========================================================================= */
   const CHEAT_ATK_PLAYER = { add: 0, mul: 1, set: null };
@@ -230,19 +230,19 @@
     const n = Number(v);
     if(!Number.isFinite(n)){ cheatWarn("수량은 0보다 커야 합니다."); return; }
     CHEAT_ATK_PLAYER.add = n; CHEAT_ATK_PLAYER.set = null;
-    cheatLog("플레이어 공격 카드 피해량 보정 add=" + n);
+    cheatLog("플레이어 공격 주문 피해량 보정 add=" + n);
   }
   function cheatAtkPlayerMul(v){
     const n = Number(v);
     if(!Number.isFinite(n) || n < 0){ cheatWarn("수량은 0보다 커야 합니다."); return; }
     CHEAT_ATK_PLAYER.mul = n; CHEAT_ATK_PLAYER.set = null;
-    cheatLog("플레이어 공격 카드 피해량 보정 mul=" + n);
+    cheatLog("플레이어 공격 주문 피해량 보정 mul=" + n);
   }
   function cheatAtkPlayerSet(v){
     const n = Number(v);
     if(!Number.isFinite(n) || n < 0){ cheatWarn("수량은 0보다 커야 합니다."); return; }
     CHEAT_ATK_PLAYER.set = n;
-    cheatLog("플레이어 공격 카드 피해량 고정값=" + n);
+    cheatLog("플레이어 공격 주문 피해량 고정값=" + n);
   }
   function cheatAtkPlayerReset(){
     CHEAT_ATK_PLAYER.add = 0; CHEAT_ATK_PLAYER.mul = 1; CHEAT_ATK_PLAYER.set = null;
@@ -447,7 +447,7 @@
   }
 
   /* =========================================================================
-     4-8 / 4-9. 카드 불러오기 / 제거하기
+     4-8 / 4-9. 주문 불러오기 / 제거하기
      ========================================================================= */
   function cardZone(location){
     if(location === "hand") return S.hand;
@@ -644,7 +644,7 @@
       "CHEAT.kill.player()                             플레이어 즉사",
       "CHEAT.hp.player(999, 999)                       체력/정신력 최대로",
       "CHEAT.give.gold(999)                            골드 999 획득",
-      'CHEAT.card.hand("soul_passing", 1)              손패에 카드 추가',
+      'CHEAT.card.hand("soul_passing", 1)              손패에 주문 추가',
       'CHEAT.status.clear("player")                    플레이어 상태이상 제거',
       "",
       "── 그룹 목록 ──",
@@ -655,7 +655,7 @@
       "CHEAT.give   돈/아이템 획득 (gold/moon/relicRandom/relic/potionTest/potion)",
       "CHEAT.take   돈/아이템 제거 (gold/moon/relic/potion)",
       "CHEAT.status 상태이상 부여/제거 (add/remove/clear)",
-      "CHEAT.card   카드 추가/제거/검색 (hand/deck/draw/discard/find/list/remove/removeAll/clear)",
+      "CHEAT.card   주문 추가/제거/검색 (hand/deck/draw/discard/find/list/remove/removeAll/clear)",
       "CHEAT.dump   현재 상태 출력 (state/cards/enemies)",
       "CHEAT.reset  전투/런 초기화 (battle/run)"
     ].join("\n"));

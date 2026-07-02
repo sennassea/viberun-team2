@@ -34,7 +34,7 @@
     const overlay = document.getElementById("mapOverlay");
     if(overlay) overlay.classList.add("tutorial-map-mode");
     const title = document.querySelector("#mapOverlay .map-title");
-    if(title) title.textContent = "🗺️ 튜토리얼 지도";
+    if(title) title.textContent = "🗺️ 튜토리얼 여정";
   }
 
   function generateTutorialMap(){
