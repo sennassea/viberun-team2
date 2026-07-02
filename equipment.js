@@ -66,7 +66,8 @@ const RELIC_MASTER_DB = [
     "rarity": "common",
     "obtainFrom": [
       "elite",
-      "shop"
+      "shop",
+      "event"
     ],
     "trigger": "firstAttack",
     "target": "self",
@@ -93,6 +94,7 @@ const RELIC_MASTER_DB = [
     "rarity": "uncommon",
     "obtainFrom": [
       "elite",
+      "shop",
       "event"
     ],
     "trigger": "battleStart",
@@ -120,7 +122,8 @@ const RELIC_MASTER_DB = [
     "rarity": "common",
     "obtainFrom": [
       "elite",
-      "shop"
+      "shop",
+      "event"
     ],
     "trigger": "battleStart",
     "target": "self",
@@ -175,8 +178,8 @@ const RELIC_MASTER_DB = [
     "rarity": "rare",
     "obtainFrom": [
       "elite",
-      "boss",
-      "shop"
+      "shop",
+      "event"
     ],
     "trigger": "turnEnd",
     "target": "self",
@@ -203,7 +206,8 @@ const RELIC_MASTER_DB = [
     "rarity": "common",
     "obtainFrom": [
       "elite",
-      "shop"
+      "shop",
+      "event"
     ],
     "trigger": "onAgitationApply",
     "target": "self",
@@ -259,7 +263,8 @@ const RELIC_MASTER_DB = [
     "rarity": "common",
     "obtainFrom": [
       "elite",
-      "shop"
+      "shop",
+      "event"
     ],
     "trigger": "battleStart",
     "target": "frontEnemy",
@@ -287,7 +292,8 @@ const RELIC_MASTER_DB = [
     "rarity": "common",
     "obtainFrom": [
       "elite",
-      "shop"
+      "shop",
+      "event"
     ],
     "trigger": "onMarkApply",
     "target": "enemy",
