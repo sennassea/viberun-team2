@@ -21,11 +21,13 @@
 .player .sprite-avatar{width:49cqh; height:65cqh; display:grid; place-items:end center; overflow:visible;}
 .player .sprite-avatar img{max-width:100%; max-height:100%; object-fit:contain; display:block;
   filter:drop-shadow(0 1.4cqh 1.6cqh rgba(40,70,120,.32));}
-.enemy{min-width:16cqw; z-index:2; pointer-events:auto;}
+.enemy{min-width:16cqw; height:43cqh; z-index:2; pointer-events:auto;}
 .enemy .avatar{font-size:12.8cqh;}
 .enemy .sprite-avatar{width:18cqh; height:22cqh; display:grid; place-items:end center; overflow:visible;}
 .enemy .sprite-avatar img{max-width:100%; max-height:100%; object-fit:contain; display:block;
   filter:drop-shadow(0 0 1.4cqh rgba(150,200,255,.75));}
+.enemy .combatant-info{display:flex; flex-direction:column; align-items:center; gap:.45cqh; min-height:12.2cqh;}
+.enemy .combatant-info .badges:empty{display:none;}
 .name{font-size:2cqh; font-weight:800; color:var(--c-ink); text-align:center; line-height:1.1;}
 .hpbar{position:relative; width:12.5cqw; height:2.35cqh; border-radius:1.3cqh; overflow:hidden;
   background:var(--c-hp-bg); border:0.2cqh solid rgba(0,0,0,.15);}
@@ -65,13 +67,13 @@
 
 /* Enemy targeting / defeat state */
 .enemy{cursor:pointer;}
-.enemy .hit{position:absolute; left:50%; transform:translateX(-50%); width:14cqw; top:3cqh; height:14cqh; border-radius:2cqh;}
+.enemy .hit{position:absolute; left:50%; transform:translateX(-50%); width:24cqh; top:4.4cqh; height:28cqh; border-radius:2.4cqh; z-index:15;}
 .enemy.targetable .avatar{animation:float 3.4s ease-in-out infinite, pulseT 1s ease-in-out infinite;}
 @keyframes pulseT{0%,100%{filter:drop-shadow(0 0 1.4cqh rgba(255,220,120,.5))}
   50%{filter:drop-shadow(0 0 2.6cqh rgba(255,200,60,1))}}
 .enemy.hovered .avatar{transform:scale(1.06);}
-.enemy.hovered::after{content:""; position:absolute; top:3cqh; left:50%; transform:translateX(-50%);
-  width:14cqw; height:14cqh;
+.enemy.hovered::after{content:""; position:absolute; top:4.4cqh; left:50%; transform:translateX(-50%);
+  width:24cqh; height:28cqh;
   background:
     linear-gradient(var(--c-gold),var(--c-gold)) 0    0   /0.35cqh 28% no-repeat,
     linear-gradient(var(--c-gold),var(--c-gold)) 0    0   /28%  0.35cqh no-repeat,
