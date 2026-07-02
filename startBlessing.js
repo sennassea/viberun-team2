@@ -271,7 +271,8 @@ function ensureSbStyles(){
   style.textContent =
     ".sb-overlay{position:absolute;inset:0;z-index:45;display:none;flex-direction:column;" +
       "padding:1.6cqh 2cqw 3cqh;color:#eee6cf;font-family:inherit;" +
-      "background:radial-gradient(120% 70% at 50% 0%,rgba(30,55,65,.92) 0%,rgba(14,28,38,.94) 45%,rgba(6,12,20,.97) 100%);}" +
+      "background-image:radial-gradient(120% 70% at 50% 0%,rgba(30,55,65,.38) 0%,rgba(14,28,38,.62) 45%,rgba(6,12,20,.76) 100%),url('assets/background/shrine_01_main.jpg');" +
+      "background-size:cover;background-position:center;background-repeat:no-repeat;}" +
     ".sb-overlay.show{display:flex;}" +
     ".sb-menu{position:absolute;top:1.4cqh;right:1.4cqh;height:12cqh;display:flex;align-items:center;gap:.8cqw;z-index:2;}" +
     ".sb-menu-btn{width:8.2cqh;height:100%;display:flex;align-items:center;justify-content:center;" +
