@@ -65,7 +65,7 @@
       text: "이 튜토리얼은 전투의 기본을 안내드려요."
     });
     const titleText = renderTutorialGuideText(titleDialogue.text);
-    const bodySpeaker = bodyDialogue.speaker ? escapeTutorialGuideHtml(bodyDialogue.speaker) + " : " : "";
+    const bodySpeaker = "";
     const bodyText = renderTutorialGuideText(bodyDialogue.text);
     const skipReactionDialogue = getTutorialGuideDialogue("S-001", {
       speaker: "",

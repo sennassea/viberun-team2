@@ -25,12 +25,14 @@
   const FIRST_ATTACK_COMPLETE_DIALOGUE_ID = "W-022";
   const BLOCK_CARD_DIALOGUE_ID = "W-030";
   const BLOCK_COMPLETE_DIALOGUE_ID = "W-031";
+  const END_TURN_DIALOGUE_ID = "W-035";
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
   let tutorialBattleIntroPauseState = null;
   let firstAttackCardState = null;
   let blockCardState = null;
+  let endTurnState = null;
 
   function startTutorialBattle(){
     state.isTutorialBattleActive = true;
@@ -47,6 +49,7 @@
     cleanupTutorialBattleIntro();
     cleanupFirstAttackCardStep();
     cleanupBlockCardStep();
+    cleanupEndTurnStep();
     state.isTutorialBattleActive = false;
     state.currentTutorialStep = null;
     applyTutorialBattleRootState(false);
@@ -92,6 +95,7 @@
     if(blockCardState && blockCardState.active){
       return cardKey === blockCardState.cardKey && handIndex === blockCardState.handIndex;
     }
+    if(endTurnState && endTurnState.active) return false;
     return true;
   }
 
@@ -99,6 +103,10 @@
     if(firstAttackCardState && firstAttackCardState.active) return false;
     if(blockCardState && blockCardState.active) return false;
     return true;
+  }
+
+  function isEndTurnStepActive(){
+    return !!(endTurnState && endTurnState.active);
   }
 
   function canOpenDeck(){
@@ -121,6 +129,10 @@
     if(blockCardState && blockCardState.active){
       if(actionType === "endTurn") return "먼저 강조된 결계 주문을 사용해보세요.";
       return "강조된 결계 주문만 사용할 수 있습니다.";
+    }
+    if(endTurnState && endTurnState.active){
+      if(actionType === "endTurn") return "";
+      return "지금은 차례 넘기기 버튼만 사용할 수 있습니다.";
     }
     return "";
   }
@@ -280,6 +292,14 @@
   function cleanupBlockCardStep(){
     blockCardState = null;
     clearBlockCardHighlight();
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
+  function cleanupEndTurnStep(){
+    endTurnState = null;
+    removeTutorialEndTurnClickBlocker();
+    removeTutorialEndTurnEventBlocker();
+    clearEndTurnHighlight();
     if(typeof updateEndBtn === "function") updateEndBtn();
   }
 
@@ -524,6 +544,86 @@
     cleanupTutorialBattleIntro();
     setTutorialStep("block_guide_completed");
     console.log("tutorial block guide completed");
+    showTutorialEndTurnDialogue();
+  }
+
+  function showTutorialEndTurnDialogue(){
+    if(!isTutorialBattle()) return;
+    const dialogue = getTutorialBattleDialogue(END_TURN_DIALOGUE_ID);
+    if(!dialogue){
+      startTutorialEndTurnStep();
+      return;
+    }
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue(dialogue, startTutorialEndTurnStep);
+  }
+
+  function startTutorialEndTurnStep(){
+    cleanupTutorialBattleIntro();
+    endTurnState = { active: true };
+    if(typeof S !== "undefined" && S && !S.over) S.busy = false;
+    setTutorialStep("end_turn");
+    applyEndTurnHighlight();
+    addTutorialEndTurnClickBlocker();
+    addTutorialEndTurnEventBlocker();
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
+  function applyEndTurnHighlight(){
+    clearEndTurnHighlight();
+    const button = document.getElementById("endTurn");
+    if(button) button.classList.add("tutorial-end-turn-button");
+  }
+
+  function clearEndTurnHighlight(){
+    const button = document.getElementById("endTurn");
+    if(button) button.classList.remove("tutorial-end-turn-button");
+  }
+
+  function addTutorialEndTurnClickBlocker(){
+    const root = document.getElementById("game");
+    if(!root || root.querySelector(".tutorial-end-turn-click-blocker")) return;
+    const blocker = document.createElement("div");
+    blocker.className = "tutorial-end-turn-click-blocker";
+    root.appendChild(blocker);
+  }
+
+  function removeTutorialEndTurnClickBlocker(){
+    document.querySelectorAll(".tutorial-end-turn-click-blocker").forEach(blocker => blocker.remove());
+  }
+
+  function addTutorialEndTurnEventBlocker(){
+    const root = document.getElementById("game");
+    if(!root) return;
+    BATTLE_INTRO_BLOCK_EVENTS.forEach(eventName => {
+      root.addEventListener(eventName, blockTutorialEndTurnEvent, true);
+    });
+  }
+
+  function removeTutorialEndTurnEventBlocker(){
+    const root = document.getElementById("game");
+    if(!root) return;
+    BATTLE_INTRO_BLOCK_EVENTS.forEach(eventName => {
+      root.removeEventListener(eventName, blockTutorialEndTurnEvent, true);
+    });
+  }
+
+  function blockTutorialEndTurnEvent(event){
+    if(!isEndTurnStepActive()) return;
+    if(event.target && typeof event.target.closest === "function" && event.target.closest("#endTurn")) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function onEndTurnClicked(){
+    if(!endTurnState || !endTurnState.active) return false;
+    cleanupEndTurnStep();
+    setTutorialStep("end_turn_clicked");
+    console.log("tutorial end turn clicked");
+    return true;
   }
 
   function pauseTutorialBattleIntroCombat(){
@@ -554,6 +654,8 @@
       ".tutorial-battle-focus-target{filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.62));}" +
       ".tutorial-first-attack-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
       ".tutorial-block-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
+      ".tutorial-end-turn-click-blocker{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);cursor:default;pointer-events:none;}" +
+      "#endTurn.tutorial-end-turn-button{position:relative;z-index:281;box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;}" +
       ".tutorial-battle-intro-speaker{margin-bottom:.7cqh;font-size:1.7cqh;font-weight:900;color:#2f66a8;}" +
       ".tutorial-battle-intro-text{font-size:1.9cqh;line-height:1.45;font-weight:800;}" +
       ".tutorial-battle-intro-actions{display:flex;justify-content:flex-end;margin-top:1.2cqh;}" +
@@ -858,12 +960,14 @@
     handleTutorialExit,
     canUseCard,
     canEndTurn,
+    isEndTurnStepActive,
     canOpenDeck,
     canUsePotion,
     canUseArtifact,
     getTutorialRestrictionMessage,
     openTutorialSettings,
     closeTutorialSettings,
-    onCardPlayed
+    onCardPlayed,
+    onEndTurnClicked
   };
 })();
