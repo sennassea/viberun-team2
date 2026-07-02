@@ -42,6 +42,7 @@
     popup.className = "tutorial-guide-popup";
     popup.innerHTML = `
       <div class="tutorial-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialGuideTitle">
+        <button type="button" class="tutorial-guide-close" aria-label="튜토리얼 안내 닫기" data-tutorial-close>&times;</button>
         <div class="tutorial-guide-main" data-tutorial-guide-main>
           <h2 id="tutorialGuideTitle">튜토리얼 안내</h2>
           <p>이 튜토리얼은 전투의 기본을 안내드려요.</p>
@@ -83,6 +84,9 @@
       closeTutorialGuidePopup();
       if(typeof updateStartScreenMode === "function") updateStartScreenMode();
     });
+    popup.querySelector("[data-tutorial-close]").addEventListener("click", () => {
+      closeTutorialGuidePopup();
+    });
 
     document.body.appendChild(popup);
   }
@@ -104,6 +108,7 @@
       }
       .tutorial-guide-popup.show{display:flex;}
       .tutorial-guide-dialog{
+        position:relative;
         width:min(520px, 100%);
         border:2px solid rgba(255, 255, 255, .85);
         border-radius:8px;
@@ -111,6 +116,21 @@
         color:#243247;
         box-shadow:0 18px 38px rgba(0, 0, 0, .22);
         padding:28px;
+      }
+      .tutorial-guide-close{
+        position:absolute;
+        top:10px;
+        right:10px;
+        width:34px;
+        height:34px;
+        border:1px solid rgba(53, 93, 135, .28);
+        border-radius:8px;
+        background:#ffffff;
+        color:#405066;
+        font-size:24px;
+        font-weight:800;
+        line-height:1;
+        cursor:pointer;
       }
       .tutorial-guide-dialog h2{
         margin:0 0 16px;
@@ -293,7 +313,7 @@
 
     if(typeof beginNewRun === "function") beginNewRun();
     if(window.MAP_STATE){
-      window.MAP_STATE.currentStage = -1;
+      window.MAP_STATE.currentStage = 0;
       window.MAP_STATE.proceedMode = false;
       window.MAP_STATE.startMapMode = false;
     }

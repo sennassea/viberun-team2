@@ -62,8 +62,8 @@
       [],
       [],
       [],
-      [{ id: "start", type: "start", emoji: "🚪", label: "시작 지점" }],
-      [{ id: "tutorial_battle", type: "enemy", emoji: "👺", label: "튜토리얼 전투", stageIndex: 0 }],
+      [{ id: "start", type: "start", emoji: "🚪", label: "집" }],
+      [{ id: "tutorial_battle", type: "enemy", emoji: "👺", label: "튜토리얼 구역", stageIndex: 0 }],
       [],
       [],
       []
@@ -73,7 +73,7 @@
       floors,
       paths: [[[3, 0], [4, 0]]],
       stages: [{
-        label: "튜토리얼 전투",
+        label: "튜토리얼 구역",
         type: "tutorial",
         packageId: "tutorial_battle",
         getMonsters: () => []
@@ -105,6 +105,11 @@
     startStage = function tutorialWrappedStartStage(stageIdx){
       if(tutorialMapActive){
         console.log("[Tutorial] 튜토리얼 전투 노드 클릭", stageIdx);
+        if(window.MAP_STATE){
+          window.MAP_STATE.currentStage = stageIdx;
+          window.MAP_STATE.proceedMode = false;
+          window.MAP_STATE.startMapMode = false;
+        }
         tutorialMapActive = false;
         const overlay = document.getElementById("mapOverlay");
         if(overlay) overlay.remove();
