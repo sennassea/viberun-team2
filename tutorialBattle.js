@@ -23,11 +23,13 @@
   ];
   const FIRST_ATTACK_DIALOGUE_ID = "W-021";
   const FIRST_ATTACK_COMPLETE_DIALOGUE_ID = "W-022";
+  const BLOCK_CARD_DIALOGUE_ID = "W-030";
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
   let tutorialBattleIntroPauseState = null;
   let firstAttackCardState = null;
+  let blockCardState = null;
 
   function startTutorialBattle(){
     state.isTutorialBattleActive = true;
@@ -36,12 +38,14 @@
     if(typeof window.startTutorialBattle === "function"){
       window.startTutorialBattle();
     }
+    ensureTutorialBattleRequiredHandCards();
     deferTutorialBattleIntro();
   }
 
   function endTutorialBattle(){
     cleanupTutorialBattleIntro();
     cleanupFirstAttackCardStep();
+    cleanupBlockCardStep();
     state.isTutorialBattleActive = false;
     state.currentTutorialStep = null;
     applyTutorialBattleRootState(false);
@@ -84,11 +88,15 @@
     if(firstAttackCardState && firstAttackCardState.active){
       return cardKey === firstAttackCardState.cardKey && handIndex === firstAttackCardState.handIndex;
     }
+    if(blockCardState && blockCardState.active){
+      return cardKey === blockCardState.cardKey && handIndex === blockCardState.handIndex;
+    }
     return true;
   }
 
   function canEndTurn(){
     if(firstAttackCardState && firstAttackCardState.active) return false;
+    if(blockCardState && blockCardState.active) return false;
     return true;
   }
 
@@ -109,7 +117,53 @@
       if(actionType === "endTurn") return "먼저 강조된 주문을 사용해보세요.";
       return "강조된 주문만 사용할 수 있습니다.";
     }
+    if(blockCardState && blockCardState.active){
+      if(actionType === "endTurn") return "먼저 강조된 결계 주문을 사용해보세요.";
+      return "강조된 결계 주문만 사용할 수 있습니다.";
+    }
     return "";
+  }
+
+  function ensureTutorialBattleRequiredHandCards(){
+    if(!isTutorialBattle() || typeof S === "undefined" || !S || !Array.isArray(S.hand) || typeof CARD_DB === "undefined") return;
+    const requiredKeys = [
+      findTutorialCardKey(isFirstAttackTutorialCard),
+      findTutorialCardKey(isBlockTutorialCard)
+    ];
+    let changed = false;
+    requiredKeys.forEach(cardKey => {
+      if(!cardKey) return;
+      const alreadyHasType = S.hand.some(existingKey => {
+        const existingCard = CARD_DB[existingKey];
+        const requiredCard = CARD_DB[cardKey];
+        if(!requiredCard) return false;
+        if(isFirstAttackTutorialCard(requiredCard)){
+          return isFirstAttackTutorialCard(existingCard);
+        }
+        if(isBlockTutorialCard(requiredCard)){
+          return isBlockTutorialCard(existingCard);
+        }
+        return false;
+      });
+      if(!alreadyHasType){
+        S.hand.push(cardKey);
+        changed = true;
+      }
+    });
+    if(changed && typeof renderAll === "function") renderAll();
+  }
+
+  function findTutorialCardKey(predicate){
+    if(typeof CARD_DB === "undefined" || !CARD_DB) return null;
+    return Object.keys(CARD_DB).find(cardKey => predicate(CARD_DB[cardKey])) || null;
+  }
+
+  function isFirstAttackTutorialCard(card){
+    return !!(card && card.type === "attack" && card.target === "enemy");
+  }
+
+  function isBlockTutorialCard(card){
+    return !!(card && (card.type === "defense" || card.type === "block" || card.type === "blockCleanse"));
   }
 
   function applyTutorialBattleRootState(active){
@@ -222,6 +276,12 @@
     if(typeof updateEndBtn === "function") updateEndBtn();
   }
 
+  function cleanupBlockCardStep(){
+    blockCardState = null;
+    clearBlockCardHighlight();
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
   function removeTutorialBattleIntroOverlay(){
     const overlay = document.querySelector("#game .tutorial-battle-intro-overlay");
     if(overlay) overlay.remove();
@@ -331,7 +391,7 @@
     for(let index = 0; index < S.hand.length; index++){
       const cardKey = S.hand[index];
       const card = CARD_DB[cardKey];
-      if(card && card.type === "attack" && card.target === "enemy"){
+      if(isFirstAttackTutorialCard(card)){
         return { cardKey, handIndex: index };
       }
     }
@@ -352,6 +412,7 @@
   }
 
   function onCardPlayed(cardKey, card, handIndex){
+    if(onBlockCardPlayed(cardKey, card, handIndex)) return;
     if(!firstAttackCardState || !firstAttackCardState.active) return;
     if(cardKey !== firstAttackCardState.cardKey || handIndex !== firstAttackCardState.handIndex) return;
     cleanupFirstAttackCardStep();
@@ -378,6 +439,69 @@
     cleanupTutorialBattleIntro();
     setTutorialStep("first_attack_guide_completed");
     console.log("tutorial first attack guide completed");
+    showTutorialBlockCardDialogue();
+  }
+
+  function showTutorialBlockCardDialogue(){
+    const dialogue = getTutorialBattleDialogue(BLOCK_CARD_DIALOGUE_ID);
+    if(!dialogue){
+      startTutorialBlockCardStep();
+      return;
+    }
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue({ ...dialogue, dialogueClass: "tutorial-battle-intro-dialogue-top" }, () => {
+      startTutorialBlockCardStep();
+    });
+  }
+
+  function startTutorialBlockCardStep(){
+    cleanupTutorialBattleIntro();
+    const cardState = findBlockCardState();
+    if(!cardState){
+      setTutorialStep("block_card_missing");
+      return;
+    }
+    blockCardState = { ...cardState, active: true };
+    setTutorialStep("block_card");
+    applyBlockCardHighlight();
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
+  function findBlockCardState(){
+    if(typeof S === "undefined" || !S || !Array.isArray(S.hand) || typeof CARD_DB === "undefined") return null;
+    for(let index = 0; index < S.hand.length; index++){
+      const cardKey = S.hand[index];
+      const card = CARD_DB[cardKey];
+      if(isBlockTutorialCard(card)){
+        return { cardKey, handIndex: index };
+      }
+    }
+    return null;
+  }
+
+  function applyBlockCardHighlight(){
+    clearBlockCardHighlight();
+    if(!blockCardState || !blockCardState.active) return;
+    const card = document.querySelector('#hand .card[data-index="' + blockCardState.handIndex + '"]');
+    if(card) card.classList.add("tutorial-block-card");
+  }
+
+  function clearBlockCardHighlight(){
+    document.querySelectorAll(".tutorial-block-card").forEach(card => {
+      card.classList.remove("tutorial-block-card");
+    });
+  }
+
+  function onBlockCardPlayed(cardKey, card, handIndex){
+    if(!blockCardState || !blockCardState.active) return false;
+    if(cardKey !== blockCardState.cardKey || handIndex !== blockCardState.handIndex) return false;
+    cleanupBlockCardStep();
+    setTutorialStep("block_card_used");
+    console.log("tutorial block card used");
+    return true;
   }
 
   function pauseTutorialBattleIntroCombat(){
@@ -407,6 +531,7 @@
       ".tutorial-battle-highlight-box{position:absolute;z-index:280;pointer-events:none;border:.28cqh solid #ffd25f;border-radius:1cqh;box-shadow:0 0 0 9999px rgba(12,24,40,.16),0 0 1.4cqh rgba(255,210,95,.86);}" +
       ".tutorial-battle-focus-target{filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.62));}" +
       ".tutorial-first-attack-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
+      ".tutorial-block-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
       ".tutorial-battle-intro-speaker{margin-bottom:.7cqh;font-size:1.7cqh;font-weight:900;color:#2f66a8;}" +
       ".tutorial-battle-intro-text{font-size:1.9cqh;line-height:1.45;font-weight:800;}" +
       ".tutorial-battle-intro-actions{display:flex;justify-content:flex-end;margin-top:1.2cqh;}" +
