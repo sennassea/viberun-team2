@@ -11,7 +11,9 @@
   let stageClickWrapped = false;
   let closeMapWrapped = false;
   let tutorialMapIntroActive = false;
+  let tutorialMapNodeSelectActive = false;
   const MAP_INTRO_DIALOGUE_IDS = ["M-001", "M-002", "M-003"];
+  const TUTORIAL_MAP_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
 
   function openTutorialMap(){
     if(typeof generateMap !== "function" || typeof openMap !== "function") return;
@@ -182,8 +184,9 @@
     if(index >= ids.length){
       tutorialMapIntroActive = false;
       removeTutorialMapClickBlocker();
-      clearTutorialMapHighlight();
       removeTutorialMapDialogue();
+      applyTutorialMapHighlight("M-003");
+      enableTutorialMapNodeSelect();
       setTutorialMapStep("map_intro_completed");
       console.log("tutorial map intro completed");
       return;
@@ -239,7 +242,7 @@
 
     const blocker = document.createElement("div");
     blocker.className = "tutorial-map-click-blocker";
-    ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"].forEach(eventName => {
+    TUTORIAL_MAP_BLOCK_EVENTS.forEach(eventName => {
       blocker.addEventListener(eventName, event => {
         event.preventDefault();
         event.stopPropagation();
@@ -251,6 +254,37 @@
   function removeTutorialMapClickBlocker(){
     const blocker = document.querySelector("#mapOverlay .tutorial-map-click-blocker");
     if(blocker) blocker.remove();
+  }
+
+  function enableTutorialMapNodeSelect(){
+    if(tutorialMapNodeSelectActive) return;
+    tutorialMapNodeSelectActive = true;
+    TUTORIAL_MAP_BLOCK_EVENTS.forEach(eventName => {
+      document.addEventListener(eventName, blockNonTutorialBattleNodeEvent, true);
+    });
+  }
+
+  function disableTutorialMapNodeSelect(){
+    if(!tutorialMapNodeSelectActive) return;
+    tutorialMapNodeSelectActive = false;
+    TUTORIAL_MAP_BLOCK_EVENTS.forEach(eventName => {
+      document.removeEventListener(eventName, blockNonTutorialBattleNodeEvent, true);
+    });
+  }
+
+  function blockNonTutorialBattleNodeEvent(event){
+    if(!tutorialMapNodeSelectActive || !tutorialMapActive) return;
+    if(isTutorialBattleNodeEvent(event)) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function isTutorialBattleNodeEvent(event){
+    const target = event.target;
+    if(!target || typeof target.closest !== "function") return false;
+    const overlay = target.closest("#mapOverlay.tutorial-map-mode");
+    if(!overlay) return false;
+    return !!target.closest('[data-nodeid="tutorial_battle"]');
   }
 
   function applyTutorialMapHighlight(dialogueId){
@@ -306,6 +340,8 @@
       if(tutorialMapActive){
         if(tutorialMapIntroActive) return;
         console.log("[Tutorial] 튜토리얼 전투 노드 클릭", stageIdx);
+        disableTutorialMapNodeSelect();
+        clearTutorialMapHighlight();
         if(window.MAP_STATE){
           window.MAP_STATE.currentStage = stageIdx;
           window.MAP_STATE.proceedMode = false;
@@ -332,6 +368,7 @@
       if(tutorialMapActive){
         tutorialMapActive = false;
         tutorialMapIntroActive = false;
+        disableTutorialMapNodeSelect();
         removeTutorialMapClickBlocker();
         clearTutorialMapHighlight();
         removeTutorialMapDialogue();
