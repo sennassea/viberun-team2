@@ -24,6 +24,7 @@
   const FIRST_ATTACK_DIALOGUE_ID = "W-021";
   const FIRST_ATTACK_COMPLETE_DIALOGUE_ID = "W-022";
   const BLOCK_CARD_DIALOGUE_ID = "W-030";
+  const BLOCK_COMPLETE_DIALOGUE_ID = "W-031";
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
@@ -501,7 +502,28 @@
     cleanupBlockCardStep();
     setTutorialStep("block_card_used");
     console.log("tutorial block card used");
+    showTutorialBlockCompleteDialogue();
     return true;
+  }
+
+  function showTutorialBlockCompleteDialogue(){
+    if(!isTutorialBattle()) return;
+    const dialogue = getTutorialBattleDialogue(BLOCK_COMPLETE_DIALOGUE_ID);
+    if(!dialogue){
+      finishTutorialBlockGuide();
+      return;
+    }
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue(dialogue, finishTutorialBlockGuide);
+  }
+
+  function finishTutorialBlockGuide(){
+    cleanupTutorialBattleIntro();
+    setTutorialStep("block_guide_completed");
+    console.log("tutorial block guide completed");
   }
 
   function pauseTutorialBattleIntroCombat(){
