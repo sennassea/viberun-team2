@@ -310,10 +310,10 @@
   animation: map-next-pulse 1.4s ease-in-out infinite alternate;
 }
 
-/* 덱 뷰어 / 설정 뷰어가 맵 오버레이(z-index:150) 위에 표시되도록 */
+/* 덱 뷰어 / 설정 뷰어가 맵 오버레이와 튜토리얼 지도 위에 표시되도록 */
 #deckViewerOverlay,
 #settingsViewerOverlay {
-  z-index: 200 !important;
+  z-index: 300 !important;
 }
 
 /* start-map-mode: 전체 화면 오버라이드 */

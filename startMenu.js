@@ -5,6 +5,7 @@
    ========================================================================= */
 
 function startNewGameFromMenu(){
+  markHasPlayedBefore();
   /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
   if(typeof window.ACT1_START_NEW_GAME === "function"){
     window.ACT1_START_NEW_GAME();
@@ -16,6 +17,7 @@ function startNewGameFromMenu(){
   } catch(error) {}
 
   if(typeof generateMap === "function") generateMap();
+  if(typeof beginNewRun === "function") beginNewRun();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = -1;
     window.MAP_STATE.proceedMode = true;
@@ -35,6 +37,7 @@ function returnToStartScreen(){
   } catch(error) {}
 
   STARTER_DECK = [...BASE_STARTER_DECK];
+  if(typeof beginNewRun === "function") beginNewRun();
   if(typeof generateMap === "function") generateMap();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = 0;
@@ -48,6 +51,7 @@ function returnToStartScreen(){
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.remove("hidden");
   updateContinueButtonInfo();
+  updateStartScreenMode();
 }
 
 function continueGameFromMenu(){
@@ -60,6 +64,7 @@ function continueGameFromMenu(){
   S = saved.state;
   normalizeRunResources();
   STARTER_DECK = [...saved.starterDeck];
+  if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
   S.busy = false;
   if(window.MAP_STATE && saved.mapState){
     window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
@@ -128,6 +133,59 @@ function showStartScreenAfterSave(){
   updateContinueButtonInfo();
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.remove("hidden");
+  updateStartScreenMode();
+}
+
+function updateStartScreenMode(){
+  const tutorial = document.querySelector(".start-tutorial-button");
+  const newGame = document.querySelector(".start-new-game");
+  const continueGame = document.querySelector(".start-continue-game");
+  const codex = document.querySelector(".start-codex-button");
+  const record = document.querySelector(".start-record-button");
+  const settings = document.querySelector(".start-settings-button");
+  const codexRecordRow = codex && record ? codex.closest(".start-menu-row") : null;
+  const isNewbie = shouldShowNewbieStartMenu();
+
+  setStartMenuVisible(tutorial, isNewbie);
+  setStartMenuVisible(newGame, !isNewbie);
+  setStartMenuVisible(continueGame, !isNewbie);
+  setStartMenuVisible(codex, !isNewbie);
+  setStartMenuVisible(record, !isNewbie);
+  setStartMenuVisible(codexRecordRow, !isNewbie);
+  setStartMenuVisible(settings, true);
+}
+
+function shouldShowNewbieStartMenu(){
+  if(window.TUTORIAL_SYSTEM && typeof window.TUTORIAL_SYSTEM.shouldShowNewbieStart === "function"){
+    return window.TUTORIAL_SYSTEM.shouldShowNewbieStart();
+  }
+  if(typeof localStorage === "undefined") return true;
+  try {
+    return !(
+      localStorage.getItem("viberunTutorialCompleted") === "true" ||
+      localStorage.getItem("viberunTutorialWasSkipped") === "true"
+    );
+  } catch(error) {
+    return true;
+  }
+}
+
+function setStartMenuVisible(el, visible){
+  if(!el) return;
+  el.hidden = !visible;
+  el.style.display = visible ? "" : "none";
+}
+
+function markHasPlayedBefore(){
+  if(typeof window.BOHYUN_TUTORIAL === "object" && typeof window.BOHYUN_TUTORIAL.markHasPlayedBefore === "function"){
+    window.BOHYUN_TUTORIAL.markHasPlayedBefore();
+    return;
+  }
+  if(typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem("viberunHasPlayedBefore", "true");
+    localStorage.setItem("hasPlayedBefore", "1");
+  } catch(error) {}
 }
 
 function updateContinueButtonInfo(){
@@ -139,7 +197,7 @@ function updateContinueButtonInfo(){
   const saved = readSavedProgress();
   if(!saved){
     button.classList.remove("has-save");
-    status.textContent = "메인 로비";
+    status.textContent = "신령의 은혜";
     return;
   }
 
@@ -153,7 +211,7 @@ function formatSavedFloor(saved){
   const label = saved.mapState && saved.mapState.floorLabel ? saved.mapState.floorLabel : "";
   const match = label.match(/(\d+)\s*F/i);
   if(match) return match[1] + "층";
-  return "메인 로비";
+  return "신령의 은혜";
 }
 
 $("#returnStart").addEventListener("click", returnToStartScreen);
@@ -165,3 +223,4 @@ document.querySelectorAll(".start-continue-game").forEach(button => {
 });
 
 updateContinueButtonInfo();
+updateStartScreenMode();
