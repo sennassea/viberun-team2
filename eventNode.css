@@ -17,7 +17,7 @@
 }
 .event-overlay.show{ display:flex; }
 
-/* ── 상단 바 (플레이어 카드 + 공통 메뉴) ──────────────────────────────────── */
+/* ── 상단 바 (플레이어 주문 + 공통 메뉴) ──────────────────────────────────── */
 .event-topbar{ flex:none; display:flex; align-items:stretch; gap:.8cqw; height:12cqh; }
 .event-player-card{
   flex:none; display:flex; align-items:center; gap:1.15cqw; width:26cqw; min-width:30cqh;
@@ -116,7 +116,7 @@
 .event-result-row.positive{ background:rgba(110,175,110,.2); border-color:rgba(80,140,80,.4); color:var(--ev-green-deep); }
 .event-result-row.negative{ background:rgba(214,110,100,.18); border-color:rgba(180,80,70,.4); color:var(--ev-red-deep); }
 
-/* ── 카드 보상 화면 ────────────────────────────────────────────────────── */
+/* ── 주문 보상 화면 ────────────────────────────────────────────────────── */
 .event-panel-cardpick{ align-items:center; }
 .event-guide{ text-align:center; font-size:1.5cqh; font-weight:700; color:var(--ev-ink-soft); }
 .event-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:1.2cqw; width:100%; max-width:80cqw; }

@@ -1,7 +1,7 @@
 "use strict";
 /* =========================================================================
    상점 노드 메인 화면 (shopNode.js)
-   기획서: 상점 UI 구현 기획서 - 최신 코드 반영본 (카드 / 약병 / 법구 판매 탭)
+   기획서: 상점 UI 구현 기획서 - 최신 코드 반영본 (주문 / 약병 / 법구 판매 탭)
 
    이 파일은 mapSystem.js / mapNodeLogic.js / mapUI.js / restNode.js / script.js /
    cardData.js / bagUI.js 이후에 로드되어야 합니다. 기존 코드를 직접 수정하지
@@ -15,7 +15,7 @@
 const SHOP_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#dock", "#hint"];
 
 /* ── 임시 테스트 가격 (기획서 9장 가격 권장안 기준. 정식 가격 기획 전까지 사용) ──
-   카드: 50-90 / 약병: 40-80 / 법구: 80-140 골드, 새로고침 20 골드 시작 */
+   주문: 50-90 / 약병: 40-80 / 법구: 80-140 골드, 새로고침 20 골드 시작 */
 const SHOP_CARD_PRICE_BY_RARITY = { common: 50, uncommon: 70, rare: 90 };
 const SHOP_DEFAULT_CARD_PRICE   = 60;
 const SHOP_RELIC_PRICE = { common: 80, uncommon: 110, rare: 145 };
@@ -29,7 +29,7 @@ const SHOP_POTION_STOCK_COUNT = 3;
 const SHOP_RELIC_STOCK_COUNT  = 3;
 
 const SHOP_TAB_INFO = {
-  card:   { label: "카드", columns: 4 },
+  card:   { label: "주문", columns: 4 },
   potion: { label: "약병", columns: 3 },
   relic:  { label: "법구", columns: 3 },
 };
@@ -38,7 +38,7 @@ const SHOP_MERCHANT_FLAVOR = {
   card: {
     bubble: "몸과 마음이 편안해지는 물건들만 준비했어요.",
     recommend: "치유와 정화, 그 균형이 당신의 승리를 이끌어줄 거예요.",
-    tip: "카드는 전투 중 한 번만 사용할 수 있어요.\n최적의 순간을 노려 보세요.",
+    tip: "주문은 전투 중 한 번만 사용할 수 있어요.\n최적의 순간을 노려 보세요.",
   },
   potion: {
     bubble: "몸과 마음이 편안해지는 물건들만 준비했어요.",
@@ -167,7 +167,7 @@ function buildCardStock() {
     const card = CARD_DB[key];
 
     if (!card) {
-      console.warn("[Shop] 존재하지 않는 카드 ID가 판매 목록에 포함되었습니다.", key);
+      console.warn("[Shop] 존재하지 않는 주문 ID가 판매 목록에 포함되었습니다.", key);
       return null;
     }
 
@@ -316,12 +316,12 @@ function ensureShopOverlay() {
 
   overlay.querySelector("#shopMapBtn").addEventListener("click", () => {
     if (typeof openMap === "function") openMap();
-    else if (typeof toast === "function") toast("지도를 열 수 없습니다.");
+    else if (typeof toast === "function") toast("여정을 열 수 없습니다.");
   });
   overlay.querySelector("#shopDeckBtn").addEventListener("click", () => {
     const deckBtn = document.getElementById("deckViewerButton");
     if (deckBtn) deckBtn.click();
-    else if (typeof toast === "function") toast("보유 카드 확인 기능을 열 수 없습니다.");
+    else if (typeof toast === "function") toast("보유 주문 확인 기능을 열 수 없습니다.");
   });
   overlay.querySelector("#shopBagBtn").addEventListener("click", () => {
     if (typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
@@ -361,8 +361,8 @@ function shopOverlayHtml() {
         '<div class="shop-title-sub">필요한 물품을 구매해 다음 전투를 준비하세요.</div>' +
       '</div>' +
       '<div class="shop-header-buttons">' +
-        '<button type="button" class="shop-header-btn" id="shopMapBtn"><span class="ico">🗺️</span><span>지도</span></button>' +
-        '<button type="button" class="shop-header-btn" id="shopDeckBtn"><span class="ico">📖</span><span>보유카드</span></button>' +
+        '<button type="button" class="shop-header-btn" id="shopMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
+        '<button type="button" class="shop-header-btn" id="shopDeckBtn"><span class="ico">📖</span><span>보유주문</span></button>' +
         '<button type="button" class="shop-header-btn" id="shopBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
         '<button type="button" class="shop-header-btn" id="shopSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
@@ -382,7 +382,7 @@ function shopOverlayHtml() {
       '</div>' +
       '<div class="shop-main">' +
         '<div class="shop-tabs" id="shopTabs">' +
-          '<button type="button" class="shop-tab" data-tab="card">카드</button>' +
+          '<button type="button" class="shop-tab" data-tab="card">주문</button>' +
           '<button type="button" class="shop-tab" data-tab="potion">약병</button>' +
           '<button type="button" class="shop-tab" data-tab="relic">법구</button>' +
         '</div>' +

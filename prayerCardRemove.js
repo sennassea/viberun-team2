@@ -1,14 +1,14 @@
 "use strict";
 /* =========================================================================
-   정리하기 - 카드 제거 UI (prayerCardRemove.js)
-   기획서: 기도터 UI 통합 기획서 - 6장 카드 제거 UI
+   정리하기 - 주문 제거 UI (prayerCardRemove.js)
+   기획서: 기도터 UI 통합 기획서 - 6장 주문 제거 UI
 
-   기존 "보유 카드" UI(deckViewer.js)의 구도(타입/속성 필터, 검색, 정렬,
-   카드 그리드)를 따르되, deckViewer.js는 건드리지 않고 전용 화면을 새로
+   기존 "보유 주문" UI(deckViewer.js)의 구도(타입/속성 필터, 검색, 정렬,
+   주문 그리드)를 따르되, deckViewer.js는 건드리지 않고 전용 화면을 새로
    그린다. 대상 데이터는 전투 사이에 유지되는 STARTER_DECK(실제 보유 덱)이다.
 
    restNode.js의 "정리하기" 확정 시 window.PRAYER_CARD_REMOVE_OPEN()을 호출한다.
-   카드 리세마라 방지를 위해 취소/뒤로가기는 제공하지 않는다 - 카드 1장을
+   주문 리세마라 방지를 위해 취소/뒤로가기는 제공하지 않는다 - 주문 1장을
    선택해 "제거 완료"를 눌러야만 닫히며, 닫히면 곧바로 맵 선택으로 돌아간다.
    ========================================================================= */
 
@@ -38,7 +38,7 @@
     return typeof STARTER_DECK !== "undefined" ? STARTER_DECK : [];
   }
 
-  /* 동일 카드ID를 묶어 보유 수량과 최초 등장 순서를 함께 기록한다 */
+  /* 동일 주문ID를 묶어 보유 수량과 최초 등장 순서를 함께 기록한다 */
   function getUniqueEntries() {
     const deck = getDeck();
     const map = new Map();
@@ -150,13 +150,13 @@
 
     overlay.innerHTML =
       '<div class="pcr-panel" role="dialog" aria-modal="true" aria-labelledby="pcrTitle">' +
-        '<div class="pcr-title" id="pcrTitle">카드 제거</div>' +
-        '<div class="pcr-guide">제거할 카드 1장을 선택하세요</div>' +
+        '<div class="pcr-title" id="pcrTitle">주문 제거</div>' +
+        '<div class="pcr-guide">제거할 주문 1장을 선택하세요</div>' +
         '<div class="pcr-toolbar">' +
           '<span class="pcr-count" id="pcrCount"></span>' +
           '<select id="pcrTypeFilter">' + typeOptionsHtml + '</select>' +
           '<select id="pcrAttrFilter"></select>' +
-          '<input type="text" id="pcrSearch" placeholder="카드 이름 검색">' +
+          '<input type="text" id="pcrSearch" placeholder="주문 이름 검색">' +
           '<select id="pcrSortType">' +
             '<option value="order">최신순</option>' +
             '<option value="name">이름순</option>' +
@@ -171,11 +171,11 @@
           '<div class="pcr-grid" id="pcrGrid"></div>' +
           '<div class="pcr-side">' +
             '<div class="pcr-side-box">' +
-              '<div class="pcr-side-title">선택한 카드</div>' +
+              '<div class="pcr-side-title">선택한 주문</div>' +
               '<div id="pcrSelectedInfo"></div>' +
             '</div>' +
             '<div class="pcr-side-box">' +
-              '<div class="pcr-side-title">덱 카드 수</div>' +
+              '<div class="pcr-side-title">덱 주문 수</div>' +
               '<div class="pcr-deck-count" id="pcrDeckCount"></div>' +
             '</div>' +
             '<div class="pcr-warning">⚠ 제거 후 되돌릴 수 없어요.</div>' +
@@ -238,15 +238,15 @@
     const allEntries = getUniqueEntries();
     renderAttrFilterOptions();
 
-    els.count.textContent = "보유 카드 " + deck.length + "장 / " + allEntries.length + "종류";
+    els.count.textContent = "보유 주문 " + deck.length + "장 / " + allEntries.length + "종류";
 
     if (allEntries.length === 0) {
-      els.grid.innerHTML = '<div class="pcr-empty">보유한 카드가 없습니다.</div>';
+      els.grid.innerHTML = '<div class="pcr-empty">보유한 주문이 없습니다.</div>';
     } else {
       const list = applyFiltersAndSort(allEntries);
       els.grid.innerHTML = list.length
         ? list.map(cardHtml).join("")
-        : '<div class="pcr-empty">조건에 맞는 카드가 없습니다.</div>';
+        : '<div class="pcr-empty">조건에 맞는 주문이 없습니다.</div>';
       els.grid.querySelectorAll(".pcr-card[data-key]").forEach((btn) => {
         btn.addEventListener("click", () => selectCard(btn.dataset.key));
       });
@@ -267,13 +267,13 @@
     els.selectedInfo.innerHTML = card
       ? '<div class="pcr-selected-name">' + escapeHtml(card.emoji) + ' ' + escapeHtml(card.name) + '</div>' +
         '<div class="pcr-selected-desc">' + escapeHtml(card.desc) + '</div>'
-      : '<div class="pcr-selected-placeholder">카드를 선택하면 상세 정보를 확인할 수 있어요.</div>';
+      : '<div class="pcr-selected-placeholder">주문을 선택하면 상세 정보를 확인할 수 있어요.</div>';
 
     const next = card ? Math.max(0, deckLength - 1) : deckLength;
     els.deckCount.innerHTML = deckLength + ' <span class="arrow">→</span> <b>' + next + '</b>';
   }
 
-  /* ── 확정 (취소 없음 - 반드시 카드를 제거해야 맵으로 복귀) ───────────── */
+  /* ── 확정 (취소 없음 - 반드시 주문을 제거해야 맵으로 복귀) ───────────── */
   function confirmRemove() {
     if (!selectedKey) return;
     const deck = getDeck();
@@ -282,7 +282,7 @@
     const card = typeof CARD_DB !== "undefined" ? CARD_DB[selectedKey] : null;
     deck.splice(idx, 1);
     if (typeof renderHud === "function") renderHud();
-    if (typeof toast === "function" && card) toast(card.name + " 카드를 덱에서 제거했습니다.");
+    if (typeof toast === "function" && card) toast(card.name + " 주문을 덱에서 제거했습니다.");
 
     if (els) {
       els.overlay.classList.remove("show");

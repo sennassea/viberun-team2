@@ -29,7 +29,7 @@ const EVENT_CHOICE_ICONS = ["❤️", "🔍", "🌙", "✨"];
 let eventOverlayEl = null;
 let eventState = null; // { event, step, resultDetails, cardCandidates, cardSelected }
 
-/* 이벤트 중 "지도 보기"에서 다음 노드 선택을 막기 위한 임시 함수 백업 */
+/* 이벤트 중 "여정 보기"에서 다음 노드 선택을 막기 위한 임시 함수 백업 */
 let eventMapStartStageBackup = null;
 let eventMapCloseMapBackup = null;
 
@@ -124,8 +124,8 @@ function eventShellHtml(){
       '</div>' +
       '<div class="event-topbar-spacer"></div>' +
       '<div class="event-menu" aria-label="이벤트 중 공통 메뉴">' +
-        '<button type="button" class="event-menu-btn" id="eventMapBtn"><span class="ico">🗺️</span><span>지도</span></button>' +
-        '<button type="button" class="event-menu-btn" id="eventDeckBtn"><span class="ico">📖</span><span>보유 카드</span></button>' +
+        '<button type="button" class="event-menu-btn" id="eventMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
+        '<button type="button" class="event-menu-btn" id="eventDeckBtn"><span class="ico">📖</span><span>보유 주문</span></button>' +
         '<button type="button" class="event-menu-btn" id="eventBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
         '<button type="button" class="event-menu-btn" id="eventSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
@@ -165,12 +165,12 @@ function onEventOverlayClick(e){
   if(e.target.closest("#eventSettingsBtn")){ openEventSettingsPreview(); return; }
 }
 
-/* ── 우상단 공통 메뉴 (지도/보유카드/가방/설정) ────────────────────────────
-   지도는 열람만 가능하다. 이벤트 선택 전에는 다음 노드로 진행할 수 없도록
-   startStage()/closeMap()을 이벤트가 지도를 보여주는 동안만 임시로 감싼다. */
+/* ── 우상단 공통 메뉴 (여정/보유주문/가방/설정) ────────────────────────────
+   여정은 열람만 가능하다. 이벤트 선택 전에는 다음 노드로 진행할 수 없도록
+   startStage()/closeMap()을 이벤트가 여정을 보여주는 동안만 임시로 감싼다. */
 function openEventMapPreview(){
   if(typeof openMap !== "function"){
-    if(typeof toast === "function") toast("지도를 열 수 없습니다.");
+    if(typeof toast === "function") toast("여정을 열 수 없습니다.");
     return;
   }
   if(eventMapStartStageBackup === null && typeof startStage === "function"){
@@ -197,7 +197,7 @@ function restoreEventMapOverrides(){
 function openEventDeckPreview(){
   const deckBtn = document.getElementById("deckViewerButton");
   if(deckBtn){ deckBtn.click(); return; }
-  if(typeof toast === "function") toast("보유 카드 확인 기능을 불러올 수 없습니다.");
+  if(typeof toast === "function") toast("보유 주문 확인 기능을 불러올 수 없습니다.");
 }
 
 function openEventBagPreview(){
@@ -308,8 +308,8 @@ function eventCardPickHtml(){
   const cards = (eventState.cardCandidates || []).map(eventCardHtml).join("");
   return (
     '<div class="event-panel event-panel-cardpick">' +
-      '<div class="event-title">카드 보상</div>' +
-      '<div class="event-guide">추가할 카드 1장을 선택하세요.</div>' +
+      '<div class="event-title">주문 보상</div>' +
+      '<div class="event-guide">추가할 주문 1장을 선택하세요.</div>' +
       '<div class="event-cards">' + cards + '</div>' +
       '<div class="event-actions">' +
         '<button type="button" class="event-btn event-btn-skip" id="eventCardSkip">건너뛰기</button>' +
@@ -555,15 +555,15 @@ function applyEventAddStatusCard(effect){
     const key = candidates[Math.floor(Math.random() * candidates.length)];
     if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
-    eventState.resultDetails.push({ kind: "negative", text: "상태 카드 추가: " + (card ? card.name : key) });
+    eventState.resultDetails.push({ kind: "negative", text: "상태 주문 추가: " + (card ? card.name : key) });
   }
 }
 
-/* 덱에서 무작위 카드를 count장 삭제한다. 덱이 1장 이하로 남을 정도로는
+/* 덱에서 무작위 주문을 count장 삭제한다. 덱이 1장 이하로 남을 정도로는
    삭제하지 않는다 (전투 진행 불가 방지). */
 function applyEventCardRemove(effect){
   if(typeof STARTER_DECK === "undefined" || STARTER_DECK.length <= 1){
-    eventState.resultDetails.push({ kind: "neutral", text: "덱이 너무 적어 카드를 삭제하지 못했습니다." });
+    eventState.resultDetails.push({ kind: "neutral", text: "덱이 너무 적어 주문을 삭제하지 못했습니다." });
     return;
   }
   const count = Math.min(effect.count || 1, STARTER_DECK.length - 1);
@@ -572,7 +572,7 @@ function applyEventCardRemove(effect){
     const key = STARTER_DECK[idx];
     STARTER_DECK.splice(idx, 1);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
-    eventState.resultDetails.push({ kind: "neutral", text: "카드 삭제: " + (card ? card.name : key) });
+    eventState.resultDetails.push({ kind: "neutral", text: "주문 삭제: " + (card ? card.name : key) });
   }
 }
 
@@ -587,7 +587,7 @@ function applyEventCardDuplicate(effect){
   const key = pool[Math.floor(Math.random() * pool.length)];
   STARTER_DECK.push(key);
   const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
-  eventState.resultDetails.push({ kind: "positive", text: "카드 복제: " + (card ? card.name : key) });
+  eventState.resultDetails.push({ kind: "positive", text: "주문 복제: " + (card ? card.name : key) });
 }
 
 function buildTaggedCardPool(attr){
@@ -675,7 +675,7 @@ function applyEventPotionSpecific(effect){
   grantEventPotion({ ...found });
 }
 
-/* ── 카드 보상 단계 ──────────────────────────────────────────────────────── */
+/* ── 주문 보상 단계 ──────────────────────────────────────────────────────── */
 function buildEventCardCandidates(effect){
   const count = effect.count || effect.rewardCount || 3;
   if(effect.type === "cardRewardTagged"){
@@ -717,13 +717,13 @@ function confirmEventCard(){
   if(card){
     if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(eventState.cardSelected);
     if(typeof S !== "undefined" && S && Array.isArray(S.discard)) S.discard.push(eventState.cardSelected);
-    if(typeof toast === "function") toast(card.name + " 카드를 덱에 추가했습니다.");
+    if(typeof toast === "function") toast(card.name + " 주문을 덱에 추가했습니다.");
   }
   finishEventNode();
 }
 
 function skipEventCard(){
-  if(typeof toast === "function") toast("카드 보상을 건너뛰었습니다.");
+  if(typeof toast === "function") toast("주문 보상을 건너뛰었습니다.");
   finishEventNode();
 }
 

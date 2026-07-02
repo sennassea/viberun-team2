@@ -65,7 +65,7 @@
         '<div class="settings-viewer-confirm" aria-hidden="true">' +
           '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsGiveUpTitle">' +
             '<h3 id="settingsGiveUpTitle">정말 포기하시겠습니까?</h3>' +
-            '<p>포기하면 패배로 처리되며,<br>진행도와 얻은 카드들이 모두 리셋됩니다.</p>' +
+            '<p>포기하면 패배로 처리되며,<br>진행도와 얻은 주문들이 모두 리셋됩니다.</p>' +
             '<div class="settings-viewer-confirm-actions">' +
               '<button type="button" class="settings-viewer-confirm-yes">예</button>' +
               '<button type="button" class="settings-viewer-confirm-no">아니오</button>' +
@@ -89,10 +89,10 @@
               '<button type="button" class="settings-viewer-help-close" aria-label="도움말 닫기">×</button>' +
             '</div>' +
             '<div class="settings-viewer-help-content">' +
-              '<section><h4>전투 진행</h4><p>카드를 드래그해서 적 또는 전장 위로 놓으면 사용할 수 있습니다. 카드마다 필요한 신통력이 다르니 좌측의 신통력 수치를 확인하세요.</p></section>' +
-              '<section><h4>대상 선택</h4><p>정화 카드는 적에게, 회복이나 결계 카드는 자신에게 사용됩니다. 적이 여럿일 때는 원하는 적을 터치해서 대상을 확인할 수 있습니다.</p></section>' +
-              '<section><h4>턴 종료</h4><p>더 사용할 카드가 없다면 턴 종료 버튼을 누르세요. 남은 카드는 버린 카드 더미로 이동하고 적의 행동이 진행됩니다.</p></section>' +
-              '<section><h4>카드 더미</h4><p>덱과 버린 카드 더미를 눌러 현재 보유 카드, 손에 든 카드, 버린 카드를 확인할 수 있습니다.</p></section>' +
+              '<section><h4>전투 진행</h4><p>주문을 드래그해서 적 또는 전장 위로 놓으면 사용할 수 있습니다. 주문마다 필요한 신통력이 다르니 좌측의 신통력 수치를 확인하세요.</p></section>' +
+              '<section><h4>대상 선택</h4><p>정화 주문은 적에게, 회복이나 결계 주문은 자신에게 사용됩니다. 적이 여럿일 때는 원하는 적을 터치해서 대상을 확인할 수 있습니다.</p></section>' +
+              '<section><h4>턴 종료</h4><p>더 사용할 주문이 없다면 턴 종료 버튼을 누르세요. 남은 주문은 버린 주문 더미로 이동하고 적의 행동이 진행됩니다.</p></section>' +
+              '<section><h4>주문 더미</h4><p>덱과 버린 주문 더미를 눌러 현재 보유 주문, 손에 든 주문, 버린 주문을 확인할 수 있습니다.</p></section>' +
               '<section><h4>설정</h4><p>설정 화면이 열려 있는 동안 전투는 일시 정지됩니다. 저장하기를 누르면 현재 진행 상태가 저장됩니다.</p></section>' +
             '</div>' +
           '</div>' +

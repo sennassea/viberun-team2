@@ -14,8 +14,8 @@ var POTION_DB = [
   { id:"five_direction_water", name:"오방수", emoji:"🌊", type:"blockCleanse", effect:"blockAndRemoveAgitation", value:8, removeWeak:1, target:"player", rarity:"common", price:40, dropWeight:3, desc:"마음의 결계를 8 얻고 동요를 1 제거합니다." },
   { id:"lotus_incense", name:"연꽃 향", emoji:"🪷", type:"applyMark", effect:"applyMark", value:3, target:"enemy", rarity:"common", price:40, dropWeight:3, desc:"대상에게 성불 표식을 3 부여합니다." },
   { id:"unsaid_letter", name:"말하지 못한 편지", emoji:"💌", type:"applyWeak", effect:"applyAgitation", value:3, target:"enemy", rarity:"common", price:40, dropWeight:3, desc:"대상에게 동요를 3 부여합니다." },
-  { id:"spirit_eye_water", name:"영안수", emoji:"👁️", type:"draw", effect:"drawCards", value:3, target:"player", rarity:"uncommon", price:55, dropWeight:2, desc:"카드를 3장 뽑습니다." },
-  { id:"ghost_gate_talisman", name:"귀문부", emoji:"符", type:"nextAttackDouble", effect:"nextAttackDouble", value:2, target:"player", rarity:"rare", price:85, dropWeight:1, desc:"이번 턴 다음 공격 카드의 정화량이 2배가 됩니다." }
+  { id:"spirit_eye_water", name:"영안수", emoji:"👁️", type:"draw", effect:"drawCards", value:3, target:"player", rarity:"uncommon", price:55, dropWeight:2, desc:"주문을 3장 뽑습니다." },
+  { id:"ghost_gate_talisman", name:"귀문부", emoji:"符", type:"nextAttackDouble", effect:"nextAttackDouble", value:2, target:"player", rarity:"rare", price:85, dropWeight:1, desc:"이번 턴 다음 공격 주문의 정화량이 2배가 됩니다." }
 ];
 
 window.POTION_SLOT_LIMIT = POTION_SLOT_LIMIT;

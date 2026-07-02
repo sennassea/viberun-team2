@@ -20,14 +20,14 @@ if(
   typeof RELIC_DB          === "undefined" ||
   typeof typeLabel         === "undefined"
 ){
-  throw new Error("캐릭터/몬스터/라이프/카드 데이터 파일이 먼저 로드되어야 합니다.");
+  throw new Error("캐릭터/몬스터/라이프/주문 데이터 파일이 먼저 로드되어야 합니다.");
 }
 
 const PLAYER_DEF   = COMBAT_DATA.character;
 const MONSTER_DEFS = COMBAT_DATA.monsters; // loadStageMonsters()가 패키지 몬스터로 채운다
 const STATUS_DATA  = window.BOHYUN_STATUS_DATA || window.STATUS_DATA || {
   agitation:{ id:"agitation", legacyKey:"weak", name:"동요", shortName:"동요", icon:"🌀", color:"#5577ff", description:"적의 공격 피해가 25% 감소합니다.", decayTiming:"afterEnemyAction", decayAmount:1, decayTimingText:"행동 종료 시 1 감소합니다.", maxStack:99, showOnEnemy:true },
-  mark:{ id:"mark", legacyKey:"mark", name:"성불 표식", shortName:"성불 표식", icon:"🌸", color:"#ff6fb1", description:"일부 성불 카드가 추가 효과를 얻습니다. 표식을 소모하는 카드에 의해 제거됩니다.", maxStack:99, showOnEnemy:true }
+  mark:{ id:"mark", legacyKey:"mark", name:"성불 표식", shortName:"성불 표식", icon:"🌸", color:"#ff6fb1", description:"일부 성불 주문이 추가 효과를 얻습니다. 표식을 소모하는 주문에 의해 제거됩니다.", maxStack:99, showOnEnemy:true }
 };
 
 // 상태 아이콘/이름 고정 매핑
@@ -61,7 +61,7 @@ function normalizeStatusDataFixedMapping(){
     icon: "🌸",
     iconImage: "",
     color: "#ff6fb1",
-    description: "일부 성불 카드가 추가 효과를 얻습니다. 표식을 소모하는 카드에 의해 제거됩니다.",
+    description: "일부 성불 주문이 추가 효과를 얻습니다. 표식을 소모하는 주문에 의해 제거됩니다.",
     maxStack: 99,
     showOnEnemy: true
   };
@@ -474,7 +474,7 @@ function autoSelectTarget(){
 }
 
 /* =========================================================================
-   카드 드로우
+   주문 드로우
    ========================================================================= */
 function drawCards(n){
   for(let i=0;i<n;i++){
@@ -515,7 +515,7 @@ function addStatusCardToDiscard(cardKey, count=1){
 }
 
 /* =========================================================================
-   카드 사용
+   주문 사용
    ========================================================================= */
 function playCard(handIndex, targetEnemy){
   const key  = S.hand[handIndex];
@@ -647,7 +647,7 @@ function openBattleVictoryReward(){
 
 const BATTLE_VICTORY_BASE_REWARDS = [
   { id:"gold", name:"복채", icon:"복", value:"+20", amount:20, doneText:"수령 완료" },
-  { id:"card", name:"카드 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
+  { id:"card", name:"주문 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
 ];
 const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
 const BATTLE_VICTORY_POTION_CHANCE = 0.5;
@@ -658,8 +658,8 @@ const BATTLE_VICTORY_POTION_CANDIDATES = (typeof window.POTION_DB !== "undefined
   { id:"five_direction_water", name:"오방수", icon:"水", emoji:"🌊", desc:"마음의 결계를 8 얻고 동요를 1 제거합니다.", type:"blockCleanse", effect:"blockAndRemoveAgitation", value:8, removeWeak:1, target:"player" },
   { id:"lotus_incense", name:"연꽃 향", icon:"香", emoji:"🪷", desc:"대상에게 성불 표식을 3 부여합니다.", type:"applyMark", effect:"applyMark", value:3, target:"enemy" },
   { id:"unsaid_letter", name:"말하지 못한 편지", icon:"文", emoji:"💌", desc:"대상에게 동요를 3 부여합니다.", type:"applyWeak", effect:"applyAgitation", value:3, target:"enemy" },
-  { id:"spirit_eye_water", name:"영안수", icon:"眼", emoji:"👁️", desc:"카드를 3장 뽑습니다.", type:"draw", effect:"drawCards", value:3, target:"player" },
-  { id:"ghost_gate_talisman", name:"귀문부", icon:"符", emoji:"符", desc:"이번 턴 다음 공격 카드의 정화량이 2배가 됩니다.", type:"nextAttackDouble", effect:"nextAttackDouble", value:2, target:"player" },
+  { id:"spirit_eye_water", name:"영안수", icon:"眼", emoji:"👁️", desc:"주문을 3장 뽑습니다.", type:"draw", effect:"drawCards", value:3, target:"player" },
+  { id:"ghost_gate_talisman", name:"귀문부", icon:"符", emoji:"符", desc:"이번 턴 다음 공격 주문의 정화량이 2배가 됩니다.", type:"nextAttackDouble", effect:"nextAttackDouble", value:2, target:"player" },
 ];
 
 function chooseRewardCard(key){
@@ -1093,7 +1093,7 @@ function ensureRewardOverlay(){
   ov.innerHTML =
     '<div class="reward-panel">' +
       '<h2>정화 보상</h2>' +
-      '<p>새로운 카드 1장을 선택해 덱에 추가하세요.</p>' +
+      '<p>새로운 주문 1장을 선택해 덱에 추가하세요.</p>' +
       '<div class="reward-cards"></div>' +
       '<button type="button" class="reward-skip">건너뛰기</button>' +
     '</div>';
@@ -1204,7 +1204,7 @@ async function endTurn(){
   const lethargyPenalty = (S.player.lethargy||0) > 0 ? 1 : 0;
   S.energy    = Math.max(0, getMaxEnergy() - lethargyPenalty);
   const drawCount = Math.max(0, DRAW_PER_TURN - anxietyPenalty);
-  if(anxietyPenalty>0)  toast("불안으로 카드 뽑기 -1");
+  if(anxietyPenalty>0)  toast("불안으로 주문 뽑기 -1");
   if(lethargyPenalty>0) toast("무기력으로 정신력 -1");
   S.turn += 1;
   drawCards(drawCount);
@@ -1622,9 +1622,9 @@ function renderEffects(){
   const rows = [];
   if(S.player.block  > 0)        rows.push(eff("🛡️","마음의 결계","결계 "+S.player.block));
   if(S.player.weak   > 0)        rows.push(eff("🌀","동요","정화 피해 25% 감소 ("+S.player.weak+"턴)"));
-  if((S.player.anxiety||0)  > 0) rows.push(eff("💭","불안","다음 턴 카드 뽑기 -1 ("+S.player.anxiety+"턴)"));
+  if((S.player.anxiety||0)  > 0) rows.push(eff("💭","불안","다음 턴 주문 뽑기 -1 ("+S.player.anxiety+"턴)"));
   if((S.player.lethargy||0) > 0) rows.push(eff("🌫️","무기력","다음 턴 정신력 -1 ("+S.player.lethargy+"턴)"));
-  rows.push(eff("💚","치유의 향기","회복 카드 보유"));
+  rows.push(eff("💚","치유의 향기","회복 주문 보유"));
   $("#effList").innerHTML = rows.join("") || '<div class="eff-empty">효과 없음</div>';
 }
 function eff(ico, name, sub){

@@ -28,7 +28,7 @@
           label: "선택지 A",
           desc: "아이의 이야기를 듣고 치료를 돕는다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "카드 보상", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "주문 보상", chance: 65,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] },
             { kind: "negative", icon: "minus", text: "정신력 -10", chance: 35,
               effects: [{ type: "spirit", value: -10 }] }
@@ -113,7 +113,7 @@
           label: "선택지 A",
           desc: "적극적으로 다가가 본다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "카드 보상", chance: 55,
+            { kind: "positive", icon: "sparkle", text: "주문 보상", chance: 55,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] },
             { kind: "negative", icon: "sword", text: "일반 전투", chance: 45,
               effects: [{ type: "combat", combatType: "normal" }] }
@@ -122,9 +122,9 @@
         {
           id: "B",
           label: "선택지 B",
-          desc: "카드 후보를 확인한 뒤 신중하게 고른다.",
+          desc: "주문 후보를 확인한 뒤 신중하게 고른다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "카드 후보 확인 후 선택 또는 포기", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "주문 후보 확인 후 선택 또는 포기", chance: 100,
               effects: [{ type: "cardRewardOptional", count: 3 }] }
           ]
         },
@@ -224,7 +224,7 @@
           label: "선택지 B",
           desc: "정신력을 소모해 덱을 정리한다.",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "카드 삭제 1장 / 정신력 -10", chance: 100,
+            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -10", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -10 }
@@ -238,7 +238,7 @@
           outcomes: [
             { kind: "positive", icon: "coin", text: "골드 +60", chance: 60,
               effects: [{ type: "gold", value: 60 }] },
-            { kind: "negative", icon: "status", text: "상태 카드 1장 추가", chance: 40,
+            { kind: "negative", icon: "status", text: "상태 주문 1장 추가", chance: 40,
               effects: [{ type: "addStatusCard", candidates: ["intrusive_thought", "regret"], count: 1 }] }
           ]
         }
@@ -310,16 +310,16 @@
           label: "선택지 A",
           desc: "새로운 인연을 덱에 맞이한다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "카드 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "주문 보상", chance: 100,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "B",
           label: "선택지 B",
-          desc: "정신력을 소모해 묵은 카드를 정리한다.",
+          desc: "정신력을 소모해 묵은 주문을 정리한다.",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "카드 삭제 1장 / 정신력 -8", chance: 100,
+            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -8", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -8 }
@@ -329,9 +329,9 @@
         {
           id: "C",
           label: "선택지 C",
-          desc: "카드 한 장을 정리하고 새 인연을 맞이한다.",
+          desc: "주문 한 장을 정리하고 새 인연을 맞이한다.",
           outcomes: [
-            { kind: "neutral", icon: "sparkle", text: "카드 1장 삭제 후 카드 보상", chance: 100,
+            { kind: "neutral", icon: "sparkle", text: "주문 1장 삭제 후 주문 보상", chance: 100,
               effects: [{ type: "cardTransform", removeCount: 1, rewardCount: 3, pick: 1 }] }
           ]
         }
@@ -354,7 +354,7 @@
           label: "선택지 A",
           desc: "지금 나에게 가장 어울리는 힘을 받는다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "주력 계열 카드 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "주력 계열 주문 보상", chance: 100,
               effects: [{ type: "cardRewardDominantAttr", count: 3, pick: 1 }] }
           ]
         },
@@ -363,7 +363,7 @@
           label: "선택지 B",
           desc: "가진 힘을 복제하는 도박을 한다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "덱 카드 1장 복제", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "덱 주문 1장 복제", chance: 65,
               effects: [{ type: "cardDuplicate", excludeRarity: ["rare"] }] },
             { kind: "negative", icon: "minus", text: "정신력 -15", chance: 35,
               effects: [{ type: "spirit", value: -15 }] }
@@ -397,7 +397,7 @@
           label: "선택지 A",
           desc: "동요의 힘을 받아들인다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "동요 카드 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "동요 주문 보상", chance: 100,
               effects: [{ type: "cardRewardTagged", attr: "동요", count: 3, pick: 1 }] }
           ]
         },
@@ -406,7 +406,7 @@
           label: "선택지 B",
           desc: "결계의 힘을 받아들인다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "결계 카드 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "결계 주문 보상", chance: 100,
               effects: [{ type: "cardRewardTagged", attr: "결계", count: 3, pick: 1 }] }
           ]
         },
@@ -415,7 +415,7 @@
           label: "선택지 C",
           desc: "성불의 힘을 받아들인다.",
           outcomes: [
-            { kind: "neutral", icon: "sparkle", text: "성불 카드 보상 / 정신력 -8", chance: 100,
+            { kind: "neutral", icon: "sparkle", text: "성불 주문 보상 / 정신력 -8", chance: 100,
               effects: [
                 { type: "cardRewardTagged", attr: "성불", count: 3, pick: 1 },
                 { type: "spirit", value: -8 }
@@ -481,9 +481,9 @@
         {
           id: "A",
           label: "선택지 A",
-          desc: "희귀한 카드를 노리고 위험을 감수한다.",
+          desc: "희귀한 주문을 노리고 위험을 감수한다.",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "Rare 카드 보상", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "Rare 주문 보상", chance: 65,
               effects: [{ type: "cardRewardRare", count: 3, pick: 1 }] },
             { kind: "negative", icon: "sword", text: "일반 전투", chance: 35,
               effects: [{ type: "combat", combatType: "normal" }] }
@@ -582,7 +582,7 @@
           label: "엘리트 전투",
           desc: "강한 기운을 두른 상대가 나타난다.",
           outcomes: [
-            { kind: "negative", icon: "sword", text: "엘리트급 전투 / 승리 시 이벤트 법구 1개, 카드 보상 없음", chance: 100,
+            { kind: "negative", icon: "sword", text: "엘리트급 전투 / 승리 시 이벤트 법구 1개, 주문 보상 없음", chance: 100,
               effects: [{ type: "combatEvent", combatType: "elite", victoryRelic: true, suppressCardReward: true }] }
           ]
         }
@@ -616,7 +616,7 @@
           label: "선택지 B",
           desc: "정신력을 소모해 덱을 정리한다.",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "카드 삭제 1장 / 정신력 -10", chance: 100,
+            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -10", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -10 }
@@ -666,7 +666,7 @@
           label: "선택지 C",
           desc: "불길한 생각을 애써 외면한다.",
           outcomes: [
-            { kind: "negative", icon: "status", text: "상태 카드 1장 추가", chance: 100,
+            { kind: "negative", icon: "status", text: "상태 주문 1장 추가", chance: 100,
               effects: [{ type: "addStatusCard", candidates: ["intrusive_thought", "regret"], count: 1 }] }
           ]
         }

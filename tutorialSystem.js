@@ -48,7 +48,7 @@
           <p>이 과정을 통해 다음을 배워요!</p>
           <div class="tutorial-guide-list">
             <div class="tutorial-guide-item"><span aria-hidden="true">🎮</span><span>기본 조작</span></div>
-            <div class="tutorial-guide-item"><span aria-hidden="true">🃏</span><span>카드 사용</span></div>
+            <div class="tutorial-guide-item"><span aria-hidden="true">🃏</span><span>주문 사용</span></div>
             <div class="tutorial-guide-item"><span aria-hidden="true">🏺</span><span>법구/약병</span></div>
             <div class="tutorial-guide-item"><span aria-hidden="true">🗺️</span><span>맵 진행</span></div>
           </div>

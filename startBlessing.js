@@ -21,12 +21,12 @@ const START_BLESSING_SPIRITS = [
 ];
 
 /* ── 은혜 선택지 3종 (테스트 데이터 - 기획서 참고 이미지 예시 기준) ─────────
-   카드 ID/희귀도, 결계 수치는 밸런스 단계에서 변경될 수 있는 예시 데이터다. */
+   주문 ID/희귀도, 결계 수치는 밸런스 단계에서 변경될 수 있는 예시 데이터다. */
 const START_BLESSINGS = [
   { id: "sealed_talisman", icon: "📿", name: "봉인 부적",
-    desc: "희귀 부적 카드 1장을 얻습니다.", effect: "gainRareCard" },
+    desc: "희귀 부적 주문 1장을 얻습니다.", effect: "gainRareCard" },
   { id: "red_thread", icon: "🪢", name: "붉은 실 매듭",
-    desc: "기본 카드 1장을 제거합니다.", effect: "removeStarterCard" },
+    desc: "기본 주문 1장을 제거합니다.", effect: "removeStarterCard" },
   { id: "clear_bell", icon: "🔔", name: "맑은 방울",
     desc: "첫 전투 시작 시 결계 8을 얻습니다.", effect: "firstBattleBlock", value: 8 },
 ];
@@ -97,7 +97,7 @@ function openSbMapPreview(){
 function openSbDeck(){
   const deckBtn = document.getElementById("deckViewerButton");
   if(deckBtn) deckBtn.click();
-  else if(typeof toast === "function") toast("보유 카드 확인 기능을 불러올 수 없습니다.");
+  else if(typeof toast === "function") toast("보유 주문 확인 기능을 불러올 수 없습니다.");
 }
 
 function openSbBag(){
@@ -229,8 +229,8 @@ function ensureSbOverlay(){
 function sbOverlayHtml(){
   return (
     '<div class="sb-menu">' +
-      '<button type="button" class="sb-menu-btn" id="sbMapBtn"><span class="sb-menu-ico">🗺️</span><span>지도</span></button>' +
-      '<button type="button" class="sb-menu-btn" id="sbDeckBtn"><span class="sb-menu-ico">📖</span><span>보유카드</span></button>' +
+      '<button type="button" class="sb-menu-btn" id="sbMapBtn"><span class="sb-menu-ico">🗺️</span><span>여정</span></button>' +
+      '<button type="button" class="sb-menu-btn" id="sbDeckBtn"><span class="sb-menu-ico">📖</span><span>보유주문</span></button>' +
       '<button type="button" class="sb-menu-btn" id="sbBagBtn"><span class="sb-menu-ico">🎒</span><span>가방</span></button>' +
       '<button type="button" class="sb-menu-btn" id="sbSettingsBtn"><span class="sb-menu-ico">⚙️</span><span>설정</span></button>' +
     '</div>' +
