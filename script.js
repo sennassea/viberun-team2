@@ -229,8 +229,58 @@ function applyRelicEffect(relic, effect, context={}){
   }
 }
 
+/**
+ * 약병 후보를 획득처 기준으로 필터링합니다.
+ * source 예시: "battle", "shop", "event"
+ */
+function getPotionCandidatesBySource(source, options = {}) {
+  const db = Array.isArray(window.POTION_DB) ? window.POTION_DB : [];
+  return db.filter(item => {
+    if (!item) return false;
+    if (source && Array.isArray(item.obtainFrom) && !item.obtainFrom.includes(source)) {
+      return false;
+    }
+    if (options.rarity && item.rarity !== options.rarity) {
+      return false;
+    }
+    return true;
+  });
+}
+
+/**
+ * 법구 후보를 획득처 기준으로 필터링합니다.
+ * 이미 보유한 법구는 제외합니다.
+ */
+function getRelicCandidatesBySource(source, options = {}) {
+  const db = Array.isArray(window.RELIC_DB)
+    ? window.RELIC_DB
+    : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+  const ownedIds = new Set(
+    (S && Array.isArray(S.relics) ? S.relics : [])
+      .map(relic => relic && relic.id)
+      .filter(Boolean)
+  );
+  return db.filter(item => {
+    if (!item || ownedIds.has(item.id)) return false;
+    if (source && Array.isArray(item.obtainFrom) && !item.obtainFrom.includes(source)) {
+      return false;
+    }
+    if (options.rarity && item.rarity !== options.rarity) {
+      return false;
+    }
+    if (options.attr && item.attr !== options.attr) {
+      return false;
+    }
+    return true;
+  });
+}
+window.getPotionCandidatesBySource = getPotionCandidatesBySource;
+window.getRelicCandidatesBySource = getRelicCandidatesBySource;
+
 function getRandomPotionReward(){
-  const db = typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES;
+  const db = typeof window.getPotionCandidatesBySource === "function"
+    ? window.getPotionCandidatesBySource("battle")
+    : (typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES);
   return pickBattleVictoryCandidate(db);
 }
 
@@ -725,8 +775,10 @@ function getBattleVictoryRewards(){
 function buildBattleVictoryOptionalReward(type, chance){
   if(Math.random() >= chance) return null;
   if(type === "relic"){
-    const ownedRelicIds = new Set((S && Array.isArray(S.relics) ? S.relics : []).map(relic => relic && relic.id).filter(Boolean));
-    const relicCandidates = (typeof RELIC_DB !== "undefined" ? RELIC_DB : []).filter(relic => relic && !ownedRelicIds.has(relic.id));
+    const isEliteStage = S && S.battleNodeType === "elite";
+    const relicCandidates = typeof window.getRelicCandidatesBySource === "function"
+      ? window.getRelicCandidatesBySource(isEliteStage ? "elite" : "battle")
+      : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
     const relic = pickBattleVictoryCandidate(relicCandidates);
     if(!relic) return null;
     return {
@@ -735,7 +787,9 @@ function buildBattleVictoryOptionalReward(type, chance){
     };
   }
   if(type === "potion"){
-    const potionDb = typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES;
+    const potionDb = typeof window.getPotionCandidatesBySource === "function"
+      ? window.getPotionCandidatesBySource("battle")
+      : (typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES);
     const potion = pickBattleVictoryCandidate(potionDb);
     if(!potion) return null;
     return {

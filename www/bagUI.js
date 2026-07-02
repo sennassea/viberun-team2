@@ -196,7 +196,7 @@
       const relic = relics[selectedRelicIdx];
       els.relicDetail.innerHTML =
         '<div class="bag-detail-name">' + escapeHtml(relic.emoji || "🏺") + ' ' + escapeHtml(relic.name || "") + '</div>' +
-        '<div class="bag-detail-desc">' + escapeHtml(relic.desc || "") + '</div>';
+        '<div class="bag-detail-desc">' + escapeHtml(relic.desc || relic.effectText || relic.valueText || "") + '</div>';
     } else {
       els.relicDetail.innerHTML = '<div class="bag-detail-placeholder">법구를 선택하면 효과를 확인할 수 있어요.</div>';
     }
@@ -232,7 +232,7 @@
       const potion = potions[selectedPotionIdx];
       els.potionDetail.innerHTML =
         '<div class="bag-detail-name">' + escapeHtml(potion.emoji || "🧪") + ' ' + escapeHtml(potion.name || "") + '</div>' +
-        '<div class="bag-detail-desc">' + escapeHtml(potion.desc || "") + '</div>';
+        '<div class="bag-detail-desc">' + escapeHtml(potion.desc || potion.effectText || potion.valueText || "") + '</div>';
     } else {
       els.potionDetail.innerHTML = '<div class="bag-detail-placeholder">약병을 선택하면 효과를 확인할 수 있어요.</div>';
     }

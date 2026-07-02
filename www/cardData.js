@@ -120,7 +120,7 @@ let STARTER_DECK = [...BASE_STARTER_DECK];
 
 const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => !["starter", "status"].includes(CARD_DB[key].rarity));
 
-// 법구/약병 데이터는 EquipmentData.js / PotionData.js에서 관리합니다.
+// 법구/약병 데이터는 equipment.js / potion.js에서 관리합니다.
 // cardData.js는 카드 데이터만 담당합니다.
 
 const typeLabel = t => t==="attack" ? "정화" : t==="defense" ? "결계" : t==="status" ? "상태" : "스킬";
