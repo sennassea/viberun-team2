@@ -15,6 +15,12 @@
     tutorialEncounterId: "stage_tutorial_child_spirit"
   };
   const BATTLE_INTRO_DIALOGUE_IDS = ["W-001", "W-002", "W-003"];
+  const BATTLE_UI_GUIDE_STEPS = [
+    { id: "W-009", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"] },
+    { id: "W-015", target: "#energy" },
+    { id: "W-012", target: ".enemy .hpbar" },
+    { id: "W-019", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" }
+  ];
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
@@ -124,9 +130,10 @@
       return;
     }
     if(index >= ids.length){
-      cleanupTutorialBattleIntro();
+      removeTutorialBattleIntroOverlay();
       setTutorialStep("battle_intro_completed");
       console.log("tutorial battle intro completed");
+      showTutorialBattleUiGuideSequence(BATTLE_UI_GUIDE_STEPS, 0);
       return;
     }
 
@@ -156,8 +163,9 @@
     const overlay = document.createElement("div");
     overlay.className = "tutorial-battle-intro-overlay";
     overlay.setAttribute("aria-hidden", "false");
+    const dialogueClass = "tutorial-battle-intro-dialogue" + (dialogue.dialogueClass ? " " + dialogue.dialogueClass : "");
     overlay.innerHTML =
-      '<div class="tutorial-battle-intro-dialogue" role="dialog" aria-modal="true">' +
+      '<div class="' + dialogueClass + '" role="dialog" aria-modal="true">' +
         '<div class="tutorial-battle-intro-speaker">' + escapeTutorialBattleIntroHtml(dialogue.speaker || "") + '</div>' +
         '<div class="tutorial-battle-intro-text">' + renderTutorialBattleIntroText(dialogue.text || "") + '</div>' +
         '<div class="tutorial-battle-intro-actions">' +
@@ -178,6 +186,7 @@
     }
     root.appendChild(overlay);
     if(nextButton) nextButton.focus();
+    updateTutorialBattleHighlight(dialogue.targetSelector);
   }
 
   function blockTutorialBattleIntroEvent(event){
@@ -191,12 +200,87 @@
   function cleanupTutorialBattleIntro(){
     tutorialBattleIntroActive = false;
     removeTutorialBattleIntroOverlay();
+    clearTutorialBattleHighlight();
     resumeTutorialBattleIntroCombat();
   }
 
   function removeTutorialBattleIntroOverlay(){
     const overlay = document.querySelector("#game .tutorial-battle-intro-overlay");
     if(overlay) overlay.remove();
+  }
+
+  function showTutorialBattleUiGuideSequence(steps, index){
+    if(!tutorialBattleIntroActive || !isTutorialBattle()){
+      cleanupTutorialBattleIntro();
+      return;
+    }
+    if(index >= steps.length){
+      cleanupTutorialBattleIntro();
+      setTutorialStep("battle_ui_guide_completed");
+      console.log("tutorial battle ui guide completed");
+      return;
+    }
+
+    const step = steps[index];
+    const dialogue = getTutorialBattleDialogue(step.id);
+    if(!dialogue){
+      showTutorialBattleUiGuideSequence(steps, index + 1);
+      return;
+    }
+
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: step.target, dialogueClass: step.dialogueClass }, () => {
+      showTutorialBattleUiGuideSequence(steps, index + 1);
+    });
+  }
+
+  function updateTutorialBattleHighlight(selector){
+    clearTutorialBattleHighlight();
+    if(!selector) return;
+    const targets = getTutorialBattleHighlightTargets(selector);
+    const overlay = document.querySelector("#game .tutorial-battle-intro-overlay");
+    if(!targets.length || !overlay) return;
+
+    targets.forEach(target => target.classList.add("tutorial-battle-focus-target"));
+    const rect = getTutorialBattleHighlightRect(targets);
+    if(!rect) return;
+    const rootRect = document.getElementById("game").getBoundingClientRect();
+    const highlight = document.createElement("div");
+    highlight.className = "tutorial-battle-highlight-box";
+    highlight.style.left = Math.max(0, rect.left - rootRect.left - 8) + "px";
+    highlight.style.top = Math.max(0, rect.top - rootRect.top - 8) + "px";
+    highlight.style.width = rect.width + 16 + "px";
+    highlight.style.height = rect.height + 16 + "px";
+    overlay.appendChild(highlight);
+  }
+
+  function getTutorialBattleHighlightTargets(selector){
+    const selectors = Array.isArray(selector) ? selector : [selector];
+    return selectors
+      .map(item => document.querySelector(item))
+      .filter(Boolean);
+  }
+
+  function getTutorialBattleHighlightRect(targets){
+    if(!targets.length) return null;
+    return targets.reduce((rect, target) => {
+      const next = target.getBoundingClientRect();
+      if(!rect) return next;
+      const left = Math.min(rect.left, next.left);
+      const top = Math.min(rect.top, next.top);
+      const right = Math.max(rect.right, next.right);
+      const bottom = Math.max(rect.bottom, next.bottom);
+      return { left, top, right, bottom, width: right - left, height: bottom - top };
+    }, null);
+  }
+
+  function clearTutorialBattleHighlight(){
+    document.querySelectorAll(".tutorial-battle-focus-target").forEach(target => {
+      target.classList.remove("tutorial-battle-focus-target");
+    });
+    document.querySelectorAll("#game .tutorial-battle-highlight-box").forEach(highlight => {
+      highlight.remove();
+    });
   }
 
   function pauseTutorialBattleIntroCombat(){
@@ -222,6 +306,9 @@
     style.textContent =
       ".tutorial-battle-intro-overlay{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);display:block;cursor:default;}" +
       ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;transform:translateX(-50%);z-index:281;width:min(54cqw,72cqh);padding:1.6cqh 1.8cqw;border:0.22cqh solid rgba(255,255,255,.88);border-radius:1cqh;background:rgba(244,248,252,.97);color:#243247;box-shadow:0 1.2cqh 2.8cqh rgba(20,35,60,.24);}" +
+      ".tutorial-battle-intro-dialogue.tutorial-battle-intro-dialogue-top{top:12cqh;bottom:auto;}" +
+      ".tutorial-battle-highlight-box{position:absolute;z-index:280;pointer-events:none;border:.28cqh solid #ffd25f;border-radius:1cqh;box-shadow:0 0 0 9999px rgba(12,24,40,.16),0 0 1.4cqh rgba(255,210,95,.86);}" +
+      ".tutorial-battle-focus-target{filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.62));}" +
       ".tutorial-battle-intro-speaker{margin-bottom:.7cqh;font-size:1.7cqh;font-weight:900;color:#2f66a8;}" +
       ".tutorial-battle-intro-text{font-size:1.9cqh;line-height:1.45;font-weight:800;}" +
       ".tutorial-battle-intro-actions{display:flex;justify-content:flex-end;margin-top:1.2cqh;}" +
