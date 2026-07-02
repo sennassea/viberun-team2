@@ -75,7 +75,6 @@
       return {
         id: monsterData.id || `enemy_${index}`,
         name: monsterData.name,
-        emoji: monsterData.emoji,
         image: monsterData.image,
         roles: Array.isArray(monsterData.roles) ? [...monsterData.roles] : [],
         hp: monsterData.maxHp,
@@ -221,8 +220,8 @@
       return Math.min(100, Math.max(0, (value / max) * 100));
     },
 
-    renderCombatantStats(unit){
-      return this.renderHpBar(unit) + this.renderBlockBar(unit) + this.renderStatuses(unit);
+    renderCombatantStats(unit, options = {}){
+      return this.renderHpBar(unit) + this.renderBlockBar(unit, options) + this.renderStatuses(unit);
     },
 
     renderHpBar(unit){
@@ -231,9 +230,13 @@
         '<div class="hptxt">' + unit.hp + '/' + unit.maxHp + '</div></div>';
     },
 
-    renderBlockBar(unit){
+    renderBlockBar(unit, options = {}){
       const block = unit.block || 0;
-      if(block <= 0) return '<div class="blockbar" style="visibility:hidden" aria-hidden="true"></div>';
+      if(block <= 0){
+        return options.reserveBlockSpace
+          ? '<div class="blockbar" style="visibility:hidden" aria-hidden="true"></div>'
+          : "";
+      }
 
       const blockPct = this.percent(block, unit.maxHp);
       return '<div class="blockbar">' +
