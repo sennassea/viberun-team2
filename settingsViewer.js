@@ -3,6 +3,17 @@
 (function(){
   const SAVE_KEY = "viberunSaveState";
   const VOLUME_KEY = "viberunVolumeSettings";
+  const RESET_KEYS = [
+    SAVE_KEY,
+    VOLUME_KEY,
+    "viberunTutorialComplete",
+    "viberunTutorialCompleted",
+    "viberunTutorialWasSkipped",
+    "viberunHasPlayedBefore",
+    "hasPlayedBefore",
+    "viberunCardCodex",
+    "viberunRunRecords"
+  ];
   const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80 };
   let els = null;
   let pauseState = null;
@@ -60,6 +71,7 @@
           '<div class="settings-viewer-actions">' +
             '<button type="button" class="settings-viewer-danger">포기하기</button>' +
             '<button type="button" class="settings-viewer-primary">저장하기</button>' +
+            '<button type="button" class="settings-viewer-reset">게임 기록 초기화</button>' +
           '</div>' +
         '</div>' +
         '<div class="settings-viewer-confirm" aria-hidden="true">' +
@@ -79,6 +91,16 @@
             '<div class="settings-viewer-confirm-actions">' +
               '<button type="button" class="settings-viewer-save-yes">예</button>' +
               '<button type="button" class="settings-viewer-save-no">아니오</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="settings-viewer-reset-confirm" aria-hidden="true">' +
+          '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsResetTitle">' +
+            '<h3 id="settingsResetTitle">게임 기록을 초기화하시겠습니까?</h3>' +
+            '<p>저장 데이터, 튜토리얼 기록, 도감, 기록이 모두 삭제됩니다.</p>' +
+            '<div class="settings-viewer-confirm-actions">' +
+              '<button type="button" class="settings-viewer-reset-yes">예</button>' +
+              '<button type="button" class="settings-viewer-reset-no">아니오</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -116,6 +138,9 @@
     overlay.querySelector(".settings-viewer-primary").addEventListener("click", openSaveConfirm);
     overlay.querySelector(".settings-viewer-save-no").addEventListener("click", closeSaveConfirm);
     overlay.querySelector(".settings-viewer-save-yes").addEventListener("click", saveProgressAndExit);
+    overlay.querySelector(".settings-viewer-reset").addEventListener("click", openResetConfirm);
+    overlay.querySelector(".settings-viewer-reset-no").addEventListener("click", closeResetConfirm);
+    overlay.querySelector(".settings-viewer-reset-yes").addEventListener("click", resetAllGameRecords);
     overlay.querySelector(".settings-viewer-confirm-no").addEventListener("click", closeGiveUpConfirm);
     overlay.querySelector(".settings-viewer-confirm-yes").addEventListener("click", confirmGiveUp);
     document.addEventListener("keydown", event => {
@@ -126,6 +151,10 @@
       }
       if(overlay.querySelector(".settings-viewer-save-confirm.show")){
         closeSaveConfirm();
+        return;
+      }
+      if(overlay.querySelector(".settings-viewer-reset-confirm.show")){
+        closeResetConfirm();
         return;
       }
       if(overlay.querySelector(".settings-viewer-help-layer.show")){
@@ -145,6 +174,9 @@
       saveConfirm: overlay.querySelector(".settings-viewer-save-confirm"),
       saveNo: overlay.querySelector(".settings-viewer-save-no"),
       primary: overlay.querySelector(".settings-viewer-primary"),
+      reset: overlay.querySelector(".settings-viewer-reset"),
+      resetConfirm: overlay.querySelector(".settings-viewer-reset-confirm"),
+      resetNo: overlay.querySelector(".settings-viewer-reset-no"),
       close: overlay.querySelector(".settings-viewer-close"),
       confirm: overlay.querySelector(".settings-viewer-confirm"),
       confirmNo: overlay.querySelector(".settings-viewer-confirm-no"),
@@ -272,9 +304,10 @@
       ".settings-viewer-actions{display:flex;justify-content:flex-end;gap:1cqw;}" +
       ".settings-viewer-actions button{height:4.4cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-danger{background:#fff1ef;color:var(--c-red-deep);}" +
+      ".settings-viewer-reset{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-primary{background:var(--c-blue);color:#fff;}" +
-      ".settings-viewer-confirm,.settings-viewer-save-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
-      ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show{display:grid;}" +
+      ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
+      ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show,.settings-viewer-reset-confirm.show{display:grid;}" +
       ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:2.2cqh 2cqw;text-align:center;}" +
       ".settings-viewer-confirm-panel h3{font-size:2.4cqh;color:var(--c-ink);margin-bottom:1cqh;}" +
       ".settings-viewer-confirm-panel p{font-size:1.7cqh;line-height:1.45;color:var(--c-ink-soft);font-weight:800;margin-bottom:1.8cqh;}" +
@@ -282,6 +315,8 @@
       ".settings-viewer-confirm-actions button{height:4.2cqh;min-width:8cqw;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-confirm-no{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-confirm-yes{background:#fff1ef;color:var(--c-red-deep);}" +
+      ".settings-viewer-reset-no{background:#fff;color:var(--c-ink-soft);}" +
+      ".settings-viewer-reset-yes{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-save-no{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-save-yes{background:var(--c-blue);color:#fff;}" +
       ".settings-viewer-help-layer{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
@@ -304,6 +339,10 @@
     settingsMode = "combat";
     els.overlay.classList.remove("start-mode");
     if(els.actions) els.actions.style.display = "";
+    if(els.reset) els.reset.style.display = "none";
+    if(els.primary) els.primary.style.display = "";
+    const danger = els.overlay.querySelector(".settings-viewer-danger");
+    if(danger) danger.style.display = "";
     applyVolumeSettings();
     pauseCombat();
     els.overlay.classList.add("show");
@@ -315,9 +354,14 @@
     if(!els) return;
     settingsMode = "start";
     els.overlay.classList.add("start-mode");
-    if(els.actions) els.actions.style.display = "none";
+    if(els.actions) els.actions.style.display = "";
+    if(els.reset) els.reset.style.display = "";
+    if(els.primary) els.primary.style.display = "none";
+    const danger = els.overlay.querySelector(".settings-viewer-danger");
+    if(danger) danger.style.display = "none";
     closeSaveConfirm();
     closeGiveUpConfirm();
+    closeResetConfirm();
     applyVolumeSettings();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -329,6 +373,7 @@
     closeHelp();
     closeSaveConfirm();
     closeGiveUpConfirm();
+    closeResetConfirm();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
     els.overlay.classList.remove("start-mode");
@@ -364,6 +409,20 @@
     if(els.overlay.classList.contains("show")) els.primary.focus();
   }
 
+  function openResetConfirm(){
+    if(!els || !els.resetConfirm) return;
+    els.resetConfirm.classList.add("show");
+    els.resetConfirm.setAttribute("aria-hidden", "false");
+    if(els.resetNo) els.resetNo.focus();
+  }
+
+  function closeResetConfirm(){
+    if(!els || !els.resetConfirm) return;
+    els.resetConfirm.classList.remove("show");
+    els.resetConfirm.setAttribute("aria-hidden", "true");
+    if(els.overlay.classList.contains("show") && els.reset) els.reset.focus();
+  }
+
   function openGiveUpConfirm(){
     if(!els || !els.confirm) return;
     els.confirm.classList.add("show");
@@ -381,6 +440,8 @@
   function confirmGiveUp(){
     if(typeof endGame !== "function") return;
     clearSavedProgress();
+    if(typeof markHasPlayedBefore === "function") markHasPlayedBefore();
+    if(typeof S !== "undefined" && S) S.giveUpToStartOnly = true;
     endGame("lose");
     closeSettingsViewer();
   }
@@ -388,6 +449,28 @@
   function clearSavedProgress(){
     if(typeof localStorage === "undefined") return;
     localStorage.removeItem(SAVE_KEY);
+  }
+
+  function resetAllGameRecords(){
+    if(typeof localStorage !== "undefined"){
+      RESET_KEYS.forEach(key => localStorage.removeItem(key));
+    }
+    closeResetConfirm();
+    closeSettingsViewer();
+    if(typeof beginNewRun === "function") beginNewRun();
+    if(typeof generateMap === "function") generateMap();
+    if(window.MAP_STATE){
+      window.MAP_STATE.currentStage = 0;
+      window.MAP_STATE.proceedMode = false;
+      window.MAP_STATE.startMapMode = false;
+    }
+    if(typeof loadStageMonsters === "function") loadStageMonsters(0);
+    if(typeof updateHudFloor === "function") updateHudFloor();
+    if(typeof updateContinueButtonInfo === "function") updateContinueButtonInfo();
+    if(typeof updateStartScreenMode === "function") updateStartScreenMode();
+    const startScreen = document.getElementById("startScreen");
+    if(startScreen) startScreen.classList.remove("hidden");
+    if(typeof showStartNotice === "function") showStartNotice("게임 기록을 초기화했습니다.");
   }
 
   function pauseCombat(){

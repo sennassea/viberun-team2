@@ -5,6 +5,7 @@
    ========================================================================= */
 
 function startNewGameFromMenu(){
+  markHasPlayedBefore();
   /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
   if(typeof window.ACT1_START_NEW_GAME === "function"){
     window.ACT1_START_NEW_GAME();
@@ -50,6 +51,7 @@ function returnToStartScreen(){
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.remove("hidden");
   updateContinueButtonInfo();
+  updateStartScreenMode();
 }
 
 function continueGameFromMenu(){
@@ -131,6 +133,61 @@ function showStartScreenAfterSave(){
   updateContinueButtonInfo();
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.remove("hidden");
+  updateStartScreenMode();
+}
+
+function updateStartScreenMode(){
+  const tutorial = document.querySelector(".start-tutorial-button");
+  const newGame = document.querySelector(".start-new-game");
+  const continueGame = document.querySelector(".start-continue-game");
+  const codex = document.querySelector(".start-codex-button");
+  const record = document.querySelector(".start-record-button");
+  const settings = document.querySelector(".start-settings-button");
+  const codexRecordRow = codex && record ? codex.closest(".start-menu-row") : null;
+  const isNewbie = shouldShowNewbieStartMenu();
+
+  setStartMenuVisible(tutorial, isNewbie);
+  setStartMenuVisible(newGame, !isNewbie);
+  setStartMenuVisible(continueGame, !isNewbie);
+  setStartMenuVisible(codex, !isNewbie);
+  setStartMenuVisible(record, !isNewbie);
+  setStartMenuVisible(codexRecordRow, !isNewbie);
+  setStartMenuVisible(settings, true);
+}
+
+function shouldShowNewbieStartMenu(){
+  if(window.TUTORIAL_SYSTEM && typeof window.TUTORIAL_SYSTEM.shouldShowNewbieStart === "function"){
+    return window.TUTORIAL_SYSTEM.shouldShowNewbieStart();
+  }
+  if(typeof localStorage === "undefined") return true;
+  try {
+    return !(
+      localStorage.getItem("viberunTutorialCompleted") === "true" ||
+      localStorage.getItem("viberunTutorialWasSkipped") === "true" ||
+      localStorage.getItem("viberunHasPlayedBefore") === "true" ||
+      !!localStorage.getItem("viberunSaveState")
+    );
+  } catch(error) {
+    return true;
+  }
+}
+
+function setStartMenuVisible(el, visible){
+  if(!el) return;
+  el.hidden = !visible;
+  el.style.display = visible ? "" : "none";
+}
+
+function markHasPlayedBefore(){
+  if(typeof window.BOHYUN_TUTORIAL === "object" && typeof window.BOHYUN_TUTORIAL.markHasPlayedBefore === "function"){
+    window.BOHYUN_TUTORIAL.markHasPlayedBefore();
+    return;
+  }
+  if(typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem("viberunHasPlayedBefore", "1");
+    localStorage.setItem("hasPlayedBefore", "1");
+  } catch(error) {}
 }
 
 function updateContinueButtonInfo(){
@@ -168,3 +225,4 @@ document.querySelectorAll(".start-continue-game").forEach(button => {
 });
 
 updateContinueButtonInfo();
+updateStartScreenMode();

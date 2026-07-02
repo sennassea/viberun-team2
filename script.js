@@ -1215,13 +1215,41 @@ async function endTurn(){
 }
 
 function endGame(result){
+  const giveUpToStartOnly = !!(S && S.giveUpToStartOnly);
   S.over = result; S.busy = false;
+  if(S) S.giveUpToStartOnly = false;
   saveCompletedRunRecord(result);
   $("#overTitle").textContent = result==="win" ? "🎉 승리!" : "💀 패배...";
   $("#overDesc").textContent  = result==="win" ? "모든 영혼을 성불시켰습니다." : PLAYER_DEF.name+"이 쓰러졌습니다.";
+  updateRestartButtonForEndGame(result === "lose" || giveUpToStartOnly);
   $("#returnStart").style.display = result==="lose" ? "block" : "none";
   $("#over").classList.add("show");
   return true;
+}
+
+function updateRestartButtonForEndGame(removeRestart){
+  const restartButton = document.getElementById("restart");
+  if(removeRestart){
+    if(restartButton) restartButton.remove();
+    return;
+  }
+  if(restartButton){
+    restartButton.hidden = false;
+    restartButton.disabled = false;
+    restartButton.style.display = "";
+    return;
+  }
+  const returnStartButton = document.getElementById("returnStart");
+  if(!returnStartButton || !returnStartButton.parentNode) return;
+  const restoredButton = document.createElement("button");
+  restoredButton.id = "restart";
+  restoredButton.textContent = "다시 시작";
+  restoredButton.addEventListener("click", () => {
+    const over = document.querySelector("#over");
+    if(over) over.classList.remove("show");
+    newGame({ resetRun:true });
+  });
+  returnStartButton.parentNode.insertBefore(restoredButton, returnStartButton);
 }
 
 /* =========================================================================
