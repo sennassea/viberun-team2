@@ -1,12 +1,13 @@
 "use strict";
 /* =========================================================================
    라이프 시스템
-   - HP, 보호막, 동요, 상태 카드, 피해 계산 담당
-   - 카드/드래그/UI 코드는 건드리지 않음
+   - HP, 보호막, 동요, 상태 주문, 피해 계산 담당
+   - 주문/드래그/UI 코드는 건드리지 않음
    ========================================================================= */
 (function attachLifeSystem(global){
   const WEAK_MULT = 0.75;
   const STATUS_META = {
+    block: { kind: "buff", icon: "&#128737;&#65039;", label: "마음의 결계", showCount: true },
     weak: { kind: "debuff", icon: "🌀", label: "동요", showCount: true },
     anxiety: { kind: "debuff", icon: "💭", label: "불안", showCount: true },
     lethargy: { kind: "debuff", icon: "🌫️", label: "무기력", showCount: true },
@@ -25,19 +26,6 @@
       fx: [],
       unplayable: true
     },
-    hesitation: {
-      name: "망설임",
-      cost: 0,
-      type: "status",
-      emoji: "…",
-      target: "none",
-      attr: "상태",
-      rarity: "status",
-      desc: "사용 불가\n턴 종료 시 소멸합니다",
-      fx: [],
-      unplayable: true,
-      exhaustOnTurnEnd: true
-    },
     regret: {
       name: "후회",
       cost: 0,
@@ -50,6 +38,19 @@
       fx: [],
       unplayable: true,
       damageOnDiscard: 3
+    },
+    hesitation: {
+      name: "망설임",
+      cost: 0,
+      type: "status",
+      emoji: "⏳",
+      target: "none",
+      attr: "상태",
+      rarity: "status",
+      desc: "사용 불가\n턴 종료 시 소멸합니다",
+      fx: [],
+      unplayable: true,
+      exhaustOnTurnEnd: true
     }
   };
 
@@ -87,7 +88,10 @@
       return {
         id: monsterData.id || `enemy_${index}`,
         name: monsterData.name,
-        emoji: monsterData.emoji,
+        image: monsterData.image,
+        family: monsterData.family,
+        theme: monsterData.theme,
+        themeLabel: monsterData.themeLabel,
         roles: Array.isArray(monsterData.roles) ? [...monsterData.roles] : [],
         hp: monsterData.maxHp,
         maxHp: monsterData.maxHp,
@@ -98,6 +102,7 @@
         grade: monsterData.grade || "normal",
         x: monsterData.x || 72,
         moves: monsterData.moves || [],
+        nextPhase: monsterData.nextPhase || null,
         intent: (monsterData.moves || [])[monsterData.first || 0] || null,
         lastIntentType: null,
         intentRepeatCount: 0
@@ -232,8 +237,8 @@
       return Math.min(100, Math.max(0, (value / max) * 100));
     },
 
-    renderCombatantStats(unit){
-      return this.renderHpBar(unit) + this.renderBlockBar(unit) + this.renderStatuses(unit);
+    renderCombatantStats(unit, options = {}){
+      return this.renderHpBar(unit) + this.renderBlockBar(unit, options) + this.renderStatuses(unit);
     },
 
     renderHpBar(unit){
@@ -242,9 +247,13 @@
         '<div class="hptxt">' + unit.hp + '/' + unit.maxHp + '</div></div>';
     },
 
-    renderBlockBar(unit){
+    renderBlockBar(unit, options = {}){
       const block = unit.block || 0;
-      if(block <= 0) return "";
+      if(block <= 0){
+        return options.reserveBlockSpace
+          ? '<div class="blockbar" style="visibility:hidden" aria-hidden="true"></div>'
+          : "";
+      }
 
       const blockPct = this.percent(block, unit.maxHp);
       return '<div class="blockbar">' +
@@ -253,8 +262,11 @@
         '</div>';
     },
 
-    renderStatuses(unit){
+    renderStatuses(unit, options = {}){
       const statuses = [];
+      if(options.includeBlock && (unit.block || 0) > 0){
+        statuses.push(this.renderStatusIcon("block", unit.block));
+      }
       if((unit.weak || 0) > 0){
         statuses.push(this.renderStatusIcon("weak", unit.weak));
       }

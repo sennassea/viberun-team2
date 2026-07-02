@@ -1,0 +1,11 @@
+{
+  "name": "타입 요소시스템",
+  "short_name": "타입 요소",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0c1422",
+  "theme_color": "#0c1422",
+  "icons": []
+}

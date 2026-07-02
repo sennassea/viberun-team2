@@ -237,6 +237,21 @@ const DMAP_EMOJI = {
   merchant: "🛍️",
 };
 
+function getTutorialMapCurrentLabel(currentNodeId) {
+  const stage = Array.isArray(MAP_STAGES) ? MAP_STAGES[0] : null;
+  const isTutorialMap = !!(stage && stage.packageId === "tutorial_battle");
+  const isTutorialBattle = !!(
+    window.TUTORIAL_BATTLE &&
+    typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+    window.TUTORIAL_BATTLE.isTutorialBattle()
+  );
+  if(!isTutorialMap && !isTutorialBattle) return "";
+  if(currentNodeId === "tutorial_battle" || (window.MAP_STATE && window.MAP_STATE.currentStage === 0)){
+    return "튜토리얼 구역";
+  }
+  return "집";
+}
+
 /* ── renderCanvas 오버라이드 ────────────────────────────────────────────── */
 function renderCanvas(currentNodeId) {
   const svg = document.getElementById("mapCanvas");
@@ -244,12 +259,27 @@ function renderCanvas(currentNodeId) {
 
   const pos     = getDiagNodePos(MAP_FLOORS);
   const myFloor = nodeFloorIdx(currentNodeId);
+  const tutorialCurrentLabel = getTutorialMapCurrentLabel(currentNodeId);
   const isPast  = id   => nodeFloorIdx(id) < myFloor;
   const isCur   = id   => id === currentNodeId;
+
+  // 현재 노드와 실제로 선(MAP_PATHS)으로 연결된 다음 노드만 선택 가능하도록 집합 구성
+  const nextNodeIds = new Set();
+  if (window.MAP_STATE.proceedMode && myFloor >= 0) {
+    const myIdx = MAP_FLOORS[myFloor]?.findIndex(n => n.id === currentNodeId);
+    if (myIdx >= 0) {
+      MAP_PATHS.forEach(([[f1, n1], [f2, n2]]) => {
+        if (f1 === myFloor && n1 === myIdx) {
+          const target = MAP_FLOORS[f2]?.[n2];
+          if (target) nextNodeIds.add(target.id);
+        }
+      });
+    }
+  }
   const isNext  = node =>
     window.MAP_STATE.proceedMode &&
     node.stageIndex !== undefined &&
-    nodeFloorIdx(node.id) === myFloor + 1;
+    nextNodeIds.has(node.id);
 
   /* ── 경로 선 ── */
   let svgPaths = "";
@@ -327,13 +357,15 @@ function renderCanvas(currentNodeId) {
   /* ── 현재 위치 배지 ── */
   const floorBadge = document.getElementById("mapCurrentFloor");
   if (floorBadge) {
-    floorBadge.textContent = myFloor > 0 ? `${myFloor}층` : "로비";
+    floorBadge.textContent = tutorialCurrentLabel || (myFloor > 0 ? `${myFloor}층` : "신령의 은혜");
   }
 
   /* ── 푸터 텍스트 ── */
   const footer = document.getElementById("mapFooter");
   if (footer) {
-    footer.textContent = window.MAP_STATE.proceedMode
+    footer.textContent = tutorialCurrentLabel
+      ? "📍 현재 위치: " + tutorialCurrentLabel
+      : window.MAP_STATE.proceedMode
       ? "강조된 다음 노드를 클릭/터치하여 진행하세요"
       : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
   }
@@ -354,7 +386,7 @@ const DMAP_LEGEND_DATA = [
     type: "enemy",
     icon: "👊",
     label: "일반 전투",
-    tip: "일반 적과 전투합니다. 승리하면 카드 보상과 골드를 얻을 수 있습니다.",
+    tip: "일반 적과 전투합니다. 승리하면 주문 보상과 골드를 얻을 수 있습니다.",
   },
   {
     type: "elite",
@@ -372,13 +404,13 @@ const DMAP_LEGEND_DATA = [
     type: "shop",
     icon: "🛍️",
     label: "상점",
-    tip: "골드를 사용해 카드, 소모품, 장비를 구매할 수 있습니다.",
+    tip: "골드를 사용해 주문, 약병, 법구를 구매할 수 있습니다.",
   },
   {
     type: "rest",
     icon: "🛏️",
-    label: "휴식",
-    tip: "체력을 회복하거나 덱을 정비할 수 있습니다.",
+    label: "기도터",
+    tip: "정신력을 회복하거나 덱을 정비할 수 있습니다.",
   },
   {
     type: "boss",
@@ -409,7 +441,7 @@ function buildOverlay() {
           <span>현재 위치</span>
           <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
         </div>
-        <span class="map-title dmap-title">🗺️ 병원 지도</span>
+        <span class="map-title dmap-title">🗺️ 여정</span>
         <button class="map-close dmap-close" id="mapClose" aria-label="닫기">✕</button>
       </div>
       <div class="map-body dmap-body">
@@ -417,7 +449,7 @@ function buildOverlay() {
           <svg id="mapCanvas" xmlns="http://www.w3.org/2000/svg"
                style="width:100%;height:100%;display:block"></svg>
           <div class="dmap-drag-hint" id="dMapDragHint">
-            <span>✥</span><span>드래그로 지도 이동</span>
+            <span>✥</span><span>드래그로 여정 이동</span>
           </div>
         </div>
         <div class="map-legend dmap-legend" id="dMapLegend">
@@ -428,8 +460,8 @@ function buildOverlay() {
       </div>
       <div class="dmap-bottom">
         <div class="dmap-action-bar">
-          <button class="dmap-action-btn" id="dMapDeckBtn">📖 덱 확인</button>
-          <button class="dmap-action-btn" id="dMapItemBtn">🎒 소지품</button>
+          <button class="dmap-action-btn" id="dMapDeckBtn">📖 보유 주문</button>
+          <button class="dmap-action-btn" id="dMapItemBtn">🎒 가방</button>
           <button class="dmap-action-btn" id="dMapSettingsBtn">⚙️ 설정</button>
         </div>
         <div class="map-footer dmap-footer" id="mapFooter"></div>
@@ -442,18 +474,30 @@ function buildOverlay() {
 
   /* 덱 확인: 기존 덱뷰어 버튼 트리거 */
   div.querySelector("#dMapDeckBtn").addEventListener("click", () => {
+    closeMapPopupViews("deck");
     const deckBtn = document.getElementById("deckViewerButton");
     if (deckBtn) deckBtn.click();
   });
 
-  /* 소지품 확인: 준비 중 */
-  div.querySelector("#dMapItemBtn").addEventListener("click", () => {
+  /* 소지품 확인: 기존 가방 UI 열기 */
+  div.querySelector("#dMapItemBtn").addEventListener("click", (e) => {
+    // 버튼 클릭이 맵 배경 클릭/노드 선택으로 번지지 않도록 차단
+    e.preventDefault();
+    e.stopPropagation();
+    closeMapPopupViews("bag");
+    // bagUI.js 에서 제공하는 가방 열기 함수 호출
+    if (typeof window.BAG_UI_OPEN === "function") {
+      window.BAG_UI_OPEN({ mode: "map" });
+      return;
+    }
+    // 예외 상황: bagUI.js 로드 실패 또는 전역 함수 누락
     const footer = document.getElementById("mapFooter");
-    if (footer) footer.textContent = "소지품 확인 기능은 준비 중입니다.";
+    if (footer) footer.textContent = "가방 기능을 불러올 수 없습니다. bagUI.js 로드 상태를 확인하세요.";
   });
 
   /* 설정: 기존 설정 버튼 트리거 */
   div.querySelector("#dMapSettingsBtn").addEventListener("click", () => {
+    closeMapPopupViews("settings");
     const settingsBtn = Array.from(document.querySelectorAll(".hud-btn"))
       .find(b => b.textContent.includes("⚙️") || b.textContent.includes("⚙"));
     if (settingsBtn) settingsBtn.click();
@@ -523,4 +567,16 @@ function buildOverlay() {
   setupDragScroll(canvasWrap, div.querySelector("#mapCanvas"));
 
   return div;
+}
+
+function closeMapPopupViews(except) {
+  if (except !== "deck" && typeof window.DECK_VIEWER_CLOSE === "function") {
+    window.DECK_VIEWER_CLOSE();
+  }
+  if (except !== "bag" && typeof window.BAG_UI_CLOSE === "function") {
+    window.BAG_UI_CLOSE();
+  }
+  if (except !== "settings" && typeof window.SETTINGS_VIEWER_CLOSE === "function") {
+    window.SETTINGS_VIEWER_CLOSE();
+  }
 }

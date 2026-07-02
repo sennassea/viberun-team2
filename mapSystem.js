@@ -1,8 +1,8 @@
 "use strict";
 /* =========================================================================
-   병원 지도 시스템 (mapSystem.js) – 5층 동적 맵
+   여정 시스템 (mapSystem.js) – 5층 동적 맵
    - 1층: 일반 적, 2~4층: 일반 2회 + 엘리트 1회 (랜덤 배치), 5층: 보스
-   - 드래그로 스크롤 가능한 SVG 지도
+   - 드래그로 스크롤 가능한 SVG 여정
    ========================================================================= */
 
 /* ── SVG 좌표 상수 ─────────────────────────────────────────────────────── */
@@ -19,7 +19,7 @@ function getViewBox(){
   return `0 ${MAP_FULL_H - MAP_VIEW_H - s} ${MAP_W} ${MAP_VIEW_H}`;
 }
 
-/* ── 동적 지도 데이터 ──────────────────────────────────────────────────── */
+/* ── 동적 여정 데이터 ──────────────────────────────────────────────────── */
 let MAP_FLOORS    = [];
 let MAP_PATHS     = [];
 let MAP_STAGES    = [];
@@ -46,7 +46,7 @@ function cloneMonsterList(list){
   }));
 }
 
-/* ── 지도 생성 ──────────────────────────────────────────────────────────── */
+/* ── 여정 생성 ──────────────────────────────────────────────────────────── */
 function generateMap(){
   /* ACT1 노드 로직이 있으면 외부 생성 로직 사용 (mapNodeLogic.js) */
   if(typeof window.ACT1_MAP_GENERATE === "function"){
@@ -267,8 +267,9 @@ function startStage(stageIdx){
   if(typeof newGame === "function") newGame();
 }
 
-/* ── 지도 열기/닫기 ────────────────────────────────────────────────────── */
+/* ── 여정 열기/닫기 ────────────────────────────────────────────────────── */
 function openMap(){
+  if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
   let ov = document.getElementById("mapOverlay");
   if(!ov){ ov = buildOverlay(); document.getElementById("game").appendChild(ov); }
   const isStartMap = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
@@ -281,6 +282,7 @@ function openMap(){
 }
 
 function closeMap(){
+  if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
   const ov = document.getElementById("mapOverlay"); if(!ov) return;
   const returnToStart = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
   ov.style.opacity = "0";
@@ -303,7 +305,7 @@ function buildOverlay(){
   div.innerHTML = `
     <div class="map-panel">
       <div class="map-header">
-        <span class="map-title">🗺️ 병원 지도</span>
+        <span class="map-title">🗺️ 여정</span>
         <button class="map-close" id="mapClose">✕</button>
       </div>
       <div class="map-body">
@@ -318,7 +320,7 @@ function buildOverlay(){
           <div class="legend-item"><span class="leg-ico boss">💀</span>보스</div>
           <div class="legend-item"><span class="leg-ico event">❓</span>이벤트</div>
           <div class="legend-item"><span class="leg-ico shop">🛒</span>상점</div>
-          <div class="legend-item"><span class="leg-ico rest">🛖</span>휴식</div>
+          <div class="legend-item"><span class="leg-ico rest">🛖</span>기도터</div>
         </div>
       </div>
       <div class="map-footer" id="mapFooter"></div>
@@ -395,10 +397,24 @@ function renderCanvas(currentNodeId){
   const myFloor = nodeFloorIdx(currentNodeId);
   const isPast  = id   => nodeFloorIdx(id) < myFloor;
   const isCur   = id   => id === currentNodeId;
+
+  // 현재 노드와 실제로 선(MAP_PATHS)으로 연결된 다음 노드만 선택 가능하도록 집합 구성
+  const nextNodeIds = new Set();
+  if(window.MAP_STATE.proceedMode && myFloor >= 0){
+    const myIdx = MAP_FLOORS[myFloor]?.findIndex(n => n.id === currentNodeId);
+    if(myIdx >= 0){
+      MAP_PATHS.forEach(([[f1, n1], [f2, n2]]) => {
+        if(f1 === myFloor && n1 === myIdx){
+          const target = MAP_FLOORS[f2]?.[n2];
+          if(target) nextNodeIds.add(target.id);
+        }
+      });
+    }
+  }
   const isNext  = node =>
     window.MAP_STATE.proceedMode &&
     node.stageIndex !== undefined &&
-    nodeFloorIdx(node.id) === myFloor + 1;
+    nextNodeIds.has(node.id);
 
   // 경로 선
   let paths = "";
@@ -592,7 +608,7 @@ function setupWinInterception(){
     loadStageMonsters(0);
 
     document.querySelectorAll(".hud-btn").forEach(btn => {
-      if(btn.textContent.includes("병원 지도") && !btn.dataset.mapBound){
+      if(btn.textContent.includes("여정") && !btn.dataset.mapBound){
         btn.dataset.mapBound = "1";
         btn.addEventListener("click", openMap);
       }
