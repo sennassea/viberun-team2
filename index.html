@@ -2,13 +2,19 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c1422">
+<link rel="manifest" href="manifest.json">
 <title>신입 액소시스트 - 전투 프로토타입</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="life-ui.css">
 <link rel="stylesheet" href="map.css">
 <link rel="stylesheet" href="mapUI.css">
 <link rel="stylesheet" href="hand-layout.css">
+<link rel="stylesheet" href="eventNode.css">
 </head>
 <body>
 
@@ -18,15 +24,16 @@
     <div class="bokeh" style="width:12cqh;height:12cqh;right:18%;top:30%"></div>
 
     <div id="startScreen" class="start-screen">
-      <div class="start-logo" aria-label="귀로 - 돌아가는 길">
-        <div class="start-logo-main">귀로</div>
-        <div class="start-logo-sub">돌아가는 길</div>
+      <div class="start-logo" aria-label="혼꽃 - SPIRIT BLOSSOM">
+        <div class="start-logo-main">혼꽃</div>
+        <div class="start-logo-sub">SPIRIT BLOSSOM</div>
       </div>
       <div class="start-menu" aria-label="시작 메뉴">
+        <button type="button" class="start-menu-button start-tutorial-button">📖 튜토리얼</button>
         <button type="button" class="start-menu-button start-new-game">새 게임</button>
         <button type="button" class="start-menu-button start-continue-game">
           <span class="start-menu-label">이어하기</span>
-          <span class="continue-status">로비</span>
+          <span class="continue-status">신령의 은혜</span>
         </button>
         <div class="start-menu-row split">
           <button type="button" class="start-menu-button start-codex-button">도감</button>
@@ -63,11 +70,16 @@
         </div>
         <div class="spacer"></div>
         <div class="top-right-menu" aria-label="상단 메뉴">
-          <div class="hud-card hud-btn top-menu-button">🗺️<span class="sr-only">병원 지도</span></div>
+          <div class="hud-card hud-btn top-menu-button">🗺️<span class="sr-only">여정</span></div>
           <div class="hud-card hud-btn stat top-menu-button" id="deckViewerButton">📖 <span id="hudDeck">18</span></div>
+          <div class="hud-card hud-btn top-menu-button" id="bagViewerButton">🎒<span class="sr-only">가방</span></div>
           <div class="hud-card hud-btn top-menu-button">⚙️</div>
         </div>
       </div>
+    </div>
+    <div class="top-relic-panel" aria-label="보유 법구">
+      <div class="side-item-title">법구</div>
+      <div id="sideRelicSlots" class="side-item-slots" aria-label="보유 법구"></div>
     </div>
     <div class="left-side-hud">
       <div class="left-side-main">
@@ -85,14 +97,10 @@
           </div>
           <span class="val">3/3</span>
         </div>
-        <div class="side-item-panel" aria-label="유물과 포션">
+        <div class="side-item-panel" aria-label="법구와 약병">
           <div class="side-item-section">
-            <div class="side-item-title">유물</div>
-            <div id="sideRelicSlots" class="side-item-slots" aria-label="보유 유물"></div>
-          </div>
-          <div class="side-item-section">
-            <div class="side-item-title">포션</div>
-            <div id="sidePotionSlots" class="side-item-slots" aria-label="보유 포션"></div>
+            <div class="side-item-title">약병</div>
+            <div id="sidePotionSlots" class="side-item-slots" aria-label="보유 약병"></div>
           </div>
         </div>
       </div>
@@ -112,10 +120,10 @@
       <div class="right-bottom-actions">
         <button id="endTurn">턴 종료</button>
         <div class="pile" id="deckPile"><div class="stack" id="deckCount">18</div><div class="plbl">덱</div></div>
-        <div class="pile" id="discardPile"><div class="stack" id="discardCount">0</div><div class="plbl">버린 카드</div></div>
+        <div class="pile" id="discardPile"><div class="stack" id="discardCount">0</div><div class="plbl">버린 주문</div></div>
       </div>
     </div>
-    <div id="hint">✦ 카드를 드래그하여 <span class="r">적</span> 또는 <span class="b">자신</span>에게 사용하세요!</div>
+    <div id="hint">✦ 주문을 드래그하여 <span class="r">적</span> 또는 <span class="b">자신</span>에게 사용하세요!</div>
 
     <div id="fx"></div>
     <div id="aim"></div>
@@ -137,18 +145,35 @@
 <!-- 캐릭터/몬스터/라이프는 충돌 방지를 위해 독립 파일로 먼저 로드 -->
 <script src="characterData.js" defer></script>
 <script src="monsterData.js" defer></script>
+<script src="mobileAppGuard.js" defer></script>
 <script src="lifeSystem.js" defer></script>
+<script src="equipment.js" defer></script>
+<script src="potion.js" defer></script>
 <script src="cardData.js" defer></script>
+<script src="eventData.js" defer></script>
 <script src="script.js" defer></script>
 <script src="runRecord.js" defer></script>
 <script src="startMenu.js" defer></script>
+<script src="tutorialSystem.js" defer></script>
+<script src="tutorialBattle.js" defer></script>
 <script src="tooltip.js" defer></script>
 <script src="deckViewer.js" defer></script>
 <script src="settingsViewer.js" defer></script>
 <script src="mapSystem.js" defer></script>
+<script src="tutorialMapSystem.js" defer></script>
 <script src="encounterPackages.js" defer></script>
 <script src="mapNodeLogic.js" defer></script>
 <script src="mapUI.js" defer></script>
+<script src="restNode.js" defer></script>
+<script src="prayerCardAdd.js" defer></script>
+<script src="prayerCardRemove.js" defer></script>
+<script src="bagUI.js" defer></script>
+<script src="shopNode.js" defer></script>
+<script src="eventNode.js" defer></script>
+<script src="startBlessing.js" defer></script>
 <script src="hand-layout.js" defer></script>
+<script src="cheatConsole.js" defer></script>
+<script src="cheatMonster.js" defer></script>
+<script src="cheatEvent.js" defer></script>
 </body>
 </html>
