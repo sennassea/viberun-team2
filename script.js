@@ -73,6 +73,11 @@ const ENERGY_SLOT_COUNT = 8;
 const DRAW_PER_TURN     = 5;
 const STARTING_GOLD     = 120;
 const STARTING_MOON_SHARDS = 0;
+const BASIC_SUMMON_MONSTER_BY_THEME = {
+  hospital: "nurse_spirit",
+  park: "child_spirit_lost",
+  school: "cafeteria_spirit"
+};
 
 let S;
 let RUN_STATE = null;
@@ -288,6 +293,16 @@ function getSelectedLivingEnemy(){
   return livingEnemies().find(e => e.id === S.selectedId) || livingEnemies()[0] || null;
 }
 
+function cloneMonsterRuntimeData(data){
+  if(!data || typeof data !== "object") return data;
+  return {
+    ...data,
+    roles: Array.isArray(data.roles) ? [...data.roles] : data.roles,
+    moves: Array.isArray(data.moves) ? data.moves.map(move => ({ ...move })) : data.moves,
+    nextPhase: data.nextPhase ? cloneMonsterRuntimeData(data.nextPhase) : null
+  };
+}
+
 function applyBattleStartRelics(){
   // 전투 데이터가 아직 준비되지 않았으면 처리하지 않는다.
   if(!S || !S.player) return;
@@ -358,6 +373,7 @@ function newGame(options={}){
     firstAttackUsed: false,
     nextAttackMultiplier: null,
     blockGainedThisTurn: 0,
+    summonCount: 0,
     relicTurnFlags: {},
     retainedBlockFromRelic: 0,
   };
@@ -377,12 +393,103 @@ function newGame(options={}){
 function spawnPackageEnemies(){
   if(!MONSTER_DEFS.length){ S.enemies = []; S.selectedId = null; return; }
   S.enemies = MONSTER_DEFS.map((def, i) => {
-    const e = LIFE.createMonster(def, i);
-    e.spawnIndex = i;
-    ensureEnemyStatus(e);
-    return e;
+    return createCombatEnemy(def, i);
   });
   S.selectedId = S.enemies[0]?.id || null;
+}
+
+function createCombatEnemy(def, index, options = {}){
+  const e = LIFE.createMonster(def, index);
+  e.baseId = def.id || e.id;
+  if(options.idSuffix) e.id = e.baseId + "_" + options.idSuffix;
+  e.spawnIndex = index;
+  e.summoned = !!options.summoned;
+  ensureEnemyStatus(e);
+  return e;
+}
+
+function getBasicSummonMonsterDef(summoner){
+  const theme = summoner && summoner.theme;
+  const monsterId = BASIC_SUMMON_MONSTER_BY_THEME[theme] || BASIC_SUMMON_MONSTER_BY_THEME.park;
+  if(typeof COMBAT_DATA.getMonsterById === "function"){
+    const monster = COMBAT_DATA.getMonsterById(monsterId);
+    if(monster) return monster;
+  }
+  return MONSTER_DEFS.find(monster => monster.id === monsterId)
+    || MONSTER_DEFS.find(monster => monster.grade === "normal")
+    || null;
+}
+
+function getSummonCountByGrade(summoner){
+  return summoner && summoner.grade === "boss" ? 2 : 1;
+}
+
+function summonEnemy(summoner){
+  if(!S || !summoner) return 0;
+  const maxLivingEnemies = 4;
+  const count = getSummonCountByGrade(summoner);
+  const def = getBasicSummonMonsterDef(summoner);
+  if(!def) return 0;
+
+  let summoned = 0;
+  for(let i = 0; i < count && livingEnemies().length < maxLivingEnemies; i++){
+    S.summonCount = (S.summonCount || 0) + 1;
+    const enemy = createCombatEnemy(def, S.enemies.length, {
+      summoned: true,
+      idSuffix: "summon" + S.summonCount
+    });
+    S.enemies.push(enemy);
+    summoned += 1;
+  }
+  if(summoned > 0) autoSelectTarget();
+  return summoned;
+}
+
+function applyNextPhaseIfNeeded(enemy){
+  if(!enemy || enemy.phaseChanged || !enemy.nextPhase) return false;
+  if(enemy.hp > Math.ceil(enemy.maxHp / 2)) return false;
+
+  const phase = cloneMonsterRuntimeData(enemy.nextPhase);
+  const previousId = enemy.id;
+  const previousBaseId = enemy.baseId || enemy.id;
+  const previousImage = enemy.image;
+  const previousTheme = enemy.theme;
+  const previousThemeLabel = enemy.themeLabel;
+  const previousFamily = enemy.family;
+  const previousSpawnIndex = enemy.spawnIndex;
+  const previousSummoned = enemy.summoned;
+  const preservedWeak = enemy.weak || 0;
+  const preservedAnxiety = enemy.anxiety || 0;
+  const preservedLethargy = enemy.lethargy || 0;
+  const preservedStatus = enemy.status ? { ...enemy.status } : {};
+  const preservedMark = enemy.mark || 0;
+
+  Object.assign(enemy, phase);
+  enemy.id = previousId;
+  enemy.baseId = previousBaseId;
+  enemy.image = phase.image || previousImage;
+  enemy.theme = phase.theme || previousTheme;
+  enemy.themeLabel = phase.themeLabel || previousThemeLabel;
+  enemy.family = phase.family || previousFamily;
+  enemy.spawnIndex = previousSpawnIndex;
+  enemy.summoned = previousSummoned;
+  enemy.maxHp = phase.maxHp || enemy.maxHp;
+  enemy.hp = enemy.maxHp;
+  enemy.block = 0;
+  enemy.weak = preservedWeak;
+  enemy.anxiety = preservedAnxiety;
+  enemy.lethargy = preservedLethargy;
+  enemy.mark = preservedMark;
+  enemy.status = preservedStatus;
+  enemy.moves = Array.isArray(phase.moves) ? phase.moves : enemy.moves;
+  enemy.intent = enemy.moves[phase.first || 0] || enemy.moves[0] || null;
+  enemy.nextPhase = null;
+  enemy.phaseChanged = true;
+  enemy.lastIntentType = null;
+  enemy.intentRepeatCount = 0;
+  ensureEnemyStatus(enemy);
+  spawnFloat('[data-id="'+enemy.id+'"]', '페이즈 전환', 'heal');
+  return true;
 }
 
 /* =========================================================================
@@ -659,6 +766,7 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak){
   if(result.absorbed > 0)                          spawnFloat(sel, '-'+result.absorbed, 'blk');
   if(result.hpLoss   > 0)                          spawnFloat(sel, '-'+result.hpLoss,   'dmg');
   if(result.absorbed === 0 && result.hpLoss === 0) spawnFloat(sel, '0', 'blk');
+  if(target !== S.player) applyNextPhaseIfNeeded(target);
 }
 
 /* =========================================================================
@@ -1244,7 +1352,8 @@ async function endTurn(){
       LIFE.addBlock(e, mv.v);
       spawnFloat('[data-id="'+e.id+'"]', '+'+mv.v, 'blk');
     } else if(mv.t==="summon"){
-      spawnFloat('[data-id="'+e.id+'"]', '소환', 'heal');
+      const summoned = summonEnemy(e);
+      spawnFloat('[data-id="'+e.id+'"]', summoned > 0 ? '소환' : '소환 실패', summoned > 0 ? 'heal' : 'blk');
     } else if(mv.t==="debuff"){
       if(mv.role==="anxiety"){
         LIFE.addAnxiety(S.player, mv.v);
@@ -1759,15 +1868,17 @@ function renderField(){
 
   // 몬스터 수별 X 배치 (기획서 §9-1)
   const X_POS = { 1:[55], 2:[42,68], 3:[33,55,78], 4:[24,45,66,87] };
-  const xList = X_POS[Math.min(S.enemies.length, 4)] || X_POS[4];
+  const xList = X_POS[Math.min(livingEnemies().length, 4)] || X_POS[4];
+  let liveIndex = 0;
 
   S.enemies.forEach((e, i) => {
+    const positionIndex = e.hp > 0 ? liveIndex++ : i;
     const el = combatantEl({
       cls:"enemy ghost"+(e.id===S.selectedId ? " selected" : ""),
       sprite:e.image, name:e.name,
       hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, mark:e.mark, status:e.status,
       anxiety:e.anxiety, lethargy:e.lethargy,
-      x: xList[i] ?? 55, bottom:"4cqh",
+      x: xList[positionIndex] ?? 55, bottom:"4cqh",
       intent:e.intent, id:e.id,
     });
     if(e.hp<=0) el.classList.add("dead");
