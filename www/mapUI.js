@@ -368,7 +368,7 @@ const DMAP_LEGEND_DATA = [
     type: "enemy",
     icon: "👊",
     label: "일반 전투",
-    tip: "일반 적과 전투합니다. 승리하면 카드 보상과 골드를 얻을 수 있습니다.",
+    tip: "일반 적과 전투합니다. 승리하면 주문 보상과 골드를 얻을 수 있습니다.",
   },
   {
     type: "elite",
@@ -386,7 +386,7 @@ const DMAP_LEGEND_DATA = [
     type: "shop",
     icon: "🛍️",
     label: "상점",
-    tip: "골드를 사용해 카드, 약병, 법구를 구매할 수 있습니다.",
+    tip: "골드를 사용해 주문, 약병, 법구를 구매할 수 있습니다.",
   },
   {
     type: "rest",
@@ -423,7 +423,7 @@ function buildOverlay() {
           <span>현재 위치</span>
           <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
         </div>
-        <span class="map-title dmap-title">🗺️ 병원 지도</span>
+        <span class="map-title dmap-title">🗺️ 여정</span>
         <button class="map-close dmap-close" id="mapClose" aria-label="닫기">✕</button>
       </div>
       <div class="map-body dmap-body">
@@ -431,7 +431,7 @@ function buildOverlay() {
           <svg id="mapCanvas" xmlns="http://www.w3.org/2000/svg"
                style="width:100%;height:100%;display:block"></svg>
           <div class="dmap-drag-hint" id="dMapDragHint">
-            <span>✥</span><span>드래그로 지도 이동</span>
+            <span>✥</span><span>드래그로 여정 이동</span>
           </div>
         </div>
         <div class="map-legend dmap-legend" id="dMapLegend">
@@ -442,7 +442,7 @@ function buildOverlay() {
       </div>
       <div class="dmap-bottom">
         <div class="dmap-action-bar">
-          <button class="dmap-action-btn" id="dMapDeckBtn">📖 보유 카드</button>
+          <button class="dmap-action-btn" id="dMapDeckBtn">📖 보유 주문</button>
           <button class="dmap-action-btn" id="dMapItemBtn">🎒 가방</button>
           <button class="dmap-action-btn" id="dMapSettingsBtn">⚙️ 설정</button>
         </div>

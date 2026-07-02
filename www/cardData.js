@@ -8,16 +8,16 @@
 
 const CARD_DB = {
   // -----------------------------------------------------------------------
-  // 범용 카드 10장
+  // 범용 주문 10장
   // -----------------------------------------------------------------------
   rosary_throw:{name:"염주 던지기", cost:1, type:"attack", emoji:"📿", target:"enemy", attr:"범용", rarity:"starter",
           desc:"적의 미련을 6만큼 정화합니다.", fx:[{t:"damage",v:6}]},
   bell_shake:{name:"방울 흔들기", cost:1, type:"attack", emoji:"🔔", target:"enemy", attr:"범용", rarity:"starter",
-          desc:"적의 미련을 4만큼 정화합니다.\n카드를 1장 뽑습니다.", fx:[{t:"damage",v:4},{t:"draw",v:1}]},
+          desc:"적의 미련을 4만큼 정화합니다.\n주문을 1장 뽑습니다.", fx:[{t:"damage",v:4},{t:"draw",v:1}]},
   calm_breath:{name:"심호흡", cost:1, type:"skill", emoji:"🌬️", target:"self", attr:"범용", rarity:"starter",
           desc:"정신력을 5 회복합니다.", fx:[{t:"heal",v:5}]},
   breath_order:{name:"호흡 정리", cost:0, type:"skill", emoji:"🍃", target:"self", attr:"범용", rarity:"common",
-          desc:"카드를 1장 뽑습니다.", fx:[{t:"draw",v:1}]},
+          desc:"주문을 1장 뽑습니다.", fx:[{t:"draw",v:1}]},
   short_meditation:{name:"짧은 명상", cost:1, type:"skill", emoji:"🧘", target:"self", attr:"범용", rarity:"common",
           desc:"정신력을 6 회복합니다.", fx:[{t:"heal",v:6}]},
   purifying_talisman:{name:"정화부", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"범용", rarity:"common",
@@ -25,19 +25,19 @@ const CARD_DB = {
   mind_training:{name:"정신 수련", cost:0, type:"skill", emoji:"🫧", target:"self", attr:"범용", rarity:"uncommon",
           desc:"이번 턴 정신력을 1 회복합니다.\n소멸.", fx:[{t:"energy",v:1}], exhaust:true},
   fast_chanting:{name:"속전염송", cost:1, type:"skill", emoji:"📜", target:"self", attr:"범용", rarity:"common",
-          desc:"카드를 2장 뽑습니다.", fx:[{t:"draw",v:2}]},
+          desc:"주문을 2장 뽑습니다.", fx:[{t:"draw",v:2}]},
   altar_preparation:{name:"제단 준비", cost:0, type:"skill", emoji:"🪔", target:"self", attr:"범용", rarity:"uncommon",
           desc:"이번 턴 정신력을 1 회복합니다.\n소멸.", fx:[{t:"energy",v:1}], exhaust:true},
   last_struggle:{name:"마지막 발버둥", cost:1, type:"attack", emoji:"🔥", target:"enemy", attr:"범용", rarity:"rare",
           desc:"모든 적의 미련을 10만큼 정화합니다.\n사용 후 소멸.", fx:[{t:"damageAll",v:10}], exhaust:true},
 
   // -----------------------------------------------------------------------
-  // 결계 카드 10장
+  // 결계 주문 10장
   // -----------------------------------------------------------------------
   guardian_talisman:{name:"수호부", cost:1, type:"defense", emoji:"🧿", target:"self", attr:"결계", rarity:"common",
           desc:"마음의 결계를 8 얻습니다.", fx:[{t:"block",v:8}]},
   quiet_steps:{name:"조용한 발걸음", cost:1, type:"defense", emoji:"👣", target:"self", attr:"결계", rarity:"common",
-          desc:"마음의 결계를 6 얻습니다.\n카드를 1장 뽑습니다.", fx:[{t:"block",v:6},{t:"draw",v:1}]},
+          desc:"마음의 결계를 6 얻습니다.\n주문을 1장 뽑습니다.", fx:[{t:"block",v:6},{t:"draw",v:1}]},
   folded_ward:{name:"접어둔 방위부", cost:0, type:"defense", emoji:"📄", target:"self", attr:"결계", rarity:"common",
           desc:"마음의 결계를 4 얻습니다.", fx:[{t:"block",v:4}]},
   clear_mind_art:{name:"맑은 마음법", cost:1, type:"skill", emoji:"💧", target:"self", attr:"결계", rarity:"common",
@@ -56,12 +56,12 @@ const CARD_DB = {
           desc:"이번 턴 얻은 마음의 결계 150%만큼 적의 미련을 정화합니다.", fx:[{t:"damageByBlockGainedThisTurn",v:1.5}]},
 
   // -----------------------------------------------------------------------
-  // 동요 카드 10장
+  // 동요 주문 10장
   // -----------------------------------------------------------------------
   memory_doll:{name:"기억 인형", cost:1, type:"attack", emoji:"🧸", target:"enemy", attr:"동요", rarity:"starter",
           desc:"적의 미련을 5만큼 정화합니다.\n동요를 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyWeak",v:1}]},
   lullaby_chant:{name:"자장 염송", cost:1, type:"skill", emoji:"🎵", target:"enemy", attr:"동요", rarity:"common",
-          desc:"동요를 1 부여합니다. 동요 1마다 적 공격 피해가 25% 감소합니다.\n카드를 1장 뽑습니다.", fx:[{t:"applyWeak",v:1},{t:"draw",v:1}]},
+          desc:"동요를 1 부여합니다. 동요 1마다 적 공격 피해가 25% 감소합니다.\n주문을 1장 뽑습니다.", fx:[{t:"applyWeak",v:1},{t:"draw",v:1}]},
   shaking_heart:{name:"흔들리는 마음", cost:1, type:"skill", emoji:"💗", target:"enemy", attr:"동요", rarity:"common",
           desc:"동요를 2 부여합니다. 동요 1마다 적 공격 피해가 25% 감소합니다.", fx:[{t:"applyWeak",v:2}]},
   unread_letter:{name:"읽지 못한 편지", cost:1, type:"attack", emoji:"✉️", target:"enemy", attr:"동요", rarity:"common",
@@ -80,18 +80,18 @@ const CARD_DB = {
           desc:"적의 미련을 20만큼 정화합니다.", fx:[{t:"damage",v:20}]},
 
   // -----------------------------------------------------------------------
-  // 성불 카드 10장
+  // 성불 주문 10장
   // -----------------------------------------------------------------------
   exorcism_talisman:{name:"퇴마부", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"성불", rarity:"common",
           desc:"적의 미련을 5만큼 정화합니다. 성불 표식을 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyMark",v:1}]},
   requiem_script:{name:"진혼경", cost:1, type:"attack", emoji:"📜", target:"enemy", attr:"성불", rarity:"common",
           desc:"적의 미련을 6만큼 정화합니다. 성불 표식이 있으면 추가로 4 정화합니다.", fx:[{t:"damage",v:6},{t:"ifMarkedDamage",v:4}]},
   small_passing_rite:{name:"작은 천도", cost:1, type:"skill", emoji:"🪷", target:"enemy", attr:"성불", rarity:"common",
-          desc:"성불 표식을 2 부여합니다.\n카드를 1장 뽑습니다.", fx:[{t:"applyMark",v:2},{t:"draw",v:1}]},
+          desc:"성불 표식을 2 부여합니다.\n주문을 1장 뽑습니다.", fx:[{t:"applyMark",v:2},{t:"draw",v:1}]},
   release_touch:{name:"성불의 손짓", cost:1, type:"attack", emoji:"🤲", target:"enemy", attr:"성불", rarity:"common",
-          desc:"적의 미련을 5만큼 정화합니다.\n카드를 1장 뽑습니다.", fx:[{t:"damage",v:5},{t:"draw",v:1}]},
+          desc:"적의 미련을 5만큼 정화합니다.\n주문을 1장 뽑습니다.", fx:[{t:"damage",v:5},{t:"draw",v:1}]},
   spirit_guidance:{name:"혼백 인도", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"성불", rarity:"common",
-          desc:"정신력을 1 회복합니다.\n카드를 1장 뽑습니다.", fx:[{t:"energy",v:1},{t:"draw",v:1}]},
+          desc:"정신력을 1 회복합니다.\n주문을 1장 뽑습니다.", fx:[{t:"energy",v:1},{t:"draw",v:1}]},
   path_of_light:{name:"빛길 열기", cost:2, type:"attack", emoji:"✨", target:"enemy", attr:"성불", rarity:"common",
           desc:"모든 적의 미련을 6만큼 정화합니다.", fx:[{t:"damageAll",v:6}]},
   guiding_rite:{name:"천도재", cost:2, type:"attack", emoji:"🪔", target:"enemy", attr:"성불", rarity:"uncommon",
@@ -121,6 +121,6 @@ let STARTER_DECK = [...BASE_STARTER_DECK];
 const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => !["starter", "status"].includes(CARD_DB[key].rarity));
 
 // 법구/약병 데이터는 equipment.js / potion.js에서 관리합니다.
-// cardData.js는 카드 데이터만 담당합니다.
+// cardData.js는 주문 데이터만 담당합니다.
 
 const typeLabel = t => t==="attack" ? "정화" : t==="defense" ? "결계" : t==="status" ? "상태" : "스킬";

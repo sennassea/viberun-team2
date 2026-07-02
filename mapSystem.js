@@ -1,8 +1,8 @@
 "use strict";
 /* =========================================================================
-   병원 지도 시스템 (mapSystem.js) – 5층 동적 맵
+   여정 시스템 (mapSystem.js) – 5층 동적 맵
    - 1층: 일반 적, 2~4층: 일반 2회 + 엘리트 1회 (랜덤 배치), 5층: 보스
-   - 드래그로 스크롤 가능한 SVG 지도
+   - 드래그로 스크롤 가능한 SVG 여정
    ========================================================================= */
 
 /* ── SVG 좌표 상수 ─────────────────────────────────────────────────────── */
@@ -19,7 +19,7 @@ function getViewBox(){
   return `0 ${MAP_FULL_H - MAP_VIEW_H - s} ${MAP_W} ${MAP_VIEW_H}`;
 }
 
-/* ── 동적 지도 데이터 ──────────────────────────────────────────────────── */
+/* ── 동적 여정 데이터 ──────────────────────────────────────────────────── */
 let MAP_FLOORS    = [];
 let MAP_PATHS     = [];
 let MAP_STAGES    = [];
@@ -46,7 +46,7 @@ function cloneMonsterList(list){
   }));
 }
 
-/* ── 지도 생성 ──────────────────────────────────────────────────────────── */
+/* ── 여정 생성 ──────────────────────────────────────────────────────────── */
 function generateMap(){
   /* ACT1 노드 로직이 있으면 외부 생성 로직 사용 (mapNodeLogic.js) */
   if(typeof window.ACT1_MAP_GENERATE === "function"){
@@ -267,7 +267,7 @@ function startStage(stageIdx){
   if(typeof newGame === "function") newGame();
 }
 
-/* ── 지도 열기/닫기 ────────────────────────────────────────────────────── */
+/* ── 여정 열기/닫기 ────────────────────────────────────────────────────── */
 function openMap(){
   if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
   let ov = document.getElementById("mapOverlay");
@@ -305,7 +305,7 @@ function buildOverlay(){
   div.innerHTML = `
     <div class="map-panel">
       <div class="map-header">
-        <span class="map-title">🗺️ 병원 지도</span>
+        <span class="map-title">🗺️ 여정</span>
         <button class="map-close" id="mapClose">✕</button>
       </div>
       <div class="map-body">
@@ -608,7 +608,7 @@ function setupWinInterception(){
     loadStageMonsters(0);
 
     document.querySelectorAll(".hud-btn").forEach(btn => {
-      if(btn.textContent.includes("병원 지도") && !btn.dataset.mapBound){
+      if(btn.textContent.includes("여정") && !btn.dataset.mapBound){
         btn.dataset.mapBound = "1";
         btn.addEventListener("click", openMap);
       }

@@ -71,7 +71,7 @@ function closePrayerNode(){
   showPrayerChrome();
 }
 
-/* 기도터를 마치고 다음 노드를 고를 수 있도록 맵으로 복귀 (카드 보상 흐름과 동일 패턴) */
+/* 기도터를 마치고 다음 노드를 고를 수 있도록 맵으로 복귀 (주문 보상 흐름과 동일 패턴) */
 function resolvePrayerNode(){
   closePrayerNode();
   window.MAP_STATE.proceedMode = true;
@@ -98,7 +98,7 @@ function showPrayerChrome(){
   });
 }
 
-/* ── 카드 선택 상태 ──────────────────────────────────────────────────────── */
+/* ── 주문 선택 상태 ──────────────────────────────────────────────────────── */
 function resetPrayerSelection(){
   prayerSelected = null;
   if(!prayerOverlayEl) return;
@@ -127,13 +127,13 @@ function confirmPrayerChoice(){
 
   if(prayerSelected === "accept"){
     if(typeof window.PRAYER_CARD_ADD_OPEN === "function") window.PRAYER_CARD_ADD_OPEN();
-    else if(typeof toast === "function") toast("카드 추가 기능을 불러올 수 없습니다.");
+    else if(typeof toast === "function") toast("주문 추가 기능을 불러올 수 없습니다.");
     return;
   }
 
   if(prayerSelected === "cleanse"){
     if(typeof window.PRAYER_CARD_REMOVE_OPEN === "function") window.PRAYER_CARD_REMOVE_OPEN();
-    else if(typeof toast === "function") toast("카드 제거 기능을 불러올 수 없습니다.");
+    else if(typeof toast === "function") toast("주문 제거 기능을 불러올 수 없습니다.");
     return;
   }
 }
@@ -167,12 +167,12 @@ function ensurePrayerOverlay(){
 
   overlay.querySelector("#prayerMapBtn").addEventListener("click", () => {
     if(typeof openMap === "function") openMap();
-    else if(typeof toast === "function") toast("지도를 열 수 없습니다.");
+    else if(typeof toast === "function") toast("여정을 열 수 없습니다.");
   });
   overlay.querySelector("#prayerDeckBtn").addEventListener("click", () => {
     const deckBtn = document.getElementById("deckViewerButton");
     if(deckBtn) deckBtn.click();
-    else if(typeof toast === "function") toast("보유 카드 확인 기능은 준비 중입니다.");
+    else if(typeof toast === "function") toast("보유 주문 확인 기능은 준비 중입니다.");
   });
   overlay.querySelector("#prayerBagBtn").addEventListener("click", () => {
     if(typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
@@ -211,8 +211,8 @@ function prayerOverlayHtml(){
         '<div class="prayer-title-sub">잠시 머물러 몸과 마음을 가다듬으세요.</div>' +
       '</div>' +
       '<div class="prayer-header-buttons">' +
-        '<button type="button" class="prayer-header-btn" id="prayerMapBtn"><span class="ico">🗺️</span><span>지도</span></button>' +
-        '<button type="button" class="prayer-header-btn" id="prayerDeckBtn"><span class="ico">📖</span><span>보유카드</span></button>' +
+        '<button type="button" class="prayer-header-btn" id="prayerMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
+        '<button type="button" class="prayer-header-btn" id="prayerDeckBtn"><span class="ico">📖</span><span>보유주문</span></button>' +
         '<button type="button" class="prayer-header-btn" id="prayerBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
         '<button type="button" class="prayer-header-btn" id="prayerSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
@@ -224,8 +224,8 @@ function prayerOverlayHtml(){
       '</div>' +
       '<div class="prayer-cards">' +
         prayerCardHtml("rest",    "🍵", "휴식하기",   "정신력 회복", "따뜻한 향과 차 한 잔으로 지친 몸을 쉬게 합니다.") +
-        prayerCardHtml("accept",  "🌸", "받아들이기", "카드 추가",   "기도의 가호로 새로운 인연을 덱에 맞이합니다.") +
-        prayerCardHtml("cleanse", "📜", "정리하기",   "카드 제거",   "마음을 정화하며 불필요한 인연을 정리합니다.") +
+        prayerCardHtml("accept",  "🌸", "받아들이기", "주문 추가",   "기도의 가호로 새로운 인연을 덱에 맞이합니다.") +
+        prayerCardHtml("cleanse", "📜", "정리하기",   "주문 제거",   "마음을 정화하며 불필요한 인연을 정리합니다.") +
       '</div>' +
       '<div class="prayer-tip prayer-tip-right">' +
         '<span class="prayer-tip-text">기도가 전해지길 바라는 마음이 가장 중요해요~</span>' +
@@ -293,13 +293,13 @@ function renderPrayerCardPreviews(){
   const acceptExtra = prayerOverlayEl.querySelector('[data-extra="accept"]');
   if(acceptExtra){
     acceptExtra.className = "prayer-card-extra prayer-card-pill";
-    acceptExtra.textContent = "덱에 카드 1장을 추가";
+    acceptExtra.textContent = "덱에 주문 1장을 추가";
   }
 
   const cleanseExtra = prayerOverlayEl.querySelector('[data-extra="cleanse"]');
   if(cleanseExtra){
     cleanseExtra.className = "prayer-card-extra prayer-card-pill";
-    cleanseExtra.textContent = "덱에서 카드 1장을 제거";
+    cleanseExtra.textContent = "덱에서 주문 1장을 제거";
   }
 }
 

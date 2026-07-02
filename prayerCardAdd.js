@@ -1,15 +1,15 @@
 "use strict";
 /* =========================================================================
-   받아들이기 - 카드 추가 UI (prayerCardAdd.js)
-   기획서: 기도터 UI 통합 기획서 - 5장 카드 추가 UI
+   받아들이기 - 주문 추가 UI (prayerCardAdd.js)
+   기획서: 기도터 UI 통합 기획서 - 5장 주문 추가 UI
 
-   전투 승리 시 뜨는 "정화 보상"과 동일한 로직(카드 보상 풀에서 3장 추첨,
+   전투 승리 시 뜨는 "정화 보상"과 동일한 로직(주문 보상 풀에서 3장 추첨,
    1장 선택 또는 건너뛰기, STARTER_DECK에 추가)을 재사용하되, 기도터 톤에 맞는
    전용 화면으로 새로 그린다. (기존 openCardReward 관련 코드는 건드리지 않음)
 
    restNode.js의 "받아들이기" 확정 시 window.PRAYER_CARD_ADD_OPEN()을 호출한다.
-   카드 리세마라 방지를 위해 취소/뒤로가기는 제공하지 않는다 - 건너뛰기 또는
-   카드 선택 완료로만 닫히며, 닫히면 곧바로 맵 선택으로 돌아간다.
+   주문 리세마라 방지를 위해 취소/뒤로가기는 제공하지 않는다 - 건너뛰기 또는
+   주문 선택 완료로만 닫히며, 닫히면 곧바로 맵 선택으로 돌아간다.
    ========================================================================= */
 
 (function () {
@@ -85,17 +85,17 @@
     overlay.setAttribute("aria-hidden", "true");
     overlay.innerHTML =
       '<div class="pca-panel" role="dialog" aria-modal="true" aria-labelledby="pcaTitle">' +
-        '<div class="pca-title" id="pcaTitle">카드 추가</div>' +
-        '<div class="pca-guide">추가할 카드 1장을 선택하세요.</div>' +
+        '<div class="pca-title" id="pcaTitle">주문 추가</div>' +
+        '<div class="pca-guide">추가할 주문 1장을 선택하세요.</div>' +
         '<div class="pca-body">' +
           '<div class="pca-cards" id="pcaCards"></div>' +
           '<div class="pca-side">' +
             '<div class="pca-side-box">' +
               '<div class="pca-side-title">✦ 선택 효과 ✦</div>' +
-              '<div class="pca-effect-body" id="pcaEffectBody">카드를 선택하면 효과를 확인할 수 있어요.</div>' +
+              '<div class="pca-effect-body" id="pcaEffectBody">주문을 선택하면 효과를 확인할 수 있어요.</div>' +
             '</div>' +
             '<div class="pca-side-box">' +
-              '<div class="pca-side-title">✦ 덱 카드 수 ✦</div>' +
+              '<div class="pca-side-title">✦ 덱 주문 수 ✦</div>' +
               '<div class="pca-deck-count" id="pcaDeckCount"></div>' +
             '</div>' +
           '</div>' +
@@ -155,7 +155,7 @@
 
   function updateSidePanels() {
     const card = selectedKey && typeof CARD_DB !== "undefined" ? CARD_DB[selectedKey] : null;
-    els.effectBody.textContent = card ? card.desc : "카드를 선택하면 효과를 확인할 수 있어요.";
+    els.effectBody.textContent = card ? card.desc : "주문을 선택하면 효과를 확인할 수 있어요.";
 
     const current = typeof STARTER_DECK !== "undefined" ? STARTER_DECK.length : 0;
     const next = card ? current + 1 : current;
@@ -170,13 +170,13 @@
       if (typeof STARTER_DECK !== "undefined") STARTER_DECK.push(selectedKey);
       if (typeof S !== "undefined" && S && Array.isArray(S.discard)) S.discard.push(selectedKey);
       if (typeof renderHud === "function") renderHud();
-      if (typeof toast === "function") toast(card.name + " 카드를 덱에 추가했습니다.");
+      if (typeof toast === "function") toast(card.name + " 주문을 덱에 추가했습니다.");
     }
     finish();
   }
 
   function skipAdd() {
-    if (typeof toast === "function") toast("카드 추가를 건너뛰었습니다.");
+    if (typeof toast === "function") toast("주문 추가를 건너뛰었습니다.");
     finish();
   }
 

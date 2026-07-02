@@ -2,7 +2,7 @@
 /* =========================================================================
    Battle Tooltip System (tooltip.js)
    ─ 전투원 툴팁: 플레이어/몬스터 위 마우스 오버 → 효과·의도 툴팁
-   ─ 카드 용어 툴팁: 카드 위 마우스 오버 → 용어 설명 툴팁
+   ─ 주문 용어 툴팁: 주문 위 마우스 오버 → 용어 설명 툴팁
    ========================================================================= */
 (function () {
 
@@ -25,7 +25,7 @@
     anxiety: {
       icon: "💭",
       name: "불안",
-      desc: function (v) { return "다음 턴 시작 시 카드 뽑기가 1 감소합니다. (" + v + "턴 남음)"; }
+      desc: function (v) { return "다음 턴 시작 시 주문 뽑기가 1 감소합니다. (" + v + "턴 남음)"; }
     },
     lethargy: {
       icon: "🌫️",
@@ -35,7 +35,7 @@
     healingAura: {
       icon: "💚",
       name: "치유의 향기",
-      desc: function () { return "회복 카드를 보유하고 있습니다."; }
+      desc: function () { return "회복 주문을 보유하고 있습니다."; }
     }
   };
 
@@ -76,11 +76,11 @@
   };
 
   /* ══════════════════════════════════════════════════════════════════════
-     II. 카드 용어 툴팁 데이터
+     II. 주문 용어 툴팁 데이터
      ══════════════════════════════════════════════════════════════════════ */
 
-  /* ── 카드 용어 DB (새 용어 추가 시 여기에 항목 추가) ─────────────────── */
-  /* test: 카드 설명에서 용어를 감지하는 함수
+  /* ── 주문 용어 DB (새 용어 추가 시 여기에 항목 추가) ─────────────────── */
+  /* test: 주문 설명에서 용어를 감지하는 함수
      icon / name / desc: 툴팁에 표시할 정보                              */
   var CARD_TERM_INFO = [
     {
@@ -110,14 +110,14 @@
     {
       test: function (d) { return /뽑기/.test(d); },
       icon: "🃏",
-      name: "카드 뽑기",
-      desc: "덱에서 손패로 카드를 가져옵니다. 덱이 비면 버린 더미를 섞어 보충합니다. 손패는 최대 10장입니다."
+      name: "주문 뽑기",
+      desc: "덱에서 손패로 주문을 가져옵니다. 덱이 비면 버린 더미를 섞어 보충합니다. 손패는 최대 10장입니다."
     },
     {
       test: function (d) { return /신통력/.test(d); },
       icon: "⚡",
       name: "신통력",
-      desc: "카드를 사용하는 데 필요한 자원입니다. 매 턴 시작 시 최대치(3)로 회복됩니다."
+      desc: "주문을 사용하는 데 필요한 자원입니다. 매 턴 시작 시 최대치(3)로 회복됩니다."
     },
     {
       test: function (d) { return /미련/.test(d); },
@@ -321,7 +321,7 @@
       html = buildEnemyHtml(enemy);
     }
 
-    cardActiveEl = null;          /* 카드 툴팁 상태 초기화 */
+    cardActiveEl = null;          /* 주문 툴팁 상태 초기화 */
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
     positionCombatantTooltip(cbEl, isPlayer);
@@ -359,7 +359,7 @@
   }).observe(field, { childList: true });
 
   /* ══════════════════════════════════════════════════════════════════════
-     V. 카드 용어 툴팁
+     V. 주문 용어 툴팁
      ══════════════════════════════════════════════════════════════════════ */
 
   var cardActiveEl = null;
@@ -426,7 +426,7 @@
     hideStatusIconTooltip();
   });
 
-  /* ── 카드 설명에서 용어 추출 후 HTML 빌드 ────────────────────────────── */
+  /* ── 주문 설명에서 용어 추출 후 HTML 빌드 ────────────────────────────── */
   function buildCardTermHtml(descText) {
     var rows = CARD_TERM_INFO
       .filter(function (t) { return t.test(descText); })
@@ -434,8 +434,8 @@
     return rows.join("");
   }
 
-  /* ── 카드 툴팁 위치 ───────────────────────────────────────────────────── */
-  /* 카드가 화면 오른쪽 반에 있으면 툴팁을 왼쪽에, 왼쪽 반이면 오른쪽에 */
+  /* ── 주문 툴팁 위치 ───────────────────────────────────────────────────── */
+  /* 주문이 화면 오른쪽 반에 있으면 툴팁을 왼쪽에, 왼쪽 반이면 오른쪽에 */
   function positionCardTooltip(cardEl) {
     var gRect   = game.getBoundingClientRect();
     var cRect   = cardEl.getBoundingClientRect();
@@ -458,9 +458,9 @@
     tooltip.style.top  = ty + "px";
   }
 
-  /* ── 카드 툴팁 표시 ───────────────────────────────────────────────────── */
+  /* ── 주문 툴팁 표시 ───────────────────────────────────────────────────── */
   function showCardTooltip(cardEl) {
-    /* 드래그 중에는 카드 용어 툴팁을 표시하지 않음 */
+    /* 드래그 중에는 주문 용어 툴팁을 표시하지 않음 */
     if (typeof dragState !== "undefined" && dragState !== null) return;
 
     var descEl = cardEl.querySelector(".desc");
@@ -468,7 +468,7 @@
 
     var html = buildCardTermHtml(descEl.textContent.trim());
     if (!html) {
-      /* 설명할 용어가 없는 카드는 상태만 추적하고 툴팁 미표시 */
+      /* 설명할 용어가 없는 주문은 상태만 추적하고 툴팁 미표시 */
       cardActiveEl = cardEl;
       return;
     }
@@ -480,13 +480,13 @@
     positionCardTooltip(cardEl);
   }
 
-  /* ── 카드 툴팁 숨김 ───────────────────────────────────────────────────── */
+  /* ── 주문 툴팁 숨김 ───────────────────────────────────────────────────── */
   function hideCardTooltip() {
     cardActiveEl = null;
     tooltip.classList.remove("tt-show");
   }
 
-  /* ── 손패 카드 이벤트 위임 ────────────────────────────────────────────── */
+  /* ── 손패 주문 이벤트 위임 ────────────────────────────────────────────── */
   handEl.addEventListener("mouseover", function (e) {
     var card = e.target.closest(".card");
     if (!card) return;
@@ -496,9 +496,9 @@
 
   handEl.addEventListener("mouseleave", hideCardTooltip);
 
-  /* ── 덱 뷰어 카드 이벤트 위임 ────────────────────────────────────────── */
+  /* ── 덱 뷰어 주문 이벤트 위임 ────────────────────────────────────────── */
   /* 덱 뷰어는 동적으로 열리므로 game 레벨에서 위임 처리                  */
-  /* 대상: 덱 보유 카드 / 뽑을 카드 / 버린 카드 탭의 .deck-viewer-card    */
+  /* 대상: 덱 보유 주문 / 뽑을 주문 / 버린 주문 탭의 .deck-viewer-card    */
   game.addEventListener("mouseover", function (e) {
     var dvCard = e.target.closest(".deck-viewer-card");
     if (!dvCard) return;
@@ -511,7 +511,7 @@
     var dvCard = e.target.closest(".deck-viewer-card");
     if (!dvCard) return;
     var to = e.relatedTarget;
-    if (to && dvCard.contains(to)) return; /* 카드 내부 이동 시 무시 */
+    if (to && dvCard.contains(to)) return; /* 주문 내부 이동 시 무시 */
     hideCardTooltip();
   });
 

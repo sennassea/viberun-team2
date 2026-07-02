@@ -63,19 +63,19 @@
   };
 
   const EMPTY_TEXT = {
-    all: "보유 중인 카드가 없습니다.",
-    hand: "손에 든 카드가 없습니다.",
-    discard: "버린 카드가 없습니다.",
+    all: "보유 중인 주문이 없습니다.",
+    hand: "손에 든 주문이 없습니다.",
+    discard: "버린 주문이 없습니다.",
   };
 
   const TABS = [
-    { id: "all", label: "전체 카드", getCards: () => getDeck() },
-    { id: "hand", label: "손에 든 카드", getCards: () => getHand() },
-    { id: "discard", label: "버린 카드", getCards: () => getDiscard() },
+    { id: "all", label: "전체 주문", getCards: () => getDeck() },
+    { id: "hand", label: "손에 든 주문", getCards: () => getHand() },
+    { id: "discard", label: "버린 주문", getCards: () => getDiscard() },
   ];
 
   const CODEX_SECTIONS = [
-    { id: "cards", tabId: "codexCards", label: "카드", title: "카드 도감", icon: "🃏" },
+    { id: "cards", tabId: "codexCards", label: "주문", title: "주문 도감", icon: "🃏" },
     { id: "relics", tabId: "codexRelics", label: "법구", title: "법구 도감", icon: "🏺" },
     { id: "potions", tabId: "codexPotions", label: "약병", title: "약병 도감", icon: "🧪" },
   ];
@@ -167,7 +167,7 @@
     overlay.innerHTML =
       '<div class="deck-viewer-panel" role="dialog" aria-modal="true" aria-labelledby="deckViewerTitle">' +
         '<div class="deck-viewer-head">' +
-          '<h2 id="deckViewerTitle">보유 카드</h2>' +
+          '<h2 id="deckViewerTitle">보유 주문</h2>' +
           '<button type="button" class="deck-viewer-close" aria-label="닫기">×</button>' +
         '</div>' +
         '<div class="codex-section-tabs" role="tablist" aria-label="도감 종류 선택">' +
@@ -176,17 +176,17 @@
         '<div class="codex-home-grid">' +
           CODEX_SECTIONS.map(codexHomeButtonHtml).join("") +
         '</div>' +
-        '<div class="deck-viewer-tabs" role="tablist" aria-label="카드 더미 선택">' +
+        '<div class="deck-viewer-tabs" role="tablist" aria-label="주문 더미 선택">' +
           TABS.map(tabButtonHtml).join("") +
         '</div>' +
         '<div class="deck-viewer-controls">' +
         '<div class="deck-viewer-summary"></div>' +
-        '<label class="deck-viewer-search">검색 <input class="deck-viewer-search-input" type="search" placeholder="카드 이름"></label>' +
-        '<div class="deck-viewer-sort" aria-label="카드 정렬">' +
+        '<label class="deck-viewer-search">검색 <input class="deck-viewer-search-input" type="search" placeholder="주문 이름"></label>' +
+        '<div class="deck-viewer-sort" aria-label="주문 정렬">' +
           '<label>정렬 <select class="deck-viewer-sort-type">' + SORT_OPTIONS.map(optionHtml).join("") + '</select></label>' +
           '<label>방향 <select class="deck-viewer-sort-direction">' + SORT_DIRECTIONS.map(optionHtml).join("") + '</select></label>' +
         '</div>' +
-        '<div class="deck-viewer-filter" aria-label="카드 필터">' +
+        '<div class="deck-viewer-filter" aria-label="주문 필터">' +
           '<label>타입 <select class="deck-viewer-filter-type">' + TYPE_FILTERS.map(optionHtml).join("") + '</select></label>' +
           '<label>속성 <select class="deck-viewer-filter-attribute">' + ATTRIBUTE_FILTERS.map(optionHtml).join("") + '</select></label>' +
         '</div>' +
@@ -389,7 +389,7 @@
     viewerMode = "deck";
     if(tabId) activeTab = tabId;
     els.overlay.classList.remove("codex-mode");
-    els.title.textContent = "보유 카드";
+    els.title.textContent = "보유 주문";
     els.tabsWrap.style.display = "";
     if(els.codexTabsWrap) els.codexTabsWrap.style.display = "none";
     if(els.codexHome) els.codexHome.style.display = "none";
@@ -518,11 +518,11 @@
     els.summary.textContent = tab.label + " " + visibleCount + "장 / " + entries.length + "종류";
     els.grid.innerHTML = entries.length
       ? entries.map(deckCardHtml).join("")
-      : '<div class="deck-viewer-empty">표시할 카드가 없습니다.</div>';
+      : '<div class="deck-viewer-empty">표시할 주문이 없습니다.</div>';
     if(entries.length === 0){
       const empty = els.grid.querySelector(".deck-viewer-empty");
-      if(empty) empty.textContent = EMPTY_TEXT[tab.id] || "해당하는 카드가 없습니다.";
-      if(empty && cards.length > 0) empty.textContent = "조건에 맞는 카드가 없습니다.";
+      if(empty) empty.textContent = EMPTY_TEXT[tab.id] || "해당하는 주문이 없습니다.";
+      if(empty && cards.length > 0) empty.textContent = "조건에 맞는 주문이 없습니다.";
     }
   }
 
@@ -606,7 +606,7 @@
 
   function getCodexSummaryText(sectionId, entries, total){
     if(sectionId === "cards"){
-      return "전체 카드 " + entries.filter(entry => !entry.locked).length + "장 발견 / " + total + "장";
+      return "전체 주문 " + entries.filter(entry => !entry.locked).length + "장 발견 / " + total + "장";
     }
     if(sectionId === "relics") return "전체 법구 " + entries.length + "개 / " + total + "개";
     return "전체 약병 " + entries.length + "개 / " + total + "개";
@@ -616,7 +616,7 @@
     if(total > 0) return "조건에 맞는 항목이 없습니다.";
     if(sectionId === "relics") return "등록된 법구가 없습니다.";
     if(sectionId === "potions") return "등록된 약병이 없습니다.";
-    return "표시할 카드가 없습니다.";
+    return "표시할 주문이 없습니다.";
   }
 
   function buildCardEntries(cards, tabId){
@@ -746,10 +746,10 @@
     }
     const card = entry.card;
     if(entry.locked){
-      return '<button type="button" class="deck-viewer-card codex-locked cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" aria-label="잠긴 카드">' +
+      return '<button type="button" class="deck-viewer-card codex-locked cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" aria-label="잠긴 주문">' +
         '<div class="codex-lock">?</div>' +
         '<div class="art">' + escapeHtml(card.emoji) + '</div>' +
-        '<div class="codex-locked-text">미발견 카드</div>' +
+        '<div class="codex-locked-text">미발견 주문</div>' +
       '</button>';
     }
     return '<button type="button" class="deck-viewer-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="' + entry.count + '">' +
@@ -790,7 +790,7 @@
     const typeId = getCardFilterType(card) || card.type;
     const attrId = getCardFilterAttribute(card);
     const changeText = getUpgradeChangeText(entry.card, card);
-    return '<button type="button" class="card-detail-nav card-detail-prev" data-card-detail-nav="prev" aria-label="이전 카드">‹</button>' +
+    return '<button type="button" class="card-detail-nav card-detail-prev" data-card-detail-nav="prev" aria-label="이전 주문">‹</button>' +
       '<div class="card-detail-spread">' +
         '<div class="card-detail-front">' +
           detailCardFaceHtml(entry, card, isUpgrade) +
@@ -800,7 +800,7 @@
         '</div>' +
         '<div class="card-detail-back">' +
           '<div class="card-detail-title">' +
-            '<div class="card-detail-kicker">' + (isUpgrade ? '강화 미리보기' : '카드 정보') + ' ' + escapeHtml(index + 1) + ' / ' + escapeHtml(total) + '</div>' +
+            '<div class="card-detail-kicker">' + (isUpgrade ? '강화 미리보기' : '주문 정보') + ' ' + escapeHtml(index + 1) + ' / ' + escapeHtml(total) + '</div>' +
             '<h3 id="cardDetailTitle">' + escapeHtml(card.name) + '</h3>' +
             '<div class="card-detail-badges">' +
               '<span class="card-detail-badge">정신력 ' + escapeHtml(card.cost) + '</span>' +
@@ -813,12 +813,12 @@
           '<div class="card-detail-desc">' + escapeHtml(card.desc) + '</div>' +
           '<div class="card-detail-info">' +
             (isUpgrade ? '<section><h4>강화 변화</h4><p>' + escapeHtml(changeText) + '</p></section>' : '') +
-            '<section><h4>카드 종류</h4><p>' + escapeHtml(getTypeDescription(card)) + '</p></section>' +
-            '<section><h4>카드 속성</h4><p>' + escapeHtml(getAttributeDescription(attrId)) + '</p></section>' +
+            '<section><h4>주문 종류</h4><p>' + escapeHtml(getTypeDescription(card)) + '</p></section>' +
+            '<section><h4>주문 속성</h4><p>' + escapeHtml(getAttributeDescription(attrId)) + '</p></section>' +
           '</div>' +
         '</div>' +
       '</div>' +
-      '<button type="button" class="card-detail-nav card-detail-next" data-card-detail-nav="next" aria-label="다음 카드">›</button>';
+      '<button type="button" class="card-detail-nav card-detail-next" data-card-detail-nav="next" aria-label="다음 주문">›</button>';
   }
 
   function detailCardFaceHtml(entry, displayCard, isUpgrade){
@@ -874,7 +874,7 @@
       case "bonusLowHpDamage": return "미련 절반 이하 추가 정화 " + effect.v;
       case "damageAll": return "모든 적에게 정화 " + effect.v;
       case "block": return "마음의 결계 " + effect.v;
-      case "draw": return "카드 " + effect.v + "장 뽑기";
+      case "draw": return "주문 " + effect.v + "장 뽑기";
       case "heal": return "스트레스 " + effect.v + " 회복";
       case "energy": return "정신력 +" + effect.v;
       case "applyWeak": return "동요 " + effect.v + " 부여";
@@ -885,20 +885,20 @@
   }
 
   function getUpgradeChangeText(baseCard, upgradedCard){
-    if(!Array.isArray(baseCard.fx) || !Array.isArray(upgradedCard.fx)) return "강화 후 카드 이름과 효과 설명이 미리보기로 표시됩니다.";
+    if(!Array.isArray(baseCard.fx) || !Array.isArray(upgradedCard.fx)) return "강화 후 주문 이름과 효과 설명이 미리보기로 표시됩니다.";
     const changes = upgradedCard.fx.map((effect, index) => {
       const before = baseCard.fx[index];
       if(!before || typeof before.v !== "number" || typeof effect.v !== "number" || before.v === effect.v) return "";
       return getEffectChangeLabel(effect.t) + " " + before.v + " → " + effect.v;
     }).filter(Boolean);
-    return changes.length > 0 ? changes.join("\n") : "강화 후 카드 이름과 효과 설명이 미리보기로 표시됩니다.";
+    return changes.length > 0 ? changes.join("\n") : "강화 후 주문 이름과 효과 설명이 미리보기로 표시됩니다.";
   }
 
   function getEffectChangeLabel(type){
     if(type === "damage" || type === "bonusLowHpDamage" || type === "damageAll") return "정화";
     if(type === "block") return "결계";
     if(type === "heal") return "회복";
-    if(type === "draw") return "카드 뽑기";
+    if(type === "draw") return "주문 뽑기";
     if(type === "energy") return "정신력";
     if(type === "applyWeak" || type === "applyWeakAll" || type === "removeWeak") return "동요";
     return "효과";
@@ -914,10 +914,10 @@
 
   function getTypeDescription(card){
     const type = getCardFilterType(card);
-    if(type === "attack") return "몬스터의 미련 게이지를 줄여 마음을 가볍게 하는 카드입니다.";
+    if(type === "attack") return "몬스터의 미련 게이지를 줄여 마음을 가볍게 하는 주문입니다.";
     if(type === "defense") return "플레이어에게 마음의 결계를 부여해 스트레스 공격을 먼저 막아줍니다.";
-    if(type === "skill") return "직접 정화하지 않고 회복, 카드 뽑기, 상태 변화 같은 다양한 도움을 줍니다.";
-    return "전투 흐름에 특별한 효과를 더하는 카드입니다.";
+    if(type === "skill") return "직접 정화하지 않고 회복, 주문 뽑기, 상태 변화 같은 다양한 도움을 줍니다.";
+    return "전투 흐름에 특별한 효과를 더하는 주문입니다.";
   }
 
   function getFriendlyAttributeLabel(card){

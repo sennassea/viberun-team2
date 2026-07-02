@@ -30,7 +30,7 @@
       icon: "🌸",
       iconImage: "",
       color: "#ff6fb1",
-      description: "일부 성불 카드가 추가 효과를 얻습니다. 표식을 소모하는 카드에 의해 제거됩니다.",
+      description: "일부 성불 주문이 추가 효과를 얻습니다. 표식을 소모하는 주문에 의해 제거됩니다.",
       maxStack: 99,
       showOnEnemy: true
     },
@@ -42,7 +42,7 @@
       icon: "💭",
       iconImage: "",
       color: "#7c93d6",
-      description: "다음 턴 카드 뽑기에 영향을 줍니다.",
+      description: "다음 턴 주문 뽑기에 영향을 줍니다.",
       maxStack: 99,
       showOnEnemy: false
     },
