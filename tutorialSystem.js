@@ -199,7 +199,11 @@
 
   function startTutorialFlow(){
     console.log("[Tutorial] startTutorialFlow");
+    markHasPlayedBefore();
     closeTutorialGuidePopup();
+    if(window.TUTORIAL_MAP_SYSTEM && typeof window.TUTORIAL_MAP_SYSTEM.open === "function"){
+      window.TUTORIAL_MAP_SYSTEM.open();
+    }
   }
 
   function markHasPlayedBefore(){
@@ -265,11 +269,13 @@
   }
 
   function startTutorialFromMenu(){
+    startTutorialBattle();
+  }
+
+  function startTutorialBattle(){
     const data = window.BOHYUN_COMBAT_DATA;
-    const tutorialMonster = data && typeof data.getMonsterById === "function"
-      ? data.getMonsterById("child_spirit")
-      : null;
-    if(!data || !Array.isArray(data.monsters) || !tutorialMonster){
+    const tutorialMonsters = getTutorialBattleMonsters(data);
+    if(!data || !Array.isArray(data.monsters) || !tutorialMonsters.length){
       if(typeof showStartNotice === "function") showStartNotice("튜토리얼을 불러올 수 없습니다.");
       return;
     }
@@ -277,7 +283,7 @@
     markTutorialStarted();
     tutorialActive = true;
     originalMonsters = data.monsters.map(monster => cloneMonster(monster));
-    data.monsters.splice(0, data.monsters.length, cloneMonster(tutorialMonster));
+    data.monsters.splice(0, data.monsters.length, ...tutorialMonsters.map(monster => cloneMonster(monster)));
 
     try {
       if(typeof localStorage !== "undefined") localStorage.removeItem("viberunSaveState");
@@ -302,6 +308,17 @@
       S.battleNodeType = "tutorial";
       S.battlePackageId = "stage_tutorial_child_spirit";
     }
+  }
+
+  function getTutorialBattleMonsters(data){
+    if(!data) return [];
+    if(typeof data.getEncounterMonsters === "function"){
+      const encounterMonsters = data.getEncounterMonsters("stage_tutorial_child_spirit");
+      if(encounterMonsters.length) return encounterMonsters;
+    }
+    if(typeof data.getMonsterById !== "function") return [];
+    const fallbackMonster = data.getMonsterById("child_spirit");
+    return fallbackMonster ? [fallbackMonster] : [];
   }
 
   function wrapCombatFlowOnce(){
@@ -363,6 +380,9 @@
     tutorialActive = false;
     restoreOriginalMonsters();
     if(typeof S !== "undefined" && S) S.tutorialMode = false;
+    if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.endTutorialBattle === "function"){
+      window.TUTORIAL_BATTLE.endTutorialBattle();
+    }
   }
 
   function restoreOriginalMonsters(){
@@ -391,6 +411,7 @@
   }
 
   window.startTutorialFlow = startTutorialFlow;
+  window.startTutorialBattle = startTutorialBattle;
 
   window.TUTORIAL_SYSTEM = {
     keys: {
@@ -410,6 +431,7 @@
     markTutorialSkipped,
     showGuide: showTutorialGuidePopup,
     startTutorialFlow,
+    startTutorialBattle,
     start: startTutorialFromMenu,
     isActive: isTutorialBattle
   };

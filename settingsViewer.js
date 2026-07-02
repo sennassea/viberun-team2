@@ -69,15 +69,16 @@
             volumeControlHtml("effect", "효과음", 80) +
           '</section>' +
           '<div class="settings-viewer-actions">' +
-            '<button type="button" class="settings-viewer-danger">포기하기</button>' +
+            '<button type="button" class="settings-viewer-danger">전투 포기</button>' +
             '<button type="button" class="settings-viewer-primary">저장하기</button>' +
+            '<button type="button" class="settings-viewer-tutorial">튜토리얼 다시 보기</button>' +
             '<button type="button" class="settings-viewer-reset">게임 기록 초기화</button>' +
           '</div>' +
         '</div>' +
         '<div class="settings-viewer-confirm" aria-hidden="true">' +
           '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsGiveUpTitle">' +
-            '<h3 id="settingsGiveUpTitle">정말 포기하시겠습니까?</h3>' +
-            '<p>포기하면 패배로 처리되며,<br>진행도와 얻은 카드들이 모두 리셋됩니다.</p>' +
+            '<h3 id="settingsGiveUpTitle">전투를 포기하시겠습니까?</h3>' +
+            '<p>전투 포기 시 패배로 처리되며,<br>현재 런 진행만 종료됩니다.</p>' +
             '<div class="settings-viewer-confirm-actions">' +
               '<button type="button" class="settings-viewer-confirm-yes">예</button>' +
               '<button type="button" class="settings-viewer-confirm-no">아니오</button>' +
@@ -136,6 +137,7 @@
     overlay.querySelector(".settings-viewer-help-close").addEventListener("click", closeHelp);
     overlay.querySelector(".settings-viewer-danger").addEventListener("click", openGiveUpConfirm);
     overlay.querySelector(".settings-viewer-primary").addEventListener("click", openSaveConfirm);
+    overlay.querySelector(".settings-viewer-tutorial").addEventListener("click", replayTutorial);
     overlay.querySelector(".settings-viewer-save-no").addEventListener("click", closeSaveConfirm);
     overlay.querySelector(".settings-viewer-save-yes").addEventListener("click", saveProgressAndExit);
     overlay.querySelector(".settings-viewer-reset").addEventListener("click", openResetConfirm);
@@ -174,6 +176,7 @@
       saveConfirm: overlay.querySelector(".settings-viewer-save-confirm"),
       saveNo: overlay.querySelector(".settings-viewer-save-no"),
       primary: overlay.querySelector(".settings-viewer-primary"),
+      tutorial: overlay.querySelector(".settings-viewer-tutorial"),
       reset: overlay.querySelector(".settings-viewer-reset"),
       resetConfirm: overlay.querySelector(".settings-viewer-reset-confirm"),
       resetNo: overlay.querySelector(".settings-viewer-reset-no"),
@@ -304,6 +307,7 @@
       ".settings-viewer-actions{display:flex;justify-content:flex-end;gap:1cqw;}" +
       ".settings-viewer-actions button{height:4.4cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-danger{background:#fff1ef;color:var(--c-red-deep);}" +
+      ".settings-viewer-tutorial{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-reset{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-primary{background:var(--c-blue);color:#fff;}" +
       ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
@@ -435,6 +439,14 @@
     els.confirm.classList.remove("show");
     els.confirm.setAttribute("aria-hidden", "true");
     if(els.overlay.classList.contains("show")) els.close.focus();
+  }
+
+  function replayTutorial(){
+    if(typeof markHasPlayedBefore === "function") markHasPlayedBefore();
+    closeSettingsViewer();
+    if(window.TUTORIAL_SYSTEM && typeof window.TUTORIAL_SYSTEM.showGuide === "function"){
+      window.TUTORIAL_SYSTEM.showGuide();
+    }
   }
 
   function confirmGiveUp(){
