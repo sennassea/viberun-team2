@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Bohyun</string>
-    <string name="title_activity_main">Bohyun</string>
-    <string name="package_name">com.yourteam.bohyun</string>
-    <string name="custom_url_scheme">com.yourteam.bohyun</string>
-</resources>
