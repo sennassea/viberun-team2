@@ -890,7 +890,7 @@ function renderProfileStatuses(){
 }
 
 function renderSideItemSlots(){
-  renderItemSlots("#sideRelicSlots",  S.relics,  3, "🏺");
+  renderItemSlots("#sideRelicSlots",  S.relics,  10, "🏺");
   renderItemSlots("#sidePotionSlots", S.potions, 3, "🧪");
 }
 
