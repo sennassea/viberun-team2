@@ -38,6 +38,19 @@
       fx: [],
       unplayable: true,
       damageOnDiscard: 3
+    },
+    hesitation: {
+      name: "망설임",
+      cost: 0,
+      type: "status",
+      emoji: "⏳",
+      target: "none",
+      attr: "상태",
+      rarity: "status",
+      desc: "사용 불가\n턴 종료 시 소멸합니다",
+      fx: [],
+      unplayable: true,
+      exhaustOnTurnEnd: true
     }
   };
 
@@ -76,6 +89,9 @@
         id: monsterData.id || `enemy_${index}`,
         name: monsterData.name,
         image: monsterData.image,
+        family: monsterData.family,
+        theme: monsterData.theme,
+        themeLabel: monsterData.themeLabel,
         roles: Array.isArray(monsterData.roles) ? [...monsterData.roles] : [],
         hp: monsterData.maxHp,
         maxHp: monsterData.maxHp,
@@ -86,6 +102,7 @@
         grade: monsterData.grade || "normal",
         x: monsterData.x || 72,
         moves: monsterData.moves || [],
+        nextPhase: monsterData.nextPhase || null,
         intent: (monsterData.moves || [])[monsterData.first || 0] || null,
         lastIntentType: null,
         intentRepeatCount: 0
