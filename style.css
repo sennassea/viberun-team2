@@ -214,7 +214,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .top-relic-panel.relic-scrollable::after{content:""; position:absolute; top:50%; width:1.35cqh; height:2.1cqh; background:var(--relic-scroll-arrow-image, var(--c-ink-soft)); pointer-events:none;}
 .top-relic-panel.relic-scrollable::before{left:-.8cqh; transform:translateY(-50%) scaleX(-1); clip-path:polygon(0 0, 100% 50%, 0 100%);}
 .top-relic-panel.relic-scrollable::after{right:-.8cqh; transform:translateY(-50%); clip-path:polygon(0 0, 100% 50%, 0 100%);}
-.side-item-panel{width:6.4cqh; min-height:33cqh; flex:none; display:flex; flex-direction:column; justify-content:flex-end; gap:1.1cqh;
+.side-item-panel{width:6.4cqh; min-height:15.8cqh; flex:none; display:flex; flex-direction:column; justify-content:flex-start; gap:1.1cqh;
   background:var(--c-panel); border:0.2cqh solid var(--c-panel-line); border-radius:1.1cqh; padding:.9cqh .55cqh;
   box-shadow:0 .5cqh 1.4cqh rgba(60,90,140,.15); backdrop-filter:blur(4px);}
 .side-item-section{display:flex; flex-direction:column; align-items:center; gap:.5cqh;}
