@@ -346,9 +346,9 @@ function selectEventChoice(choiceId){
 
   const picked = rollEventOutcomes(outcomes);
   const effects = picked.reduce((acc, o) => acc.concat(Array.isArray(o.effects) ? o.effects : []), []);
-  const combatEffect = effects.find(e => e.type === "combat");
-  const cardRewardEffect = effects.find(e => e.type === "cardReward");
-  const immediateEffects = effects.filter(e => e.type !== "combat" && e.type !== "cardReward");
+  const combatEffect = effects.find(e => e.type === "combat" || e.type === "combatEvent");
+  const cardRewardEffect = effects.find(e => e.type === "cardReward" || e.type === "cardRewardOptional");
+  const immediateEffects = effects.filter(e => e !== combatEffect && e !== cardRewardEffect);
 
   eventState.resultDetails = picked.map(o => ({ kind: o.kind, text: o.text }));
   immediateEffects.forEach(applyEventEffect);
@@ -537,3 +537,71 @@ function triggerEventCombat(combatType){
 }
 
 window.EVENT_NODE_OPEN = openEventNode;
+
+/* =========================================================================
+   맵 연동: event 노드 선택 시 이벤트 UI 진입
+   - mapNodeLogic.js의 event 노드는 이제 isDimmed:false이므로 맵에서 실제로
+     클릭할 수 있다. 이 파일은 restNode.js/shopNode.js와 동일한 "startStage
+     감싸기" 패턴으로 event 타입 스테이지만 가로챈다.
+   - 현재 층(phase: early/mid/late) 기준으로 EVENT_DB를 필터링한 뒤,
+     weight 가중치로 랜덤 이벤트 1개를 선택해 연다.
+   ========================================================================= */
+function eventFloorForStageIndex(stageIdx){
+  if(typeof MAP_FLOORS === "undefined") return 1;
+  for(let fi = 0; fi < MAP_FLOORS.length; fi++){
+    if(MAP_FLOORS[fi].some(n => n.stageIndex === stageIdx)) return fi;
+  }
+  return 1;
+}
+
+/* mapNodeLogic.js의 act1GetWeights 구간 분류(1~5=early, 6~10=mid, 11~14=late)와
+   동일한 경계를 사용해 EVENT_DB.phaseTags와 맞춘다. */
+function eventPhaseForFloor(floor){
+  if(floor <= 5) return "early";
+  if(floor <= 10) return "mid";
+  return "late";
+}
+
+function pickRandomEventForFloor(floor){
+  const db = window.EVENT_DB || [];
+  if(!db.length) return null;
+  const phase = eventPhaseForFloor(floor);
+  let pool = db.filter(e => Array.isArray(e.phaseTags) && e.phaseTags.includes(phase));
+  if(!pool.length) pool = db; // 안전망: 해당 구간에 맞는 이벤트가 없으면 전체 중에서 선택
+
+  const total = pool.reduce((sum, e) => sum + (e.weight || 1), 0);
+  if(total <= 0) return pool[0];
+  let roll = Math.random() * total;
+  for(const e of pool){
+    roll -= (e.weight || 1);
+    if(roll <= 0) return e;
+  }
+  return pool[pool.length - 1];
+}
+
+(function initEventMapEntry(){
+  const prevStartStage = window.startStage;
+  window.startStage = function eventWrappedStartStage(stageIdx){
+    const stage = typeof MAP_STAGES !== "undefined" ? MAP_STAGES[stageIdx] : null;
+
+    if(stage && stage.type === "event"){
+      window.MAP_STATE.currentStage = stageIdx;
+      window.MAP_STATE.proceedMode  = false;
+      window.MAP_STATE.startMapMode = false;
+      if(typeof updateHudFloor === "function") updateHudFloor();
+      if(typeof closeMap === "function") closeMap();
+
+      const floor = eventFloorForStageIndex(stageIdx);
+      const picked = pickRandomEventForFloor(floor);
+      if(!picked){
+        if(typeof toast === "function") toast("표시할 이벤트가 없습니다.");
+        if(typeof openMap === "function") openMap();
+        return;
+      }
+      openEventNode(picked.id);
+      return;
+    }
+
+    if(typeof prevStartStage === "function") return prevStartStage(stageIdx);
+  };
+})();
