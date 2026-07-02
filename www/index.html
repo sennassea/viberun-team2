@@ -31,7 +31,7 @@
         <button type="button" class="start-menu-button start-new-game">새 게임</button>
         <button type="button" class="start-menu-button start-continue-game">
           <span class="start-menu-label">이어하기</span>
-          <span class="continue-status">로비</span>
+          <span class="continue-status">신령의 은혜</span>
         </button>
         <div class="start-menu-row split">
           <button type="button" class="start-menu-button start-codex-button">도감</button>
@@ -70,6 +70,7 @@
         <div class="top-right-menu" aria-label="상단 메뉴">
           <div class="hud-card hud-btn top-menu-button">🗺️<span class="sr-only">병원 지도</span></div>
           <div class="hud-card hud-btn stat top-menu-button" id="deckViewerButton">📖 <span id="hudDeck">18</span></div>
+          <div class="hud-card hud-btn top-menu-button" id="bagViewerButton">🎒<span class="sr-only">가방</span></div>
           <div class="hud-card hud-btn top-menu-button">⚙️</div>
         </div>
       </div>
@@ -90,14 +91,14 @@
           </div>
           <span class="val">3/3</span>
         </div>
-        <div class="side-item-panel" aria-label="유물과 포션">
+        <div class="side-item-panel" aria-label="법구와 약병">
           <div class="side-item-section">
-            <div class="side-item-title">유물</div>
-            <div id="sideRelicSlots" class="side-item-slots" aria-label="보유 유물"></div>
+            <div class="side-item-title">법구</div>
+            <div id="sideRelicSlots" class="side-item-slots" aria-label="보유 법구"></div>
           </div>
           <div class="side-item-section">
-            <div class="side-item-title">포션</div>
-            <div id="sidePotionSlots" class="side-item-slots" aria-label="보유 포션"></div>
+            <div class="side-item-title">약병</div>
+            <div id="sidePotionSlots" class="side-item-slots" aria-label="보유 약병"></div>
           </div>
         </div>
       </div>
@@ -144,6 +145,8 @@
 <script src="monsterData.js" defer></script>
 <script src="mobileAppGuard.js" defer></script>
 <script src="lifeSystem.js" defer></script>
+<script src="EquipmentData.js" defer></script>
+<script src="PotionData.js" defer></script>
 <script src="cardData.js" defer></script>
 <script src="script.js" defer></script>
 <script src="runRecord.js" defer></script>
@@ -155,6 +158,14 @@
 <script src="encounterPackages.js" defer></script>
 <script src="mapNodeLogic.js" defer></script>
 <script src="mapUI.js" defer></script>
+<script src="restNode.js" defer></script>
+<script src="prayerCardAdd.js" defer></script>
+<script src="prayerCardRemove.js" defer></script>
+<script src="bagUI.js" defer></script>
+<script src="shopNode.js" defer></script>
+<script src="startBlessing.js" defer></script>
 <script src="hand-layout.js" defer></script>
+<script src="cheatConsole.js" defer></script>
+<script src="cheatMonster.js" defer></script>
 </body>
 </html>

@@ -16,6 +16,7 @@ function startNewGameFromMenu(){
   } catch(error) {}
 
   if(typeof generateMap === "function") generateMap();
+  if(typeof beginNewRun === "function") beginNewRun();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = -1;
     window.MAP_STATE.proceedMode = true;
@@ -35,6 +36,7 @@ function returnToStartScreen(){
   } catch(error) {}
 
   STARTER_DECK = [...BASE_STARTER_DECK];
+  if(typeof beginNewRun === "function") beginNewRun();
   if(typeof generateMap === "function") generateMap();
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = 0;
@@ -60,6 +62,7 @@ function continueGameFromMenu(){
   S = saved.state;
   normalizeRunResources();
   STARTER_DECK = [...saved.starterDeck];
+  if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
   S.busy = false;
   if(window.MAP_STATE && saved.mapState){
     window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
@@ -139,7 +142,7 @@ function updateContinueButtonInfo(){
   const saved = readSavedProgress();
   if(!saved){
     button.classList.remove("has-save");
-    status.textContent = "메인 로비";
+    status.textContent = "신령의 은혜";
     return;
   }
 
@@ -153,7 +156,7 @@ function formatSavedFloor(saved){
   const label = saved.mapState && saved.mapState.floorLabel ? saved.mapState.floorLabel : "";
   const match = label.match(/(\d+)\s*F/i);
   if(match) return match[1] + "층";
-  return "메인 로비";
+  return "신령의 은혜";
 }
 
 $("#returnStart").addEventListener("click", returnToStartScreen);

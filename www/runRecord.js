@@ -46,7 +46,7 @@ function getRunRecordFloor(){
   const hudFloor = document.getElementById("hudFloor");
   const match = hudFloor ? hudFloor.textContent.match(/(\d+)\s*F/i) : null;
   if(match) return match[1] + "층";
-  return "메인 로비";
+  return "신령의 은혜";
 }
 
 function openRecordPage(){
@@ -100,7 +100,7 @@ function renderRecordPage(overlay){
     return '<div class="record-page-item">' +
       '<div class="record-page-rank">' + (index + 1) + '</div>' +
       '<div class="record-page-main">' +
-        '<strong>' + (record.floor || "메인 로비") + ' ' + (record.turn || 1) + '턴</strong>' +
+        '<strong>' + (record.floor || "신령의 은혜") + ' ' + (record.turn || 1) + '턴</strong>' +
         '<span>' + resultLabel + (date ? ' · ' + date : '') + '</span>' +
       '</div>' +
     '</div>';

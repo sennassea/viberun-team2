@@ -7,18 +7,16 @@
   'use strict';
 
   /* ── 상수 ─────────────────────────────────────────────────────── */
-  /* 카드 간격에 사용할 게임 폭 비율
-     - 0.68 → 손패가 게임 폭의 68% 안에 들어옴
-     - 중앙 기준: 좌 34%~우 34%, 에너지(9cqw)·덱파일(89cqw) 모두 여유 확보 */
-  var AVAIL_W_FRAC    = 0.68;
-  /* 카드 폭: 11.5cqw */
+  /* 카드 간격은 .card-hand-area 폭을 기준으로 계산한다. */
+  var AREA_PADDING_R  = 0.035;
+  /* 카드 폭 fallback: 11.5cqw */
   var CARD_W_PCT      = 0.115;
-  /* 카드당 최대 간격: 카드 폭의 85% */
-  var MAX_SPACING_R   = 0.85;
+  /* 카드당 최대 간격: 카드 폭의 82% */
+  var MAX_SPACING_R   = 0.82;
   /* 최대 부채꼴 각도 (총 펼침, 도) */
-  var MAX_FAN_ANGLE   = 25;
+  var MAX_FAN_ANGLE   = 12;
   /* 카드 1장당 추가 각도 */
-  var ANGLE_PER_CARD  = 2.5;
+  var ANGLE_PER_CARD  = 1.3;
 
   /* ── 레이아웃 적용 ────────────────────────────────────────────── */
   function applyLayout() {
@@ -32,13 +30,16 @@
     var game = document.getElementById('game');
     if (!game || game.offsetWidth === 0) return;
 
+    var area = hand.closest('.card-hand-area') || game;
     var gameW  = game.offsetWidth;
-    var cqw    = gameW / 100;
-    var cardW  = CARD_W_PCT * gameW;          /* 카드 1장 픽셀 폭 */
-    var availW = AVAIL_W_FRAC * gameW;        /* 허용 전체 폭 (px) */
+    var measuredCardW = cards[0].getBoundingClientRect().width;
+    var cardW  = measuredCardW || (CARD_W_PCT * gameW);          /* 카드 1장 픽셀 폭 */
+    var areaW  = area.clientWidth || gameW;
+    var edgePad = Math.max(12, areaW * AREA_PADDING_R);
+    var availW = Math.max(cardW, areaW - edgePad * 2);        /* 허용 전체 폭 (px) */
 
     /* 카드 중심 간격: availW 안에 모든 카드가 들어오도록 */
-    var maxStep  = n > 1 ? availW / (n - 1) : availW;
+    var maxStep  = n > 1 ? Math.max(0, (availW - cardW) / (n - 1)) : 0;
     var spacing  = Math.min(cardW * MAX_SPACING_R, maxStep);
 
     /* 부채꼴 각도: 카드 수에 비례, 최대값으로 제한 */
