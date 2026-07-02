@@ -1,7 +1,7 @@
 "use strict";
 /* =========================================================================
    상점 노드 메인 화면 (shopNode.js)
-   기획서: 상점 UI 구현 기획서 - 최신 코드 반영본 (카드 / 약병 / 법구 판매 탭)
+   기획서: 상점 UI 구현 기획서 - 최신 코드 반영본 (주문 / 약병 / 법구 판매 탭)
 
    이 파일은 mapSystem.js / mapNodeLogic.js / mapUI.js / restNode.js / script.js /
    cardData.js / bagUI.js 이후에 로드되어야 합니다. 기존 코드를 직접 수정하지
@@ -15,25 +15,21 @@
 const SHOP_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#dock", "#hint"];
 
 /* ── 임시 테스트 가격 (기획서 9장 가격 권장안 기준. 정식 가격 기획 전까지 사용) ──
-   카드: 50-90 / 약병: 40-80 / 법구: 80-140 골드, 새로고침 20 골드 시작 */
+   주문: 50-90 / 약병: 40-80 / 법구: 80-140 골드, 새로고침 20 골드 시작 */
 const SHOP_CARD_PRICE_BY_RARITY = { common: 50, uncommon: 70, rare: 90 };
 const SHOP_DEFAULT_CARD_PRICE   = 60;
-const SHOP_RELIC_PRICE = { incense_burner: 90, spirit_tablet: 110, charm_box: 130 };
+const SHOP_RELIC_PRICE = { common: 80, uncommon: 110, rare: 145 };
 
-/* 약병 DB (기획서 11장 "약병 DB 신규 추가 권장"). 전역 이름 POTION_DB는
-   deckViewer.js(보유 카드 도감)와 cheatConsole.js(CHEAT.give.potion)가 이미
-   window.POTION_DB를 찾도록 되어 있어, 그대로 사용하면 자동으로 연결된다. */
-const POTION_DB = [
-  { id: "heal_potion",    name: "치유 약병", emoji: "💧", desc: "아군 1명 HP 30 회복",  price: 50 },
-  { id: "cleanse_potion", name: "정화 약병", emoji: "🌿", desc: "해로운 효과 2개 제거", price: 60 },
-  { id: "power_potion",   name: "기운 약병", emoji: "🔥", desc: "공격력 2 증가 (2턴)",  price: 70 },
-];
-const SHOP_POTION_SLOT_LIMIT = 3;
+/* 약병 DB는 potion.js의 POTION_DB를 사용합니다. */
+const SHOP_POTION_DB = (typeof window.POTION_DB !== "undefined") ? window.POTION_DB : [];
+const SHOP_POTION_SLOT_LIMIT = (typeof window.POTION_SLOT_LIMIT === "number") ? window.POTION_SLOT_LIMIT : 3;
 const SHOP_REFRESH_COST      = 20;
 const SHOP_CARD_STOCK_COUNT  = 4;
+const SHOP_POTION_STOCK_COUNT = 3;
+const SHOP_RELIC_STOCK_COUNT  = 3;
 
 const SHOP_TAB_INFO = {
-  card:   { label: "카드", columns: 4 },
+  card:   { label: "주문", columns: 4 },
   potion: { label: "약병", columns: 3 },
   relic:  { label: "법구", columns: 3 },
 };
@@ -42,7 +38,7 @@ const SHOP_MERCHANT_FLAVOR = {
   card: {
     bubble: "몸과 마음이 편안해지는 물건들만 준비했어요.",
     recommend: "치유와 정화, 그 균형이 당신의 승리를 이끌어줄 거예요.",
-    tip: "카드는 전투 중 한 번만 사용할 수 있어요.\n최적의 순간을 노려 보세요.",
+    tip: "주문은 전투 중 한 번만 사용할 수 있어요.\n최적의 순간을 노려 보세요.",
   },
   potion: {
     bubble: "몸과 마음이 편안해지는 물건들만 준비했어요.",
@@ -146,26 +142,71 @@ function getCardPrice(key) {
   return (card && SHOP_CARD_PRICE_BY_RARITY[card.rarity]) || SHOP_DEFAULT_CARD_PRICE;
 }
 
+/**
+ * 상점 판매 후보 목록을 무작위로 섞은 뒤 지정 개수만큼 반환합니다.
+ * 원본 DB 배열은 직접 변경하지 않습니다.
+ *
+ * @param {Array} list - 판매 후보 목록
+ * @param {number} count - 상점에 실제로 표시할 개수
+ * @returns {Array} 지정 개수만큼 추출된 판매 목록
+ */
+function pickShopItems(list, count) {
+  if (!Array.isArray(list)) {
+    console.warn("[Shop] 판매 후보 목록이 배열이 아닙니다.", list);
+    return [];
+  }
+
+  return list
+    .slice()
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count);
+}
+
 function buildCardStock() {
-  const pool = CARD_REWARD_POOL.slice().sort(() => Math.random() - 0.5);
-  return pool.slice(0, SHOP_CARD_STOCK_COUNT).map((key) => {
+  return pickShopItems(CARD_REWARD_POOL, SHOP_CARD_STOCK_COUNT).map((key) => {
     const card = CARD_DB[key];
+
+    if (!card) {
+      console.warn("[Shop] 존재하지 않는 주문 ID가 판매 목록에 포함되었습니다.", key);
+      return null;
+    }
+
     return {
-      id: key, category: "card", sourceKey: key,
-      name: card.name, emoji: card.emoji, cardType: card.type,
-      desc: card.desc, price: getCardPrice(key), soldOut: false,
+      id: key,
+      category: "card",
+      sourceKey: key,
+      name: card.name,
+      emoji: card.emoji,
+      cardType: card.type,
+      desc: card.desc,
+      price: getCardPrice(key),
+      soldOut: false,
     };
-  });
+  }).filter(Boolean);
 }
 
 function buildPotionStock() {
-  return POTION_DB.map((p) => ({ ...p, category: "potion", soldOut: false }));
+  const db = typeof window.getPotionCandidatesBySource === "function"
+    ? window.getPotionCandidatesBySource("shop")
+    : SHOP_POTION_DB;
+
+  return pickShopItems(db, SHOP_POTION_STOCK_COUNT).map((p) => ({
+    ...p,
+    category: "potion",
+    price: p.shopPrice || p.price || 0,
+    soldOut: false,
+  }));
 }
 
 function buildRelicStock() {
-  return RELIC_DB.map((r) => ({
-    ...r, category: "relic",
-    price: SHOP_RELIC_PRICE[r.id] || 100,
+  const db = typeof window.getRelicCandidatesBySource === "function"
+    ? window.getRelicCandidatesBySource("shop")
+    : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+
+  return pickShopItems(db, SHOP_RELIC_STOCK_COUNT).map((r) => ({
+    ...r,
+    category: "relic",
+    price: r.shopPrice || r.price || SHOP_RELIC_PRICE[r.rarity] || 100,
     soldOut: false,
   }));
 }
@@ -227,7 +268,7 @@ function buyPotion(item) {
   if (getPotionCount() >= SHOP_POTION_SLOT_LIMIT) { if (typeof toast === "function") toast("약병 슬롯이 가득 찼습니다."); return; }
   if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
   if (!Array.isArray(S.potions)) S.potions = [];
-  S.potions.push({ id: item.id, name: item.name, emoji: item.emoji, desc: item.desc });
+  S.potions.push({ ...item, soldOut: undefined, category: undefined });
   S.gold -= item.price;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
@@ -238,7 +279,8 @@ function buyRelic(item) {
   if (isRelicOwned(item.id)) { if (typeof toast === "function") toast("이미 보유한 법구입니다."); return; }
   if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
   if (!Array.isArray(S.relics)) S.relics = [];
-  S.relics.push({ id: item.id, name: item.name, emoji: item.emoji, desc: item.desc });
+  // 효과 배열(fx)까지 보존해야 전투 시작/턴 종료/조건부 법구 효과가 정상 발동됩니다.
+  S.relics.push({ ...item });
   S.gold -= item.price;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
@@ -274,12 +316,12 @@ function ensureShopOverlay() {
 
   overlay.querySelector("#shopMapBtn").addEventListener("click", () => {
     if (typeof openMap === "function") openMap();
-    else if (typeof toast === "function") toast("지도를 열 수 없습니다.");
+    else if (typeof toast === "function") toast("여정을 열 수 없습니다.");
   });
   overlay.querySelector("#shopDeckBtn").addEventListener("click", () => {
     const deckBtn = document.getElementById("deckViewerButton");
     if (deckBtn) deckBtn.click();
-    else if (typeof toast === "function") toast("보유 카드 확인 기능을 열 수 없습니다.");
+    else if (typeof toast === "function") toast("보유 주문 확인 기능을 열 수 없습니다.");
   });
   overlay.querySelector("#shopBagBtn").addEventListener("click", () => {
     if (typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
@@ -319,8 +361,8 @@ function shopOverlayHtml() {
         '<div class="shop-title-sub">필요한 물품을 구매해 다음 전투를 준비하세요.</div>' +
       '</div>' +
       '<div class="shop-header-buttons">' +
-        '<button type="button" class="shop-header-btn" id="shopMapBtn"><span class="ico">🗺️</span><span>지도</span></button>' +
-        '<button type="button" class="shop-header-btn" id="shopDeckBtn"><span class="ico">📖</span><span>보유카드</span></button>' +
+        '<button type="button" class="shop-header-btn" id="shopMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
+        '<button type="button" class="shop-header-btn" id="shopDeckBtn"><span class="ico">📖</span><span>보유주문</span></button>' +
         '<button type="button" class="shop-header-btn" id="shopBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
         '<button type="button" class="shop-header-btn" id="shopSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
@@ -340,7 +382,7 @@ function shopOverlayHtml() {
       '</div>' +
       '<div class="shop-main">' +
         '<div class="shop-tabs" id="shopTabs">' +
-          '<button type="button" class="shop-tab" data-tab="card">카드</button>' +
+          '<button type="button" class="shop-tab" data-tab="card">주문</button>' +
           '<button type="button" class="shop-tab" data-tab="potion">약병</button>' +
           '<button type="button" class="shop-tab" data-tab="relic">법구</button>' +
         '</div>' +
@@ -493,21 +535,22 @@ function ensureShopStyles() {
         "linear-gradient(180deg,#efe0c4 0%,#d8c39a 55%,#c3aa7c 100%);}" +
     ".shop-overlay.show{display:flex;}" +
 
-    ".shop-header{flex:none;display:flex;align-items:stretch;gap:1.2cqw;height:11.5cqh;}" +
-    ".shop-player-card{flex:none;display:flex;align-items:center;gap:1cqw;width:26cqw;min-width:32cqh;" +
-      "background:rgba(255,251,240,.85);border:.2cqh solid rgba(178,140,80,.45);border-radius:1.4cqh;" +
-      "padding:.9cqh 1.1cqw;box-shadow:0 .4cqh 1cqh rgba(120,90,40,.18);}" +
-    ".shop-portrait{flex:none;width:8.4cqh;height:8.4cqh;border-radius:50%;display:grid;place-items:center;" +
-      "font-size:4.3cqh;background:linear-gradient(160deg,#fff8e6,#f0dcb0);border:.22cqh solid #caa15a;}" +
+    ".shop-header{flex:none;display:flex;align-items:stretch;gap:.8cqw;height:12cqh;}" +
+    ".shop-player-card{flex:none;display:flex;align-items:center;gap:1.15cqw;width:24cqw;min-width:30cqh;" +
+      "background:var(--c-panel);border:.2cqh solid var(--c-panel-line);border-radius:var(--r);" +
+      "padding:.8cqh 1cqw;box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);backdrop-filter:blur(4px);}" +
+    ".shop-portrait{flex:none;width:11cqh;height:7cqh;border-radius:1.5cqh;display:grid;place-items:center;" +
+      "font-size:4.2cqh;background:linear-gradient(160deg,#fff,#dcecff);border:.25cqh solid var(--c-gold);box-shadow:0 0 1cqh rgba(231,181,74,.6);}" +
     ".shop-player-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4cqh;}" +
     ".shop-player-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}" +
-    ".shop-player-name b{font-size:1.85cqh;}" +
-    ".shop-player-name span{margin-left:.6cqw;font-size:1.25cqh;color:#8a6b3d;font-weight:800;}" +
-    ".shop-hp-row{display:flex;justify-content:space-between;font-size:1.35cqh;font-weight:900;color:#6b4a20;}" +
-    ".shop-hp-bar{position:relative;height:1.25cqh;border-radius:.7cqh;overflow:hidden;background:rgba(120,60,40,.25);}" +
-    ".shop-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#f0857a,#c94a3d);transition:width .3s ease;}" +
-    ".shop-resource-row{display:flex;gap:.8cqw;font-size:1.2cqh;font-weight:900;color:#6b4a20;}" +
-    ".shop-resource{display:inline-flex;align-items:center;gap:.25cqw;}" +
+    ".shop-player-name b{font-size:2.3cqh;}" +
+    ".shop-player-name span{display:none;}" +
+    ".shop-hp-row{display:flex;justify-content:space-between;gap:.8cqw;font-size:1.55cqh;font-weight:800;color:var(--c-ink);}" +
+    ".shop-hp-row span:first-child{color:var(--c-red-deep);}" +
+    ".shop-hp-bar{position:relative;height:1.45cqh;border-radius:.8cqh;overflow:hidden;background:rgba(122,42,42,.62);border:.12cqh solid rgba(0,0,0,.14);}" +
+    ".shop-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#ff8079,var(--c-hp));transition:width .35s ease;}" +
+    ".shop-resource-row{display:flex;align-items:center;gap:.65cqw;font-size:1.45cqh;font-weight:900;color:var(--c-ink);}" +
+    ".shop-resource{display:inline-flex;align-items:center;gap:.22cqw;}" +
 
     ".shop-title-badge{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;" +
       "background:rgba(255,251,240,.85);border:.2cqh solid rgba(178,140,80,.45);border-radius:1.4cqh;" +
@@ -515,12 +558,12 @@ function ensureShopStyles() {
     ".shop-title-main{font-size:2.6cqh;font-weight:900;letter-spacing:.25cqh;}" +
     ".shop-title-sub{font-size:1.2cqh;color:#8a6b3d;margin-top:.35cqh;font-weight:700;}" +
 
-    ".shop-header-buttons{flex:none;display:flex;align-items:center;gap:.7cqw;}" +
-    ".shop-header-btn{width:8.2cqh;height:100%;display:flex;flex-direction:column;align-items:center;" +
-      "justify-content:center;gap:.3cqh;background:rgba(255,251,240,.85);border:.2cqh solid rgba(178,140,80,.45);" +
-      "border-radius:1.2cqh;color:#6b4a20;cursor:pointer;font:inherit;}" +
-    ".shop-header-btn .ico{font-size:2.4cqh;line-height:1;}" +
-    ".shop-header-btn span:last-child{font-size:1.05cqh;font-weight:900;}" +
+    ".shop-header-buttons{flex:none;display:flex;align-items:center;gap:.8cqw;}" +
+    ".shop-header-btn{width:8.2cqh;height:100%;display:flex;align-items:center;justify-content:center;" +
+      "background:var(--c-panel);border:.2cqh solid var(--c-panel-line);border-radius:var(--r);color:var(--c-ink);" +
+      "cursor:pointer;font:inherit;font-size:3.1cqh;padding:0;box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);backdrop-filter:blur(4px);}" +
+    ".shop-header-btn .ico{font-size:3.1cqh;line-height:1;}" +
+    ".shop-header-btn span:last-child{display:none;}" +
     ".shop-header-btn:active{transform:scale(.94);}" +
 
     ".shop-body{flex:1;min-height:0;display:flex;gap:1.4cqw;}" +
@@ -539,7 +582,7 @@ function ensureShopStyles() {
     ".shop-tab{flex:1;height:5cqh;border-radius:1.1cqh 1.1cqh 0 0;border:.2cqh solid rgba(178,140,80,.5);border-bottom:none;" +
       "background:rgba(230,214,180,.6);color:#8a6b3d;font-size:1.7cqh;font-weight:900;cursor:pointer;font:inherit;}" +
     ".shop-tab.active{background:rgba(255,251,240,.96);color:#4a3a24;}" +
-    ".shop-products{flex:1;min-height:0;display:grid;align-content:start;gap:1cqw;padding:1.4cqh 1.2cqw;" +
+    ".shop-products{flex:0 1 auto;max-height:100%;display:grid;align-content:start;gap:1cqw;padding:1.4cqh 1.2cqw;" +
       "background:rgba(255,251,240,.9);border:.2cqh solid rgba(178,140,80,.5);border-radius:0 1.1cqh 1.1cqh 1.1cqh;overflow:auto;}" +
 
     ".shop-product{display:flex;flex-direction:column;align-items:center;gap:.5cqh;padding:1.2cqh .8cqw;" +

@@ -41,9 +41,10 @@
     style.id = "bagUIStyles";
     style.textContent =
       ".bag-ui-overlay{--bg-cream:#faf2e2;--bg-beige:#ece0c6;--bg-beige-deep:#cbb480;--bg-gold:#dba53f;--bg-gold-deep:#a97a1f;--bg-ink:#4a3a26;--bg-ink-soft:#8a765a;" +
-        "position:absolute;left:0;right:0;top:12.9cqh;bottom:0;z-index:70;display:none;place-items:center;" +
+        "position:absolute;inset:0;z-index:95;display:none;place-items:center;" +
         "background:rgba(30,20,10,.45);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s ease;}" +
       ".bag-ui-overlay.show{display:grid;opacity:1;}" +
+      ".bag-ui-overlay.map-mode{top:0;z-index:210;}" +
       ".bag-ui-panel{position:relative;width:min(84cqw,106cqh);max-height:78cqh;display:flex;flex-direction:column;gap:1.3cqh;padding:1.8cqh 2cqw;" +
         "background:radial-gradient(ellipse at 30% 15%,var(--bg-cream) 0%,var(--bg-beige) 62%,var(--bg-beige-deep) 100%);" +
         "border:0.3cqh solid var(--bg-gold);border-radius:1.6cqh;box-shadow:0 2cqh 4cqh rgba(30,20,10,.5),inset 0 0 3cqh rgba(255,250,230,.5);color:var(--bg-ink);}" +
@@ -195,7 +196,7 @@
       const relic = relics[selectedRelicIdx];
       els.relicDetail.innerHTML =
         '<div class="bag-detail-name">' + escapeHtml(relic.emoji || "🏺") + ' ' + escapeHtml(relic.name || "") + '</div>' +
-        '<div class="bag-detail-desc">' + escapeHtml(relic.desc || "") + '</div>';
+        '<div class="bag-detail-desc">' + escapeHtml(relic.desc || relic.effectText || relic.valueText || "") + '</div>';
     } else {
       els.relicDetail.innerHTML = '<div class="bag-detail-placeholder">법구를 선택하면 효과를 확인할 수 있어요.</div>';
     }
@@ -231,18 +232,23 @@
       const potion = potions[selectedPotionIdx];
       els.potionDetail.innerHTML =
         '<div class="bag-detail-name">' + escapeHtml(potion.emoji || "🧪") + ' ' + escapeHtml(potion.name || "") + '</div>' +
-        '<div class="bag-detail-desc">' + escapeHtml(potion.desc || "") + '</div>';
+        '<div class="bag-detail-desc">' + escapeHtml(potion.desc || potion.effectText || potion.valueText || "") + '</div>';
     } else {
       els.potionDetail.innerHTML = '<div class="bag-detail-placeholder">약병을 선택하면 효과를 확인할 수 있어요.</div>';
     }
   }
 
   /* ── 열기/닫기 ─────────────────────────────────────────────────────── */
-  function openBagUI() {
+  function openBagUI(options) {
     ensureUI();
+    // 호출 화면 구분: 맵에서 열 때만 map-mode 적용
+    const mode = options && options.mode ? options.mode : "";
+    const isMapMode = mode === "map";
     relicPage = 0;
     selectedRelicIdx = null;
     selectedPotionIdx = null;
+    // 맵에서 열릴 때는 맵 오버레이보다 위에 표시
+    els.overlay.classList.toggle("map-mode", isMapMode);
     render();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -251,8 +257,10 @@
   function closeBagUI() {
     if (!els) return;
     els.overlay.classList.remove("show");
+    els.overlay.classList.remove("map-mode");
     els.overlay.setAttribute("aria-hidden", "true");
   }
 
   window.BAG_UI_OPEN = openBagUI;
+  window.BAG_UI_CLOSE = closeBagUI;
 })();
