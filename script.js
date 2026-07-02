@@ -890,8 +890,50 @@ function renderProfileStatuses(){
 }
 
 function renderSideItemSlots(){
-  renderItemSlots("#sideRelicSlots",  S.relics,  10, "🏺");
+  const relicSlotCount = Array.isArray(S.relics) ? S.relics.length : resourceCount(S.relics);
+  renderItemSlots("#sideRelicSlots",  S.relics,  relicSlotCount, "🏺");
+  setupRelicSlotDragScroll();
+  updateRelicScrollHint();
   renderItemSlots("#sidePotionSlots", S.potions, 3, "🧪");
+}
+
+function updateRelicScrollHint(){
+  const host = document.querySelector("#sideRelicSlots");
+  const panel = host && host.closest(".top-relic-panel");
+  if(!host || !panel) return;
+  requestAnimationFrame(() => {
+    panel.classList.toggle("relic-scrollable", host.scrollWidth > host.clientWidth + 1);
+  });
+}
+
+function setupRelicSlotDragScroll(){
+  const host = document.querySelector("#sideRelicSlots");
+  if(!host || host.dataset.dragScrollReady === "1") return;
+  host.dataset.dragScrollReady = "1";
+  let dragging = false, startX = 0, startScrollLeft = 0, pointerId = null;
+  host.addEventListener("pointerdown", ev => {
+    if(host.scrollWidth <= host.clientWidth) return;
+    dragging = true;
+    pointerId = ev.pointerId;
+    startX = ev.clientX;
+    startScrollLeft = host.scrollLeft;
+    host.classList.add("drag-scrolling");
+    host.setPointerCapture(pointerId);
+  });
+  host.addEventListener("pointermove", ev => {
+    if(!dragging) return;
+    host.scrollLeft = startScrollLeft - (ev.clientX - startX);
+  });
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    host.classList.remove("drag-scrolling");
+    try{ host.releasePointerCapture(pointerId); }catch(e){}
+    pointerId = null;
+  }
+  host.addEventListener("pointerup", endDrag);
+  host.addEventListener("pointercancel", endDrag);
+  window.addEventListener("resize", updateRelicScrollHint);
 }
 
 function renderItemSlots(selector, items, maxSlots, fallbackIcon){
