@@ -147,6 +147,21 @@
         background:rgba(12,24,40,.12);
         cursor:default;
       }
+      #mapOverlay.tutorial-map-mode.tutorial-map-focus-active .mnode:not(.tutorial-map-focus-node){
+        opacity:.45;
+        filter:saturate(.75);
+      }
+      #mapOverlay.tutorial-map-mode.tutorial-map-focus-active .mpath{
+        opacity:.35;
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-map-focus-node{
+        opacity:1;
+        filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.82));
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-map-focus-node .mnode-bg{
+        stroke:#ffd25f !important;
+        stroke-width:5 !important;
+      }
     `;
     document.head.appendChild(style);
   }
@@ -167,6 +182,7 @@
     if(index >= ids.length){
       tutorialMapIntroActive = false;
       removeTutorialMapClickBlocker();
+      clearTutorialMapHighlight();
       removeTutorialMapDialogue();
       setTutorialMapStep("map_intro_completed");
       console.log("tutorial map intro completed");
@@ -180,6 +196,7 @@
     }
 
     setTutorialMapStep(dialogue.id);
+    applyTutorialMapHighlight(dialogue.id);
     renderTutorialMapDialogue(dialogue, () => {
       showTutorialMapDialogueSequence(ids, index + 1);
     });
@@ -236,6 +253,32 @@
     if(blocker) blocker.remove();
   }
 
+  function applyTutorialMapHighlight(dialogueId){
+    clearTutorialMapHighlight();
+    const overlay = document.getElementById("mapOverlay");
+    if(!overlay || !overlay.classList.contains("tutorial-map-mode")) return;
+
+    let node = null;
+    if(dialogueId === "M-002"){
+      node = overlay.querySelector("#mapCanvas .mnode-current");
+    } else if(dialogueId === "M-003"){
+      node = overlay.querySelector('#mapCanvas [data-nodeid="tutorial_battle"]');
+    }
+
+    if(!node) return;
+    overlay.classList.add("tutorial-map-focus-active");
+    node.classList.add("tutorial-map-focus-node");
+  }
+
+  function clearTutorialMapHighlight(){
+    const overlay = document.getElementById("mapOverlay");
+    if(!overlay) return;
+    overlay.classList.remove("tutorial-map-focus-active");
+    overlay.querySelectorAll(".tutorial-map-focus-node").forEach(node => {
+      node.classList.remove("tutorial-map-focus-node");
+    });
+  }
+
   function setTutorialMapStep(step){
     if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.setTutorialStep === "function"){
       window.TUTORIAL_BATTLE.setTutorialStep(step);
@@ -290,6 +333,7 @@
         tutorialMapActive = false;
         tutorialMapIntroActive = false;
         removeTutorialMapClickBlocker();
+        clearTutorialMapHighlight();
         removeTutorialMapDialogue();
       }
       if(shouldReturnToNewbieStart && window.MAP_STATE){
