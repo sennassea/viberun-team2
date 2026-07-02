@@ -28,10 +28,19 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   overflow:hidden; color:var(--c-ink);
   font-size:2.2cqh; line-height:1.25;
 }
+.battle-bg{
+  position:absolute; inset:0; z-index:0; opacity:0;
+  background-image:var(--battle-bg-image);
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+  transition:opacity .25s ease;
+  pointer-events:none;
+}
+#game.battle-bg-active .battle-bg{opacity:1;}
+#game.battle-bg-active::before{opacity:.34;}
 /* 蹂묒썝 諛붾떏/李쎈Ц 遺꾩쐞湲??꾪듃 ?泥? */
 #game::before{content:""; position:absolute; left:0; right:0; bottom:0; height:42%;
   background:linear-gradient(180deg, rgba(223,234,245,0) 0%, var(--c-floor) 40%, #cdddee 100%);
-  pointer-events:none;}
+  pointer-events:none; z-index:1;}
 .bokeh{position:absolute; border-radius:50%; background:rgba(255,255,255,.35);
   filter:blur(2cqh); pointer-events:none;}
 
