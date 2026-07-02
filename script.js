@@ -1189,7 +1189,12 @@ function closeRewardOverlay(){
    턴 종료 → 생존 적 행동(spawnIndex 순) → 새 플레이어 턴
    ========================================================================= */
 async function endTurn(){
-  if(S.busy || S.over) return;
+  const tutorialEndTurnStepActive = window.TUTORIAL_BATTLE &&
+    typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+    window.TUTORIAL_BATTLE.isTutorialBattle() &&
+    typeof window.TUTORIAL_BATTLE.isEndTurnStepActive === "function" &&
+    window.TUTORIAL_BATTLE.isEndTurnStepActive();
+  if((S.busy && !tutorialEndTurnStepActive) || S.over) return;
   if(window.TUTORIAL_BATTLE &&
      typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
      window.TUTORIAL_BATTLE.isTutorialBattle() &&
@@ -1200,6 +1205,12 @@ async function endTurn(){
       : "";
     if(message && typeof toast === "function") toast(message);
     return;
+  }
+  if(window.TUTORIAL_BATTLE &&
+     typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+     window.TUTORIAL_BATTLE.isTutorialBattle() &&
+     typeof window.TUTORIAL_BATTLE.onEndTurnClicked === "function"){
+    window.TUTORIAL_BATTLE.onEndTurnClicked();
   }
   S.busy = true;
   updateEndBtn();
@@ -1274,6 +1285,12 @@ async function endTurn(){
   livingEnemies().forEach(e => MONSTER_PATTERN.planNextIntent(e));
   S.busy = false;
   renderAll();
+  if(window.TUTORIAL_BATTLE &&
+     typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+     window.TUTORIAL_BATTLE.isTutorialBattle() &&
+     typeof window.TUTORIAL_BATTLE.onEnemyTurnCompleted === "function"){
+    window.TUTORIAL_BATTLE.onEnemyTurnCompleted();
+  }
 }
 
 function endGame(result){
@@ -1831,12 +1848,17 @@ function renderEnergyOrbs(){
 }
 
 function updateEndBtn(){
+  const tutorialEndTurnStepActive = window.TUTORIAL_BATTLE &&
+    typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+    window.TUTORIAL_BATTLE.isTutorialBattle() &&
+    typeof window.TUTORIAL_BATTLE.isEndTurnStepActive === "function" &&
+    window.TUTORIAL_BATTLE.isEndTurnStepActive();
   const tutorialBlocksEndTurn = window.TUTORIAL_BATTLE &&
     typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
     window.TUTORIAL_BATTLE.isTutorialBattle() &&
     typeof window.TUTORIAL_BATTLE.canEndTurn === "function" &&
     !window.TUTORIAL_BATTLE.canEndTurn();
-  $("#endTurn").disabled = !!(S.busy || S.over || tutorialBlocksEndTurn);
+  $("#endTurn").disabled = !!((S.busy && !tutorialEndTurnStepActive) || S.over || tutorialBlocksEndTurn);
 }
 
 /* =========================================================================
