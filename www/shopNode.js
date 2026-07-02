@@ -25,6 +25,8 @@ const SHOP_POTION_DB = (typeof window.POTION_DB !== "undefined") ? window.POTION
 const SHOP_POTION_SLOT_LIMIT = (typeof window.POTION_SLOT_LIMIT === "number") ? window.POTION_SLOT_LIMIT : 3;
 const SHOP_REFRESH_COST      = 20;
 const SHOP_CARD_STOCK_COUNT  = 4;
+const SHOP_POTION_STOCK_COUNT = 3;
+const SHOP_RELIC_STOCK_COUNT  = 3;
 
 const SHOP_TAB_INFO = {
   card:   { label: "카드", columns: 4 },
@@ -140,27 +142,59 @@ function getCardPrice(key) {
   return (card && SHOP_CARD_PRICE_BY_RARITY[card.rarity]) || SHOP_DEFAULT_CARD_PRICE;
 }
 
+/**
+ * 상점 판매 후보 목록을 무작위로 섞은 뒤 지정 개수만큼 반환합니다.
+ * 원본 DB 배열은 직접 변경하지 않습니다.
+ *
+ * @param {Array} list - 판매 후보 목록
+ * @param {number} count - 상점에 실제로 표시할 개수
+ * @returns {Array} 지정 개수만큼 추출된 판매 목록
+ */
+function pickShopItems(list, count) {
+  if (!Array.isArray(list)) {
+    console.warn("[Shop] 판매 후보 목록이 배열이 아닙니다.", list);
+    return [];
+  }
+
+  return list
+    .slice()
+    .sort(() => Math.random() - 0.5)
+    .slice(0, count);
+}
+
 function buildCardStock() {
-  const pool = CARD_REWARD_POOL.slice().sort(() => Math.random() - 0.5);
-  return pool.slice(0, SHOP_CARD_STOCK_COUNT).map((key) => {
+  return pickShopItems(CARD_REWARD_POOL, SHOP_CARD_STOCK_COUNT).map((key) => {
     const card = CARD_DB[key];
+
+    if (!card) {
+      console.warn("[Shop] 존재하지 않는 카드 ID가 판매 목록에 포함되었습니다.", key);
+      return null;
+    }
+
     return {
-      id: key, category: "card", sourceKey: key,
-      name: card.name, emoji: card.emoji, cardType: card.type,
-      desc: card.desc, price: getCardPrice(key), soldOut: false,
+      id: key,
+      category: "card",
+      sourceKey: key,
+      name: card.name,
+      emoji: card.emoji,
+      cardType: card.type,
+      desc: card.desc,
+      price: getCardPrice(key),
+      soldOut: false,
     };
-  });
+  }).filter(Boolean);
 }
 
 function buildPotionStock() {
   const db = typeof window.getPotionCandidatesBySource === "function"
     ? window.getPotionCandidatesBySource("shop")
     : SHOP_POTION_DB;
-  return db.map((p) => ({
+
+  return pickShopItems(db, SHOP_POTION_STOCK_COUNT).map((p) => ({
     ...p,
     category: "potion",
     price: p.shopPrice || p.price || 0,
-    soldOut: false
+    soldOut: false,
   }));
 }
 
@@ -168,7 +202,8 @@ function buildRelicStock() {
   const db = typeof window.getRelicCandidatesBySource === "function"
     ? window.getRelicCandidatesBySource("shop")
     : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
-  return db.map((r) => ({
+
+  return pickShopItems(db, SHOP_RELIC_STOCK_COUNT).map((r) => ({
     ...r,
     category: "relic",
     price: r.shopPrice || r.price || SHOP_RELIC_PRICE[r.rarity] || 100,
@@ -547,7 +582,7 @@ function ensureShopStyles() {
     ".shop-tab{flex:1;height:5cqh;border-radius:1.1cqh 1.1cqh 0 0;border:.2cqh solid rgba(178,140,80,.5);border-bottom:none;" +
       "background:rgba(230,214,180,.6);color:#8a6b3d;font-size:1.7cqh;font-weight:900;cursor:pointer;font:inherit;}" +
     ".shop-tab.active{background:rgba(255,251,240,.96);color:#4a3a24;}" +
-    ".shop-products{flex:1;min-height:0;display:grid;align-content:start;gap:1cqw;padding:1.4cqh 1.2cqw;" +
+    ".shop-products{flex:0 1 auto;max-height:100%;display:grid;align-content:start;gap:1cqw;padding:1.4cqh 1.2cqw;" +
       "background:rgba(255,251,240,.9);border:.2cqh solid rgba(178,140,80,.5);border-radius:0 1.1cqh 1.1cqh 1.1cqh;overflow:auto;}" +
 
     ".shop-product{display:flex;flex-direction:column;align-items:center;gap:.5cqh;padding:1.2cqh .8cqw;" +
