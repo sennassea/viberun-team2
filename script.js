@@ -78,6 +78,23 @@ const BASIC_SUMMON_MONSTER_BY_THEME = {
   park: "child_spirit_lost",
   school: "cafeteria_spirit"
 };
+const BATTLE_BACKGROUND_BY_THEME = {
+  hospital: [
+    "assets/background/hospital_01_station.jpg",
+    "assets/background/hospital_02_ward.jpg",
+    "assets/background/hospital_03_corridor_night.jpg"
+  ],
+  park: [
+    "assets/background/park_01_playground_day.jpg",
+    "assets/background/park_02_fountain_sunset.jpg",
+    "assets/background/park_03_court_night.jpg"
+  ],
+  school: [
+    "assets/background/school_01_classroom_day.jpg",
+    "assets/background/school_02_hallway_sunset.jpg",
+    "assets/background/school_03_music_room_night.jpg"
+  ]
+};
 
 let S;
 let RUN_STATE = null;
@@ -367,8 +384,10 @@ function newGame(options={}){
     // 전투 시작 효과 중복 적용 방지 플래그
     battleStartApplied: false,
     // 노드 컨텍스트 (기획서 §2)
+    battleStage: curStage || null,
     battleNodeType:  curStage ? (curStage.type      || "enemy") : "enemy",
     battlePackageId: curStage ? (curStage.packageId || null)    : null,
+    battleBackground: null,
     encounterCleared: false,
     firstAttackUsed: false,
     nextAttackMultiplier: null,
@@ -380,6 +399,7 @@ function newGame(options={}){
 
   // 패키지 몬스터 전체 동시 배치 (기획서 §8-3)
   spawnPackageEnemies();
+  applyBattleBackground();
 
   S.draw = shuffle([...STARTER_DECK]);
   drawCards(DRAW_PER_TURN);
@@ -391,11 +411,57 @@ function newGame(options={}){
 
 // MONSTER_DEFS(패키지 몬스터 전체)를 한 번에 전장에 배치
 function spawnPackageEnemies(){
-  if(!MONSTER_DEFS.length){ S.enemies = []; S.selectedId = null; return; }
-  S.enemies = MONSTER_DEFS.map((def, i) => {
+  const stageMonsters = S.battleStage && typeof S.battleStage.getMonsters === "function"
+    ? S.battleStage.getMonsters()
+    : null;
+  const defs = Array.isArray(stageMonsters) && stageMonsters.length ? stageMonsters : MONSTER_DEFS;
+  if(!defs.length){ S.enemies = []; S.selectedId = null; return; }
+  S.enemies = defs.map((def, i) => {
     return createCombatEnemy(def, i);
   });
   S.selectedId = S.enemies[0]?.id || null;
+}
+
+function pickBattleTheme(enemies){
+  const counts = {};
+  (enemies || []).forEach(enemy => {
+    const theme = enemy && enemy.theme;
+    if(BATTLE_BACKGROUND_BY_THEME[theme]){
+      counts[theme] = (counts[theme] || 0) + 1;
+    }
+  });
+  const themes = Object.keys(counts);
+  if(!themes.length) return "hospital";
+  const max = Math.max(...themes.map(theme => counts[theme]));
+  const candidates = themes.filter(theme => counts[theme] === max);
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function pickBattleBackground(enemies){
+  const theme = pickBattleTheme(enemies);
+  const list = BATTLE_BACKGROUND_BY_THEME[theme] || BATTLE_BACKGROUND_BY_THEME.hospital;
+  return {
+    theme,
+    url: list[Math.floor(Math.random() * list.length)]
+  };
+}
+
+function applyBattleBackground(){
+  const game = document.querySelector("#game");
+  if(!game) return;
+  const bg = pickBattleBackground(S.enemies);
+  S.battleBackground = bg;
+  game.style.setProperty("--battle-bg-image", 'url("' + bg.url + '")');
+  game.dataset.battleTheme = bg.theme;
+  game.classList.add("battle-bg-active");
+}
+
+function clearBattleBackground(){
+  const game = document.querySelector("#game");
+  if(!game) return;
+  game.classList.remove("battle-bg-active");
+  game.style.removeProperty("--battle-bg-image");
+  delete game.dataset.battleTheme;
 }
 
 function createCombatEnemy(def, index, options = {}){
