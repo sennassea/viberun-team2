@@ -7,6 +7,8 @@
     SAVE_KEY,
     VOLUME_KEY,
     "viberunTutorialComplete",
+    "viberunTutorialCompleted",
+    "viberunTutorialWasSkipped",
     "viberunHasPlayedBefore",
     "hasPlayedBefore",
     "viberunCardCodex",
@@ -438,6 +440,8 @@
   function confirmGiveUp(){
     if(typeof endGame !== "function") return;
     clearSavedProgress();
+    if(typeof markHasPlayedBefore === "function") markHasPlayedBefore();
+    if(typeof S !== "undefined" && S) S.giveUpToStartOnly = true;
     endGame("lose");
     closeSettingsViewer();
   }
@@ -463,6 +467,7 @@
     if(typeof loadStageMonsters === "function") loadStageMonsters(0);
     if(typeof updateHudFloor === "function") updateHudFloor();
     if(typeof updateContinueButtonInfo === "function") updateContinueButtonInfo();
+    if(typeof updateStartScreenMode === "function") updateStartScreenMode();
     const startScreen = document.getElementById("startScreen");
     if(startScreen) startScreen.classList.remove("hidden");
     if(typeof showStartNotice === "function") showStartNotice("게임 기록을 초기화했습니다.");
