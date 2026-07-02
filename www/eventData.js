@@ -8,10 +8,7 @@
    * - UI는 이 데이터를 읽어서 제목, 스토리, 선택지, 결과 칩을 자동 렌더링한다.
    * - 확률/수치는 ACT1_이벤트_세부기획서_밸런스조정안 기준으로 반영되었다.
    * - 스토리 문구는 임시 문구이며, 기획 확정 문구로 추후 교체 가능하다.
-   * - effects의 일부 타입(potionRandom/potionChoice/potionSpecific,
-   *   cardRemove/cardDuplicate/cardTransform/cardRewardTagged/
-   *   cardRewardDominantAttr/cardRewardRare, relicRare)은 eventNode.js에
-   *   아직 연결되지 않았다 (미구현 타입은 콘솔 경고만 남기고 무시된다).
+   * - effects에 쓰이는 모든 type은 eventNode.js에 핸들러가 연결되어 있다.
    */
   const EVENT_DB = [
     {
