@@ -313,7 +313,7 @@
 
     if(typeof beginNewRun === "function") beginNewRun();
     if(window.MAP_STATE){
-      window.MAP_STATE.currentStage = -1;
+      window.MAP_STATE.currentStage = 0;
       window.MAP_STATE.proceedMode = false;
       window.MAP_STATE.startMapMode = false;
     }

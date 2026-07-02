@@ -237,6 +237,12 @@ const DMAP_EMOJI = {
   merchant: "🛍️",
 };
 
+function getTutorialMapCurrentLabel(currentNodeId) {
+  const stage = Array.isArray(MAP_STAGES) ? MAP_STAGES[0] : null;
+  if(!stage || stage.packageId !== "tutorial_battle") return "";
+  return currentNodeId === "tutorial_battle" ? "튜토리얼 구역" : "집";
+}
+
 /* ── renderCanvas 오버라이드 ────────────────────────────────────────────── */
 function renderCanvas(currentNodeId) {
   const svg = document.getElementById("mapCanvas");
@@ -244,6 +250,7 @@ function renderCanvas(currentNodeId) {
 
   const pos     = getDiagNodePos(MAP_FLOORS);
   const myFloor = nodeFloorIdx(currentNodeId);
+  const tutorialCurrentLabel = getTutorialMapCurrentLabel(currentNodeId);
   const isPast  = id   => nodeFloorIdx(id) < myFloor;
   const isCur   = id   => id === currentNodeId;
 
@@ -341,13 +348,15 @@ function renderCanvas(currentNodeId) {
   /* ── 현재 위치 배지 ── */
   const floorBadge = document.getElementById("mapCurrentFloor");
   if (floorBadge) {
-    floorBadge.textContent = myFloor > 0 ? `${myFloor}층` : "신령의 은혜";
+    floorBadge.textContent = tutorialCurrentLabel || (myFloor > 0 ? `${myFloor}층` : "신령의 은혜");
   }
 
   /* ── 푸터 텍스트 ── */
   const footer = document.getElementById("mapFooter");
   if (footer) {
-    footer.textContent = window.MAP_STATE.proceedMode
+    footer.textContent = tutorialCurrentLabel
+      ? "📍 현재 위치: " + tutorialCurrentLabel
+      : window.MAP_STATE.proceedMode
       ? "강조된 다음 노드를 클릭/터치하여 진행하세요"
       : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
   }
