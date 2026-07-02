@@ -199,7 +199,11 @@
 
   function startTutorialFlow(){
     console.log("[Tutorial] startTutorialFlow");
+    markHasPlayedBefore();
     closeTutorialGuidePopup();
+    if(window.TUTORIAL_MAP_SYSTEM && typeof window.TUTORIAL_MAP_SYSTEM.open === "function"){
+      window.TUTORIAL_MAP_SYSTEM.open();
+    }
   }
 
   function markHasPlayedBefore(){

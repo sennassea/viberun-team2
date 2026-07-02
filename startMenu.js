@@ -185,7 +185,7 @@ function markHasPlayedBefore(){
   }
   if(typeof localStorage === "undefined") return;
   try {
-    localStorage.setItem("viberunHasPlayedBefore", "1");
+    localStorage.setItem("viberunHasPlayedBefore", "true");
     localStorage.setItem("hasPlayedBefore", "1");
   } catch(error) {}
 }
