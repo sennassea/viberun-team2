@@ -510,6 +510,7 @@ function renderField(){
     const el = combatantEl({
       cls:"enemy ghost"+(e.id===S.selectedId ? " selected" : ""),
       emoji:e.emoji, name:e.name,
+      sprite:e.image,
       hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak,
       anxiety:e.anxiety, lethargy:e.lethargy,
       x: xList[i] ?? 72, bottom:"36cqh",
@@ -530,7 +531,7 @@ function combatantEl(o){
   if(o.id) el.dataset.id = o.id;
   const intentHtml = o.intent ? intentBubble(o.intent, o.weak) : "";
   const avatarHtml = o.sprite
-    ? '<div class="avatar sprite-avatar"><img src="'+o.sprite+'" alt=""></div>'
+    ? '<div class="avatar sprite-avatar"><img src="'+o.sprite+'" alt="" onerror="this.remove()"></div>'
     : '<div class="avatar">'+o.emoji+'</div>';
   const infoHtml = o.hideHud ? "" : '<div class="name">'+o.name+'</div>'+LIFE.renderCombatantStats(o);
   el.innerHTML = intentHtml + avatarHtml + infoHtml + '<div class="hit"></div>';
