@@ -26,6 +26,7 @@
   const BLOCK_CARD_DIALOGUE_ID = "W-030";
   const BLOCK_COMPLETE_DIALOGUE_ID = "W-031";
   const END_TURN_DIALOGUE_ID = "W-035";
+  const ENEMY_ACTION_COMPLETE_DIALOGUE_ID = "W-037";
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
@@ -626,6 +627,27 @@
     return true;
   }
 
+  function onEnemyTurnCompleted(){
+    if(!isTutorialBattle() || getTutorialStep() !== "end_turn_clicked") return false;
+    const dialogue = getTutorialBattleDialogue(ENEMY_ACTION_COMPLETE_DIALOGUE_ID);
+    if(!dialogue){
+      finishTutorialEnemyActionGuide();
+      return true;
+    }
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue(dialogue, finishTutorialEnemyActionGuide);
+    return true;
+  }
+
+  function finishTutorialEnemyActionGuide(){
+    cleanupTutorialBattleIntro();
+    setTutorialStep("enemy_action_guide_completed");
+    console.log("tutorial enemy action guide completed");
+  }
+
   function pauseTutorialBattleIntroCombat(){
     if(tutorialBattleIntroPauseState || typeof S === "undefined" || !S || S.over) return;
     tutorialBattleIntroPauseState = { busy: !!S.busy };
@@ -968,6 +990,7 @@
     openTutorialSettings,
     closeTutorialSettings,
     onCardPlayed,
-    onEndTurnClicked
+    onEndTurnClicked,
+    onEnemyTurnCompleted
   };
 })();

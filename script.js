@@ -1285,6 +1285,12 @@ async function endTurn(){
   livingEnemies().forEach(e => MONSTER_PATTERN.planNextIntent(e));
   S.busy = false;
   renderAll();
+  if(window.TUTORIAL_BATTLE &&
+     typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+     window.TUTORIAL_BATTLE.isTutorialBattle() &&
+     typeof window.TUTORIAL_BATTLE.onEnemyTurnCompleted === "function"){
+    window.TUTORIAL_BATTLE.onEnemyTurnCompleted();
+  }
 }
 
 function endGame(result){
