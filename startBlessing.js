@@ -38,6 +38,32 @@ let sbOverlayEl = null;
 let sbResolved  = false;
 let sbSpirit    = null;
 
+const START_BLESSING_SPIRIT_ASSETS = [
+  {
+    image: "assets/spirits/guardian_spirit.png",
+    emoji: "👻",
+    name: "수호 신령",
+    dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지."
+  },
+  {
+    image: "assets/spirits/bond_spirit.png",
+    emoji: "🧿",
+    name: "인연 신령",
+    dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마."
+  },
+  {
+    image: "assets/spirits/guide_spirit.png",
+    emoji: "🏮",
+    name: "길잡이 신령",
+    dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나."
+  },
+];
+START_BLESSING_SPIRIT_ASSETS.forEach((asset, index) => {
+  if(START_BLESSING_SPIRITS[index]){
+    START_BLESSING_SPIRITS[index] = { ...START_BLESSING_SPIRITS[index], ...asset };
+  }
+});
+
 /* ── 화면 열기 ────────────────────────────────────────────────────────────── */
 window.OPEN_START_BLESSING = function(){
   sbResolved = false;
@@ -243,10 +269,17 @@ function sbChoiceHtml(blessing, index){
 }
 
 /* ── 화면 값 렌더링 (열 때마다 최신 상태 반영) ────────────────────────────── */
+function sbSpiritVisualHtml(spirit){
+  if(spirit && spirit.image){
+    return '<img src="' + spirit.image + '" alt="' + (spirit.name || "") + '">';
+  }
+  return (spirit && spirit.emoji) || "";
+}
+
 function renderSbOverlay(){
   if(!sbOverlayEl) return;
 
-  sbOverlayEl.querySelector("#sbSpiritEmoji").textContent = sbSpirit.emoji;
+  sbOverlayEl.querySelector("#sbSpiritEmoji").innerHTML = sbSpiritVisualHtml(sbSpirit);
   sbOverlayEl.querySelector("#sbDialogue").textContent    = '"' + sbSpirit.dialogue + '"';
 
   const playerEmoji = (typeof PLAYER_DEF !== "undefined" && PLAYER_DEF && PLAYER_DEF.emoji) || "👼";
@@ -288,7 +321,8 @@ function ensureSbStyles(){
     ".sb-scene{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:6cqw;}" +
     ".sb-player,.sb-spirit{width:16cqh;height:16cqh;border-radius:50%;display:grid;place-items:center;font-size:8cqh;" +
       "background:radial-gradient(circle,rgba(80,150,170,.28),rgba(10,20,30,.12));border:.2cqh solid rgba(150,200,190,.35);}" +
-    ".sb-spirit{width:20cqh;height:20cqh;font-size:10cqh;border-color:rgba(230,190,110,.55);box-shadow:0 0 3cqh rgba(230,190,110,.35);}" +
+    ".sb-spirit{width:34cqh;height:54cqh;font-size:10cqh;border:none;background:transparent;box-shadow:none;overflow:visible;}" +
+    ".sb-spirit img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 1.2cqh 1.6cqh rgba(0,0,0,.45)) drop-shadow(0 0 1.8cqh rgba(180,220,255,.2));}" +
     ".sb-choices{flex:none;display:flex;justify-content:center;gap:1.8cqw;padding:0 2cqw;}" +
     ".sb-card{position:relative;flex:1;max-width:22cqw;min-height:34cqh;display:flex;flex-direction:column;align-items:center;" +
       "gap:.9cqh;padding:2.6cqh 1.2cqw 1.6cqh;background:linear-gradient(180deg,rgba(20,45,55,.85),rgba(10,22,30,.9));" +
