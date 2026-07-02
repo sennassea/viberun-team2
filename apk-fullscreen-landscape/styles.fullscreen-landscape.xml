@@ -1,0 +1,14 @@
+<!--
+  Copy this style into android/app/src/main/res/values/styles.xml.
+  It removes the title/action bar and keeps the Activity fullscreen.
+-->
+<resources>
+    <style name="AppTheme.FullscreenLandscape" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+    </style>
+</resources>
