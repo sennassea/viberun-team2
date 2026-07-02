@@ -15,6 +15,32 @@
     "viberunRunRecords"
   ];
   const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80 };
+  const volumeSettingsApi = window.VIBERUN_VOLUME_SETTINGS || (window.VIBERUN_VOLUME_SETTINGS = {
+    key: VOLUME_KEY,
+    defaults: { ...DEFAULT_VOLUMES },
+    read(){
+      if(typeof localStorage === "undefined") return { ...this.defaults };
+      try {
+        const saved = JSON.parse(localStorage.getItem(this.key) || "{}");
+        return {
+          master: Number.isFinite(saved.master) ? saved.master : this.defaults.master,
+          music: Number.isFinite(saved.music) ? saved.music : this.defaults.music,
+          effect: Number.isFinite(saved.effect) ? saved.effect : this.defaults.effect,
+        };
+      } catch(error) {
+        localStorage.removeItem(this.key);
+        return { ...this.defaults };
+      }
+    },
+    write(volumes){
+      if(typeof localStorage === "undefined") return;
+      localStorage.setItem(this.key, JSON.stringify({
+        master: Number(volumes.master),
+        music: Number(volumes.music),
+        effect: Number(volumes.effect),
+      }));
+    }
+  });
   let els = null;
   let pauseState = null;
   let settingsMode = "combat";
@@ -198,18 +224,7 @@
   }
 
   function getVolumeSettings(){
-    if(typeof localStorage === "undefined") return { ...DEFAULT_VOLUMES };
-    try {
-      const saved = JSON.parse(localStorage.getItem(VOLUME_KEY) || "{}");
-      return {
-        master: Number.isFinite(saved.master) ? saved.master : DEFAULT_VOLUMES.master,
-        music: Number.isFinite(saved.music) ? saved.music : DEFAULT_VOLUMES.music,
-        effect: Number.isFinite(saved.effect) ? saved.effect : DEFAULT_VOLUMES.effect,
-      };
-    } catch(error) {
-      localStorage.removeItem(VOLUME_KEY);
-      return { ...DEFAULT_VOLUMES };
-    }
+    return volumeSettingsApi.read();
   }
 
   function saveVolumeSettings(){
@@ -219,7 +234,7 @@
       const key = input.id.replace("settingsVolume", "");
       volumes[key] = Number(input.value);
     });
-    localStorage.setItem(VOLUME_KEY, JSON.stringify(volumes));
+    volumeSettingsApi.write(volumes);
   }
 
   function applyVolumeSettings(){
@@ -340,7 +355,7 @@
 
   function openSettingsViewer(){
     if(!els) return;
-    if(window.TUTORIAL_MAP_SYSTEM && typeof window.TUTORIAL_MAP_SYSTEM.isActive === "function" && window.TUTORIAL_MAP_SYSTEM.isActive()){
+    if(isTutorialMapSettings()){
       openStartSettingsViewer();
       return;
     }
@@ -369,17 +384,18 @@
   function openStartSettingsViewer(){
     if(!els) return;
     const isNewbieStart = isNewbieStartSettings();
-    const isTutorialMapSettings = window.TUTORIAL_MAP_SYSTEM && typeof window.TUTORIAL_MAP_SYSTEM.isActive === "function" && window.TUTORIAL_MAP_SYSTEM.isActive();
+    const isTutorialMap = isTutorialMapSettings();
+    const hideActionButtons = isTutorialMap || isNewbieStart;
     settingsMode = "start";
     els.overlay.classList.add("start-mode");
-    els.overlay.classList.toggle("tutorial-map-settings-mode", !!isTutorialMapSettings);
-    els.overlay.style.zIndex = isTutorialMapSettings ? "1000" : "";
-    if(isTutorialMapSettings && els.overlay.parentNode){
+    els.overlay.classList.toggle("tutorial-map-settings-mode", !!isTutorialMap);
+    els.overlay.style.zIndex = isTutorialMap ? "1000" : "";
+    if(isTutorialMap && els.overlay.parentNode){
       els.overlay.parentNode.appendChild(els.overlay);
     }
-    if(els.actions) els.actions.style.display = isNewbieStart ? "none" : "";
-    if(els.reset) els.reset.style.display = isNewbieStart ? "none" : "";
-    if(els.tutorial) els.tutorial.style.display = isNewbieStart ? "none" : "";
+    if(els.actions) els.actions.style.display = hideActionButtons ? "none" : "";
+    if(els.reset) els.reset.style.display = hideActionButtons ? "none" : "";
+    if(els.tutorial) els.tutorial.style.display = hideActionButtons ? "none" : "";
     if(els.primary) els.primary.style.display = "none";
     const danger = els.overlay.querySelector(".settings-viewer-danger");
     if(danger) danger.style.display = "none";
@@ -390,6 +406,20 @@
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
     els.close.focus();
+  }
+
+  function isTutorialMapSettings(){
+    const mapOverlay = document.getElementById("mapOverlay");
+    const tutorialMapSystemActive = window.TUTORIAL_MAP_SYSTEM &&
+      typeof window.TUTORIAL_MAP_SYSTEM.isActive === "function" &&
+      window.TUTORIAL_MAP_SYSTEM.isActive();
+    const tutorialBattleMapOpen = !!(
+      mapOverlay &&
+      window.TUTORIAL_BATTLE &&
+      typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+      window.TUTORIAL_BATTLE.isTutorialBattle()
+    );
+    return !!(tutorialMapSystemActive || (mapOverlay && mapOverlay.classList.contains("tutorial-map-mode")) || tutorialBattleMapOpen);
   }
 
   function isNewbieStartSettings(){

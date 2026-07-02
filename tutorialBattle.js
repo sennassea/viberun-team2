@@ -259,6 +259,9 @@
   }
 
   function getTutorialVolumeSettings(){
+    if(window.VIBERUN_VOLUME_SETTINGS && typeof window.VIBERUN_VOLUME_SETTINGS.read === "function"){
+      return window.VIBERUN_VOLUME_SETTINGS.read();
+    }
     if(typeof localStorage === "undefined") return { ...DEFAULT_VOLUMES };
     try {
       const saved = JSON.parse(localStorage.getItem(VOLUME_KEY) || "{}");
@@ -282,6 +285,10 @@
       const key = input.id.replace("tutorialBattleVolume", "");
       volumes[key] = Number(input.value);
     });
+    if(window.VIBERUN_VOLUME_SETTINGS && typeof window.VIBERUN_VOLUME_SETTINGS.write === "function"){
+      window.VIBERUN_VOLUME_SETTINGS.write(volumes);
+      return;
+    }
     localStorage.setItem(VOLUME_KEY, JSON.stringify(volumes));
   }
 
