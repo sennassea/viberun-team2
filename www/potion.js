@@ -38,7 +38,8 @@ const POTION_MASTER_DB = [
     "rarity": "common",
     "obtainFrom": [
       "battle",
-      "shop"
+      "shop",
+      "event"
     ],
     "useTiming": "battle",
     "target": "self",
@@ -91,7 +92,8 @@ const POTION_MASTER_DB = [
     "rarity": "common",
     "obtainFrom": [
       "battle",
-      "shop"
+      "shop",
+      "event"
     ],
     "useTiming": "battle",
     "target": "self",
