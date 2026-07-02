@@ -22,6 +22,7 @@
     { id: "W-019", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" }
   ];
   const FIRST_ATTACK_DIALOGUE_ID = "W-021";
+  const FIRST_ATTACK_COMPLETE_DIALOGUE_ID = "W-022";
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
@@ -356,6 +357,27 @@
     cleanupFirstAttackCardStep();
     setTutorialStep("first_attack_card_used");
     console.log("tutorial first attack card used");
+    showTutorialFirstAttackCompleteDialogue();
+  }
+
+  function showTutorialFirstAttackCompleteDialogue(){
+    if(!isTutorialBattle()) return;
+    const dialogue = getTutorialBattleDialogue(FIRST_ATTACK_COMPLETE_DIALOGUE_ID);
+    if(!dialogue){
+      finishTutorialFirstAttackGuide();
+      return;
+    }
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue(dialogue, finishTutorialFirstAttackGuide);
+  }
+
+  function finishTutorialFirstAttackGuide(){
+    cleanupTutorialBattleIntro();
+    setTutorialStep("first_attack_guide_completed");
+    console.log("tutorial first attack guide completed");
   }
 
   function pauseTutorialBattleIntroCombat(){
