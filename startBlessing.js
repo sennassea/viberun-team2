@@ -174,22 +174,6 @@ function applySbBlessing(blessing){
   }
 }
 
-/* ── script.js의 applyBattleStartRelics() 재정의 ─────────────────────────
-   기존 법구(향로) 결계 로직은 그대로 유지하면서, "맑은 방울" 은혜를
-   선택했을 때 첫 전투 시작 시 1회만 결계 효과를 추가로 적용한다. */
-function applyBattleStartRelics(){
-  if(typeof S === "undefined" || !S || !S.player) return;
-  if(typeof hasRelic === "function" && hasRelic("incense_burner")){
-    LIFE.addBlock(S.player, 6);
-  }
-  const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
-  const effect = run && run.startBlessingEffect;
-  if(effect && !effect.used && effect.type === "firstBattleBlock"){
-    LIFE.addBlock(S.player, effect.value || 8);
-    effect.used = true;
-  }
-}
-
 /* ── mapSystem.js의 getCurrentNodeId() 재정의 ─────────────────────────────
    원본은 currentStage<0일 때 "start"를 반환하지만 ACT1 맵의 로비 노드 id는
    "lobby_0"이라 매치되지 않아 현재 위치가 표시되지 않는 문제가 있었다.
