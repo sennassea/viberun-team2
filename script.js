@@ -289,8 +289,39 @@ function getSelectedLivingEnemy(){
 }
 
 function applyBattleStartRelics(){
+  // 전투 데이터가 아직 준비되지 않았으면 처리하지 않는다.
   if(!S || !S.player) return;
-  applyRelicTrigger("battleStart");
+
+  // 전투 시작 효과 중복 적용 방지
+  // 실수로 applyBattleStartRelics()가 여러 번 호출되어도
+  // 법구/은혜 전투 시작 효과는 전투당 1회만 적용한다.
+  if(S.battleStartApplied){
+    console.warn("[BattleStart] 전투 시작 효과가 이미 적용되어 중복 호출을 무시합니다.");
+    return;
+  }
+  S.battleStartApplied = true;
+
+  // 1. 기존 법구 전투 시작 효과 처리
+  // 예: 청동 향로, 도깨비 주머니, 봉마패 등 battleStart 트리거 법구
+  if(typeof applyRelicTrigger === "function"){
+    applyRelicTrigger("battleStart");
+  }else{
+    console.warn("[BattleStart] applyRelicTrigger 함수가 없어 법구 전투 시작 효과를 적용하지 못했습니다.");
+  }
+
+  // 2. 신령의 은혜 전투 시작 효과 처리
+  // 예: firstBattleBlock 은혜 선택 시 첫 전투 시작에 결계 부여
+  const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
+  const effect = run && run.startBlessingEffect;
+  if(effect && !effect.used && effect.type === "firstBattleBlock"){
+    const blockValue = Number(effect.value || 8);
+    if(typeof LIFE !== "undefined" && LIFE && typeof LIFE.addBlock === "function"){
+      LIFE.addBlock(S.player, blockValue);
+      effect.used = true;
+    }else{
+      console.warn("[BattleStart] LIFE.addBlock 함수가 없어 신령의 은혜 결계 효과를 적용하지 못했습니다.");
+    }
+  }
 }
 
 /* =========================================================================
@@ -318,6 +349,8 @@ function newGame(options={}){
     relics: cloneRunArray(RUN_STATE.relics), potions: cloneRunArray(RUN_STATE.potions),
     gold: RUN_STATE.gold, moonShards: RUN_STATE.moonShards,
     turn: 1,
+    // 전투 시작 효과 중복 적용 방지 플래그
+    battleStartApplied: false,
     // 노드 컨텍스트 (기획서 §2)
     battleNodeType:  curStage ? (curStage.type      || "enemy") : "enemy",
     battlePackageId: curStage ? (curStage.packageId || null)    : null,
@@ -331,10 +364,11 @@ function newGame(options={}){
 
   // 패키지 몬스터 전체 동시 배치 (기획서 §8-3)
   spawnPackageEnemies();
-  applyBattleStartRelics();
 
   S.draw = shuffle([...STARTER_DECK]);
   drawCards(DRAW_PER_TURN);
+  // 전투 시작 효과는 전투당 1회만 적용한다.
+  // 드로우 이후에 호출하여 "전투 시작 시 드로우 +1" 계열 법구도 자연스럽게 처리한다.
   applyBattleStartRelics();
   renderAll();
 }
