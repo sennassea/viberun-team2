@@ -21,10 +21,12 @@
     { id: "W-012", target: ".enemy .hpbar" },
     { id: "W-019", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" }
   ];
+  const FIRST_ATTACK_DIALOGUE_ID = "W-021";
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
   let tutorialBattleIntroPauseState = null;
+  let firstAttackCardState = null;
 
   function startTutorialBattle(){
     state.isTutorialBattleActive = true;
@@ -38,6 +40,7 @@
 
   function endTutorialBattle(){
     cleanupTutorialBattleIntro();
+    cleanupFirstAttackCardStep();
     state.isTutorialBattleActive = false;
     state.currentTutorialStep = null;
     applyTutorialBattleRootState(false);
@@ -76,11 +79,15 @@
     return state.tutorialBattleExitTarget;
   }
 
-  function canUseCard(card){
+  function canUseCard(card, cardKey, handIndex){
+    if(firstAttackCardState && firstAttackCardState.active){
+      return cardKey === firstAttackCardState.cardKey && handIndex === firstAttackCardState.handIndex;
+    }
     return true;
   }
 
   function canEndTurn(){
+    if(firstAttackCardState && firstAttackCardState.active) return false;
     return true;
   }
 
@@ -97,6 +104,10 @@
   }
 
   function getTutorialRestrictionMessage(actionType){
+    if(firstAttackCardState && firstAttackCardState.active){
+      if(actionType === "endTurn") return "먼저 강조된 주문을 사용해보세요.";
+      return "강조된 주문만 사용할 수 있습니다.";
+    }
     return "";
   }
 
@@ -204,6 +215,12 @@
     resumeTutorialBattleIntroCombat();
   }
 
+  function cleanupFirstAttackCardStep(){
+    firstAttackCardState = null;
+    clearFirstAttackCardHighlight();
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
   function removeTutorialBattleIntroOverlay(){
     const overlay = document.querySelector("#game .tutorial-battle-intro-overlay");
     if(overlay) overlay.remove();
@@ -215,9 +232,9 @@
       return;
     }
     if(index >= steps.length){
-      cleanupTutorialBattleIntro();
       setTutorialStep("battle_ui_guide_completed");
       console.log("tutorial battle ui guide completed");
+      showTutorialFirstAttackDialogue();
       return;
     }
 
@@ -283,6 +300,64 @@
     });
   }
 
+  function showTutorialFirstAttackDialogue(){
+    const dialogue = getTutorialBattleDialogue(FIRST_ATTACK_DIALOGUE_ID);
+    if(!dialogue){
+      startTutorialFirstAttackCardStep();
+      return;
+    }
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue({ ...dialogue, dialogueClass: "tutorial-battle-intro-dialogue-top" }, () => {
+      startTutorialFirstAttackCardStep();
+    });
+  }
+
+  function startTutorialFirstAttackCardStep(){
+    cleanupTutorialBattleIntro();
+    const cardState = findFirstAttackCardState();
+    if(!cardState){
+      setTutorialStep("first_attack_card_missing");
+      return;
+    }
+    firstAttackCardState = { ...cardState, active: true };
+    setTutorialStep("first_attack_card");
+    applyFirstAttackCardHighlight();
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
+  function findFirstAttackCardState(){
+    if(typeof S === "undefined" || !S || !Array.isArray(S.hand) || typeof CARD_DB === "undefined") return null;
+    for(let index = 0; index < S.hand.length; index++){
+      const cardKey = S.hand[index];
+      const card = CARD_DB[cardKey];
+      if(card && card.type === "attack" && card.target === "enemy"){
+        return { cardKey, handIndex: index };
+      }
+    }
+    return null;
+  }
+
+  function applyFirstAttackCardHighlight(){
+    clearFirstAttackCardHighlight();
+    if(!firstAttackCardState || !firstAttackCardState.active) return;
+    const card = document.querySelector('#hand .card[data-index="' + firstAttackCardState.handIndex + '"]');
+    if(card) card.classList.add("tutorial-first-attack-card");
+  }
+
+  function clearFirstAttackCardHighlight(){
+    document.querySelectorAll(".tutorial-first-attack-card").forEach(card => {
+      card.classList.remove("tutorial-first-attack-card");
+    });
+  }
+
+  function onCardPlayed(cardKey, card, handIndex){
+    if(!firstAttackCardState || !firstAttackCardState.active) return;
+    if(cardKey !== firstAttackCardState.cardKey || handIndex !== firstAttackCardState.handIndex) return;
+    cleanupFirstAttackCardStep();
+    setTutorialStep("first_attack_card_used");
+    console.log("tutorial first attack card used");
+  }
+
   function pauseTutorialBattleIntroCombat(){
     if(tutorialBattleIntroPauseState || typeof S === "undefined" || !S || S.over) return;
     tutorialBattleIntroPauseState = { busy: !!S.busy };
@@ -309,6 +384,7 @@
       ".tutorial-battle-intro-dialogue.tutorial-battle-intro-dialogue-top{top:12cqh;bottom:auto;}" +
       ".tutorial-battle-highlight-box{position:absolute;z-index:280;pointer-events:none;border:.28cqh solid #ffd25f;border-radius:1cqh;box-shadow:0 0 0 9999px rgba(12,24,40,.16),0 0 1.4cqh rgba(255,210,95,.86);}" +
       ".tutorial-battle-focus-target{filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.62));}" +
+      ".tutorial-first-attack-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
       ".tutorial-battle-intro-speaker{margin-bottom:.7cqh;font-size:1.7cqh;font-weight:900;color:#2f66a8;}" +
       ".tutorial-battle-intro-text{font-size:1.9cqh;line-height:1.45;font-weight:800;}" +
       ".tutorial-battle-intro-actions{display:flex;justify-content:flex-end;margin-top:1.2cqh;}" +
@@ -618,6 +694,7 @@
     canUseArtifact,
     getTutorialRestrictionMessage,
     openTutorialSettings,
-    closeTutorialSettings
+    closeTutorialSettings,
+    onCardPlayed
   };
 })();
