@@ -26,8 +26,6 @@
       window.MAP_STATE.startMapMode = false;
     }
 
-    const startScreen = document.getElementById("startScreen");
-    if(startScreen) startScreen.classList.add("hidden");
     if(typeof closeRewardOverlay === "function") closeRewardOverlay();
     const over = document.getElementById("over");
     if(over) over.classList.remove("show");
@@ -90,6 +88,9 @@
     const style = document.createElement("style");
     style.id = "tutorialMapStyles";
     style.textContent = `
+      #mapOverlay.tutorial-map-mode{
+        z-index:220;
+      }
       #mapOverlay.tutorial-map-mode .mfloor-lbl{
         display:none;
       }

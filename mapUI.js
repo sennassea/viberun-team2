@@ -456,6 +456,7 @@ function buildOverlay() {
 
   /* 덱 확인: 기존 덱뷰어 버튼 트리거 */
   div.querySelector("#dMapDeckBtn").addEventListener("click", () => {
+    closeMapPopupViews("deck");
     const deckBtn = document.getElementById("deckViewerButton");
     if (deckBtn) deckBtn.click();
   });
@@ -465,6 +466,7 @@ function buildOverlay() {
     // 버튼 클릭이 맵 배경 클릭/노드 선택으로 번지지 않도록 차단
     e.preventDefault();
     e.stopPropagation();
+    closeMapPopupViews("bag");
     // bagUI.js 에서 제공하는 가방 열기 함수 호출
     if (typeof window.BAG_UI_OPEN === "function") {
       window.BAG_UI_OPEN({ mode: "map" });
@@ -477,6 +479,7 @@ function buildOverlay() {
 
   /* 설정: 기존 설정 버튼 트리거 */
   div.querySelector("#dMapSettingsBtn").addEventListener("click", () => {
+    closeMapPopupViews("settings");
     const settingsBtn = Array.from(document.querySelectorAll(".hud-btn"))
       .find(b => b.textContent.includes("⚙️") || b.textContent.includes("⚙"));
     if (settingsBtn) settingsBtn.click();
@@ -546,4 +549,16 @@ function buildOverlay() {
   setupDragScroll(canvasWrap, div.querySelector("#mapCanvas"));
 
   return div;
+}
+
+function closeMapPopupViews(except) {
+  if (except !== "deck" && typeof window.DECK_VIEWER_CLOSE === "function") {
+    window.DECK_VIEWER_CLOSE();
+  }
+  if (except !== "bag" && typeof window.BAG_UI_CLOSE === "function") {
+    window.BAG_UI_CLOSE();
+  }
+  if (except !== "settings" && typeof window.SETTINGS_VIEWER_CLOSE === "function") {
+    window.SETTINGS_VIEWER_CLOSE();
+  }
 }
