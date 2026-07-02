@@ -26,19 +26,6 @@
       fx: [],
       unplayable: true
     },
-    hesitation: {
-      name: "망설임",
-      cost: 0,
-      type: "status",
-      emoji: "…",
-      target: "none",
-      attr: "상태",
-      rarity: "status",
-      desc: "사용 불가\n턴 종료 시 소멸합니다",
-      fx: [],
-      unplayable: true,
-      exhaustOnTurnEnd: true
-    },
     regret: {
       name: "후회",
       cost: 0,

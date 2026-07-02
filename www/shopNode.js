@@ -18,17 +18,11 @@ const SHOP_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#do
    카드: 50-90 / 약병: 40-80 / 법구: 80-140 골드, 새로고침 20 골드 시작 */
 const SHOP_CARD_PRICE_BY_RARITY = { common: 50, uncommon: 70, rare: 90 };
 const SHOP_DEFAULT_CARD_PRICE   = 60;
-const SHOP_RELIC_PRICE = { incense_burner: 90, spirit_tablet: 110, charm_box: 130 };
+const SHOP_RELIC_PRICE = { common: 80, uncommon: 110, rare: 145 };
 
-/* 약병 DB (기획서 11장 "약병 DB 신규 추가 권장"). 전역 이름 POTION_DB는
-   deckViewer.js(보유 카드 도감)와 cheatConsole.js(CHEAT.give.potion)가 이미
-   window.POTION_DB를 찾도록 되어 있어, 그대로 사용하면 자동으로 연결된다. */
-const POTION_DB = [
-  { id: "heal_potion",    name: "회복 약병",      emoji: "💧", desc: "플레이어 정신력(HP) 10 회복",       type: "heal",         effect: "healPlayerHp",     value: 10, target: "player",     price: 50 },
-  { id: "cleanse_potion", name: "단일 공격 약병", emoji: "🌿", desc: "선택한 적 1명에게 데미지 5",         type: "attackSingle", effect: "damageEnemy",       value: 5,  target: "enemy",      price: 60 },
-  { id: "power_potion",   name: "전체 공격 약병", emoji: "🔥", desc: "살아있는 모든 적에게 각각 데미지 3", type: "attackAll",    effect: "damageAllEnemies", value: 3,  target: "allEnemies", price: 70 },
-];
-const SHOP_POTION_SLOT_LIMIT = 3;
+/* 약병 DB는 PotionData.js의 POTION_DB를 사용합니다. */
+const SHOP_POTION_DB = (typeof window.POTION_DB !== "undefined") ? window.POTION_DB : [];
+const SHOP_POTION_SLOT_LIMIT = (typeof window.POTION_SLOT_LIMIT === "number") ? window.POTION_SLOT_LIMIT : 3;
 const SHOP_REFRESH_COST      = 20;
 const SHOP_CARD_STOCK_COUNT  = 4;
 
@@ -159,13 +153,13 @@ function buildCardStock() {
 }
 
 function buildPotionStock() {
-  return POTION_DB.map((p) => ({ ...p, category: "potion", soldOut: false }));
+  return SHOP_POTION_DB.map((p) => ({ ...p, category: "potion", soldOut: false }));
 }
 
 function buildRelicStock() {
   return RELIC_DB.map((r) => ({
     ...r, category: "relic",
-    price: SHOP_RELIC_PRICE[r.id] || 100,
+    price: r.price || SHOP_RELIC_PRICE[r.rarity] || 100,
     soldOut: false,
   }));
 }
@@ -227,7 +221,7 @@ function buyPotion(item) {
   if (getPotionCount() >= SHOP_POTION_SLOT_LIMIT) { if (typeof toast === "function") toast("약병 슬롯이 가득 찼습니다."); return; }
   if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
   if (!Array.isArray(S.potions)) S.potions = [];
-  S.potions.push({ id: item.id, name: item.name, emoji: item.emoji, desc: item.desc });
+  S.potions.push({ ...item, soldOut: undefined, category: undefined });
   S.gold -= item.price;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
@@ -238,7 +232,8 @@ function buyRelic(item) {
   if (isRelicOwned(item.id)) { if (typeof toast === "function") toast("이미 보유한 법구입니다."); return; }
   if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
   if (!Array.isArray(S.relics)) S.relics = [];
-  S.relics.push({ id: item.id, name: item.name, emoji: item.emoji, desc: item.desc });
+  // 효과 배열(fx)까지 보존해야 전투 시작/턴 종료/조건부 법구 효과가 정상 발동됩니다.
+  S.relics.push({ ...item });
   S.gold -= item.price;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");

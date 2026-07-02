@@ -25,6 +25,48 @@ if(
 
 const PLAYER_DEF   = COMBAT_DATA.character;
 const MONSTER_DEFS = COMBAT_DATA.monsters; // loadStageMonsters()가 패키지 몬스터로 채운다
+const STATUS_DATA  = window.BOHYUN_STATUS_DATA || window.STATUS_DATA || {
+  agitation:{ id:"agitation", legacyKey:"weak", name:"동요", shortName:"동요", icon:"🌀", color:"#5577ff", description:"적의 공격 피해가 25% 감소합니다.", decayTiming:"afterEnemyAction", decayAmount:1, decayTimingText:"행동 종료 시 1 감소합니다.", maxStack:99, showOnEnemy:true },
+  mark:{ id:"mark", legacyKey:"mark", name:"성불 표식", shortName:"성불 표식", icon:"🌸", color:"#ff6fb1", description:"일부 성불 카드가 추가 효과를 얻습니다. 표식을 소모하는 카드에 의해 제거됩니다.", maxStack:99, showOnEnemy:true }
+};
+
+// 상태 아이콘/이름 고정 매핑
+// - 동요: 🌀
+// - 성불 표식: 🌸
+// StatusData.js가 캐시되거나 이전 버전이 섞여도 여기서 최종 보정합니다.
+function normalizeStatusDataFixedMapping(){
+  if(!STATUS_DATA || typeof STATUS_DATA !== "object") return;
+  STATUS_DATA.agitation = {
+    ...(STATUS_DATA.agitation || {}),
+    id: "agitation",
+    legacyKey: "weak",
+    name: "동요",
+    shortName: "동요",
+    icon: "🌀",
+    iconImage: "",
+    color: "#5577ff",
+    description: "적의 공격 피해가 25% 감소합니다.",
+    decayTiming: "afterEnemyAction",
+    decayAmount: 1,
+    decayTimingText: "행동 종료 시 1 감소합니다.",
+    maxStack: 99,
+    showOnEnemy: true
+  };
+  STATUS_DATA.mark = {
+    ...(STATUS_DATA.mark || {}),
+    id: "mark",
+    legacyKey: "mark",
+    name: "성불 표식",
+    shortName: "성불 표식",
+    icon: "🌸",
+    iconImage: "",
+    color: "#ff6fb1",
+    description: "일부 성불 카드가 추가 효과를 얻습니다. 표식을 소모하는 카드에 의해 제거됩니다.",
+    maxStack: 99,
+    showOnEnemy: true
+  };
+}
+normalizeStatusDataFixedMapping();
 
 const MAX_ENERGY        = 3;
 const ENERGY_SLOT_COUNT = 8;
@@ -82,15 +124,123 @@ function getMaxEnergy(){
   return MAX_ENERGY + (hasRelic("charm_box") ? 1 : 0);
 }
 
-function getPlayerAttackDamage(rawDamage){
-  return Math.max(0, rawDamage + (hasRelic("spirit_tablet") ? 1 : 0));
+function getPlayerAttackDamage(rawDamage, targetEnemy){
+  let amount = rawDamage;
+  if(S && S.nextAttackMultiplier){
+    amount = Math.floor(amount * S.nextAttackMultiplier);
+    S.nextAttackMultiplier = null;
+  }
+  if(S && !S.firstAttackUsed && hasRelic("moon_spirit_tablet")){
+    amount += 3;
+    S.firstAttackUsed = true;
+  }
+  if(targetEnemy && (targetEnemy.weak || 0) > 0 && hasRelic("soul_return_mirror")) amount += 2;
+  if(targetEnemy && (targetEnemy.mark || 0) > 0 && hasRelic("bronze_wooden_fish")) amount += 2;
+  return Math.max(0, amount);
+}
+
+function gainPlayerBlock(value){
+  const before = S && S.player ? (S.player.block || 0) : 0;
+  LIFE.addBlock(S.player, value);
+  const gained = Math.max(0, (S.player.block || 0) - before);
+  if(gained > 0){
+    S.blockGainedThisTurn = (S.blockGainedThisTurn || 0) + gained;
+    spawnFloat('.player', '+'+gained, 'blk');
+    applyRelicTrigger("onBlockGain", { amount: gained });
+  }
+  return gained;
+}
+
+function getRelicMasterData(id){
+  if(!id || typeof RELIC_DB === "undefined" || !Array.isArray(RELIC_DB)) return null;
+  return RELIC_DB.find(item => item && item.id === id) || null;
+}
+
+function hydrateRelicData(relic){
+  if(!relic || !relic.id) return relic;
+  const master = getRelicMasterData(relic.id);
+  if(!master) return relic;
+  // 상점/저장/이전 세이브에서 id·name·desc만 남은 법구도 실제 효과가 발동되도록 원본 DB 데이터를 병합합니다.
+  return { ...master, ...relic, fx: Array.isArray(relic.fx) ? relic.fx : master.fx };
+}
+
+function applyRelicTrigger(trigger, context={}){
+  if(!S || !Array.isArray(S.relics)) return;
+  S.relics = S.relics.map(hydrateRelicData);
+  S.relics.forEach(relic => {
+    if(!relic || !Array.isArray(relic.fx)) return;
+    relic.fx.forEach(effect => {
+      if(effect.timing !== trigger) return;
+      applyRelicEffect(relic, effect, context);
+    });
+  });
+}
+
+function applyRelicEffect(relic, effect, context={}){
+  switch(effect.t){
+    case "draw":
+      if(effect.oncePerTurn){
+        S.relicTurnFlags = S.relicTurnFlags || {};
+        const key = relic.id + ":" + effect.t + ":" + S.turn;
+        if(S.relicTurnFlags[key]) return;
+        S.relicTurnFlags[key] = true;
+      }
+      drawCards(effect.v || 1);
+      toast(relic.name+" 발동");
+      break;
+    case "heal": {
+      const healed = LIFE.heal(S.player, effect.v || 0);
+      if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
+      toast(relic.name+" 발동");
+      break;
+    }
+    case "block":
+      gainPlayerBlock(effect.v || 0);
+      toast(relic.name+" 발동");
+      break;
+    case "damageRandomEnemy": {
+      const targets = livingEnemies();
+      if(targets.length){
+        const target = targets[Math.floor(Math.random()*targets.length)];
+        applyDamageWithFeedback(target, effect.v || 0, 0);
+      }
+      break;
+    }
+    case "gainRandomPotion": {
+      const potion = getRandomPotionReward();
+      const limit = typeof POTION_SLOT_LIMIT === "number" ? POTION_SLOT_LIMIT : 3;
+      if(potion && Array.isArray(S.potions) && S.potions.length < limit){
+        S.potions.push({ ...potion });
+        toast(relic.name+" 발동: "+potion.name+" 획득");
+      }
+      break;
+    }
+    case "applyAgitation": {
+      const target = effect.target === "frontEnemy" ? livingEnemies()[0] : getSelectedLivingEnemy();
+      if(target){
+        LIFE.addWeak(target, effect.v || 1);
+        applyRelicTrigger("onAgitationApply", { target, amount: effect.v || 1 });
+      }
+      break;
+    }
+    case "retainBlockRatio":
+      S.retainedBlockFromRelic = Math.floor((S.player.block || 0) * (effect.v || 0));
+      break;
+  }
+}
+
+function getRandomPotionReward(){
+  const db = typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES;
+  return pickBattleVictoryCandidate(db);
+}
+
+function getSelectedLivingEnemy(){
+  return livingEnemies().find(e => e.id === S.selectedId) || livingEnemies()[0] || null;
 }
 
 function applyBattleStartRelics(){
   if(!S || !S.player) return;
-  if(hasRelic("incense_burner")){
-    LIFE.addBlock(S.player, 6);
-  }
+  applyRelicTrigger("battleStart");
 }
 
 /* =========================================================================
@@ -122,6 +272,11 @@ function newGame(options={}){
     battleNodeType:  curStage ? (curStage.type      || "enemy") : "enemy",
     battlePackageId: curStage ? (curStage.packageId || null)    : null,
     encounterCleared: false,
+    firstAttackUsed: false,
+    nextAttackMultiplier: null,
+    blockGainedThisTurn: 0,
+    relicTurnFlags: {},
+    retainedBlockFromRelic: 0,
   };
 
   // 패키지 몬스터 전체 동시 배치 (기획서 §8-3)
@@ -130,6 +285,7 @@ function newGame(options={}){
 
   S.draw = shuffle([...STARTER_DECK]);
   drawCards(DRAW_PER_TURN);
+  applyBattleStartRelics();
   renderAll();
 }
 
@@ -139,6 +295,7 @@ function spawnPackageEnemies(){
   S.enemies = MONSTER_DEFS.map((def, i) => {
     const e = LIFE.createMonster(def, i);
     e.spawnIndex = i;
+    ensureEnemyStatus(e);
     return e;
   });
   S.selectedId = S.enemies[0]?.id || null;
@@ -150,6 +307,114 @@ function spawnPackageEnemies(){
 const $ = s => document.querySelector(s);
 const livingEnemies = () => S.enemies.filter(e => e.hp > 0);
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+
+function ensureEnemyStatus(enemy){
+  if(!enemy) return {};
+  if(!enemy.status || typeof enemy.status !== "object") enemy.status = {};
+  Object.entries(STATUS_DATA).forEach(([statusId, data]) => {
+    const legacyKey = data.legacyKey;
+    if(legacyKey && typeof enemy[legacyKey] === "number"){
+      enemy.status[statusId] = Math.max(enemy.status[statusId] || 0, enemy[legacyKey] || 0);
+    } else if(typeof enemy.status[statusId] !== "number"){
+      enemy.status[statusId] = 0;
+    }
+  });
+  syncLegacyStatusFields(enemy);
+  return enemy.status;
+}
+
+function syncLegacyStatusFields(enemy){
+  if(!enemy || !enemy.status) return;
+  Object.entries(STATUS_DATA).forEach(([statusId, data]) => {
+    if(!data.legacyKey) return;
+    enemy[data.legacyKey] = Math.max(0, enemy.status[statusId] || 0);
+  });
+}
+
+function addStatus(enemy, statusId, amount){
+  if(!enemy || !statusId || !amount) return 0;
+  const data = STATUS_DATA[statusId] || { maxStack: 99 };
+  ensureEnemyStatus(enemy);
+  const before = enemy.status[statusId] || 0;
+  const next = Math.min(data.maxStack || 99, before + amount);
+  enemy.status[statusId] = Math.max(0, next);
+  syncLegacyStatusFields(enemy);
+  return Math.max(0, enemy.status[statusId] - before);
+}
+
+function removeStatus(enemy, statusId, amount){
+  if(!enemy || !statusId || !enemy.status) return 0;
+  ensureEnemyStatus(enemy);
+  const before = enemy.status[statusId] || 0;
+  enemy.status[statusId] = Math.max(0, before - (amount || before));
+  syncLegacyStatusFields(enemy);
+  return before - enemy.status[statusId];
+}
+
+function setStatus(enemy, statusId, amount){
+  if(!enemy || !statusId) return;
+  ensureEnemyStatus(enemy);
+  enemy.status[statusId] = Math.max(0, amount || 0);
+  syncLegacyStatusFields(enemy);
+}
+
+function getStatus(enemy, statusId){
+  if(!enemy || !statusId) return 0;
+  ensureEnemyStatus(enemy);
+  return enemy.status?.[statusId] || 0;
+}
+
+function decayEnemyStatuses(enemy, timing){
+  if(!enemy) return;
+  ensureEnemyStatus(enemy);
+  Object.entries(STATUS_DATA).forEach(([statusId, data]) => {
+    if(!data || !data.showOnEnemy) return;
+    if(data.decayTiming && data.decayTiming !== timing) return;
+    const amount = data.decayAmount || 1;
+    if(amount > 0) removeStatus(enemy, statusId, amount);
+  });
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function statusTooltipText(statusId, count){
+  const data = STATUS_DATA[statusId] || {};
+  const lines = [];
+  lines.push(data.name || statusId);
+  lines.push("현재 스택 : " + count);
+  if(data.description) lines.push(data.description);
+  if(data.decayTimingText) lines.push(data.decayTimingText);
+  return lines.filter(Boolean).join("\n");
+}
+
+function statusIconHtml(statusId, count){
+  const data = STATUS_DATA[statusId];
+  if(!data || !data.showOnEnemy || count <= 0) return "";
+  const name = data.name || statusId;
+  const tooltip = statusTooltipText(statusId, count);
+  const icon = data.iconImage
+    ? '<img src="'+escapeHtml(data.iconImage)+'" alt="'+escapeHtml(name)+'">'
+    : '<span>'+escapeHtml(data.icon || "•")+'</span>';
+  return '<div class="enemy-status-icon status-'+escapeHtml(statusId)+'" data-status-id="'+escapeHtml(statusId)+'" data-status-name="'+escapeHtml(name)+'" data-status-tooltip="'+escapeHtml(tooltip)+'" style="--status-color:'+(data.color || '#7b61ff')+'">'
+       + icon + '<b>'+count+'</b></div>';
+}
+
+function renderEnemyStatusIcons(enemyLike){
+  if(!enemyLike || enemyLike.hideHud) return "";
+  ensureEnemyStatus(enemyLike);
+  const orderedStatusIds = ["agitation", "mark", ...Object.keys(STATUS_DATA).filter(id => id !== "agitation" && id !== "mark")];
+  const html = orderedStatusIds
+    .map(statusId => statusIconHtml(statusId, enemyLike.status?.[statusId] || 0))
+    .join("");
+  return html ? '<div class="enemy-status-icons">'+html+'</div>' : "";
+}
 
 // 선택 적이 죽으면 다음 생존 적으로 자동 전환 (기획서 §8-6)
 function autoSelectTarget(){
@@ -215,18 +480,23 @@ function playCard(handIndex, targetEnemy){
   for(const e of card.fx){
     switch(e.t){
       case "damage":
-        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v), S.player.weak); break;
+        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak); break;
       case "bonusLowHpDamage":
         if(targetEnemy && targetEnemy.hp>0 && targetEnemy.hp<=Math.ceil(targetEnemy.maxHp/2))
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v), S.player.weak);
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak);
         break;
       case "damageAll":
-        livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v), S.player.weak)); break;
+        livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v, en), S.player.weak)); break;
       case "applyWeakAll":
         livingEnemies().forEach(en => LIFE.addWeak(en, e.v)); break;
       case "block":
-        LIFE.addBlock(S.player, e.v);
-        spawnFloat('.player', '+'+e.v, 'blk'); break;
+        gainPlayerBlock(e.v); break;
+      case "damageByBlockRatio":
+        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.player.block || 0) * e.v), targetEnemy), S.player.weak); break;
+      case "damageByBlockGainedThisTurn":
+        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.blockGainedThisTurn || 0) * e.v), targetEnemy), S.player.weak); break;
+      case "blockGainPlusThisTurn":
+        gainPlayerBlock((e.v || 0) + (S.blockGainedThisTurn || 0)); break;
       case "draw":
         drawCards(e.v); break;
       case "heal": {
@@ -237,7 +507,31 @@ function playCard(handIndex, targetEnemy){
       case "energy":
         S.energy += e.v; break;
       case "applyWeak":
-        if(targetEnemy) LIFE.addWeak(targetEnemy, e.v); break;
+        if(targetEnemy){
+          LIFE.addWeak(targetEnemy, e.v);
+          applyRelicTrigger("onAgitationApply", { target: targetEnemy, amount: e.v });
+        }
+        break;
+      case "applyMark":
+        if(targetEnemy){
+          const bonus = hasRelic("lotus_lamp") ? 1 : 0;
+          const amount = (e.v || 0) + bonus;
+          addStatus(targetEnemy, "mark", amount);
+          spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
+        }
+        break;
+      case "ifMarkedDamage":
+        if(targetEnemy && getStatus(targetEnemy, "mark") > 0)
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak);
+        break;
+      case "consumeAllMarksDamage":
+        if(targetEnemy){
+          const marks = getStatus(targetEnemy, "mark");
+          const amount = (e.base || 0) + marks * (e.per || 0);
+          setStatus(targetEnemy, "mark", 0);
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
+        }
+        break;
       case "removeWeak":
         LIFE.reduceWeak(S.player, e.v); break;
     }
@@ -276,6 +570,7 @@ function nodeClear(){
   S.enemies.forEach(e => toast(e.name+" 성불 완료"));
 
   const nodeType = S.battleNodeType || "enemy";
+  applyRelicTrigger("battleEnd");
   if(nodeType==="boss")  return endGame("win");   // 보스 클리어 → 게임 승리 (기획서 §6)
   if(nodeType==="elite") grantRelic();             // 엘리트 → 유물 추가 (기획서 §10)
   openBattleVictoryReward();
@@ -306,10 +601,15 @@ const BATTLE_VICTORY_BASE_REWARDS = [
 ];
 const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
 const BATTLE_VICTORY_POTION_CHANCE = 0.5;
-const BATTLE_VICTORY_POTION_CANDIDATES = [
-  { id:"heal_potion", name:"회복 약병", icon:"藥", desc:"플레이어 정신력(HP) 10 회복", type:"heal", effect:"healPlayerHp", value:10, target:"player" },
-  { id:"cleanse_potion", name:"단일 공격 약병", icon:"水", desc:"선택한 적 1명에게 데미지 5", type:"attackSingle", effect:"damageEnemy", value:5, target:"enemy" },
-  { id:"power_potion", name:"전체 공격 약병", icon:"茶", desc:"살아있는 모든 적에게 각각 데미지 3", type:"attackAll", effect:"damageAllEnemies", value:3, target:"allEnemies" },
+const BATTLE_VICTORY_POTION_CANDIDATES = (typeof window.POTION_DB !== "undefined") ? window.POTION_DB : [
+  { id:"cheongsim_pill", name:"청심환", icon:"藥", emoji:"💊", desc:"정신력을 18 회복합니다.", type:"heal", effect:"healPlayerHp", value:18, target:"player" },
+  { id:"focus_talisman", name:"집중부", icon:"符", emoji:"🔖", desc:"이번 턴 정신력을 1 회복합니다.", type:"energy", effect:"gainEnergy", value:1, target:"player" },
+  { id:"protective_talisman", name:"호신부", icon:"護", emoji:"🧿", desc:"마음의 결계를 12 얻습니다.", type:"block", effect:"gainBlock", value:12, target:"player" },
+  { id:"five_direction_water", name:"오방수", icon:"水", emoji:"🌊", desc:"마음의 결계를 8 얻고 동요를 1 제거합니다.", type:"blockCleanse", effect:"blockAndRemoveAgitation", value:8, removeWeak:1, target:"player" },
+  { id:"lotus_incense", name:"연꽃 향", icon:"香", emoji:"🪷", desc:"대상에게 성불 표식을 3 부여합니다.", type:"applyMark", effect:"applyMark", value:3, target:"enemy" },
+  { id:"unsaid_letter", name:"말하지 못한 편지", icon:"文", emoji:"💌", desc:"대상에게 동요를 3 부여합니다.", type:"applyWeak", effect:"applyAgitation", value:3, target:"enemy" },
+  { id:"spirit_eye_water", name:"영안수", icon:"眼", emoji:"👁️", desc:"카드를 3장 뽑습니다.", type:"draw", effect:"drawCards", value:3, target:"player" },
+  { id:"ghost_gate_talisman", name:"귀문부", icon:"符", emoji:"符", desc:"이번 턴 다음 공격 카드의 정화량이 2배가 됩니다.", type:"nextAttackDouble", effect:"nextAttackDouble", value:2, target:"player" },
 ];
 
 function chooseRewardCard(key){
@@ -788,6 +1088,8 @@ async function endTurn(){
   S.busy = true;
   updateEndBtn();
 
+  applyRelicTrigger("turnEnd");
+
   LIFE.reduceWeak(S.player, 1);
   LIFE.reduceAnxiety(S.player, 1);
   LIFE.reduceLethargy(S.player, 1);
@@ -829,14 +1131,21 @@ async function endTurn(){
       }
     }
 
-    LIFE.reduceWeak(e, 1);
+    decayEnemyStatuses(e, "afterEnemyAction");
     renderAll();
     if(S.player.hp<=0) return endGame("lose");
     await wait(450);
   }
 
   // 새 플레이어 턴 준비
+  const retainedBlock = S.retainedBlockFromRelic || 0;
   LIFE.prepareNextPlayerTurn(S.player);
+  if(retainedBlock > 0){
+    LIFE.addBlock(S.player, retainedBlock);
+    spawnFloat('.player', '+'+retainedBlock, 'blk');
+  }
+  S.retainedBlockFromRelic = 0;
+  S.blockGainedThisTurn = 0;
   const anxietyPenalty  = (S.player.anxiety||0)  > 0 ? 1 : 0;
   const lethargyPenalty = (S.player.lethargy||0) > 0 ? 1 : 0;
   S.energy    = Math.max(0, getMaxEnergy() - lethargyPenalty);
@@ -924,22 +1233,26 @@ function canUsePotionNow(){
   return !!(S && !S.busy && !S.over && !S.rewardOpen && !S.encounterCleared);
 }
 
+function isSelfUsePotion(item){
+  return !!(item && (item.target === "player" || ["heal","energy","block","blockCleanse","draw","nextAttackDouble"].includes(item.type)));
+}
+
 function isHealPotion(item){
   return !!(item && (item.type === "heal" || item.effect === "healPlayerHp"));
 }
 
 function isAttackPotion(item){
-  return !!(item && (item.type === "attackSingle" || item.type === "attackAll"));
+  return !!(item && ["attackSingle","attackAll","applyMark","applyWeak"].includes(item.type));
 }
 
 function onPotionSlotClick(item, index, slot){
   hidePotionUseButton();
-  if(!isHealPotion(item)) return;
+  if(!isSelfUsePotion(item)) return;
   if(!canUsePotionNow()){
     toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
     return;
   }
-  showHealPotionUseButton(index, slot);
+  showPotionUseButton(index, slot);
 }
 
 function ensurePotionUseButton(){
@@ -954,14 +1267,14 @@ function ensurePotionUseButton(){
     if(btn.disabled) return;
     btn.disabled = true;
     const index = Number(btn.dataset.potionIndex);
-    useHealPotion(index);
+    useSelfPotion(index);
   });
   document.querySelector("#game").appendChild(btn);
   document.addEventListener("click", hidePotionUseButton);
   return btn;
 }
 
-function showHealPotionUseButton(index, slot){
+function showPotionUseButton(index, slot){
   const btn = ensurePotionUseButton();
   const anchor = slot || document.querySelector('#sidePotionSlots [data-potion-index="'+index+'"]');
   const game = document.querySelector("#game");
@@ -984,19 +1297,47 @@ function hidePotionUseButton(){
   btn.disabled = false;
 }
 
-function useHealPotion(index){
+function useSelfPotion(index){
   if(!canUsePotionNow()) return;
   if(!Array.isArray(S.potions)) return;
   const potion = S.potions[index];
-  if(!isHealPotion(potion)) return;
-  const amount = typeof potion.value === "number" ? potion.value : 10;
-  const healed = LIFE.heal(S.player, amount);
+  if(!potion || !isSelfUsePotion(potion)) return;
+  applySelfPotionEffect(potion);
   S.potions.splice(index, 1);
   syncRunStateFromCombat();
   hidePotionUseButton();
-  if(healed>0) spawnFloat(".player", "+"+healed, "heal");
   renderAll();
 }
+
+function applySelfPotionEffect(potion){
+  const amount = typeof potion.value === "number" ? potion.value : 0;
+  switch(potion.type){
+    case "heal": {
+      const healed = LIFE.heal(S.player, amount);
+      if(healed>0) spawnFloat(".player", "+"+healed, "heal");
+      break;
+    }
+    case "energy":
+      S.energy += amount;
+      toast(potion.name+" 사용: 정신력 +"+amount);
+      break;
+    case "block":
+      gainPlayerBlock(amount);
+      break;
+    case "blockCleanse":
+      gainPlayerBlock(amount);
+      LIFE.reduceWeak(S.player, potion.removeWeak || 1);
+      break;
+    case "draw":
+      drawCards(amount);
+      break;
+    case "nextAttackDouble":
+      S.nextAttackMultiplier = potion.value || 2;
+      toast("다음 공격 정화량 2배");
+      break;
+  }
+}
+
 
 let potionDragState = null;
 function attachPotionDrag(slot, item, index){
@@ -1051,11 +1392,13 @@ function updatePotionDrag(x, y){
 
 function dropPotionDrag(x, y){
   const state = potionDragState;
-  if(state && (state.type === "attackSingle" || state.type === "attackAll")){
+  if(state && isAttackPotion(state.item)){
     const en = enemyUnder(x, y);
     if(en){
       if(state.type === "attackSingle") useSingleAttackPotion(state.index, en.enemy);
       if(state.type === "attackAll") useAllAttackPotion(state.index, en.enemy);
+      if(state.type === "applyMark") useMarkPotion(state.index, en.enemy);
+      if(state.type === "applyWeak") useWeakPotion(state.index, en.enemy);
     }
   }
   endPotionDrag();
@@ -1077,6 +1420,36 @@ function useSingleAttackPotion(index, targetEnemy){
     renderAll();
     return true;
   }
+  renderAll();
+  return true;
+}
+
+function useMarkPotion(index, targetEnemy){
+  if(!canUsePotionNow()) return false;
+  if(!Array.isArray(S.potions)) return false;
+  const potion = S.potions[index];
+  if(!potion || potion.type !== "applyMark") return false;
+  if(!targetEnemy || targetEnemy.hp <= 0) return false;
+  const amount = typeof potion.value === "number" ? potion.value : 3;
+  addStatus(targetEnemy, "mark", amount);
+  spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
+  S.potions.splice(index, 1);
+  syncRunStateFromCombat();
+  renderAll();
+  return true;
+}
+
+function useWeakPotion(index, targetEnemy){
+  if(!canUsePotionNow()) return false;
+  if(!Array.isArray(S.potions)) return false;
+  const potion = S.potions[index];
+  if(!potion || potion.type !== "applyWeak") return false;
+  if(!targetEnemy || targetEnemy.hp <= 0) return false;
+  const amount = typeof potion.value === "number" ? potion.value : 3;
+  LIFE.addWeak(targetEnemy, amount);
+  applyRelicTrigger("onAgitationApply", { target: targetEnemy, amount });
+  S.potions.splice(index, 1);
+  syncRunStateFromCombat();
   renderAll();
   return true;
 }
@@ -1189,7 +1562,7 @@ function renderField(){
     const el = combatantEl({
       cls:"enemy ghost"+(e.id===S.selectedId ? " selected" : ""),
       emoji:e.emoji, sprite:e.image, name:e.name,
-      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak,
+      hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, mark:e.mark, status:e.status,
       anxiety:e.anxiety, lethargy:e.lethargy,
       x: xList[i] ?? 55, bottom:"4cqh",
       intent:e.intent, id:e.id,
@@ -1211,7 +1584,11 @@ function combatantEl(o){
   const avatarHtml = o.sprite
     ? '<div class="avatar sprite-avatar"><img src="'+o.sprite+'" alt=""></div>'
     : '<div class="avatar">'+o.emoji+'</div>';
-  const infoHtml = o.hideHud ? "" : '<div class="name">'+o.name+'</div>'+LIFE.renderCombatantStats(o);
+  const statusHtml = renderEnemyStatusIcons(o);
+  // LIFE.renderCombatantStats()의 기존 동요/표식 표시와 새 StatusData 표시가 중복되지 않도록
+  // 전투 계산용 원본 값은 유지하고, 렌더링용 객체에서만 상태값을 숨깁니다.
+  const statsRenderObj = o.hideHud ? o : { ...o, weak:0, mark:0, status:{} };
+  const infoHtml = o.hideHud ? "" : '<div class="name">'+o.name+'</div>'+LIFE.renderCombatantStats(statsRenderObj)+statusHtml;
   el.innerHTML = intentHtml + avatarHtml + infoHtml + '<div class="hit"></div>';
   return el;
 }
@@ -1482,16 +1859,109 @@ function injectRewardStyles(){
 }
 
 /* =========================================================================
-   버튼 바인딩
+   상태이상 아이콘 CSS
    ========================================================================= */
-$("#endTurn").addEventListener("click", endTurn);
-$("#restart").addEventListener("click", () => { $("#over").classList.remove("show"); newGame({ resetRun:true }); });
-const bagViewerButton = $("#bagViewerButton");
-if(bagViewerButton){
-  bagViewerButton.addEventListener("click", () => {
-    if(typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
-    else toast("가방을 불러올 수 없습니다.");
+function injectStatusStyles(){
+  if(document.querySelector("#statusStyle")) return;
+  const style = document.createElement("style");
+  style.id = "statusStyle";
+  style.textContent = `
+    .enemy-status-icons{display:flex !important;flex-direction:row !important;align-items:center;justify-content:center;gap:.65cqw;margin-top:.45cqh;min-height:4.5cqh;position:relative;z-index:20;}
+    .enemy-status-icon{position:relative;width:4.1cqh;height:4.1cqh;border-radius:.85cqh;display:grid;place-items:center;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(236,241,255,.86));border:.18cqh solid rgba(255,255,255,.75);box-shadow:0 .35cqh .9cqh rgba(40,50,90,.28), inset 0 0 0 .22cqh color-mix(in srgb, var(--status-color) 25%, transparent);font-size:2.15cqh;line-height:1;cursor:help;}
+    .enemy-status-icon img{width:100%;height:100%;object-fit:contain;border-radius:.7cqh;}
+    .enemy-status-icon span{filter:drop-shadow(0 .15cqh .2cqh rgba(0,0,0,.18));}
+    .enemy-status-icon b{position:absolute;right:-.55cqh;bottom:-.55cqh;min-width:2cqh;height:2cqh;padding:0 .25cqh;border-radius:999px;display:grid;place-items:center;background:#1f2d45;color:#fff;border:.18cqh solid #fff;font-size:1.25cqh;font-weight:900;box-shadow:0 .2cqh .45cqh rgba(0,0,0,.25);}
+    .enemy-status-icon.status-agitation{--status-color:#5577ff !important;}
+    .enemy-status-icon.status-mark{--status-color:#ff6fb1 !important;}
+    #enemyStatusTooltip{position:fixed;left:0;top:0;z-index:99999;max-width:28cqw;min-width:17cqw;padding:1.2cqh 1.35cqw;border-radius:.9cqh;background:rgba(20,30,48,.96);color:#edf5ff;box-shadow:0 .55cqh 1.4cqh rgba(0,0,0,.32);border:.12cqh solid rgba(170,190,230,.25);pointer-events:none;opacity:0;transform:translate3d(-9999px,-9999px,0);transition:opacity .08s ease;white-space:pre-line;font-size:1.45cqh;line-height:1.45;text-align:left;}
+    #enemyStatusTooltip.show{opacity:1;}
+    #enemyStatusTooltip .status-tooltip-title{display:flex;align-items:center;gap:.5cqw;margin-bottom:.55cqh;font-weight:900;font-size:1.65cqh;color:#fff;}
+    #enemyStatusTooltip .status-tooltip-body{font-weight:700;color:#dce8fa;}
+  `;
+  document.head.appendChild(style);
+}
+
+function ensureEnemyStatusTooltip(){
+  let tip = document.querySelector("#enemyStatusTooltip");
+  if(tip) return tip;
+  tip = document.createElement("div");
+  tip.id = "enemyStatusTooltip";
+  document.body.appendChild(tip);
+  return tip;
+}
+
+function showEnemyStatusTooltip(iconEl){
+  if(!iconEl) return;
+  const tip = ensureEnemyStatusTooltip();
+  const statusId = iconEl.dataset.statusId;
+  const data = STATUS_DATA[statusId] || {};
+  const icon = data.icon || "•";
+  const name = iconEl.dataset.statusName || data.name || statusId;
+  const body = iconEl.dataset.statusTooltip || name;
+  const bodyLines = body.split("\n").slice(1).join("\n");
+  tip.innerHTML = '<div class="status-tooltip-title"><span>'+escapeHtml(icon)+'</span><b>'+escapeHtml(name)+'</b></div>'
+    + '<div class="status-tooltip-body">'+escapeHtml(bodyLines || body)+'</div>';
+  tip.classList.add("show");
+  positionEnemyStatusTooltip(iconEl, tip);
+}
+
+function positionEnemyStatusTooltip(iconEl, tip){
+  if(!iconEl || !tip) return;
+  const r = iconEl.getBoundingClientRect();
+  const pad = 8;
+  const tw = tip.offsetWidth || 260;
+  const th = tip.offsetHeight || 120;
+  let left = r.left + r.width / 2 - tw / 2;
+  let top = r.bottom + 10;
+  if(left < pad) left = pad;
+  if(left + tw > window.innerWidth - pad) left = window.innerWidth - tw - pad;
+  if(top + th > window.innerHeight - pad) top = Math.max(pad, r.top - th - 10);
+  tip.style.transform = "translate3d("+left+"px,"+top+"px,0)";
+}
+
+function hideEnemyStatusTooltip(){
+  const tip = document.querySelector("#enemyStatusTooltip");
+  if(!tip) return;
+  tip.classList.remove("show");
+  tip.style.transform = "translate3d(-9999px,-9999px,0)";
+}
+
+function bindEnemyStatusTooltipEvents(){
+  document.addEventListener("mouseover", ev => {
+    const icon = ev.target.closest && ev.target.closest(".enemy-status-icon");
+    if(icon) showEnemyStatusTooltip(icon);
+  });
+  document.addEventListener("mousemove", ev => {
+    const icon = ev.target.closest && ev.target.closest(".enemy-status-icon");
+    if(icon) positionEnemyStatusTooltip(icon, ensureEnemyStatusTooltip());
+  });
+  document.addEventListener("mouseout", ev => {
+    const icon = ev.target.closest && ev.target.closest(".enemy-status-icon");
+    if(icon && (!ev.relatedTarget || !icon.contains(ev.relatedTarget))) hideEnemyStatusTooltip();
   });
 }
 
+function bindCombatButtonsOnce(){
+  if(window.__BOHYUN_COMBAT_BUTTONS_BOUND__) return;
+  window.__BOHYUN_COMBAT_BUTTONS_BOUND__ = true;
+  const endTurnButton = document.querySelector("#endTurn");
+  if(endTurnButton) endTurnButton.addEventListener("click", endTurn);
+  const restartButton = document.querySelector("#restart");
+  if(restartButton) restartButton.addEventListener("click", () => {
+    const over = document.querySelector("#over");
+    if(over) over.classList.remove("show");
+    newGame({ resetRun:true });
+  });
+  const bagViewerButton = document.querySelector("#bagViewerButton");
+  if(bagViewerButton){
+    bagViewerButton.addEventListener("click", () => {
+      if(typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
+      else toast("가방을 불러올 수 없습니다.");
+    });
+  }
+}
+
 injectRewardStyles();
+injectStatusStyles();
+bindEnemyStatusTooltipEvents();
+bindCombatButtonsOnce();
