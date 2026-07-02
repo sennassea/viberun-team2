@@ -162,11 +162,14 @@ function getPlayerAttackDamage(rawDamage, targetEnemy){
 }
 
 function gainPlayerBlock(value){
+  const requested = Math.max(0, value || 0);
   const before = S && S.player ? (S.player.block || 0) : 0;
-  LIFE.addBlock(S.player, value);
+  LIFE.addBlock(S.player, requested);
   const gained = Math.max(0, (S.player.block || 0) - before);
+  if(requested > 0){
+    S.blockGainedThisTurn = (S.blockGainedThisTurn || 0) + requested;
+  }
   if(gained > 0){
-    S.blockGainedThisTurn = (S.blockGainedThisTurn || 0) + gained;
     spawnFloat('.player', '+'+gained, 'blk');
     applyRelicTrigger("onBlockGain", { amount: gained });
   }
@@ -870,6 +873,36 @@ function openBattleVictoryReward(){
   updateEndBtn();
 }
 
+function proceedToMap(){
+  if(window.MAP_STATE) window.MAP_STATE.proceedMode = true;
+  if(typeof openMap==="function") openMap();
+}
+
+function getPotionSlotLimit(){
+  if(typeof window.POTION_SLOT_LIMIT === "number") return window.POTION_SLOT_LIMIT;
+  if(typeof POTION_SLOT_LIMIT === "number") return POTION_SLOT_LIMIT;
+  return 3;
+}
+
+function ensureVictoryRewardState(){
+  if(!S.victoryRewardDone) S.victoryRewardDone = {};
+  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  return {
+    done: S.victoryRewardDone,
+    doneText: S.victoryRewardDoneText
+  };
+}
+
+function markVictoryRewardDone(id, doneText){
+  const rewardState = ensureVictoryRewardState();
+  rewardState.done[id] = true;
+  rewardState.doneText[id] = doneText;
+}
+
+function isVictoryRewardDone(id){
+  return !!(S && S.victoryRewardDone && S.victoryRewardDone[id]);
+}
+
 const BATTLE_VICTORY_BASE_REWARDS = [
   { id:"gold", name:"복채", icon:"복", value:"+20", amount:20, doneText:"수령 완료" },
   { id:"card", name:"주문 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
@@ -901,8 +934,7 @@ function chooseRewardCard(key){
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
   toast(card.name+" 획득");
-  window.MAP_STATE.proceedMode = true;
-  if(typeof openMap==="function") openMap();
+  proceedToMap();
 }
 
 function skipRewardCard(){
@@ -913,8 +945,7 @@ function skipRewardCard(){
   }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
-  window.MAP_STATE.proceedMode = true;
-  if(typeof openMap==="function") openMap();
+  proceedToMap();
 }
 
 function grantRelic(){
@@ -1046,11 +1077,10 @@ function getBattleVictoryInfo(){
 }
 
 function renderBattleVictoryRewardSlots(host){
-  if(!S.victoryRewardDone) S.victoryRewardDone = {};
-  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
+  const rewardState = ensureVictoryRewardState();
   host.innerHTML = getBattleVictoryRewards().map(item => {
-    const done = !!S.victoryRewardDone[item.id];
-    const doneText = S.victoryRewardDoneText[item.id] || item.doneText;
+    const done = !!rewardState.done[item.id];
+    const doneText = rewardState.doneText[item.id] || item.doneText;
     return '<button type="button" class="victory-reward-slot' + (done ? ' done' : '') + '" data-reward-id="' + item.id + '">' +
       '<div class="victory-reward-icon">' + item.icon + '</div>' +
       '<div class="victory-reward-name">' + item.name + '</div>' +
@@ -1064,24 +1094,21 @@ function renderBattleVictoryRewardSlots(host){
 }
 
 function completeBattleVictoryReward(id, host){
-  if(S.victoryRewardDone && S.victoryRewardDone[id]) return;
-  if(id === "card" && !(S.victoryRewardDone && S.victoryRewardDone.card)){
+  if(isVictoryRewardDone(id)) return;
+  if(id === "card" && !isVictoryRewardDone("card")){
     openBattleVictoryCardReward(host);
     return;
   }
-  if((id === "relic" || id === "potion") && !(S.victoryRewardDone && S.victoryRewardDone[id])){
+  if((id === "relic" || id === "potion") && !isVictoryRewardDone(id)){
     openBattleVictoryConfirm(id, host);
     return;
   }
-  if(!S.victoryRewardDone) S.victoryRewardDone = {};
-  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
   if(id === "gold"){
     const reward = getBattleVictoryRewards().find(item => item.id === "gold");
     S.gold = (typeof S.gold === "number" ? S.gold : STARTING_GOLD) + ((reward && reward.amount) || 0);
     renderHud();
   }
-  S.victoryRewardDone[id] = true;
-  S.victoryRewardDoneText[id] = "수령 완료";
+  markVictoryRewardDone(id, "수령 완료");
   renderBattleVictoryRewardSlots(host);
   updateBattleVictoryNextButton(host.closest("#battleVictoryOverlay"));
 }
@@ -1127,7 +1154,7 @@ function openBattleVictoryPotionReplacePanel(host){
   const modal = ov && ov.querySelector(".victory-confirm-modal");
   const panel = modal && modal.querySelector(".victory-potion-replace-panel");
   if(!panel) return;
-  const potions = Array.isArray(S.potions) ? S.potions.slice(0, 3) : [];
+  const potions = Array.isArray(S.potions) ? S.potions.slice(0, getPotionSlotLimit()) : [];
   panel.innerHTML =
     '<div class="victory-potion-replace-title">교체할 약병 선택</div>' +
     '<div class="victory-potion-replace-desc">약병은 최대 3개까지 보유할 수 있습니다. 교체할 약병을 선택해주세요.</div>' +
@@ -1199,7 +1226,7 @@ function renderBattleVictoryPotionReplaceDetail(panel, slots, selectedSlot, oldP
 }
 
 function finishBattleVictoryPotionReplace(host, potionIndex, reward, button){
-  if(S.victoryRewardDone && S.victoryRewardDone.potion) return;
+  if(isVictoryRewardDone("potion")) return;
   if(!S.potions) S.potions = [];
   if(potionIndex < 0 || potionIndex >= S.potions.length) return;
   if(button){
@@ -1213,11 +1240,9 @@ function finishBattleVictoryPotionReplace(host, potionIndex, reward, button){
       })
     : { name:(reward && reward.name) || "새 약병", emoji:reward && reward.icon, desc:reward && reward.desc };
   S.potions[potionIndex] = { ...potion };
-  if(S.potions.length > 3) S.potions = S.potions.slice(0, 3);
-  if(!S.victoryRewardDone) S.victoryRewardDone = {};
-  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
-  S.victoryRewardDone.potion = true;
-  S.victoryRewardDoneText.potion = "수령 완료";
+  const potionLimit = getPotionSlotLimit();
+  if(S.potions.length > potionLimit) S.potions = S.potions.slice(0, potionLimit);
+  markVictoryRewardDone("potion", "수령 완료");
   renderHud();
   const ov = host && host.closest("#battleVictoryOverlay");
   closeBattleVictoryConfirm(ov);
@@ -1226,9 +1251,8 @@ function finishBattleVictoryPotionReplace(host, potionIndex, reward, button){
 }
 
 function finishBattleVictoryOptionalReward(id, host, doneText){
-  if(!S.victoryRewardDone) S.victoryRewardDone = {};
-  if(!S.victoryRewardDoneText) S.victoryRewardDoneText = {};
-  if(S.victoryRewardDone[id]) return;
+  const rewardState = ensureVictoryRewardState();
+  if(rewardState.done[id]) return;
   const reward = getBattleVictoryRewards().find(item => item.id === id);
   if(id === "relic" && doneText === "수령 완료"){
     if(!S.relics) S.relics = [];
@@ -1247,7 +1271,7 @@ function finishBattleVictoryOptionalReward(id, host, doneText){
   }
   if(id === "potion" && doneText === "수령 완료"){
     if(!S.potions) S.potions = [];
-    if(S.potions.length >= 3){
+    if(S.potions.length >= getPotionSlotLimit()){
       openBattleVictoryPotionReplacePanel(host);
       return;
     }
@@ -1260,8 +1284,7 @@ function finishBattleVictoryOptionalReward(id, host, doneText){
       renderHud();
     }
   }
-  S.victoryRewardDone[id] = true;
-  S.victoryRewardDoneText[id] = doneText;
+  markVictoryRewardDone(id, doneText);
   const ov = host.closest("#battleVictoryOverlay");
   closeBattleVictoryConfirm(ov);
   renderBattleVictoryRewardSlots(host);
@@ -1279,15 +1302,14 @@ function openBattleVictoryCardReward(host){
 function finishBattleVictoryCardReward(){
   S.victoryCardRewardOpen = false;
   S.rewardOpen = true; S.busy = true;
-  if(!S.victoryRewardDone) S.victoryRewardDone = {};
-  S.victoryRewardDone.card = true;
+  markVictoryRewardDone("card", "선택 완료");
   closeRewardOverlay();
   renderBattleVictoryOverlay();
   updateEndBtn();
 }
 
 function areBattleVictoryRewardsDone(){
-  return !!(S && S.victoryRewardDone && getBattleVictoryRewards().every(item => S.victoryRewardDone[item.id]));
+  return !!(S && getBattleVictoryRewards().every(item => isVictoryRewardDone(item.id)));
 }
 
 function updateBattleVictoryNextButton(ov){
@@ -1306,8 +1328,7 @@ function onBattleVictoryNextClick(){
   }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
-  window.MAP_STATE.proceedMode = true;
-  if(typeof openMap==="function") openMap();
+  proceedToMap();
 }
 
 function ensureRewardOverlay(){
