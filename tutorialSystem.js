@@ -33,9 +33,52 @@
     if(popup) popup.classList.add("show");
   }
 
+  function getTutorialGuideDialogue(id, fallback){
+    if(typeof window.getTutorialDialogueById !== "function") return fallback;
+    const dialogue = window.getTutorialDialogueById(id);
+    return dialogue || fallback;
+  }
+
+  function escapeTutorialGuideHtml(value){
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderTutorialGuideText(text){
+    return escapeTutorialGuideHtml(text).replace(/&lt;br&gt;/g, "<br>");
+  }
+
   function ensureTutorialGuidePopup(){
     ensureTutorialGuideStyles();
     if(document.getElementById("tutorialGuidePopup")) return;
+
+    const titleDialogue = getTutorialGuideDialogue("T-001", {
+      speaker: "시스템",
+      text: "튜토리얼 안내"
+    });
+    const bodyDialogue = getTutorialGuideDialogue("T-002", {
+      speaker: "",
+      text: "이 튜토리얼은 전투의 기본을 안내드려요."
+    });
+    const titleText = renderTutorialGuideText(titleDialogue.text);
+    const bodySpeaker = bodyDialogue.speaker ? escapeTutorialGuideHtml(bodyDialogue.speaker) + " : " : "";
+    const bodyText = renderTutorialGuideText(bodyDialogue.text);
+    const skipReactionDialogue = getTutorialGuideDialogue("S-001", {
+      speaker: "",
+      text: "튜토리얼을 건너뛰시겠어요?"
+    });
+    const skipResultDialogue = getTutorialGuideDialogue("S-002", {
+      speaker: "",
+      text: "이후 설정 메뉴에서 튜토리얼을 다시 진행할 수 있습니다."
+    });
+    const skipReactionSpeaker = skipReactionDialogue.speaker ? escapeTutorialGuideHtml(skipReactionDialogue.speaker) + " : " : "";
+    const skipResultSpeaker = skipResultDialogue.speaker ? escapeTutorialGuideHtml(skipResultDialogue.speaker) + " : " : "";
+    const skipReactionText = renderTutorialGuideText(skipReactionDialogue.text);
+    const skipResultText = renderTutorialGuideText(skipResultDialogue.text);
 
     const popup = document.createElement("div");
     popup.id = "tutorialGuidePopup";
@@ -44,8 +87,8 @@
       <div class="tutorial-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialGuideTitle">
         <button type="button" class="tutorial-guide-close" aria-label="튜토리얼 안내 닫기" data-tutorial-close>&times;</button>
         <div class="tutorial-guide-main" data-tutorial-guide-main>
-          <h2 id="tutorialGuideTitle">튜토리얼 안내</h2>
-          <p>이 튜토리얼은 전투의 기본을 안내드려요.</p>
+          <h2 id="tutorialGuideTitle">${titleText}</h2>
+          <p>${bodySpeaker}${bodyText}</p>
           <p>예상 플레이 시간 3~5분</p>
           <p>이 과정을 통해 다음을 배워요!</p>
           <div class="tutorial-guide-list">
@@ -60,8 +103,8 @@
           </div>
         </div>
         <div class="tutorial-guide-confirm" data-tutorial-skip-confirm hidden>
-          <h2>튜토리얼을 건너뛰시겠어요?</h2>
-          <p>이후 설정 메뉴에서 튜토리얼을 다시 진행할 수 있습니다.</p>
+          <h2>${skipReactionSpeaker}${skipReactionText}</h2>
+          <p>${skipResultSpeaker}${skipResultText}</p>
           <div class="tutorial-guide-actions">
             <button type="button" class="tutorial-guide-button tutorial-guide-button-primary" data-tutorial-skip-confirm-button>예</button>
             <button type="button" class="tutorial-guide-button tutorial-guide-button-secondary" data-tutorial-skip-back>아니오</button>

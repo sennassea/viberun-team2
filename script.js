@@ -555,6 +555,17 @@ function playCard(handIndex, targetEnemy){
   const key  = S.hand[handIndex];
   const card = CARD_DB[key];
   if(!card) return false;
+  if(window.TUTORIAL_BATTLE &&
+     typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+     window.TUTORIAL_BATTLE.isTutorialBattle() &&
+     typeof window.TUTORIAL_BATTLE.canUseCard === "function" &&
+     !window.TUTORIAL_BATTLE.canUseCard(card, key, handIndex)){
+    const message = typeof window.TUTORIAL_BATTLE.getTutorialRestrictionMessage === "function"
+      ? window.TUTORIAL_BATTLE.getTutorialRestrictionMessage("card")
+      : "";
+    if(message && typeof toast === "function") toast(message);
+    return false;
+  }
   if(card.unplayable){ toast(card.name+"은 사용할 수 없습니다"); return false; }
   if(S.energy < card.cost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
@@ -624,6 +635,12 @@ function playCard(handIndex, targetEnemy){
   S.hand.splice(handIndex, 1);
   discardCard(key, { source:"played" });
   autoSelectTarget();
+  if(window.TUTORIAL_BATTLE &&
+     typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+     window.TUTORIAL_BATTLE.isTutorialBattle() &&
+     typeof window.TUTORIAL_BATTLE.onCardPlayed === "function"){
+    window.TUTORIAL_BATTLE.onCardPlayed(key, card, handIndex);
+  }
 
   // 생존 적 0명 = 패키지 전멸 = 노드 클리어 (기획서 §8-6)
   if(livingEnemies().length===0){
@@ -1173,6 +1190,17 @@ function closeRewardOverlay(){
    ========================================================================= */
 async function endTurn(){
   if(S.busy || S.over) return;
+  if(window.TUTORIAL_BATTLE &&
+     typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+     window.TUTORIAL_BATTLE.isTutorialBattle() &&
+     typeof window.TUTORIAL_BATTLE.canEndTurn === "function" &&
+     !window.TUTORIAL_BATTLE.canEndTurn()){
+    const message = typeof window.TUTORIAL_BATTLE.getTutorialRestrictionMessage === "function"
+      ? window.TUTORIAL_BATTLE.getTutorialRestrictionMessage("endTurn")
+      : "";
+    if(message && typeof toast === "function") toast(message);
+    return;
+  }
   S.busy = true;
   updateEndBtn();
 
@@ -1802,7 +1830,14 @@ function renderEnergyOrbs(){
   }
 }
 
-function updateEndBtn(){ $("#endTurn").disabled = !!(S.busy || S.over); }
+function updateEndBtn(){
+  const tutorialBlocksEndTurn = window.TUTORIAL_BATTLE &&
+    typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+    window.TUTORIAL_BATTLE.isTutorialBattle() &&
+    typeof window.TUTORIAL_BATTLE.canEndTurn === "function" &&
+    !window.TUTORIAL_BATTLE.canEndTurn();
+  $("#endTurn").disabled = !!(S.busy || S.over || tutorialBlocksEndTurn);
+}
 
 /* =========================================================================
    드래그 & 드롭
@@ -1813,6 +1848,19 @@ function attachDrag(cardEl, index){
   cardEl.addEventListener("pointerdown", down);
   function down(ev){
     if(S.busy||S.over) return;
+    const key = S.hand[index];
+    const card = CARD_DB[key];
+    if(window.TUTORIAL_BATTLE &&
+       typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+       window.TUTORIAL_BATTLE.isTutorialBattle() &&
+       typeof window.TUTORIAL_BATTLE.canUseCard === "function" &&
+       !window.TUTORIAL_BATTLE.canUseCard(card, key, index)){
+      const message = typeof window.TUTORIAL_BATTLE.getTutorialRestrictionMessage === "function"
+        ? window.TUTORIAL_BATTLE.getTutorialRestrictionMessage("card")
+        : "";
+      if(message && typeof toast === "function") toast(message);
+      return;
+    }
     pid=ev.pointerId; startX=ev.clientX; startY=ev.clientY; dragging=false;
     cardEl.setPointerCapture(pid);
     cardEl.addEventListener("pointermove",   move);

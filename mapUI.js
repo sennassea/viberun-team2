@@ -239,8 +239,17 @@ const DMAP_EMOJI = {
 
 function getTutorialMapCurrentLabel(currentNodeId) {
   const stage = Array.isArray(MAP_STAGES) ? MAP_STAGES[0] : null;
-  if(!stage || stage.packageId !== "tutorial_battle") return "";
-  return currentNodeId === "tutorial_battle" ? "튜토리얼 구역" : "집";
+  const isTutorialMap = !!(stage && stage.packageId === "tutorial_battle");
+  const isTutorialBattle = !!(
+    window.TUTORIAL_BATTLE &&
+    typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
+    window.TUTORIAL_BATTLE.isTutorialBattle()
+  );
+  if(!isTutorialMap && !isTutorialBattle) return "";
+  if(currentNodeId === "tutorial_battle" || (window.MAP_STATE && window.MAP_STATE.currentStage === 0)){
+    return "튜토리얼 구역";
+  }
+  return "집";
 }
 
 /* ── renderCanvas 오버라이드 ────────────────────────────────────────────── */
