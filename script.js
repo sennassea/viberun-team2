@@ -281,6 +281,7 @@ function newGame(options={}){
 
   // 패키지 몬스터 전체 동시 배치 (기획서 §8-3)
   spawnPackageEnemies();
+  applyBattleStartRelics();
 
   S.draw = shuffle([...STARTER_DECK]);
   drawCards(DRAW_PER_TURN);
