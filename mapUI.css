@@ -313,7 +313,7 @@
 /* 덱 뷰어 / 설정 뷰어가 맵 오버레이와 튜토리얼 지도 위에 표시되도록 */
 #deckViewerOverlay,
 #settingsViewerOverlay {
-  z-index: 240 !important;
+  z-index: 300 !important;
 }
 
 /* start-map-mode: 전체 화면 오버라이드 */

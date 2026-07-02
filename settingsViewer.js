@@ -293,7 +293,7 @@
     style.textContent =
       ".settings-viewer{position:absolute;inset:0;z-index:96;display:none;place-items:center;background:rgba(20,35,60,.45);backdrop-filter:blur(3px);}" +
       ".settings-viewer.show{display:grid;}" +
-      ".settings-viewer.start-mode{z-index:240!important;}" +
+      ".settings-viewer.start-mode{z-index:300!important;}" +
       ".settings-viewer-panel{position:relative;width:min(54cqw,72cqh);max-height:72cqh;display:flex;flex-direction:column;background:var(--c-panel);border:0.3cqh solid var(--c-gold);border-radius:var(--r);box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:2cqh 2cqw;}" +
       ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding-bottom:1.2cqh;border-bottom:0.15cqh solid var(--c-panel-line);}" +
       ".settings-viewer-head h2{font-size:3cqh;line-height:1;flex:1;}" +
@@ -369,8 +369,14 @@
   function openStartSettingsViewer(){
     if(!els) return;
     const isNewbieStart = isNewbieStartSettings();
+    const isTutorialMapSettings = window.TUTORIAL_MAP_SYSTEM && typeof window.TUTORIAL_MAP_SYSTEM.isActive === "function" && window.TUTORIAL_MAP_SYSTEM.isActive();
     settingsMode = "start";
     els.overlay.classList.add("start-mode");
+    els.overlay.classList.toggle("tutorial-map-settings-mode", !!isTutorialMapSettings);
+    els.overlay.style.zIndex = isTutorialMapSettings ? "1000" : "";
+    if(isTutorialMapSettings && els.overlay.parentNode){
+      els.overlay.parentNode.appendChild(els.overlay);
+    }
     if(els.actions) els.actions.style.display = isNewbieStart ? "none" : "";
     if(els.reset) els.reset.style.display = isNewbieStart ? "none" : "";
     if(els.tutorial) els.tutorial.style.display = isNewbieStart ? "none" : "";
@@ -411,6 +417,8 @@
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
     els.overlay.classList.remove("start-mode");
+    els.overlay.classList.remove("tutorial-map-settings-mode");
+    els.overlay.style.zIndex = "";
     if(settingsMode === "combat") resumeCombat();
     settingsMode = "combat";
   }

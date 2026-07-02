@@ -100,6 +100,10 @@
     pauseTutorialCombat();
     const overlay = document.getElementById("tutorialBattleSettings");
     if(!overlay) return;
+    overlay.style.zIndex = document.getElementById("mapOverlay") ? "1000" : "";
+    if(document.getElementById("mapOverlay") && overlay.parentNode){
+      overlay.parentNode.appendChild(overlay);
+    }
     overlay.classList.add("show");
     overlay.setAttribute("aria-hidden", "false");
     const closeButton = overlay.querySelector(".tutorial-battle-settings-close");
@@ -112,6 +116,7 @@
     closeTutorialExitConfirm();
     overlay.classList.remove("show");
     overlay.setAttribute("aria-hidden", "true");
+    overlay.style.zIndex = "";
     resumeTutorialCombat();
   }
 
@@ -173,7 +178,7 @@
     const style = document.createElement("style");
     style.id = "tutorialBattleSettingsStyles";
     style.textContent =
-      ".tutorial-battle-settings{position:absolute;inset:0;z-index:98;display:none;place-items:center;background:rgba(20,35,60,.45);backdrop-filter:blur(3px);}" +
+      ".tutorial-battle-settings{position:absolute;inset:0;z-index:300;display:none;place-items:center;background:rgba(20,35,60,.45);backdrop-filter:blur(3px);}" +
       ".tutorial-battle-settings.show{display:grid;}" +
       ".tutorial-battle-settings-panel{position:relative;width:min(44cqw,64cqh);max-height:70cqh;display:flex;flex-direction:column;background:var(--c-panel);border:0.3cqh solid var(--c-gold);border-radius:var(--r);box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:2cqh 2cqw;}" +
       ".tutorial-battle-settings-head{display:flex;align-items:center;gap:1cqw;padding-bottom:1.2cqh;border-bottom:0.15cqh solid var(--c-panel-line);}" +

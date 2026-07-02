@@ -44,7 +44,7 @@
         "position:absolute;inset:0;z-index:95;display:none;place-items:center;" +
         "background:rgba(30,20,10,.45);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s ease;}" +
       ".bag-ui-overlay.show{display:grid;opacity:1;}" +
-      ".bag-ui-overlay.map-mode{top:0;z-index:240!important;}" +
+      ".bag-ui-overlay.map-mode{top:0;z-index:300!important;}" +
       ".bag-ui-panel{position:relative;width:min(84cqw,106cqh);max-height:78cqh;display:flex;flex-direction:column;gap:1.3cqh;padding:1.8cqh 2cqw;" +
         "background:radial-gradient(ellipse at 30% 15%,var(--bg-cream) 0%,var(--bg-beige) 62%,var(--bg-beige-deep) 100%);" +
         "border:0.3cqh solid var(--bg-gold);border-radius:1.6cqh;box-shadow:0 2cqh 4cqh rgba(30,20,10,.5),inset 0 0 3cqh rgba(255,250,230,.5);color:var(--bg-ink);}" +
