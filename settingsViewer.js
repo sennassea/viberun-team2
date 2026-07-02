@@ -28,6 +28,7 @@
     restoreSavedProgress();
     if(trigger) bindOpenTrigger(trigger, openSettingsViewer);
     if(startTrigger) bindOpenTrigger(startTrigger, openStartSettingsViewer);
+    window.SETTINGS_VIEWER_CLOSE = closeSettingsViewer;
   }
 
   function findSettingsTrigger(){
@@ -292,7 +293,7 @@
     style.textContent =
       ".settings-viewer{position:absolute;inset:0;z-index:96;display:none;place-items:center;background:rgba(20,35,60,.45);backdrop-filter:blur(3px);}" +
       ".settings-viewer.show{display:grid;}" +
-      ".settings-viewer.start-mode{z-index:240;}" +
+      ".settings-viewer.start-mode{z-index:240!important;}" +
       ".settings-viewer-panel{position:relative;width:min(54cqw,72cqh);max-height:72cqh;display:flex;flex-direction:column;background:var(--c-panel);border:0.3cqh solid var(--c-gold);border-radius:var(--r);box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:2cqh 2cqw;}" +
       ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding-bottom:1.2cqh;border-bottom:0.15cqh solid var(--c-panel-line);}" +
       ".settings-viewer-head h2{font-size:3cqh;line-height:1;flex:1;}" +
@@ -339,6 +340,10 @@
 
   function openSettingsViewer(){
     if(!els) return;
+    if(window.TUTORIAL_MAP_SYSTEM && typeof window.TUTORIAL_MAP_SYSTEM.isActive === "function" && window.TUTORIAL_MAP_SYSTEM.isActive()){
+      openStartSettingsViewer();
+      return;
+    }
     if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" && window.TUTORIAL_BATTLE.isTutorialBattle()){
       if(typeof window.TUTORIAL_BATTLE.openTutorialSettings === "function"){
         window.TUTORIAL_BATTLE.openTutorialSettings();
@@ -350,6 +355,7 @@
     els.overlay.classList.remove("start-mode");
     if(els.actions) els.actions.style.display = "";
     if(els.reset) els.reset.style.display = "none";
+    if(els.tutorial) els.tutorial.style.display = "";
     if(els.primary) els.primary.style.display = "";
     const danger = els.overlay.querySelector(".settings-viewer-danger");
     if(danger) danger.style.display = "";
@@ -362,10 +368,12 @@
 
   function openStartSettingsViewer(){
     if(!els) return;
+    const isNewbieStart = isNewbieStartSettings();
     settingsMode = "start";
     els.overlay.classList.add("start-mode");
-    if(els.actions) els.actions.style.display = "";
-    if(els.reset) els.reset.style.display = "";
+    if(els.actions) els.actions.style.display = isNewbieStart ? "none" : "";
+    if(els.reset) els.reset.style.display = isNewbieStart ? "none" : "";
+    if(els.tutorial) els.tutorial.style.display = isNewbieStart ? "none" : "";
     if(els.primary) els.primary.style.display = "none";
     const danger = els.overlay.querySelector(".settings-viewer-danger");
     if(danger) danger.style.display = "none";
@@ -376,6 +384,22 @@
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
     els.close.focus();
+  }
+
+  function isNewbieStartSettings(){
+    if(typeof shouldShowNewbieStartMenu === "function") return shouldShowNewbieStartMenu();
+    if(window.TUTORIAL_SYSTEM && typeof window.TUTORIAL_SYSTEM.shouldShowNewbieStart === "function"){
+      return window.TUTORIAL_SYSTEM.shouldShowNewbieStart();
+    }
+    if(typeof localStorage === "undefined") return true;
+    try {
+      return !(
+        localStorage.getItem("viberunTutorialCompleted") === "true" ||
+        localStorage.getItem("viberunTutorialWasSkipped") === "true"
+      );
+    } catch(error) {
+      return true;
+    }
   }
 
   function closeSettingsViewer(){

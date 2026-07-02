@@ -96,6 +96,7 @@
     triggers.forEach(bindOpenTrigger);
     if(codexTrigger) bindCodexTrigger(codexTrigger);
     window.BOHYUN_MARK_CARDS_ENCOUNTERED = markEncounteredCards;
+    window.DECK_VIEWER_CLOSE = closeDeckViewer;
   }
 
   function bindOpenTrigger(trigger){
