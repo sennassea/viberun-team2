@@ -14,7 +14,11 @@
     tutorialBattleExitTarget: "newbieStart",
     tutorialEncounterId: "stage_tutorial_child_spirit"
   };
+  const BATTLE_INTRO_DIALOGUE_IDS = ["W-001", "W-002", "W-003"];
+  const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
+  let tutorialBattleIntroActive = false;
+  let tutorialBattleIntroPauseState = null;
 
   function startTutorialBattle(){
     state.isTutorialBattleActive = true;
@@ -23,9 +27,11 @@
     if(typeof window.startTutorialBattle === "function"){
       window.startTutorialBattle();
     }
+    deferTutorialBattleIntro();
   }
 
   function endTutorialBattle(){
+    cleanupTutorialBattleIntro();
     state.isTutorialBattleActive = false;
     state.currentTutorialStep = null;
     applyTutorialBattleRootState(false);
@@ -94,6 +100,146 @@
     root.classList.toggle("is-tutorial-battle", !!active);
     if(active) root.dataset.state = "tutorial-battle";
     else if(root.dataset.state === "tutorial-battle") delete root.dataset.state;
+  }
+
+  function deferTutorialBattleIntro(){
+    if(typeof requestAnimationFrame === "function"){
+      requestAnimationFrame(() => requestAnimationFrame(startTutorialBattleIntro));
+      return;
+    }
+    setTimeout(startTutorialBattleIntro, 0);
+  }
+
+  function startTutorialBattleIntro(){
+    if(!isTutorialBattle()) return;
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    showTutorialBattleIntroDialogueSequence(BATTLE_INTRO_DIALOGUE_IDS, 0);
+  }
+
+  function showTutorialBattleIntroDialogueSequence(ids, index){
+    if(!tutorialBattleIntroActive || !isTutorialBattle()){
+      cleanupTutorialBattleIntro();
+      return;
+    }
+    if(index >= ids.length){
+      cleanupTutorialBattleIntro();
+      setTutorialStep("battle_intro_completed");
+      console.log("tutorial battle intro completed");
+      return;
+    }
+
+    const dialogue = getTutorialBattleDialogue(ids[index]);
+    if(!dialogue){
+      showTutorialBattleIntroDialogueSequence(ids, index + 1);
+      return;
+    }
+
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue(dialogue, () => {
+      showTutorialBattleIntroDialogueSequence(ids, index + 1);
+    });
+  }
+
+  function getTutorialBattleDialogue(id){
+    if(typeof window.getTutorialDialogueById !== "function") return null;
+    return window.getTutorialDialogueById(id);
+  }
+
+  function renderTutorialBattleIntroDialogue(dialogue, onNext){
+    const root = document.getElementById("game");
+    if(!root) return;
+
+    removeTutorialBattleIntroOverlay();
+
+    const overlay = document.createElement("div");
+    overlay.className = "tutorial-battle-intro-overlay";
+    overlay.setAttribute("aria-hidden", "false");
+    overlay.innerHTML =
+      '<div class="tutorial-battle-intro-dialogue" role="dialog" aria-modal="true">' +
+        '<div class="tutorial-battle-intro-speaker">' + escapeTutorialBattleIntroHtml(dialogue.speaker || "") + '</div>' +
+        '<div class="tutorial-battle-intro-text">' + renderTutorialBattleIntroText(dialogue.text || "") + '</div>' +
+        '<div class="tutorial-battle-intro-actions">' +
+          '<button type="button" class="tutorial-battle-intro-next">다음</button>' +
+        '</div>' +
+      '</div>';
+
+    BATTLE_INTRO_BLOCK_EVENTS.forEach(eventName => {
+      overlay.addEventListener(eventName, blockTutorialBattleIntroEvent);
+    });
+    const nextButton = overlay.querySelector(".tutorial-battle-intro-next");
+    if(nextButton){
+      nextButton.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        onNext();
+      });
+    }
+    root.appendChild(overlay);
+    if(nextButton) nextButton.focus();
+  }
+
+  function blockTutorialBattleIntroEvent(event){
+    if(event.target && typeof event.target.closest === "function" && event.target.closest(".tutorial-battle-intro-next")){
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function cleanupTutorialBattleIntro(){
+    tutorialBattleIntroActive = false;
+    removeTutorialBattleIntroOverlay();
+    resumeTutorialBattleIntroCombat();
+  }
+
+  function removeTutorialBattleIntroOverlay(){
+    const overlay = document.querySelector("#game .tutorial-battle-intro-overlay");
+    if(overlay) overlay.remove();
+  }
+
+  function pauseTutorialBattleIntroCombat(){
+    if(tutorialBattleIntroPauseState || typeof S === "undefined" || !S || S.over) return;
+    tutorialBattleIntroPauseState = { busy: !!S.busy };
+    S.busy = true;
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
+  function resumeTutorialBattleIntroCombat(){
+    if(!tutorialBattleIntroPauseState) return;
+    if(typeof S !== "undefined" && S && !S.over){
+      S.busy = tutorialBattleIntroPauseState.busy;
+      if(typeof updateEndBtn === "function") updateEndBtn();
+    }
+    tutorialBattleIntroPauseState = null;
+  }
+
+  function ensureTutorialBattleIntroStyles(){
+    if(document.getElementById("tutorialBattleIntroStyles")) return;
+    const style = document.createElement("style");
+    style.id = "tutorialBattleIntroStyles";
+    style.textContent =
+      ".tutorial-battle-intro-overlay{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);display:block;cursor:default;}" +
+      ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;transform:translateX(-50%);z-index:281;width:min(54cqw,72cqh);padding:1.6cqh 1.8cqw;border:0.22cqh solid rgba(255,255,255,.88);border-radius:1cqh;background:rgba(244,248,252,.97);color:#243247;box-shadow:0 1.2cqh 2.8cqh rgba(20,35,60,.24);}" +
+      ".tutorial-battle-intro-speaker{margin-bottom:.7cqh;font-size:1.7cqh;font-weight:900;color:#2f66a8;}" +
+      ".tutorial-battle-intro-text{font-size:1.9cqh;line-height:1.45;font-weight:800;}" +
+      ".tutorial-battle-intro-actions{display:flex;justify-content:flex-end;margin-top:1.2cqh;}" +
+      ".tutorial-battle-intro-next{min-width:7.5cqw;min-height:4.2cqh;border:0.16cqh solid #2f66a8;border-radius:.8cqh;background:#4b8bd8;color:#fff;font-size:1.7cqh;font-weight:900;cursor:pointer;}";
+    document.head.appendChild(style);
+  }
+
+  function escapeTutorialBattleIntroHtml(value){
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderTutorialBattleIntroText(text){
+    return escapeTutorialBattleIntroHtml(text).replace(/&lt;br&gt;/g, "<br>");
   }
 
   function openTutorialSettings(){
