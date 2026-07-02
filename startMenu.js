@@ -5,6 +5,7 @@
    ========================================================================= */
 
 function startNewGameFromMenu(){
+  markHasPlayedBefore();
   /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
   if(typeof window.ACT1_START_NEW_GAME === "function"){
     window.ACT1_START_NEW_GAME();
@@ -131,6 +132,18 @@ function showStartScreenAfterSave(){
   updateContinueButtonInfo();
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.remove("hidden");
+}
+
+function markHasPlayedBefore(){
+  if(typeof window.BOHYUN_TUTORIAL === "object" && typeof window.BOHYUN_TUTORIAL.markHasPlayedBefore === "function"){
+    window.BOHYUN_TUTORIAL.markHasPlayedBefore();
+    return;
+  }
+  if(typeof localStorage === "undefined") return;
+  try {
+    localStorage.setItem("viberunHasPlayedBefore", "1");
+    localStorage.setItem("hasPlayedBefore", "1");
+  } catch(error) {}
 }
 
 function updateContinueButtonInfo(){
