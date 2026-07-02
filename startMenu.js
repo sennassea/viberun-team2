@@ -163,9 +163,7 @@ function shouldShowNewbieStartMenu(){
   try {
     return !(
       localStorage.getItem("viberunTutorialCompleted") === "true" ||
-      localStorage.getItem("viberunTutorialWasSkipped") === "true" ||
-      localStorage.getItem("viberunHasPlayedBefore") === "true" ||
-      !!localStorage.getItem("viberunSaveState")
+      localStorage.getItem("viberunTutorialWasSkipped") === "true"
     );
   } catch(error) {
     return true;
