@@ -104,6 +104,10 @@
     startStage = function tutorialWrappedStartStage(stageIdx){
       if(tutorialMapActive){
         console.log("[Tutorial] 튜토리얼 전투 노드 클릭", stageIdx);
+        tutorialMapActive = false;
+        const overlay = document.getElementById("mapOverlay");
+        if(overlay) overlay.remove();
+        if(typeof window.startTutorialBattle === "function") window.startTutorialBattle();
         return;
       }
       return originalStartStage.apply(this, arguments);
