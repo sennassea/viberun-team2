@@ -380,6 +380,9 @@
     tutorialActive = false;
     restoreOriginalMonsters();
     if(typeof S !== "undefined" && S) S.tutorialMode = false;
+    if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.endTutorialBattle === "function"){
+      window.TUTORIAL_BATTLE.endTutorialBattle();
+    }
   }
 
   function restoreOriginalMonsters(){

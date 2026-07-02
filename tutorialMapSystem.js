@@ -107,7 +107,9 @@
         tutorialMapActive = false;
         const overlay = document.getElementById("mapOverlay");
         if(overlay) overlay.remove();
-        if(typeof window.startTutorialBattle === "function") window.startTutorialBattle();
+        if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.startTutorialBattle === "function"){
+          window.TUTORIAL_BATTLE.startTutorialBattle();
+        }
         return;
       }
       return originalStartStage.apply(this, arguments);
