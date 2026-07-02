@@ -20,6 +20,10 @@ const EVENT_CHOICE_ICONS = ["❤️", "🔍", "🌙", "✨"];
 let eventOverlayEl = null;
 let eventState = null; // { event, step, resultDetails, cardCandidates, cardSelected }
 
+/* 이벤트 중 "지도 보기"에서 다음 노드 선택을 막기 위한 임시 함수 백업 */
+let eventMapStartStageBackup = null;
+let eventMapCloseMapBackup = null;
+
 /* ── 진입점 (cheatEvent.js의 CHEAT.event.open()이 호출) ─────────────────── */
 function openEventNode(eventId){
   const ev = (window.EVENT_DB || []).find(e => e.id === eventId);
@@ -44,9 +48,10 @@ function closeEventOverlayOnly(){
 
 /* 이벤트 종료 → 맵으로 복귀 (기도터/상점과 동일 패턴) */
 function finishEventNode(){
+  restoreEventMapOverrides();
   closeEventOverlayOnly();
   eventState = null;
-  if(typeof renderHud === "function") renderHud();
+  if(typeof renderHud === "function" && typeof S !== "undefined" && S) renderHud();
   if(window.MAP_STATE) window.MAP_STATE.proceedMode = true;
   if(typeof openMap === "function") openMap();
 }
@@ -90,7 +95,7 @@ function ensureEventOverlay(){
 
 function eventShellHtml(){
   return (
-    '<div class="event-header">' +
+    '<div class="event-topbar">' +
       '<div class="event-player-card">' +
         '<div class="event-portrait" id="eventPortrait">👼</div>' +
         '<div class="event-player-body">' +
@@ -104,9 +109,19 @@ function eventShellHtml(){
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="event-header-badge">이벤트</div>' +
+      '<div class="event-topbar-spacer"></div>' +
+      '<div class="event-menu" aria-label="이벤트 중 공통 메뉴">' +
+        '<button type="button" class="event-menu-btn" id="eventMapBtn"><span class="ico">🗺️</span><span>지도</span></button>' +
+        '<button type="button" class="event-menu-btn" id="eventDeckBtn"><span class="ico">📖</span><span>보유 카드</span></button>' +
+        '<button type="button" class="event-menu-btn" id="eventBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
+        '<button type="button" class="event-menu-btn" id="eventSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
+      '</div>' +
     '</div>' +
-    '<div class="event-body" id="eventBody"></div>'
+    '<div class="event-stage">' +
+      '<div class="event-panel-wrap">' +
+        '<div class="event-body" id="eventBody"></div>' +
+      '</div>' +
+    '</div>'
   );
 }
 
@@ -124,6 +139,54 @@ function onEventOverlayClick(e){
   if(e.target.closest("#eventCardConfirm")){ confirmEventCard(); return; }
   if(e.target.closest("#eventCardSkip")){ skipEventCard(); return; }
   if(e.target.closest("#eventResultConfirm")){ finishEventNode(); return; }
+  if(e.target.closest("#eventMapBtn")){ openEventMapPreview(); return; }
+  if(e.target.closest("#eventDeckBtn")){ openEventDeckPreview(); return; }
+  if(e.target.closest("#eventBagBtn")){ openEventBagPreview(); return; }
+  if(e.target.closest("#eventSettingsBtn")){ openEventSettingsPreview(); return; }
+}
+
+/* ── 우상단 공통 메뉴 (지도/보유카드/가방/설정) ────────────────────────────
+   지도는 열람만 가능하다. 이벤트 선택 전에는 다음 노드로 진행할 수 없도록
+   startStage()/closeMap()을 이벤트가 지도를 보여주는 동안만 임시로 감싼다. */
+function openEventMapPreview(){
+  if(typeof openMap !== "function"){
+    if(typeof toast === "function") toast("지도를 열 수 없습니다.");
+    return;
+  }
+  if(eventMapStartStageBackup === null && typeof startStage === "function"){
+    eventMapStartStageBackup = startStage;
+    startStage = function eventBlockedStartStage(){
+      if(typeof toast === "function") toast("이벤트를 먼저 선택해 주세요.");
+    };
+  }
+  if(eventMapCloseMapBackup === null && typeof closeMap === "function"){
+    eventMapCloseMapBackup = closeMap;
+    closeMap = function eventWrappedCloseMap(){
+      eventMapCloseMapBackup();
+      restoreEventMapOverrides();
+    };
+  }
+  openMap();
+}
+
+function restoreEventMapOverrides(){
+  if(eventMapStartStageBackup !== null){ startStage = eventMapStartStageBackup; eventMapStartStageBackup = null; }
+  if(eventMapCloseMapBackup !== null){ closeMap = eventMapCloseMapBackup; eventMapCloseMapBackup = null; }
+}
+
+function openEventDeckPreview(){
+  const deckBtn = document.getElementById("deckViewerButton");
+  if(deckBtn){ deckBtn.click(); return; }
+  if(typeof toast === "function") toast("보유 카드 확인 기능을 불러올 수 없습니다.");
+}
+
+function openEventBagPreview(){
+  if(typeof window.BAG_UI_OPEN === "function"){ window.BAG_UI_OPEN(); return; }
+  if(typeof toast === "function") toast("가방 확인 기능을 불러올 수 없습니다.");
+}
+
+function openEventSettingsPreview(){
+  alert("설정 기능은 준비 중입니다.");
 }
 
 /* ── 렌더링 ──────────────────────────────────────────────────────────────── */
@@ -170,6 +233,7 @@ function eventChoicesHtml(){
   const choicesHtml = (ev.choices || []).map((choice, idx) => eventChoiceRowHtml(choice, idx)).join("");
   return (
     '<div class="event-panel">' +
+      '<div class="event-kicker">이벤트</div>' +
       '<div class="event-title">' + escapeEventHtml(ev.title || "") + '</div>' +
       '<div class="event-story">' + storyHtml + '</div>' +
       '<div class="event-choices">' + choicesHtml + '</div>' +
@@ -437,6 +501,7 @@ function skipEventCard(){
 
 /* ── 전투 전환 ───────────────────────────────────────────────────────────── */
 function triggerEventCombat(combatType){
+  restoreEventMapOverrides();
   closeEventOverlayOnly();
   eventState = null;
 
