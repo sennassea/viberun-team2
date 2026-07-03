@@ -62,6 +62,16 @@
     { id: "W-043", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" },
     { id: "W-044" }
   ];
+  const FINAL_ATTACK_GUIDE_STEPS = [
+    { id: "W-045", target: ".enemy .hpbar" },
+    { id: "W-046" },
+    { id: "W-047", target: BATTLE_ENEMY_HIGHLIGHT_SELECTOR },
+    { id: "W-048", target: ".enemy .hpbar" },
+    { id: "W-049", target: BATTLE_ENEMY_HIGHLIGHT_SELECTOR },
+    { id: "W-050", target: ".enemy .hpbar" },
+    { id: "W-051", target: ".enemy .hpbar" },
+    { id: "W-052", target: BATTLE_ENEMY_HIGHLIGHT_SELECTOR }
+  ];
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
@@ -70,6 +80,7 @@
   let blockCardState = null;
   let endTurnState = null;
   let skillCardState = null;
+  let finalAttackCardState = null;
   let tutorialFirstNewTurnSkillCardGuaranteed = false;
 
   function startTutorialBattle(){
@@ -89,6 +100,7 @@
     cleanupFirstAttackCardStep();
     cleanupBlockCardStep();
     cleanupSkillCardStep();
+    cleanupFinalAttackCardStep();
     cleanupEndTurnStep();
     tutorialFirstNewTurnSkillCardGuaranteed = false;
     state.isTutorialBattleActive = false;
@@ -139,6 +151,9 @@
     if(skillCardState && skillCardState.active){
       return cardKey === skillCardState.cardKey && handIndex === skillCardState.handIndex;
     }
+    if(finalAttackCardState && finalAttackCardState.active){
+      return cardKey === finalAttackCardState.cardKey && handIndex === finalAttackCardState.handIndex;
+    }
     if(endTurnState && endTurnState.active) return false;
     return true;
   }
@@ -147,6 +162,7 @@
     if(firstAttackCardState && firstAttackCardState.active) return false;
     if(blockCardState && blockCardState.active) return false;
     if(skillCardState && skillCardState.active) return false;
+    if(finalAttackCardState && finalAttackCardState.active) return false;
     return true;
   }
 
@@ -178,6 +194,10 @@
     if(skillCardState && skillCardState.active){
       if(actionType === "endTurn") return "먼저 강조된 조율 주문을 사용해보세요.";
       return "강조된 조율 주문만 사용할 수 있습니다.";
+    }
+    if(finalAttackCardState && finalAttackCardState.active){
+      if(actionType === "endTurn") return "먼저 강조된 정화 주문을 사용해보세요.";
+      return "강조된 정화 주문만 사용할 수 있습니다.";
     }
     if(endTurnState && endTurnState.active){
       if(actionType === "endTurn") return "";
@@ -381,6 +401,13 @@
     if(typeof updateEndBtn === "function") updateEndBtn();
   }
 
+  function cleanupFinalAttackCardStep(){
+    finalAttackCardState = null;
+    removeTutorialFinalAttackCardEventBlocker();
+    clearFinalAttackCardHighlight();
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
   function cleanupEndTurnStep(){
     endTurnState = null;
     removeTutorialEndTurnClickBlocker();
@@ -568,6 +595,7 @@
   }
 
   function onCardPlayed(cardKey, card, handIndex){
+    if(onFinalAttackCardPlayed(cardKey, card, handIndex)) return;
     if(onSkillCardPlayed(cardKey, card, handIndex)) return;
     if(onBlockCardPlayed(cardKey, card, handIndex)) return;
     if(!firstAttackCardState || !firstAttackCardState.active) return;
@@ -750,6 +778,92 @@
     cleanupSkillCardStep();
     setTutorialStep("skill_card_used");
     resumeTutorialPostEnemyGuideFrom("W-043");
+    return true;
+  }
+
+  function startTutorialFinalAttackCardStep(){
+    cleanupTutorialBattleIntro();
+    ensureTutorialFinalAttackCard();
+    const cardState = findFinalAttackCardState();
+    if(!cardState){
+      setTutorialStep("final_attack_card_missing");
+      return;
+    }
+    finalAttackCardState = { ...cardState, active: true };
+    setTutorialStep("final_attack_card");
+    applyFinalAttackCardHighlight();
+    addTutorialFinalAttackCardEventBlocker();
+    if(typeof S !== "undefined" && S && !S.over) S.busy = false;
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
+  function ensureTutorialFinalAttackCard(){
+    if(!isTutorialBattle() || typeof S === "undefined" || !S || !Array.isArray(S.hand) || typeof CARD_DB === "undefined") return;
+    const alreadyHasAttackCard = S.hand.some(cardKey => isFirstAttackTutorialCard(CARD_DB[cardKey]));
+    if(alreadyHasAttackCard) return;
+    const attackCardKey = findTutorialCardKey(isFirstAttackTutorialCard);
+    if(!attackCardKey) return;
+    S.hand.push(attackCardKey);
+    if(typeof renderAll === "function") renderAll();
+  }
+
+  function findFinalAttackCardState(){
+    if(typeof S === "undefined" || !S || !Array.isArray(S.hand) || typeof CARD_DB === "undefined") return null;
+    for(let index = 0; index < S.hand.length; index++){
+      const cardKey = S.hand[index];
+      const card = CARD_DB[cardKey];
+      if(isFirstAttackTutorialCard(card)){
+        return { cardKey, handIndex: index };
+      }
+    }
+    return null;
+  }
+
+  function applyFinalAttackCardHighlight(){
+    clearFinalAttackCardHighlight();
+    if(!finalAttackCardState || !finalAttackCardState.active) return;
+    const card = document.querySelector('#hand .card[data-index="' + finalAttackCardState.handIndex + '"]');
+    if(card) card.classList.add("tutorial-final-attack-card");
+  }
+
+  function clearFinalAttackCardHighlight(){
+    document.querySelectorAll(".tutorial-final-attack-card").forEach(card => {
+      card.classList.remove("tutorial-final-attack-card");
+    });
+  }
+
+  function addTutorialFinalAttackCardEventBlocker(){
+    const root = document.getElementById("game");
+    if(!root) return;
+    BATTLE_INTRO_BLOCK_EVENTS.forEach(eventName => {
+      root.addEventListener(eventName, blockTutorialFinalAttackCardEvent, true);
+    });
+  }
+
+  function removeTutorialFinalAttackCardEventBlocker(){
+    const root = document.getElementById("game");
+    if(!root) return;
+    BATTLE_INTRO_BLOCK_EVENTS.forEach(eventName => {
+      root.removeEventListener(eventName, blockTutorialFinalAttackCardEvent, true);
+    });
+  }
+
+  function blockTutorialFinalAttackCardEvent(event){
+    if(!finalAttackCardState || !finalAttackCardState.active) return;
+    const allowedCard = event.target && typeof event.target.closest === "function"
+      ? event.target.closest('#hand .card[data-index="' + finalAttackCardState.handIndex + '"]')
+      : null;
+    if(allowedCard) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function onFinalAttackCardPlayed(cardKey, card, handIndex){
+    if(!finalAttackCardState || !finalAttackCardState.active) return false;
+    if(cardKey !== finalAttackCardState.cardKey || handIndex !== finalAttackCardState.handIndex) return false;
+    cleanupFinalAttackCardStep();
+    setTutorialStep("final_attack_card_used");
+    console.log("tutorial final attack card used");
     return true;
   }
 
@@ -961,9 +1075,31 @@
   }
 
   function finishTutorialPostEnemyGuide(){
-    cleanupTutorialBattleIntro();
     setTutorialStep("post_enemy_guide_completed");
-    console.log("tutorial post enemy guide completed");
+    showTutorialFinalAttackGuideSequence(FINAL_ATTACK_GUIDE_STEPS, 0);
+  }
+
+  function showTutorialFinalAttackGuideSequence(steps, index){
+    if(!tutorialBattleIntroActive || !isTutorialBattle()){
+      cleanupTutorialBattleIntro();
+      return;
+    }
+    if(index >= steps.length){
+      startTutorialFinalAttackCardStep();
+      return;
+    }
+
+    const step = steps[index];
+    const dialogue = getTutorialBattleDialogue(step.id);
+    if(!dialogue){
+      showTutorialFinalAttackGuideSequence(steps, index + 1);
+      return;
+    }
+
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: step.target, dialogueClass: step.dialogueClass }, () => {
+      showTutorialFinalAttackGuideSequence(steps, index + 1);
+    });
   }
 
   function finishTutorialEnemyActionGuide(){
@@ -1001,6 +1137,7 @@
       ".tutorial-first-attack-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
       ".tutorial-block-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
       ".tutorial-skill-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
+      ".tutorial-final-attack-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
       ".tutorial-end-turn-click-blocker{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);cursor:default;pointer-events:none;}" +
       "#endTurn.tutorial-end-turn-button{position:relative;z-index:281;box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;}" +
       ".tutorial-battle-intro-content{display:block;}" +
