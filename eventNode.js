@@ -777,14 +777,18 @@ function triggerEventCombat(combatType){
   const floor = (typeof nodeFloorIdx === "function" && typeof getCurrentNodeId === "function")
     ? Math.max(1, nodeFloorIdx(getCurrentNodeId()))
     : 1;
+  const stageTheme = typeof window.ACT1_PICK_STAGE_THEME === "function"
+    ? window.ACT1_PICK_STAGE_THEME(nodeType, floor, {})
+    : null;
   const pkg = typeof window.ACT1_PICK_PACKAGE === "function"
-    ? window.ACT1_PICK_PACKAGE(nodeType, floor, new Set())
+    ? window.ACT1_PICK_PACKAGE(nodeType, floor, new Set(), stageTheme)
     : null;
 
   let mons = (pkg && typeof d.getMonstersByIds === "function") ? d.getMonstersByIds(pkg.monsterIds) : null;
   if(!mons || !mons.length){
-    const normalIds = (d.monsterGroups && d.monsterGroups.normal) || [];
-    mons = normalIds.slice(0, 1).map(id => d.getMonsterById(id)).filter(Boolean);
+    const fallbackGrade = nodeType === "elite" ? "elite" : "normal";
+    const themeIds = (d.monsterThemeGroups && stageTheme && d.monsterThemeGroups[stageTheme] && d.monsterThemeGroups[stageTheme][fallbackGrade]) || (d.monsterGroups && d.monsterGroups.normal) || [];
+    mons = themeIds.slice(0, 1).map(id => d.getMonsterById(id)).filter(Boolean);
   }
   if(!mons || !mons.length){
     if(typeof toast === "function") toast("전투를 시작할 몬스터를 찾을 수 없습니다.");

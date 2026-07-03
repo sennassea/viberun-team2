@@ -1,275 +1,244 @@
 "use strict";
 /* =========================================================================
    ACT 1 전투 패키지 시스템 (encounterPackages.js)
-   - G01~G25 일반, E01~E09 엘리트, B01~B02 보스 패키지 정의
-   - 층·구간별 가중치 기반 패키지 선택 로직
-   - window.ACT1_PICK_PACKAGE(nodeType, floor, usedIds) 함수 노출
+   - 병원(hospital) / 공원(park) / 학교(school) 3테마 분리형 전투 패키지
+   - 일반 27개(테마별 9) + 엘리트 15개(테마별 5) + 보스 3개(테마별 1)
+     + 튜토리얼 1개 = 총 46개 패키지
+   - 같은 전투 안에서 서로 다른 테마의 몬스터가 섞이지 않도록,
+     패키지 선택은 반드시 stageTheme으로 필터링된 풀 안에서만 이루어진다.
+   - window.ACT1_PICK_STAGE_THEME(nodeType, floor, themeCounts) 함수 노출
+   - window.ACT1_PICK_PACKAGE(nodeType, floor, usedIds, stageTheme) 함수 노출
    ========================================================================= */
 (function(global){
 
-  /* ── 패키지 정의 ────────────────────────────────────────────────────── */
+  const THEME_LABELS = { hospital: "병원", park: "공원", school: "학교" };
+
+  /* ── 패키지 메타데이터(이름/태그/설명) 생성 헬퍼 ───────────────────────
+     monsterData.js가 먼저 로드되어 BOHYUN_COMBAT_DATA가 준비되어 있다는
+     전제 하에, 몬스터 한글 이름/계열을 그대로 재사용해 패키지 이름과
+     태그를 자동 생성한다. (이름/태그를 패키지마다 수기로 중복 관리하지
+     않기 위함) */
+  function getCombatData(){ return global.BOHYUN_COMBAT_DATA || null; }
+
+  function buildName(monsterIds){
+    const d = getCombatData();
+    return monsterIds.map(id => {
+      const mon = d && typeof d.getMonsterById === "function" ? d.getMonsterById(id) : null;
+      return mon ? mon.name : id;
+    }).join(" + ");
+  }
+
+  function buildTags(monsterIds){
+    const d = getCombatData();
+    const seen = new Set();
+    const tags = [];
+    monsterIds.forEach(id => {
+      const mon = d && typeof d.getMonsterById === "function" ? d.getMonsterById(id) : null;
+      const fam = mon && mon.family;
+      if(fam && !seen.has(fam)){ seen.add(fam); tags.push(fam); }
+    });
+    return tags;
+  }
+
+  const DIFFICULTY_PHRASE = {
+    easy: "기본 전투",
+    medium: "중간 압박 전투",
+    high: "고강도 전투",
+    extreme: "초고강도 전투",
+  };
+
+  function buildIntent(themeLabel, difficulty, tags, opts){
+    opts = opts || {};
+    const phrase = DIFFICULTY_PHRASE[difficulty] || "전투";
+    const tagPhrase = tags.length ? `${tags.join("와 ")} 압박을 체감한다` : "다양한 위협을 마주한다";
+    if(opts.boss) return `${themeLabel} 보스 전투. ${tagPhrase}. 최종 위협과 마주한다.`;
+    if(opts.elite) return `${themeLabel} 엘리트 ${phrase}. ${tagPhrase}.`;
+    if(opts.tutorial) return `${themeLabel} 튜토리얼 전투. 기본 조작을 익힌다.`;
+    return `${themeLabel} ${phrase}. ${tagPhrase}.`;
+  }
+
+  /* ── 구간 태그 규칙 (지시서 6장) ────────────────────────────────────── */
+  const NORMAL_PHASE_TAGS = {
+    easy:   ["early_low", "early_high"],
+    medium: ["early_low", "early_high", "mid", "late_low"],
+    high:   ["mid", "late_low", "late_high"],
+  };
+  const ELITE_PHASE_TAGS = {
+    solo:        ["early_high", "mid", "late_low"],
+    plus_normal: ["mid", "late_low"],
+    plus_elite:  ["late_low", "late_high"],
+  };
+  const BOSS_PHASE_TAGS = ["boss"];
+  const TUTORIAL_PHASE_TAGS = ["tutorial"];
+
+  /* ── danger(1~5)는 실제 출현 확률 계산에는 쓰이지 않는 설명용 지표.
+     실제 출현 빈도 제어는 difficulty 기반 getDangerWeight()가 담당한다. */
+  const NORMAL_DANGER = { easy: 1, medium: 2, high: 3 };
+  const ELITE_DANGER  = { solo: 3, plus_normal: 4, plus_elite: 5 };
+
+  function buildNormalPackage(theme, id, difficulty, monsterIds){
+    const themeLabel = THEME_LABELS[theme];
+    const tags = buildTags(monsterIds);
+    return {
+      id, nodeType: "enemy", grade: "normal",
+      theme, themeLabel,
+      name: buildName(monsterIds),
+      monsterIds: monsterIds.slice(),
+      size: monsterIds.length,
+      difficulty,
+      danger: NORMAL_DANGER[difficulty] || 1,
+      phaseTags: NORMAL_PHASE_TAGS[difficulty] || NORMAL_PHASE_TAGS.medium,
+      tags,
+      intent: buildIntent(themeLabel, difficulty, tags),
+      maxAppearPerRun: 1,
+    };
+  }
+
+  function buildElitePackage(theme, id, difficulty, eliteType, monsterIds){
+    const themeLabel = THEME_LABELS[theme];
+    const tags = buildTags(monsterIds);
+    return {
+      id, nodeType: "elite", grade: "elite",
+      theme, themeLabel,
+      name: buildName(monsterIds),
+      monsterIds: monsterIds.slice(),
+      size: monsterIds.length,
+      difficulty,
+      eliteType,
+      danger: ELITE_DANGER[eliteType] || 3,
+      phaseTags: ELITE_PHASE_TAGS[eliteType] || ELITE_PHASE_TAGS.plus_normal,
+      tags,
+      intent: buildIntent(themeLabel, difficulty, tags, { elite: true }),
+      maxAppearPerRun: 1,
+    };
+  }
+
+  function buildBossPackage(theme, id, monsterIds){
+    const themeLabel = THEME_LABELS[theme];
+    const tags = buildTags(monsterIds);
+    return {
+      id, nodeType: "boss", grade: "boss",
+      theme, themeLabel,
+      name: buildName(monsterIds),
+      monsterIds: monsterIds.slice(),
+      size: monsterIds.length,
+      difficulty: "boss",
+      danger: 5,
+      phaseTags: BOSS_PHASE_TAGS.slice(),
+      tags,
+      intent: buildIntent(themeLabel, "boss", tags, { boss: true }),
+      maxAppearPerRun: 1,
+    };
+  }
+
+  function buildTutorialPackage(theme, id, difficulty, monsterIds){
+    const themeLabel = THEME_LABELS[theme];
+    const tags = buildTags(monsterIds);
+    return {
+      id, nodeType: "tutorial", grade: "tutorial",
+      theme, themeLabel,
+      name: buildName(monsterIds),
+      monsterIds: monsterIds.slice(),
+      size: monsterIds.length,
+      difficulty,
+      danger: 1,
+      phaseTags: TUTORIAL_PHASE_TAGS.slice(),
+      tags,
+      intent: buildIntent(themeLabel, difficulty, tags, { tutorial: true }),
+      maxAppearPerRun: 1,
+    };
+  }
+
+  /* ── 5-2 / 5-4 / 5-6: 테마별 일반 전투 9개 ─────────────────────────── */
+  const NORMAL_ROWS = {
+    hospital: [
+      ["HN01", "easy",   ["nurse_spirit", "patient_spirit_waiting"]],
+      ["HN02", "easy",   ["child_spirit_underbed", "nurse_spirit"]],
+      ["HN03", "medium", ["nurse_spirit_lamp", "patient_spirit_waiting"]],
+      ["HN04", "medium", ["visitor_spirit_flower", "nurse_spirit"]],
+      ["HN05", "medium", ["child_spirit_underbed", "nurse_spirit_lamp", "nurse_spirit"]],
+      ["HN06", "medium", ["grandmother_spirit_visit", "patient_spirit_waiting", "nurse_spirit"]],
+      ["HN07", "medium", ["nurse_spirit_lamp", "visitor_spirit_flower", "nurse_spirit"]],
+      ["HN08", "high",   ["child_spirit_underbed", "grandmother_spirit_visit", "patient_spirit_waiting", "nurse_spirit"]],
+      ["HN09", "high",   ["child_spirit_underbed", "nurse_spirit_lamp", "visitor_spirit_flower", "nurse_spirit"]],
+    ],
+    park: [
+      ["PN01", "medium", ["child_spirit_lost", "child_spirit_swallowed"]],
+      ["PN02", "easy",   ["grandmother_spirit", "child_spirit_lost"]],
+      ["PN03", "medium", ["grandmother_spirit_memory", "child_spirit_lost"]],
+      ["PN04", "medium", ["nurse_spirit_callbell", "child_spirit_lost"]],
+      ["PN05", "medium", ["grandmother_spirit", "grandmother_spirit_memory", "child_spirit_lost"]],
+      ["PN06", "high",   ["child_spirit_swallowed", "nurse_spirit_callbell", "patient_spirit_iv"]],
+      ["PN07", "high",   ["grandmother_spirit", "patient_spirit_iv", "child_spirit_swallowed"]],
+      ["PN08", "high",   ["child_spirit_lost", "child_spirit_swallowed", "nurse_spirit_callbell", "grandmother_spirit"]],
+      ["PN09", "high",   ["grandmother_spirit_memory", "nurse_spirit_callbell", "child_spirit_swallowed", "child_spirit_lost"]],
+    ],
+    school: [
+      ["SN01", "easy",   ["child_spirit_night", "cafeteria_spirit"]],
+      ["SN02", "medium", ["doctor_spirit_intern", "child_spirit_night"]],
+      ["SN03", "medium", ["grandmother_spirit_dream", "doctor_spirit_intern"]],
+      ["SN04", "medium", ["locker_spirit", "nurse_spirit_soft"]],
+      ["SN05", "medium", ["locker_spirit", "cafeteria_spirit", "doctor_spirit_intern"]],
+      ["SN06", "high",   ["doctor_spirit_intern", "nurse_spirit_soft", "grandmother_spirit_dream"]],
+      ["SN07", "high",   ["locker_spirit", "doctor_spirit_intern", "cafeteria_spirit"]],
+      ["SN08", "high",   ["child_spirit_night", "grandmother_spirit_dream", "locker_spirit", "cafeteria_spirit"]],
+      ["SN09", "high",   ["doctor_spirit_intern", "nurse_spirit_soft", "locker_spirit", "child_spirit_night"]],
+    ],
+  };
+
+  /* ── 5-3 / 5-5 / 5-7: 테마별 엘리트 5개 ────────────────────────────── */
+  const ELITE_ROWS = {
+    hospital: [
+      ["HE02", "medium",  "solo",        ["doctor_spirit"]],
+      ["HE04", "high",    "plus_normal", ["mother_spirit", "visitor_spirit_flower"]],
+      ["HE05", "high",    "plus_normal", ["doctor_spirit", "patient_spirit_waiting"]],
+      ["HE06", "high",    "plus_normal", ["surgery_light_spirit", "nurse_spirit_lamp"]],
+      ["HE08", "extreme", "plus_elite",  ["doctor_spirit", "surgery_light_spirit"]],
+    ],
+    park: [
+      ["PE02", "medium",  "solo",        ["fountain_reflection_spirit"]],
+      ["PE04", "high",    "plus_normal", ["grandfather_spirit", "grandmother_spirit_memory"]],
+      ["PE06", "high",    "plus_normal", ["lost_picnic_spirit", "nurse_spirit_callbell"]],
+      ["PE07", "high",    "plus_normal", ["lost_picnic_spirit", "child_spirit_swallowed"]],
+      ["PE08", "extreme", "plus_elite",  ["grandfather_spirit", "fountain_reflection_spirit"]],
+    ],
+    school: [
+      ["SE01", "medium",  "solo",        ["child_spirit_window"]],
+      ["SE04", "high",    "plus_normal", ["child_spirit_window", "child_spirit_night", "grandmother_spirit_dream"]],
+      ["SE06", "high",    "plus_normal", ["nurse_spirit_watch", "nurse_spirit_soft"]],
+      ["SE07", "extreme", "plus_normal", ["nurse_spirit_watch", "doctor_spirit_intern", "cafeteria_spirit"]],
+      ["SE08", "extreme", "plus_elite",  ["grandmother_spirit_echo", "nurse_spirit_watch"]],
+    ],
+  };
+
+  /* ── 5-3 / 5-5 / 5-7: 테마별 보스 1개 ──────────────────────────────── */
+  const BOSS_ROWS = {
+    hospital: ["HB01", ["ward_wraith"]],
+    park:     ["PB01", ["runner_spirit"]],
+    school:   ["SB01", ["blank_exam_wraith"]],
+  };
+
+  /* ── 5-1: 학교 튜토리얼 1개 ────────────────────────────────────────── */
+  const TUTORIAL_ROW = ["ST01", "school", "easy", ["child_spirit"]];
+
+  const THEMES = ["hospital", "park", "school"];
+
   const PACKAGES = [
-
-    // ── G01~G25: 일반 적 패키지 ─────────────────────────────────────────
-    {
-      id:"G01", nodeType:"enemy", grade:"normal",
-      name:"병동을 헤매는 아이",
-      monsterIds:["child_spirit_lost"],
-      size:1, phaseTags:["early_low","early_high"],
-      danger:1, tags:["아이"], maxAppearPerRun:1
-    },
-    {
-      id:"G02", nodeType:"enemy", grade:"normal",
-      name:"밤 복도를 걷는 아이",
-      monsterIds:["child_spirit_night"],
-      size:1, phaseTags:["early_low","early_high"],
-      danger:1, tags:["아이"], maxAppearPerRun:1
-    },
-    {
-      id:"G03", nodeType:"enemy", grade:"normal",
-      name:"사진을 품은 노인",
-      monsterIds:["grandmother_spirit_memory"],
-      size:1, phaseTags:["early_low","early_high"],
-      danger:1, tags:["노인"], maxAppearPerRun:1
-    },
-    {
-      id:"G04", nodeType:"enemy", grade:"normal",
-      name:"기록을 놓친 의사",
-      monsterIds:["doctor_spirit_intern"],
-      size:1, phaseTags:["early_low","early_high"],
-      danger:1, tags:["의사"], maxAppearPerRun:1
-    },
-    {
-      id:"G05", nodeType:"enemy", grade:"normal",
-      name:"병동을 헤매는 아이 + 침대 밑에 숨은 아이",
-      monsterIds:["child_spirit_lost","child_spirit_underbed"],
-      size:2, phaseTags:["early_low","early_high","mid"],
-      danger:2, tags:["아이"], maxAppearPerRun:1
-    },
-    {
-      id:"G06", nodeType:"enemy", grade:"normal",
-      name:"야간 병동 간호사 + 스테이션의 간호사",
-      monsterIds:["nurse_spirit","nurse_spirit_lamp"],
-      size:2, phaseTags:["early_low","early_high","mid"],
-      danger:2, tags:["간호사"], maxAppearPerRun:1
-    },
-    {
-      id:"G07", nodeType:"enemy", grade:"normal",
-      name:"진료를 기다리던 환자 + 밤 복도를 걷는 아이",
-      monsterIds:["patient_spirit_waiting","child_spirit_night"],
-      size:2, phaseTags:["early_low","early_high","mid"],
-      danger:2, tags:["환자","아이"], maxAppearPerRun:1
-    },
-    {
-      id:"G08", nodeType:"enemy", grade:"normal",
-      name:"링거를 끌던 환자 + 사진을 품은 노인",
-      monsterIds:["patient_spirit_iv","grandmother_spirit_memory"],
-      size:2, phaseTags:["early_low","early_high","mid"],
-      danger:2, tags:["환자","노인"], maxAppearPerRun:1
-    },
-    {
-      id:"G09", nodeType:"enemy", grade:"normal",
-      name:"울음을 삼킨 아이 + 스테이션의 간호사",
-      monsterIds:["child_spirit_swallowed","nurse_spirit_lamp"],
-      size:2, phaseTags:["early_low","early_high","mid"],
-      danger:2, tags:["아이","간호사"], maxAppearPerRun:1
-    },
-    {
-      id:"G10", nodeType:"enemy", grade:"normal",
-      name:"아이 3체 - 공격/불안/방어",
-      monsterIds:["child_spirit_lost","child_spirit_night","child_spirit_underbed"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:2, tags:["아이"], maxAppearPerRun:1
-    },
-    {
-      id:"G11", nodeType:"enemy", grade:"normal",
-      name:"간호사 3체 - 방어 지원+망설임",
-      monsterIds:["nurse_spirit","nurse_spirit_lamp","nurse_spirit_soft"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["간호사"], maxAppearPerRun:1
-    },
-    {
-      id:"G12", nodeType:"enemy", grade:"normal",
-      name:"노인 3체 - 잡념/동요/불안",
-      monsterIds:["grandmother_spirit_memory","grandmother_spirit_dream","grandmother_spirit_visit"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["노인"], maxAppearPerRun:1
-    },
-    {
-      id:"G13", nodeType:"enemy", grade:"normal",
-      name:"환자+의사 3체",
-      monsterIds:["patient_spirit_waiting","patient_spirit_iv","doctor_spirit_intern"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["환자","의사"], maxAppearPerRun:1
-    },
-    {
-      id:"G14", nodeType:"enemy", grade:"normal",
-      name:"탱커 노인 + 간호사 3체",
-      monsterIds:["grandmother_spirit","grandmother_spirit_memory","nurse_spirit"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["노인","간호사"], maxAppearPerRun:1
-    },
-    {
-      id:"G15", nodeType:"enemy", grade:"normal",
-      name:"호출 간호사 + 아이 3체",
-      monsterIds:["nurse_spirit_callbell","child_spirit_lost","child_spirit_night"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["간호사","아이"], maxAppearPerRun:1
-    },
-    {
-      id:"G16", nodeType:"enemy", grade:"normal",
-      name:"폭딜+불안+방어 아이 3체",
-      monsterIds:["child_spirit_swallowed","patient_spirit_waiting","child_spirit_underbed"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["아이","환자"], maxAppearPerRun:1
-    },
-    {
-      id:"G17", nodeType:"enemy", grade:"normal",
-      name:"방어 지원 3체",
-      monsterIds:["nurse_spirit_soft","grandmother_spirit","grandmother_spirit_visit"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["간호사","노인"], maxAppearPerRun:1
-    },
-    {
-      id:"G18", nodeType:"enemy", grade:"normal",
-      name:"균형형 3체",
-      monsterIds:["nurse_spirit_lamp","patient_spirit_iv","doctor_spirit_intern"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["간호사","환자","의사"], maxAppearPerRun:1
-    },
-    {
-      id:"G19", nodeType:"enemy", grade:"normal",
-      name:"운영 붕괴 3체",
-      monsterIds:["nurse_spirit_callbell","grandmother_spirit_memory","grandmother_spirit_dream"],
-      size:3, phaseTags:["mid","late_low"],
-      danger:3, tags:["간호사","노인"], maxAppearPerRun:1
-    },
-    {
-      id:"G20", nodeType:"enemy", grade:"normal",
-      name:"아이 계열 총합 4체",
-      monsterIds:["child_spirit_lost","child_spirit_night","child_spirit_underbed","child_spirit_swallowed"],
-      size:4, phaseTags:["late_low","late_high"],
-      danger:4, tags:["아이"], maxAppearPerRun:1
-    },
-    {
-      id:"G21", nodeType:"enemy", grade:"normal",
-      name:"간호사 계열 총합 4체",
-      monsterIds:["nurse_spirit","nurse_spirit_lamp","nurse_spirit_soft","nurse_spirit_callbell"],
-      size:4, phaseTags:["late_low","late_high"],
-      danger:4, tags:["간호사"], maxAppearPerRun:1
-    },
-    {
-      id:"G22", nodeType:"enemy", grade:"normal",
-      name:"노인 계열 총합 4체",
-      monsterIds:["grandmother_spirit","grandmother_spirit_memory","grandmother_spirit_dream","grandmother_spirit_visit"],
-      size:4, phaseTags:["late_low","late_high"],
-      danger:4, tags:["노인"], maxAppearPerRun:1
-    },
-    {
-      id:"G23", nodeType:"enemy", grade:"normal",
-      name:"공격+상태이상 4체",
-      monsterIds:["patient_spirit_waiting","patient_spirit_iv","nurse_spirit","doctor_spirit_intern"],
-      size:4, phaseTags:["late_low","late_high"],
-      danger:4, tags:["환자","간호사","의사"], maxAppearPerRun:1
-    },
-    {
-      id:"G24", nodeType:"enemy", grade:"normal",
-      name:"방어 버티기 4체",
-      monsterIds:["child_spirit_underbed","grandmother_spirit","nurse_spirit_lamp","grandmother_spirit_memory"],
-      size:4, phaseTags:["late_low","late_high"],
-      danger:4, tags:["아이","노인","간호사"], maxAppearPerRun:1
-    },
-    {
-      id:"G25", nodeType:"enemy", grade:"normal",
-      name:"고위험 일반 4체",
-      monsterIds:["child_spirit_swallowed","nurse_spirit_callbell","patient_spirit_iv","grandmother_spirit_visit"],
-      size:4, phaseTags:["late_low","late_high"],
-      danger:5, tags:["아이","간호사","환자","노인"], maxAppearPerRun:1
-    },
-
-    // ── E01~E09: 엘리트 패키지 ──────────────────────────────────────────
-    {
-      id:"E01", nodeType:"elite", grade:"elite",
-      name:"창가 침대의 아이",
-      monsterIds:["child_spirit_window"],
-      size:1, eliteType:"solo", phaseTags:["early_high"],
-      danger:3, tags:["아이"], maxAppearPerRun:1
-    },
-    {
-      id:"E02", nodeType:"elite", grade:"elite",
-      name:"자장가를 흥얼대는 노인",
-      monsterIds:["grandmother_spirit_echo"],
-      size:1, eliteType:"solo", phaseTags:["early_high"],
-      danger:3, tags:["노인"], maxAppearPerRun:1
-    },
-    {
-      id:"E03", nodeType:"elite", grade:"elite",
-      name:"마지막 순찰의 간호사",
-      monsterIds:["nurse_spirit_watch"],
-      size:1, eliteType:"solo", phaseTags:["early_high"],
-      danger:3, tags:["간호사"], maxAppearPerRun:1
-    },
-    {
-      id:"E04", nodeType:"elite", grade:"elite",
-      name:"창가 침대의 아이 + 일반 2체",
-      monsterIds:["child_spirit_window","child_spirit_underbed","child_spirit_night"],
-      size:3, eliteType:"plus_normal", phaseTags:["mid","late_low"],
-      danger:4, tags:["아이"], maxAppearPerRun:1
-    },
-    {
-      id:"E05", nodeType:"elite", grade:"elite",
-      name:"자장가를 흥얼대는 노인 + 일반 2체",
-      monsterIds:["grandmother_spirit_echo","grandmother_spirit_memory","grandmother_spirit_visit"],
-      size:3, eliteType:"plus_normal", phaseTags:["mid","late_low"],
-      danger:4, tags:["노인"], maxAppearPerRun:1
-    },
-    {
-      id:"E06", nodeType:"elite", grade:"elite",
-      name:"마지막 순찰의 간호사 + 일반 2체",
-      monsterIds:["nurse_spirit_watch","nurse_spirit_lamp","nurse_spirit_callbell"],
-      size:3, eliteType:"plus_normal", phaseTags:["mid","late_low"],
-      danger:4, tags:["간호사"], maxAppearPerRun:1
-    },
-    {
-      id:"E07", nodeType:"elite", grade:"elite",
-      name:"아이를 기다린 환자 + 일반 2체",
-      monsterIds:["mother_spirit","patient_spirit_iv","patient_spirit_waiting"],
-      size:3, eliteType:"plus_normal", phaseTags:["mid","late_low"],
-      danger:4, tags:["환자"], maxAppearPerRun:1
-    },
-    {
-      id:"E08", nodeType:"elite", grade:"elite",
-      name:"창가 침대의 아이 + 회진을 멈추지 못한 의사",
-      monsterIds:["child_spirit_window","doctor_spirit"],
-      size:2, eliteType:"plus_elite", phaseTags:["late_low"],
-      danger:5, tags:["아이","의사"], maxAppearPerRun:1
-    },
-    {
-      id:"E09", nodeType:"elite", grade:"elite",
-      name:"약속을 남긴 환자 + 아이를 기다린 환자",
-      monsterIds:["grandfather_spirit","mother_spirit"],
-      size:2, eliteType:"plus_elite", phaseTags:["late_low"],
-      danger:5, tags:["환자"], maxAppearPerRun:1
-    },
-
-    // ── B01~B02: 보스 패키지 ────────────────────────────────────────────
-    {
-      id:"B01", nodeType:"boss", grade:"boss",
-      name:"복도를 달리던 환자",
-      monsterIds:["runner_spirit"],
-      size:1, phaseTags:["boss"],
-      danger:5, tags:["환자"], maxAppearPerRun:1
-    },
-    {
-      id:"B02", nodeType:"boss", grade:"boss",
-      name:"비어 있는 404호",
-      monsterIds:["ward_wraith"],
-      size:1, phaseTags:["boss"],
-      danger:5, tags:["공간"], maxAppearPerRun:1
-    },
+    buildTutorialPackage(TUTORIAL_ROW[1], TUTORIAL_ROW[0], TUTORIAL_ROW[2], TUTORIAL_ROW[3]),
   ];
 
-  /* ── 구간 태그 ──────────────────────────────────────────────────────── */
+  THEMES.forEach(theme => {
+    NORMAL_ROWS[theme].forEach(([id, difficulty, monsterIds]) => {
+      PACKAGES.push(buildNormalPackage(theme, id, difficulty, monsterIds));
+    });
+    ELITE_ROWS[theme].forEach(([id, difficulty, eliteType, monsterIds]) => {
+      PACKAGES.push(buildElitePackage(theme, id, difficulty, eliteType, monsterIds));
+    });
+    const [bossId, bossMonsterIds] = BOSS_ROWS[theme];
+    PACKAGES.push(buildBossPackage(theme, bossId, bossMonsterIds));
+  });
+
+  /* ── 구간 태그 (floor 기준) ─────────────────────────────────────────── */
   function getPhaseTag(floor){
     if(floor <= 3)  return "early_low";
     if(floor <= 5)  return "early_high";
@@ -279,20 +248,21 @@
     return "boss";
   }
 
-  /* ── 일반 적 크기 가중치 (기획서 4-2) ──────────────────────────────── */
+  /* ── 일반 적 크기 가중치 (지시서 9장) : 2~4체 중심으로 조정 ─────────── */
   const ENEMY_SIZE_WEIGHTS = {
-    early_low:  { 1:50, 2:50, 3:0,  4:0  },
-    early_high: { 1:20, 2:45, 3:35, 4:0  },
-    mid:        { 1:0,  2:25, 3:55, 4:20 },
-    late_low:   { 1:0,  2:10, 3:45, 4:45 },
-    late_high:  { 1:0,  2:0,  3:50, 4:50 },
+    early_low:  { 2:70, 3:30, 4:0  },
+    early_high: { 2:45, 3:45, 4:10 },
+    mid:        { 2:15, 3:55, 4:30 },
+    late_low:   { 2:0,  3:45, 4:55 },
+    late_high:  { 2:0,  3:30, 4:70 },
   };
 
-  /* ── 엘리트 유형 가중치 (기획서 5-2) ───────────────────────────────── */
+  /* ── 엘리트 유형 가중치 ─────────────────────────────────────────────── */
   const ELITE_TYPE_WEIGHTS = {
-    early_high: { solo:100, plus_normal:0,  plus_elite:0  },
-    mid:        { solo:50,  plus_normal:40, plus_elite:10 },
-    late_low:   { solo:20,  plus_normal:50, plus_elite:30 },
+    early_high: { solo:100, plus_normal:0,  plus_elite:0   },
+    mid:        { solo:50,  plus_normal:40, plus_elite:10  },
+    late_low:   { solo:20,  plus_normal:50, plus_elite:30  },
+    late_high:  { solo:0,   plus_normal:0,  plus_elite:100 },
   };
 
   /* ── 가중치 랜덤 선택 ───────────────────────────────────────────────── */
@@ -305,30 +275,63 @@
     return entries[entries.length-1][0];
   }
 
-  /* ── 패키지 선택 함수 ───────────────────────────────────────────────── */
-  /*
-    nodeType : "enemy" | "elite" | "boss"
-    floor    : 현재 층 번호 (1~16)
-    usedIds  : 이번 맵 생성에서 이미 사용된 패키지 ID Set (in-place 업데이트)
-  */
-  global.ACT1_PICK_PACKAGE = function(nodeType, floor, usedIds){
+  /* ── danger 기반 가중치 (지시서 9장) : 고위험/초고위험 패키지 과다 출현 방지 ── */
+  function getDangerWeight(pkg, phase){
+    if(pkg.difficulty === "extreme") return phase === "late_high" ? 20 : 5;
+    if(pkg.difficulty === "high")    return phase === "late_high" ? 60 : 35;
+    if(pkg.difficulty === "medium")  return 70;
+    return 90;
+  }
+
+  function weightedPackagePick(candidates, phase){
+    const total = candidates.reduce((sum, pkg) => sum + getDangerWeight(pkg, phase), 0);
+    if(total <= 0) return candidates[Math.floor(Math.random() * candidates.length)];
+    let r = Math.random() * total;
+    for(const pkg of candidates){
+      r -= getDangerWeight(pkg, phase);
+      if(r <= 0) return pkg;
+    }
+    return candidates[candidates.length - 1];
+  }
+
+  /* ── stageTheme 자동 선택 함수 (지시서 8장) ─────────────────────────────
+     한 런 안에서 병원/공원/학교 패키지가 한쪽으로 몰리지 않도록,
+     지금까지 가장 적게 나온 테마를 우선 선택한다. */
+  global.ACT1_PICK_STAGE_THEME = function(nodeType, floor, themeCounts){
+    themeCounts = themeCounts || {};
+    const minCount = Math.min(...THEMES.map(t => themeCounts[t] || 0));
+    const candidates = THEMES.filter(t => (themeCounts[t] || 0) === minCount);
+    const picked = candidates[Math.floor(Math.random() * candidates.length)];
+    themeCounts[picked] = (themeCounts[picked] || 0) + 1;
+    return picked;
+  };
+
+  /* ── 패키지 선택 함수 (지시서 7장) ───────────────────────────────────────
+    nodeType    : "enemy" | "elite" | "boss"
+    floor       : 현재 층 번호 (1~16)
+    usedIds     : 이번 맵 생성에서 이미 사용된 패키지 ID Set (in-place 업데이트)
+    stageTheme  : "hospital" | "park" | "school" - 이 테마의 패키지 풀만 사용한다.
+                  절대 다른 테마 몬스터를 섞지 않는다. */
+  global.ACT1_PICK_PACKAGE = function(nodeType, floor, usedIds, stageTheme){
     usedIds = usedIds instanceof Set ? usedIds : new Set(usedIds || []);
     const phase = getPhaseTag(floor);
 
-    /* 후보 필터: 노드타입 + 구간태그 일치 + 미사용 */
+    /* 후보 필터: 노드타입 + 구간태그 + 테마 일치 + 미사용 */
     let candidates = PACKAGES.filter(pkg =>
       pkg.nodeType === nodeType &&
       pkg.phaseTags.includes(phase) &&
+      pkg.theme === stageTheme &&
       !usedIds.has(pkg.id)
     );
 
-    /* 후보 없으면 반복 제한 완화 */
+    /* 후보가 없을 때만 반복 제한을 완화한다. 테마 조건은 절대 풀지 않는다. */
     if(!candidates.length){
       candidates = PACKAGES.filter(pkg =>
-        pkg.nodeType === nodeType && pkg.phaseTags.includes(phase)
+        pkg.nodeType === nodeType &&
+        pkg.phaseTags.includes(phase) &&
+        pkg.theme === stageTheme
       );
     }
-    /* 그래도 없으면 null */
     if(!candidates.length) return null;
 
     let pick;
@@ -338,17 +341,17 @@
       const targetSize = parseInt(weightedPick(sizeMap), 10);
       let pool = candidates.filter(p => p.size === targetSize);
       if(!pool.length) pool = candidates;
-      pick = pool[Math.floor(Math.random() * pool.length)];
+      pick = weightedPackagePick(pool, phase);
     }
     else if(nodeType === "elite"){
       const typeMap = ELITE_TYPE_WEIGHTS[phase] || ELITE_TYPE_WEIGHTS.mid;
       const targetType = weightedPick(typeMap);
       let pool = candidates.filter(p => p.eliteType === targetType);
       if(!pool.length) pool = candidates;
-      pick = pool[Math.floor(Math.random() * pool.length)];
+      pick = weightedPackagePick(pool, phase);
     }
     else {
-      /* boss: 단순 랜덤 */
+      /* boss / tutorial: 테마당 1개뿐이므로 단순 랜덤 */
       pick = candidates[Math.floor(Math.random() * candidates.length)];
     }
 
