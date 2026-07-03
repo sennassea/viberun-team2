@@ -40,12 +40,18 @@
     { id: "W-026", target: ".enemy .intent" },
     { id: "W-027", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" },
     { id: "W-028", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" },
-    { id: "W-029", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"] }
+    { id: "W-029", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"], dialogueClass: "tutorial-battle-intro-dialogue-top" }
   ];
   const BLOCK_CARD_DIALOGUE_ID = "W-030";
   const BLOCK_COMPLETE_DIALOGUE_ID = "W-031";
   const BLOCK_COMPLETE_HIGHLIGHT_SELECTOR = '#profileStatusEffects [data-status="block"]';
+  const BLOCK_FOLLOWUP_STEPS = [
+    { id: "W-032", target: BLOCK_COMPLETE_HIGHLIGHT_SELECTOR },
+    { id: "W-033", target: "#endTurn" },
+    { id: "W-034", target: "#endTurn" }
+  ];
   const END_TURN_DIALOGUE_ID = "W-035";
+  const ENEMY_ACTION_DIALOGUE_ID = "W-036";
   const ENEMY_ACTION_COMPLETE_DIALOGUE_ID = "W-037";
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
@@ -653,7 +659,33 @@
     cleanupTutorialBattleIntro();
     setTutorialStep("block_guide_completed");
     console.log("tutorial block guide completed");
-    showTutorialEndTurnDialogue();
+    showTutorialBlockFollowupSequence(BLOCK_FOLLOWUP_STEPS, 0);
+  }
+
+  function showTutorialBlockFollowupSequence(steps, index){
+    if(!isTutorialBattle()){
+      cleanupTutorialBattleIntro();
+      return;
+    }
+    if(index >= steps.length){
+      showTutorialEndTurnDialogue();
+      return;
+    }
+
+    const step = steps[index];
+    const dialogue = getTutorialBattleDialogue(step.id);
+    if(!dialogue){
+      showTutorialBlockFollowupSequence(steps, index + 1);
+      return;
+    }
+
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: step.target }, () => {
+      showTutorialBlockFollowupSequence(steps, index + 1);
+    });
   }
 
   function showTutorialEndTurnDialogue(){
@@ -667,7 +699,7 @@
     tutorialBattleIntroActive = true;
     pauseTutorialBattleIntroCombat();
     setTutorialStep(dialogue.id);
-    renderTutorialBattleIntroDialogue(dialogue, startTutorialEndTurnStep);
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: "#endTurn" }, startTutorialEndTurnStep);
   }
 
   function startTutorialEndTurnStep(){
@@ -737,17 +769,30 @@
 
   function onEnemyTurnCompleted(){
     if(!isTutorialBattle() || getTutorialStep() !== "end_turn_clicked") return false;
+    const actionDialogue = getTutorialBattleDialogue(ENEMY_ACTION_DIALOGUE_ID);
+    if(actionDialogue){
+      ensureTutorialBattleIntroStyles();
+      tutorialBattleIntroActive = true;
+      pauseTutorialBattleIntroCombat();
+      setTutorialStep(actionDialogue.id);
+      renderTutorialBattleIntroDialogue({ ...actionDialogue, targetSelector: BATTLE_ENEMY_HIGHLIGHT_SELECTOR }, showTutorialEnemyActionCompleteDialogue);
+      return true;
+    }
+    showTutorialEnemyActionCompleteDialogue();
+    return true;
+  }
+
+  function showTutorialEnemyActionCompleteDialogue(){
     const dialogue = getTutorialBattleDialogue(ENEMY_ACTION_COMPLETE_DIALOGUE_ID);
     if(!dialogue){
       finishTutorialEnemyActionGuide();
-      return true;
+      return;
     }
     ensureTutorialBattleIntroStyles();
     tutorialBattleIntroActive = true;
     pauseTutorialBattleIntroCombat();
     setTutorialStep(dialogue.id);
-    renderTutorialBattleIntroDialogue(dialogue, finishTutorialEnemyActionGuide);
-    return true;
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: BLOCK_COMPLETE_HIGHLIGHT_SELECTOR }, finishTutorialEnemyActionGuide);
   }
 
   function finishTutorialEnemyActionGuide(){
