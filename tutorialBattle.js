@@ -33,6 +33,15 @@
   ];
   const FIRST_ATTACK_DIALOGUE_ID = "W-021";
   const FIRST_ATTACK_COMPLETE_DIALOGUE_ID = "W-022";
+  const FIRST_ATTACK_FOLLOWUP_STEPS = [
+    { id: "W-023", target: ["#energy", ".enemy .hpbar"], separateHighlights: true },
+    { id: "W-024", target: ".enemy .intent" },
+    { id: "W-025", target: ".enemy .intent" },
+    { id: "W-026", target: ".enemy .intent" },
+    { id: "W-027", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" },
+    { id: "W-028", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" },
+    { id: "W-029", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"] }
+  ];
   const BLOCK_CARD_DIALOGUE_ID = "W-030";
   const BLOCK_COMPLETE_DIALOGUE_ID = "W-031";
   const BLOCK_COMPLETE_HIGHLIGHT_SELECTOR = '#profileStatusEffects [data-status="block"]';
@@ -291,7 +300,7 @@
     }
     root.appendChild(overlay);
     if(nextButton) nextButton.focus();
-    updateTutorialBattleHighlight(dialogue.targetSelector);
+    updateTutorialBattleHighlight(dialogue.targetSelector, { separate: !!dialogue.separateHighlights });
   }
 
   function blockTutorialBattleIntroEvent(event){
@@ -359,7 +368,7 @@
     });
   }
 
-  function updateTutorialBattleHighlight(selector){
+  function updateTutorialBattleHighlight(selector, options={}){
     clearTutorialBattleHighlight();
     if(!selector) return;
     const targets = getTutorialBattleHighlightTargets(selector);
@@ -367,8 +376,20 @@
     if(!targets.length || !overlay) return;
 
     targets.forEach(target => target.classList.add("tutorial-battle-focus-target"));
+    if(options.separate){
+      targets.forEach(target => {
+        const rect = getTutorialBattleHighlightRect([target]);
+        if(rect) appendTutorialBattleHighlightBox(overlay, rect);
+      });
+      return;
+    }
+
     const rect = getTutorialBattleHighlightRect(targets);
     if(!rect) return;
+    appendTutorialBattleHighlightBox(overlay, rect);
+  }
+
+  function appendTutorialBattleHighlightBox(overlay, rect){
     const rootRect = document.getElementById("game").getBoundingClientRect();
     const highlight = document.createElement("div");
     highlight.className = "tutorial-battle-highlight-box";
@@ -516,7 +537,32 @@
     tutorialBattleIntroActive = true;
     pauseTutorialBattleIntroCombat();
     setTutorialStep(dialogue.id);
-    renderTutorialBattleIntroDialogue(dialogue, finishTutorialFirstAttackGuide);
+    renderTutorialBattleIntroDialogue(dialogue, () => {
+      showTutorialFirstAttackFollowupSequence(FIRST_ATTACK_FOLLOWUP_STEPS, 0);
+    });
+  }
+
+  function showTutorialFirstAttackFollowupSequence(steps, index){
+    if(!tutorialBattleIntroActive || !isTutorialBattle()){
+      cleanupTutorialBattleIntro();
+      return;
+    }
+    if(index >= steps.length){
+      finishTutorialFirstAttackGuide();
+      return;
+    }
+
+    const step = steps[index];
+    const dialogue = getTutorialBattleDialogue(step.id);
+    if(!dialogue){
+      showTutorialFirstAttackFollowupSequence(steps, index + 1);
+      return;
+    }
+
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: step.target, dialogueClass: step.dialogueClass, separateHighlights: step.separateHighlights }, () => {
+      showTutorialFirstAttackFollowupSequence(steps, index + 1);
+    });
   }
 
   function finishTutorialFirstAttackGuide(){
