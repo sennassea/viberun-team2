@@ -103,6 +103,11 @@
         position:absolute;
         left:50%;
         bottom:2.4cqh;
+        --tutorial-dongjasin-avatar-width:7.2cqh;
+        --tutorial-dongjasin-avatar-height:10.2cqh;
+        --tutorial-dongjasin-avatar-left:-8.8cqh;
+        --tutorial-dongjasin-avatar-top:-1.6cqh;
+        --tutorial-dongjasin-avatar-transform:none;
         transform:translateX(-50%);
         z-index:12;
         pointer-events:none;
@@ -113,6 +118,29 @@
         background:rgba(244,248,252,.96);
         color:#243247;
         box-shadow:0 1.2cqh 2.8cqh rgba(20,35,60,.22);
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-content{
+        display:block;
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar{
+        position:absolute;
+        left:var(--tutorial-dongjasin-avatar-left);
+        top:var(--tutorial-dongjasin-avatar-top);
+        transform:var(--tutorial-dongjasin-avatar-transform);
+        width:var(--tutorial-dongjasin-avatar-width);
+        height:var(--tutorial-dongjasin-avatar-height);
+        pointer-events:none;
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar-placeholder{
+        width:100%;
+        height:100%;
+        border:.22cqh solid rgba(47,102,168,.45);
+        border-radius:46% 46% 42% 42% / 38% 38% 52% 52%;
+        background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(220,234,250,.96));
+        box-shadow:0 .45cqh 1cqh rgba(20,35,60,.16);
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-body{
+        min-width:0;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-speaker{
         margin-bottom:.7cqh;
@@ -218,11 +246,19 @@
 
     const box = document.createElement("div");
     box.className = "tutorial-map-dialogue";
+    const avatarHtml = dialogue.speaker === "동자신"
+      ? '<div class="tutorial-dongjasin-avatar" aria-hidden="true"><div class="tutorial-dongjasin-avatar-placeholder"></div></div>'
+      : "";
     box.innerHTML =
-      '<div class="tutorial-map-dialogue-speaker">' + escapeTutorialMapHtml(dialogue.speaker || "") + '</div>' +
-      '<div class="tutorial-map-dialogue-text">' + renderTutorialMapText(dialogue.text || "") + '</div>' +
-      '<div class="tutorial-map-dialogue-actions">' +
-        '<button type="button" class="tutorial-map-dialogue-next">다음</button>' +
+      avatarHtml +
+      '<div class="tutorial-map-dialogue-content">' +
+        '<div class="tutorial-map-dialogue-body">' +
+          '<div class="tutorial-map-dialogue-speaker">' + escapeTutorialMapHtml(dialogue.speaker || "") + '</div>' +
+          '<div class="tutorial-map-dialogue-text">' + renderTutorialMapText(dialogue.text || "") + '</div>' +
+          '<div class="tutorial-map-dialogue-actions">' +
+            '<button type="button" class="tutorial-map-dialogue-next">다음</button>' +
+          '</div>' +
+        '</div>' +
       '</div>';
 
     const nextButton = box.querySelector(".tutorial-map-dialogue-next");
