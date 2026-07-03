@@ -19,9 +19,17 @@
   const BATTLE_ENEMY_HIGHLIGHT_SELECTOR = ".combatant.enemy:not(.dead)";
   const BATTLE_UI_GUIDE_STEPS = [
     { id: "W-009", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"] },
-    { id: "W-015", target: "#energy" },
+    { id: "W-010", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"] },
+    { id: "W-011", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"] },
     { id: "W-012", target: ".enemy .hpbar" },
-    { id: "W-019", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" }
+    { id: "W-013", target: ".enemy .hpbar" },
+    { id: "W-014" },
+    { id: "W-015", target: "#energy" },
+    { id: "W-016", target: "#energy" },
+    { id: "W-017", target: "#energy" },
+    { id: "W-018", target: "#energy" },
+    { id: "W-019", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" },
+    { id: "W-020", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" }
   ];
   const FIRST_ATTACK_DIALOGUE_ID = "W-021";
   const FIRST_ATTACK_COMPLETE_DIALOGUE_ID = "W-022";
