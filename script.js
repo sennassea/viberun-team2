@@ -152,12 +152,23 @@ function getPlayerAttackDamage(rawDamage, targetEnemy){
     amount = Math.floor(amount * S.nextAttackMultiplier);
     S.nextAttackMultiplier = null;
   }
-  if(S && !S.firstAttackUsed && hasRelic("moon_spirit_tablet")){
-    amount += 3;
-    S.firstAttackUsed = true;
+  if(S && Array.isArray(S.relics)){
+    S.relics = S.relics.map(hydrateRelicData);
+    S.relics.forEach(relic => {
+      if(!relic || !Array.isArray(relic.fx)) return;
+      relic.fx.forEach(effect => {
+        if(!effect) return;
+        if(effect.timing === "firstAttack" && effect.t === "damagePlus" && !S.firstAttackUsed){
+          amount += effect.v || 0;
+          S.firstAttackUsed = true;
+        }
+        if(effect.timing !== "damage") return;
+        if(effect.t === "damagePlus") amount += effect.v || 0;
+        if(effect.t === "damagePlusVsAgitated" && targetEnemy && (targetEnemy.weak || 0) > 0) amount += effect.v || 0;
+        if(effect.t === "damagePlusVsMarked" && targetEnemy && (targetEnemy.mark || 0) > 0) amount += effect.v || 0;
+      });
+    });
   }
-  if(targetEnemy && (targetEnemy.weak || 0) > 0 && hasRelic("soul_return_mirror")) amount += 2;
-  if(targetEnemy && (targetEnemy.mark || 0) > 0 && hasRelic("bronze_wooden_fish")) amount += 2;
   return Math.max(0, amount);
 }
 
@@ -248,10 +259,46 @@ function applyRelicEffect(relic, effect, context={}){
       }
       break;
     }
+    case "applyMark": {
+      const target = effect.target === "frontEnemy" ? livingEnemies()[0] : getSelectedLivingEnemy();
+      if(target){
+        addStatus(target, "mark", effect.v || 1);
+        applyRelicTrigger("onMarkApply", { target, amount: effect.v || 1 });
+      }
+      break;
+    }
+    case "markPlus": {
+      const target = context.target || getSelectedLivingEnemy();
+      if(target) addStatus(target, "mark", effect.v || 1);
+      break;
+    }
     case "retainBlockRatio":
       S.retainedBlockFromRelic = Math.floor((S.player.block || 0) * (effect.v || 0));
       break;
   }
+}
+
+function tryApplyFatalRelic(){
+  if(!S || !S.player || S.player.hp > 0 || !Array.isArray(S.relics)) return false;
+  S.relics = S.relics.map(hydrateRelicData);
+  const relicIndex = S.relics.findIndex(relic =>
+    relic && Array.isArray(relic.fx) && relic.fx.some(effect =>
+      effect && effect.timing === "fatalDamage" && effect.t === "revive"
+    )
+  );
+  if(relicIndex < 0) return false;
+
+  const relic = S.relics[relicIndex];
+  const effect = relic.fx.find(fx => fx && fx.timing === "fatalDamage" && fx.t === "revive");
+  const ratio = typeof effect.v === "number" ? effect.v : 0.5;
+  const healValue = Math.max(1, Math.floor((S.player.maxHp || 1) * ratio));
+  S.player.hp = 0;
+  const healed = LIFE.heal(S.player, healValue);
+  if(effect.consume) S.relics.splice(relicIndex, 1);
+  if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
+  toast(relic.name+" 발동");
+  renderAll();
+  return S.player.hp > 0;
 }
 
 /**
@@ -785,9 +832,9 @@ function playCard(handIndex, targetEnemy){
         break;
       case "applyMark":
         if(targetEnemy){
-          const bonus = hasRelic("lotus_lamp") ? 1 : 0;
-          const amount = (e.v || 0) + bonus;
+          const amount = e.v || 0;
           addStatus(targetEnemy, "mark", amount);
+          applyRelicTrigger("onMarkApply", { target: targetEnemy, amount });
           spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
         }
         break;
@@ -1421,7 +1468,7 @@ async function endTurn(){
   renderAll();
   await wait(250);
 
-  if(S.player.hp<=0) return endGame("lose");
+  if(S.player.hp<=0 && !tryApplyFatalRelic()) return endGame("lose");
 
   // 생존 적을 spawnIndex 순서대로 행동 (기획서 §8-5)
   const actingEnemies = livingEnemies().sort((a,b) => (a.spawnIndex||0)-(b.spawnIndex||0));
@@ -1456,7 +1503,7 @@ async function endTurn(){
 
     decayEnemyStatuses(e, "afterEnemyAction");
     renderAll();
-    if(S.player.hp<=0) return endGame("lose");
+    if(S.player.hp<=0 && !tryApplyFatalRelic()) return endGame("lose");
     await wait(450);
   }
 
@@ -1831,6 +1878,7 @@ function useMarkPotion(index, targetEnemy){
   if(!targetEnemy || targetEnemy.hp <= 0) return false;
   const amount = typeof potion.value === "number" ? potion.value : 3;
   addStatus(targetEnemy, "mark", amount);
+  applyRelicTrigger("onMarkApply", { target: targetEnemy, amount });
   spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
   S.potions.splice(index, 1);
   syncRunStateFromCombat();

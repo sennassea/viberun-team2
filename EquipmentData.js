@@ -20,7 +20,10 @@ var RELIC_DB = [
   { id:"echoing_wind_chime", name:"울림 풍경", emoji:"🎐", attr:"동요", rarity:"common", price:70, dropWeight:3, desc:"전투 시작 시 가장 앞의 적에게 동요를 2 부여합니다.", fx:[{timing:"battleStart", t:"applyAgitation", target:"frontEnemy", v:2}] },
 
   { id:"lotus_lamp", name:"연화 등잔", emoji:"🪷", attr:"성불", rarity:"common", price:80, dropWeight:3, desc:"성불 표식을 부여할 때 1 추가로 부여합니다.", fx:[{timing:"onMarkApply", t:"markPlus", v:1}] },
-  { id:"bronze_wooden_fish", name:"청동 목탁", emoji:"🐟", attr:"성불", rarity:"uncommon", price:110, dropWeight:2, desc:"성불 표식이 있는 적에게 주는 정화량이 2 증가합니다.", fx:[{timing:"damage", t:"damagePlusVsMarked", v:2}] }
+  { id:"bronze_wooden_fish", name:"청동 목탁", emoji:"🐟", attr:"성불", rarity:"uncommon", price:110, dropWeight:2, desc:"성불 표식이 있는 적에게 주는 정화량이 2 증가합니다.", fx:[{timing:"damage", t:"damagePlusVsMarked", v:2}] },
+  { id:"thunder_spirit_bell", name:"뇌령방울", emoji:"🔔", attr:"범용", rarity:"rare", price:220, dropWeight:1, desc:"공격 주문의 정화량이 1 증가합니다.", fx:[{timing:"damage", t:"damagePlus", v:1}] },
+  { id:"lotus_seed_bead", name:"연씨 염주", emoji:"📿", attr:"성불", rarity:"common", price:120, dropWeight:3, desc:"전투 시작 시 가장 앞의 적에게 성불 표식을 1 부여합니다.", fx:[{timing:"battleStart", t:"applyMark", target:"frontEnemy", v:1}] },
+  { id:"lizard_tail_charm", name:"도마뱀 꼬리 부적", emoji:"🦎", attr:"범용", rarity:"rare", price:220, dropWeight:1, desc:"쓰러질 때 이 법구를 소모하고 최대 정신력의 50%를 회복합니다.", fx:[{timing:"fatalDamage", t:"revive", v:0.5, consume:true}] }
 ];
 
 window.RELIC_DB = RELIC_DB;
