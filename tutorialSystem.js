@@ -71,14 +71,10 @@
       speaker: "",
       text: "튜토리얼을 건너뛰시겠어요?"
     });
-    const skipResultDialogue = getTutorialGuideDialogue("S-002", {
-      speaker: "",
-      text: "이후 설정 메뉴에서 튜토리얼을 다시 진행할 수 있습니다."
-    });
     const skipReactionSpeaker = skipReactionDialogue.speaker ? escapeTutorialGuideHtml(skipReactionDialogue.speaker) + " : " : "";
-    const skipResultSpeaker = skipResultDialogue.speaker ? escapeTutorialGuideHtml(skipResultDialogue.speaker) + " : " : "";
+    const skipResultSpeaker = "";
     const skipReactionText = renderTutorialGuideText(skipReactionDialogue.text);
-    const skipResultText = renderTutorialGuideText(skipResultDialogue.text);
+    const skipResultText = renderTutorialGuideText("튜토리얼을 건너뛰겠습니까?");
 
     const popup = document.createElement("div");
     popup.id = "tutorialGuidePopup";
