@@ -1000,7 +1000,11 @@ function isVictoryRewardDone(id){
 }
 
 const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
-const BATTLE_VICTORY_POTION_CHANCE = 0.5;
+const BATTLE_VICTORY_POTION_CHANCE = 0.25;
+const ELITE_VICTORY_POTION_CHANCE = 0.5;
+function getBattleVictoryPotionChance(){
+  return S && S.battleNodeType === "elite" ? ELITE_VICTORY_POTION_CHANCE : BATTLE_VICTORY_POTION_CHANCE;
+}
 function createBattleVictoryBaseRewards(){
   const gold = getBattleVictoryGoldAmount();
   return [
@@ -1120,7 +1124,7 @@ function getBattleVictoryRewards(){
   if(!S.victoryRewards){
     S.victoryRewards = createBattleVictoryBaseRewards();
     const relicReward = buildBattleVictoryOptionalReward("relic", BATTLE_VICTORY_RELIC_CHANCE);
-    const potionReward = buildBattleVictoryOptionalReward("potion", BATTLE_VICTORY_POTION_CHANCE);
+    const potionReward = buildBattleVictoryOptionalReward("potion", getBattleVictoryPotionChance());
     if(relicReward) S.victoryRewards.push(relicReward);
     if(potionReward) S.victoryRewards.push(potionReward);
   }
