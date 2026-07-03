@@ -4,10 +4,9 @@
    기획서: 최종 승리 / 패배 UI 구현 기획서
 
    현재 구현 범위:
-   - 승리: ① 신령의 은혜 신령 출현 연출 → ② 동자승의 끝없는 여정 선택 화면
-     → ③ 전투 요약 화면 → ④ 전투 상세 화면
-   - 패배: ① 동자승 패배 연출(터치 시 바로 전투 요약으로 이동, 끝없는 여정
-     선택 화면은 건너뛴다) → ③ 전투 요약 화면 → ④ 전투 상세 화면
+   - 승리: ① 신령 출현 연출 → ② 동자신 대사 → ③ 여정 종료/끝없는 여정 선택
+     → ④ 기존 전투 요약 화면
+   - 패배: ① 동자신 패배 연출 → ② 기존 전투 요약 화면
    전투 상세 화면의 "메인 메뉴로 돌아가기"는 오버레이를 닫고
    startMenu.js의 returnToStartScreen()을 호출해 새 게임을 바로 시작하지
    않고 시작 화면(메인 메뉴)으로 돌아간다.
@@ -16,19 +15,25 @@
    script.js / startMenu.js / startBlessing.js 이후에 로드되어야 한다.
    ========================================================================= */
 
-/* ── 동자승 NPC 데이터 (기획서 §5-3) ────────────────────────────────────────
-   동자승 에셋이 아직 없으므로 emoji로 임시 대체한다. */
+const RR_DATA = window.BOHYUN_RUN_RESULT_DATA || {};
+const RR_ENDING = RR_DATA.ending || {};
+const RR_DEFEAT = RR_DATA.defeat || {};
+
+/* ── 동자신 NPC 데이터 ────────────────────────────────────────────────────
+   엑셀 v3 지시서 기준으로 동자신은 선택지 안내와 패배 대사만 담당한다. */
 const NPC_DONGJASEUNG = {
   id: "npc_dongjaseung",
-  name: "동자승",
-  emoji: "🧘",
-  endlessTitle: "끝없는 여정 선택",
-  endlessLine1: "아가, 아직도 많은 미련들이 남아 있단다.",
-  endlessLine2: "끝없는 여정을 떠나보겠느냐?",
-  endlessLine3: "더 깊은 곳으로 나아가 볼까?",
-  defeatTitle: "패배",
-  defeatLine1: "저런, 안타깝다~",
-  defeatLine2: "더 잘 해보지 그랬느냐?"
+  name: (RR_ENDING.dongja && RR_ENDING.dongja.name) || RR_DEFEAT.speaker || "동자신",
+  emoji: (RR_ENDING.dongja && RR_ENDING.dongja.emoji) || RR_DEFEAT.emoji || "🧒",
+  endlessTitle: (RR_ENDING.labels && RR_ENDING.labels.dongja) || "끝없는 여정",
+  endlessLines: (RR_ENDING.dongja && RR_ENDING.dongja.lines) || [
+    "드디어 여정이 끝났네.",
+    "아가, 이번 여정은 끝났지만 아직도 수많은 미련이 남았구나.",
+    "아가, 이 끝없는 여정을 시작할래?"
+  ],
+  defeatTitle: RR_DEFEAT.label || "여정 실패",
+  defeatLine1: RR_DEFEAT.mainLine || "어라? 벌써 끝이야?",
+  defeatLine2: RR_DEFEAT.subLine || "아가, 너무 서두른 거 아니야? 다음엔 더 멀리 가보자."
 };
 
 /* ── 노드 타입별 표시 정보 (전투 상세 화면의 "밟은 노드 루트"용) ──────────
@@ -117,13 +122,15 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
       '<div class="rr-continue">✦ 터치하여 계속 ✦</div>' +
     '</div>';
 
-  overlay.querySelector("#rrBadgeText").textContent = spirit.appearanceTitle || "승리";
+  overlay.querySelector("#rrBadgeText").textContent =
+    spirit.appearanceTitle || (RR_ENDING.labels && RR_ENDING.labels.spirit) || "승리";
 
-  const dialogLines = (spirit.appearanceLines && spirit.appearanceLines.length)
-    ? spirit.appearanceLines
-    : [spirit.dialogue || ""];
-  overlay.querySelector("#rrLines").innerHTML =
-    dialogLines.map(line => '<p>' + line + '</p>').join("");
+  const dialogLines = getEndingSpiritLines(spirit);
+  let lineIndex = 0;
+  const renderLine = () => {
+    overlay.querySelector("#rrLines").innerHTML = '<p>' + escapeRrHtml(dialogLines[lineIndex] || "") + '</p>';
+  };
+  renderLine();
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
@@ -131,6 +138,11 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
 
   const handleContinue = (event) => {
     event.preventDefault();
+    lineIndex += 1;
+    if(lineIndex < dialogLines.length){
+      renderLine();
+      return;
+    }
     overlay.removeEventListener("click", handleContinue);
     renderEndlessJourneyChoice(NPC_DONGJASEUNG, snapshot, onFinish);
   };
@@ -162,7 +174,7 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
 
   const dialogLines = [npc.defeatLine1, npc.defeatLine2].filter(Boolean);
   overlay.querySelector("#rrLines").innerHTML =
-    dialogLines.map(line => '<p>' + line + '</p>').join("");
+    dialogLines.map(line => '<p>' + escapeRrHtml(line) + '</p>').join("");
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
@@ -176,9 +188,9 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
   overlay.addEventListener("click", handleContinue);
 }
 
-/* ── 동자승: 끝없는 여정 선택 화면 (기획서 §3-1, §7-2) ────────────────────
-   끝없는 여정은 아직 미개발이므로 딤드 처리하고, 기록 보고 종료만 다음
-   단계(onFinish, 현재는 기존 종료 UI로 폴백)로 이어준다. */
+/* ── 동자신: 끝없는 여정 선택 화면 (기획서 §3-1, §7-2) ────────────────────
+   동자신 대사가 모두 끝난 뒤 선택지를 노출한다. 여정 종료는 기존 전투 요약
+   UI로 연결하고, 끝없는 여정은 외부 진입 함수가 있을 때만 호출한다. */
 function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
@@ -187,53 +199,74 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
     ? '<img src="' + npc.image + '" alt="' + (npc.name || "") + '">'
     : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
 
-  const panelSlot = overlay.querySelector("#rrPanelSlot");
-  panelSlot.innerHTML =
-    '<div class="rr-choice-panel">' +
-      '<div class="rr-choice-titlebar"><span>' + (npc.endlessTitle || "끝없는 여정 선택") + '</span></div>' +
-      '<div class="rr-choice-lines">' +
-        '<p class="rr-choice-line-main">' + npc.endlessLine1 + '</p>' +
-        '<p>' + npc.endlessLine2 + '</p>' +
-        '<p>' + npc.endlessLine3 + '</p>' +
-      '</div>' +
-      '<div class="rr-choice-cards">' +
-        '<div class="rr-choice-card rr-choice-card--disabled" id="rrChoiceEndless" aria-disabled="true">' +
-          '<div class="rr-choice-card-icon">🔒</div>' +
-          '<div class="rr-choice-card-title">끝없는 여정 진입</div>' +
-          '<div class="rr-choice-card-tag">준비 중</div>' +
-          '<div class="rr-choice-card-desc">끝없는 여정은 아직 준비 중입니다.</div>' +
-        '</div>' +
-        '<div class="rr-choice-card rr-choice-card--active" id="rrChoiceFinish">' +
-          '<div class="rr-choice-card-icon">📖</div>' +
-          '<div class="rr-choice-card-title">여정 종료</div>' +
-          '<div class="rr-choice-card-desc">이번 여정의 기록을 확인하고 돌아갑니다.</div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
-
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
   document.body.classList.add("result-ui-open");
 
-  const endlessCard = panelSlot.querySelector("#rrChoiceEndless");
-  const finishCard = panelSlot.querySelector("#rrChoiceFinish");
+  const lines = Array.isArray(npc.endlessLines) ? npc.endlessLines : [];
+  let lineIndex = 0;
+  const renderDialogue = () => {
+    const panelSlot = overlay.querySelector("#rrPanelSlot");
+    panelSlot.innerHTML =
+      '<div class="rr-choice-panel">' +
+        '<div class="rr-choice-titlebar"><span>' + escapeRrHtml(npc.endlessTitle || "끝없는 여정") + '</span></div>' +
+        '<div class="rr-choice-lines">' +
+          '<p class="rr-choice-line-main">' + escapeRrHtml(lines[lineIndex] || "") + '</p>' +
+        '</div>' +
+        '<div class="rr-divider"></div>' +
+        '<div class="rr-continue">✦ ' + escapeRrHtml((RR_ENDING.labels && RR_ENDING.labels.continue) || "터치하여 계속") + ' ✦</div>' +
+      '</div>';
+  };
+  const renderChoices = () => {
+    const choices = RR_ENDING.choices || {};
+    const panelSlot = overlay.querySelector("#rrPanelSlot");
+    panelSlot.innerHTML =
+      '<div class="rr-choice-panel">' +
+        '<div class="rr-choice-titlebar"><span>' + escapeRrHtml(npc.endlessTitle || "끝없는 여정") + '</span></div>' +
+        '<div class="rr-choice-lines">' +
+          '<p class="rr-choice-line-main">이후 진행을 선택하세요.</p>' +
+        '</div>' +
+        '<div class="rr-choice-cards">' +
+          '<div class="rr-choice-card rr-choice-card--active" id="rrChoiceFinish">' +
+            '<div class="rr-choice-card-icon">📖</div>' +
+            '<div class="rr-choice-card-title">' + escapeRrHtml(choices.exit && choices.exit.title || "여정 종료") + '</div>' +
+            '<div class="rr-choice-card-desc">' + escapeRrHtml(choices.exit && choices.exit.desc || "이번 여정의 기록을 확인하고 돌아갑니다.") + '</div>' +
+          '</div>' +
+          '<div class="rr-choice-card rr-choice-card--active" id="rrChoiceEndless">' +
+            '<div class="rr-choice-card-icon">∞</div>' +
+            '<div class="rr-choice-card-title">' + escapeRrHtml(choices.infinite && choices.infinite.title || "끝없는 여정 진입") + '</div>' +
+            '<div class="rr-choice-card-desc">' + escapeRrHtml(choices.infinite && choices.infinite.desc || "끝없는 여정으로 이어서 나아갑니다.") + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
 
-  endlessCard.addEventListener("click", (event) => {
-    event.stopPropagation();
-    endlessCard.classList.remove("rr-choice-card--shake");
-    void endlessCard.offsetWidth;
-    endlessCard.classList.add("rr-choice-card--shake");
-  });
+    panelSlot.querySelector("#rrChoiceFinish").addEventListener("click", (event) => {
+      event.stopPropagation();
+      renderRunSummary(snapshot, onFinish);
+    });
+    panelSlot.querySelector("#rrChoiceEndless").addEventListener("click", (event) => {
+      event.stopPropagation();
+      startInfiniteJourney();
+    });
+  };
 
-  finishCard.addEventListener("click", (event) => {
-    event.stopPropagation();
-    renderRunSummary(snapshot, onFinish);
-  });
+  renderDialogue();
+  const handleContinue = (event) => {
+    event.preventDefault();
+    lineIndex += 1;
+    if(lineIndex < lines.length){
+      renderDialogue();
+      return;
+    }
+    overlay.removeEventListener("click", handleContinue);
+    renderChoices();
+  };
+  overlay.addEventListener("click", handleContinue);
 }
 
-/* ── 전투 요약 화면 (기획서 §4-1, §10-1) ────────────────────────────────────
+/* ── 전투 요약 화면 (기존 구현 재사용) ─────────────────────────────────────
    승리: 끝없는 여정 선택에서 "여정 종료" 클릭 시 진입.
-   패배: 동자승 패배 연출이 아직 없으므로 결과 직후 바로 진입한다. */
+   패배: 동자신 패배 연출 터치 후 바로 진입한다. */
 function renderRunSummary(snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
@@ -252,7 +285,7 @@ function renderRunSummary(snapshot, onFinish){
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
     '<div class="rr-summary-panel">' +
-      '<div class="rr-summary-titlebar"><span>' + (snapshot.result === "win" ? "전투 요약" : "패배") + '</span></div>' +
+      '<div class="rr-summary-titlebar"><span>전투 요약</span></div>' +
       '<div class="rr-summary-rows">' +
         rows.map(row =>
           '<div class="rr-summary-row">' +
@@ -493,6 +526,61 @@ function summarizeRrPotions(list){
   return order;
 }
 
+function getSavedEndingSpirit(){
+  const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
+  const savedSpirit = run && run.blessingSpirit;
+  const spirits = Array.isArray(RR_ENDING.spirits) ? RR_ENDING.spirits : [];
+  const matched = savedSpirit && spirits.find(spirit =>
+    spirit.id === savedSpirit.id || spirit.name === savedSpirit.name
+  );
+  const appearanceTitle = (RR_ENDING.labels && RR_ENDING.labels.spirit) || "승리";
+  if(matched){
+    return Object.assign({}, savedSpirit || {}, matched, {
+      appearanceTitle: (savedSpirit && savedSpirit.appearanceTitle) || matched.appearanceTitle || appearanceTitle
+    });
+  }
+  if(savedSpirit){
+    return Object.assign({}, savedSpirit, {
+      appearanceTitle: savedSpirit.appearanceTitle || appearanceTitle
+    });
+  }
+  if(spirits[0]){
+    return Object.assign({}, spirits[0], {
+      appearanceTitle: spirits[0].appearanceTitle || appearanceTitle
+    });
+  }
+  return null;
+}
+
+function getEndingSpiritLines(spirit){
+  if(spirit && Array.isArray(spirit.lines) && spirit.lines.length) return spirit.lines;
+  if(spirit && Array.isArray(spirit.appearanceLines) && spirit.appearanceLines.length) return spirit.appearanceLines;
+  return [spirit && (spirit.dialogue || spirit.name) || ""].filter(Boolean);
+}
+
+function startInfiniteJourney(){
+  const startInfinite = window.START_INFINITE_JOURNEY || window.START_ENDLESS_JOURNEY;
+  if(typeof startInfinite === "function"){
+    closeRrOverlay();
+    startInfinite();
+    return;
+  }
+  if(typeof toast === "function"){
+    toast("끝없는 여정 시작 함수가 아직 연결되지 않았습니다.");
+    return;
+  }
+  console.warn("[runResult] START_INFINITE_JOURNEY is not defined.");
+}
+
+function escapeRrHtml(value){
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /* ── 전역 인터페이스 ─────────────────────────────────────────────────────── */
 function rrOpen(result, onContinue){
   if(result !== "win" && result !== "lose") return false;
@@ -500,8 +588,7 @@ function rrOpen(result, onContinue){
   const snapshot = buildRunResultSnapshot(result);
 
   if(result === "win"){
-    const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
-    const spirit = run && run.blessingSpirit;
+    const spirit = getSavedEndingSpirit();
     if(!spirit) return false;
     renderBlessingSpiritAppearance(spirit, snapshot, onContinue);
     return true;
@@ -527,8 +614,7 @@ function ensureRrStyles(){
        (기획서 §5, §6). rr-overlay(z-index:90)보다 위, 각 메뉴 팝업(z-index:95 이상)보다는
        아래에 오도록 z-index를 둔다. */
     "body.result-ui-open .top-hud{z-index:92;pointer-events:auto;}" +
-    ".rr-backdrop{position:absolute;inset:0;" +
-      "background-image:radial-gradient(120% 90% at 50% 28%,rgba(30,20,15,.35) 0%,rgba(10,7,10,.72) 60%,rgba(4,4,8,.88) 100%);}" +
+    ".rr-backdrop{position:absolute;inset:0;background:transparent;pointer-events:none;}" +
     ".rr-frame{position:relative;width:88%;height:76%;}" +
     ".rr-character-wrap{position:absolute;left:2%;bottom:-2%;width:52%;height:128%;z-index:2;" +
       "display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}" +

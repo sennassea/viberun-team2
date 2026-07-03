@@ -13,12 +13,23 @@
    플레이어가 직접 고르게 한다.
    ========================================================================= */
 
-/* ── 신령 3종 (화면을 열 때마다 랜덤 출현) ───────────────────────────────── */
-const START_BLESSING_SPIRITS = [
-  { emoji: "👻", name: "수호 신령",   dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지." },
-  { emoji: "🧿", name: "인연 신령",   dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마." },
-  { emoji: "🏮", name: "길잡이 신령", dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나." },
-];
+/* ── 신령 3종 (화면을 열 때마다 랜덤 출현) ─────────────────────────────────
+   엔딩 지시서의 선택 신령 ID/대사와 동일한 데이터 원본을 사용한다. */
+const START_BLESSING_ENDING_DATA = window.BOHYUN_RUN_RESULT_DATA && window.BOHYUN_RUN_RESULT_DATA.ending;
+const START_BLESSING_SPIRITS = (START_BLESSING_ENDING_DATA && Array.isArray(START_BLESSING_ENDING_DATA.spirits))
+  ? START_BLESSING_ENDING_DATA.spirits.map(spirit => ({
+      id: spirit.id,
+      image: spirit.image,
+      emoji: spirit.emoji,
+      name: spirit.name,
+      dialogue: spirit.blessingDialogue,
+      victoryLines: spirit.lines
+    }))
+  : [
+      { emoji: "👻", name: "수호 신령",   dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지." },
+      { emoji: "🧿", name: "인연 신령",   dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마." },
+      { emoji: "🏮", name: "길잡이 신령", dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나." },
+    ];
 
 /* ── 은혜 선택지 3종 (테스트 데이터 - 기획서 참고 이미지 예시 기준) ─────────
    주문 ID/희귀도, 결계 수치는 밸런스 단계에서 변경될 수 있는 예시 데이터다. */
@@ -37,39 +48,6 @@ const SB_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#dock
 let sbOverlayEl = null;
 let sbResolved  = false;
 let sbSpirit    = null;
-
-const START_BLESSING_SPIRIT_ASSETS = [
-  {
-    id: "spirit_guardian",
-    image: "assets/spirits/guardian_spirit.png",
-    emoji: "👻",
-    name: "수호 신령",
-    dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지.",
-    // 임시 대사. 승리 연출용 신령별 대사는 이후 별도 데이터로 교체 예정.
-    victoryLines: ["잘했구나.", "네가 지켜낸 것들이 헛되지 않았다."]
-  },
-  {
-    id: "spirit_bond",
-    image: "assets/spirits/bond_spirit.png",
-    emoji: "🧿",
-    name: "인연 신령",
-    dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마.",
-    victoryLines: ["잘했구나.", "이어진 인연이 헛되지 않았음이야."]
-  },
-  {
-    id: "spirit_guide",
-    image: "assets/spirits/guide_spirit.png",
-    emoji: "🏮",
-    name: "길잡이 신령",
-    dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나.",
-    victoryLines: ["잘했구나.", "네가 밝힌 길이 여기까지 이어졌구나."]
-  },
-];
-START_BLESSING_SPIRIT_ASSETS.forEach((asset, index) => {
-  if(START_BLESSING_SPIRITS[index]){
-    START_BLESSING_SPIRITS[index] = { ...START_BLESSING_SPIRITS[index], ...asset };
-  }
-});
 
 /* ── 화면 열기 ────────────────────────────────────────────────────────────── */
 window.OPEN_START_BLESSING = function(){
@@ -219,7 +197,7 @@ function saveSbSpiritToRunState(){
     name: sbSpirit.name,
     image: sbSpirit.image,
     emoji: sbSpirit.emoji,
-    appearanceTitle: "승리",
+    appearanceTitle: "여정 종료",
     appearanceLines: (sbSpirit.victoryLines && sbSpirit.victoryLines.length)
       ? sbSpirit.victoryLines
       : [sbSpirit.dialogue]
