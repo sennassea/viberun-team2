@@ -1707,12 +1707,24 @@ function endGame(result){
   S.over = result; S.busy = false;
   if(S) S.giveUpToStartOnly = false;
   saveCompletedRunRecord(result);
+
+  // 보스 처치(승리) 시 신령의 은혜 신령 출현 연출을 먼저 보여준다.
+  // runResult.js가 처리하지 못하는 결과(패배 등)는 기존 종료 UI로 폴백한다.
+  if(window.RUN_RESULT_UI && typeof window.RUN_RESULT_UI.open === "function" &&
+     window.RUN_RESULT_UI.open(result, () => showLegacyEndOverlay(result, giveUpToStartOnly))){
+    return true;
+  }
+
+  showLegacyEndOverlay(result, giveUpToStartOnly);
+  return true;
+}
+
+function showLegacyEndOverlay(result, giveUpToStartOnly){
   $("#overTitle").textContent = result==="win" ? "🎉 승리!" : "💀 패배...";
   $("#overDesc").textContent  = result==="win" ? "모든 영혼을 성불시켰습니다." : PLAYER_DEF.name+"이 쓰러졌습니다.";
   updateRestartButtonForEndGame(result === "lose" || giveUpToStartOnly);
   $("#returnStart").style.display = result==="lose" ? "block" : "none";
   $("#over").classList.add("show");
-  return true;
 }
 
 function updateRestartButtonForEndGame(removeRestart){

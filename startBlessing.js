@@ -40,22 +40,29 @@ let sbSpirit    = null;
 
 const START_BLESSING_SPIRIT_ASSETS = [
   {
+    id: "spirit_guardian",
     image: "assets/spirits/guardian_spirit.png",
     emoji: "👻",
     name: "수호 신령",
-    dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지."
+    dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지.",
+    // 임시 대사. 승리 연출용 신령별 대사는 이후 별도 데이터로 교체 예정.
+    victoryLines: ["잘했구나.", "네가 지켜낸 것들이 헛되지 않았다."]
   },
   {
+    id: "spirit_bond",
     image: "assets/spirits/bond_spirit.png",
     emoji: "🧿",
     name: "인연 신령",
-    dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마."
+    dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마.",
+    victoryLines: ["잘했구나.", "이어진 인연이 헛되지 않았음이야."]
   },
   {
+    id: "spirit_guide",
     image: "assets/spirits/guide_spirit.png",
     emoji: "🏮",
     name: "길잡이 신령",
-    dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나."
+    dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나.",
+    victoryLines: ["잘했구나.", "네가 밝힌 길이 여기까지 이어졌구나."]
   },
 ];
 START_BLESSING_SPIRIT_ASSETS.forEach((asset, index) => {
@@ -144,6 +151,7 @@ function selectSbBlessing(blessing){
   sbResolved = true;
 
   applySbBlessing(blessing);
+  saveSbSpiritToRunState();
   closeSbOverlay();
   if(typeof toast === "function") toast(blessing.name + "의 은혜를 받았습니다.");
 
@@ -198,6 +206,24 @@ function applySbBlessing(blessing){
   if(blessing.effect === "firstBattleBlock"){
     run.startBlessingEffect = { type: "firstBattleBlock", value: blessing.value || 8, used: false };
   }
+}
+
+/* ── 이번 런의 신령을 RUN_STATE에 저장 (승리 연출에서 동일한 신령을 재사용) ─
+   기획서 §3-2, §5-2: 승리 연출은 별도 신령 이미지를 새로 지정하지 않고,
+   신령의 은혜에서 사용한 신령 데이터(RUN_STATE.blessingSpirit)를 그대로 읽는다. */
+function saveSbSpiritToRunState(){
+  const run = getSbRunState();
+  if(!run || !sbSpirit) return;
+  run.blessingSpirit = {
+    id: sbSpirit.id || sbSpirit.name,
+    name: sbSpirit.name,
+    image: sbSpirit.image,
+    emoji: sbSpirit.emoji,
+    appearanceTitle: "승리",
+    appearanceLines: (sbSpirit.victoryLines && sbSpirit.victoryLines.length)
+      ? sbSpirit.victoryLines
+      : [sbSpirit.dialogue]
+  };
 }
 
 /* ── mapSystem.js의 getCurrentNodeId() 재정의 ─────────────────────────────
