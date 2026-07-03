@@ -2152,7 +2152,7 @@ function renderIntents(){
     let ico, txt, cls;
     if(m.t==="attack"){
       const sn = m.statusCard && CARD_DB[m.statusCard] ? " + "+CARD_DB[m.statusCard].name : "";
-      ico="💢"; txt=(m.name ? m.name+" / " : "")+"스트레스 "+m.v+(e.weak>0?" (동요)":"")+sn; cls="atk";
+      ico="💢"; txt=(m.name ? m.name+" / " : "")+"정신력 "+m.v+(e.weak>0?" (동요)":"")+sn; cls="atk";
     } else if(m.t==="defend"){
       ico="🛡️"; txt=(m.name ? m.name+" / " : "")+"결계 "+m.v+" 획득"; cls="def";
     } else if(m.t==="summon"){
