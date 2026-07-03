@@ -12,7 +12,7 @@
   let closeMapWrapped = false;
   let tutorialMapIntroActive = false;
   let tutorialMapNodeSelectActive = false;
-  const MAP_INTRO_DIALOGUE_IDS = ["M-001", "M-002", "M-003"];
+  const MAP_INTRO_DIALOGUE_IDS = ["M-001", "M-002", "M-003", "M-004", "M-005", "M-006", "M-007"];
   const TUTORIAL_MAP_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
 
   function openTutorialMap(){
@@ -184,6 +184,22 @@
       #mapOverlay.tutorial-map-mode.tutorial-map-focus-active .mpath{
         opacity:.35;
       }
+      #mapOverlay.tutorial-map-mode .tutorial-map-focus-path{
+        opacity:1 !important;
+        stroke:#ffd25f !important;
+        stroke-width:5 !important;
+        filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.78));
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend{
+        position:relative;
+        z-index:13;
+        isolation:isolate;
+        opacity:1 !important;
+        filter:none !important;
+        background:rgba(244,248,252,.98) !important;
+        border-color:#ffd25f !important;
+        box-shadow:0 0 0 .36cqh #ffd25f,0 0 2.4cqh rgba(255,210,95,.95),0 1cqh 2.4cqh rgba(20,35,60,.26) !important;
+      }
       #mapOverlay.tutorial-map-mode .tutorial-map-focus-node{
         opacity:1;
         filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.82));
@@ -213,7 +229,7 @@
       tutorialMapIntroActive = false;
       removeTutorialMapClickBlocker();
       removeTutorialMapDialogue();
-      applyTutorialMapHighlight("M-003");
+      applyTutorialMapHighlight("M-004");
       enableTutorialMapNodeSelect();
       setTutorialMapStep("map_intro_completed");
       console.log("tutorial map intro completed");
@@ -329,10 +345,24 @@
     if(!overlay || !overlay.classList.contains("tutorial-map-mode")) return;
 
     let node = null;
-    if(dialogueId === "M-002"){
+    if(dialogueId === "M-002" || dialogueId === "M-003"){
       node = overlay.querySelector("#mapCanvas .mnode-current");
-    } else if(dialogueId === "M-003"){
+    } else if(dialogueId === "M-004"){
       node = overlay.querySelector('#mapCanvas [data-nodeid="tutorial_battle"]');
+    } else if(dialogueId === "M-005"){
+      const path = overlay.querySelector("#mapCanvas .mpath");
+      if(path){
+        overlay.classList.add("tutorial-map-focus-active");
+        path.classList.add("tutorial-map-focus-path");
+      }
+      return;
+    } else if(dialogueId === "M-006" || dialogueId === "M-007"){
+      const legend = overlay.querySelector("#dMapLegend, .dmap-legend, .map-legend");
+      if(legend){
+        overlay.classList.add("tutorial-map-focus-active");
+        legend.classList.add("tutorial-map-focus-legend");
+      }
+      return;
     }
 
     if(!node) return;
@@ -346,6 +376,12 @@
     overlay.classList.remove("tutorial-map-focus-active");
     overlay.querySelectorAll(".tutorial-map-focus-node").forEach(node => {
       node.classList.remove("tutorial-map-focus-node");
+    });
+    overlay.querySelectorAll(".tutorial-map-focus-path").forEach(path => {
+      path.classList.remove("tutorial-map-focus-path");
+    });
+    overlay.querySelectorAll(".tutorial-map-focus-legend").forEach(legend => {
+      legend.classList.remove("tutorial-map-focus-legend");
     });
   }
 
