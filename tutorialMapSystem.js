@@ -12,7 +12,15 @@
   let closeMapWrapped = false;
   let tutorialMapIntroActive = false;
   let tutorialMapNodeSelectActive = false;
-  const MAP_INTRO_DIALOGUE_IDS = ["M-001", "M-002", "M-003", "M-004", "M-005", "M-006", "M-007"];
+  const MAP_INTRO_DIALOGUE_IDS = ["M-001", "M-002", "M-003", "M-004", "M-005", "M-006", "M-007", "M-008", "M-009", "M-010", "M-011", "M-012", "M-013"];
+  const MAP_LEGEND_DIALOGUE_TYPES = {
+    "M-008": "enemy",
+    "M-009": "elite",
+    "M-010": "event",
+    "M-011": "shop",
+    "M-012": "rest",
+    "M-013": "boss"
+  };
   const TUTORIAL_MAP_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
 
   function openTutorialMap(){
@@ -200,6 +208,25 @@
         border-color:#ffd25f !important;
         box-shadow:0 0 0 .36cqh #ffd25f,0 0 2.4cqh rgba(255,210,95,.95),0 1cqh 2.4cqh rgba(20,35,60,.26) !important;
       }
+      #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-panel{
+        position:relative;
+        z-index:13;
+        isolation:isolate;
+        opacity:1 !important;
+        filter:none !important;
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-items .dmap-legend-item:not(.tutorial-map-focus-legend-item){
+        opacity:.42;
+        filter:saturate(.72);
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-item{
+        position:relative;
+        z-index:14;
+        opacity:1 !important;
+        filter:none !important;
+        background:rgba(255,248,214,.96) !important;
+        box-shadow:0 0 0 .24cqh #ffd25f,0 0 1.2cqh rgba(255,210,95,.9) !important;
+      }
       #mapOverlay.tutorial-map-mode .tutorial-map-focus-node{
         opacity:1;
         filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.82));
@@ -363,6 +390,9 @@
         legend.classList.add("tutorial-map-focus-legend");
       }
       return;
+    } else if(MAP_LEGEND_DIALOGUE_TYPES[dialogueId]){
+      applyTutorialMapLegendItemHighlight(MAP_LEGEND_DIALOGUE_TYPES[dialogueId]);
+      return;
     }
 
     if(!node) return;
@@ -383,6 +413,25 @@
     overlay.querySelectorAll(".tutorial-map-focus-legend").forEach(legend => {
       legend.classList.remove("tutorial-map-focus-legend");
     });
+    overlay.querySelectorAll(".tutorial-map-focus-legend-panel").forEach(legend => {
+      legend.classList.remove("tutorial-map-focus-legend-panel", "tutorial-map-focus-legend-items");
+    });
+    overlay.querySelectorAll(".tutorial-map-focus-legend-item").forEach(item => {
+      item.classList.remove("tutorial-map-focus-legend-item");
+    });
+  }
+
+  function applyTutorialMapLegendItemHighlight(type){
+    const overlay = document.getElementById("mapOverlay");
+    if(!overlay || !overlay.classList.contains("tutorial-map-mode")) return;
+    const legend = overlay.querySelector("#dMapLegend, .dmap-legend, .map-legend");
+    if(!legend) return;
+    const item = legend.querySelector('.dmap-legend-item[data-type="' + type + '"], .legend-item[data-type="' + type + '"]');
+    if(!item) return;
+
+    overlay.classList.add("tutorial-map-focus-active");
+    legend.classList.add("tutorial-map-focus-legend-panel", "tutorial-map-focus-legend-items");
+    item.classList.add("tutorial-map-focus-legend-item");
   }
 
   function setTutorialMapStep(step){
