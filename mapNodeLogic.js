@@ -91,12 +91,16 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   if (!d) { console.warn("[ACT1] BOHYUN_COMBAT_DATA 없음"); return; }
 
   const floors = [], paths = [], stages = [], popupGetters = [];
-  const normalIds = (d.monsterGroups && d.monsterGroups.normal) || [];
 
   function pickMons(ids, count) {
     const shuffled = [...ids].sort(() => Math.random() - 0.5);
     return shuffled.slice(0, Math.min(count, shuffled.length))
       .map(id => d.getMonsterById(id)).filter(Boolean);
+  }
+  /* 테마 안에서만 몬스터를 뽑는 fallback (병원/공원/학교 혼합 방지) */
+  function pickMonsByTheme(theme, grade, count) {
+    const ids = (d.monsterThemeGroups && d.monsterThemeGroups[theme] && d.monsterThemeGroups[theme][grade]) || [];
+    return pickMons(ids, count);
   }
   function cloneMons(list) {
     return list.map(m => ({
@@ -115,6 +119,14 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   let stageIdx = 0;
   /* 이번 맵 생성에서 사용한 패키지 ID 추적 */
   const usedPkgIds = new Set();
+  /* 이번 맵 생성에서 테마별 출현 횟수 추적 (한쪽 테마로 몰리지 않도록 균형 배치) */
+  const usedThemeCounts = { hospital: 0, park: 0, school: 0 };
+  const ACT1_THEME_FALLBACK = ["hospital", "park", "school"];
+  function pickStageTheme(nodeType, floor){
+    return typeof window.ACT1_PICK_STAGE_THEME === "function"
+      ? window.ACT1_PICK_STAGE_THEME(nodeType, floor, usedThemeCounts)
+      : ACT1_THEME_FALLBACK[Math.floor(Math.random() * ACT1_THEME_FALLBACK.length)];
+  }
 
   /* 휴식 노드 연속 출현 방지를 위한 추적 변수
      - prevFloorHasRest: 직전 층에 휴식 노드가 있었는지 (있었다면 이번 층은 휴식 후보 제외) */
@@ -184,17 +196,19 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
       const nodeId = `node_${fi}_${ni}`;
 
       if (info.hasCombat) {
-        /* 전투 노드: 패키지 선택 → 몬스터 로드 */
+        /* 전투 노드: 테마 선택 → 해당 테마 패키지 풀에서만 선택 → 몬스터 로드 */
+        const stageTheme = pickStageTheme(type, fi);
         const pkg = typeof window.ACT1_PICK_PACKAGE === "function"
-          ? window.ACT1_PICK_PACKAGE(type, fi, usedPkgIds)
+          ? window.ACT1_PICK_PACKAGE(type, fi, usedPkgIds, stageTheme)
           : null;
 
         let mons = getMonsFromPackage(pkg, type);
-        /* 폴백: 패키지 없으면 기존 방식 */
+        /* 폴백: 패키지 없으면 같은 테마 안에서만 몬스터를 뽑는다 (테마 혼합 금지) */
         if (!mons || !mons.length) {
-          mons = pickMons(normalIds, act1RandInt(1, 2));
+          const fallbackGrade = type === "elite" ? "elite" : "normal";
+          mons = pickMonsByTheme(stageTheme, fallbackGrade, type === "elite" ? 1 : act1RandInt(1, 2));
         }
-        if (!mons.length) mons = pickMons(normalIds, 1);
+        if (!mons.length) mons = pickMonsByTheme(stageTheme, type === "elite" ? "elite" : "normal", 1);
 
         const ms  = mons.slice();
         const lbl = type === "elite"
@@ -203,6 +217,9 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
         stages.push({
           label: lbl, type, isDimmed: info.isDimmed,
           packageId: pkg ? pkg.id : null,
+          packageName: pkg ? pkg.name : null,
+          packageTheme: pkg ? pkg.theme : stageTheme,
+          packageThemeLabel: pkg ? pkg.themeLabel : (d.monsterThemeLabels ? d.monsterThemeLabels[stageTheme] : null),
           getMonsters: (m => () => cloneMons(m))(ms),
         });
         popupGetters.push((m => () => m)(ms));
@@ -267,6 +284,9 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
       stage.type = "rest";
       stage.isDimmed = info.isDimmed;
       stage.packageId = null;
+      stage.packageName = null;
+      stage.packageTheme = null;
+      stage.packageThemeLabel = null;
       stage.getMonsters = null;
       popupGetters[node.stageIndex] = () => [];
 
@@ -274,15 +294,19 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
     }
   }
 
-  /* ── Boss Floor (16번째): 보스 패키지에서 1개 선택 ── */
+  /* ── Boss Floor (16번째): 테마 선택 → 해당 테마 보스 패키지에서 1개 선택 ── */
+  const bossTheme = pickStageTheme("boss", 16);
   const bossPkg = typeof window.ACT1_PICK_PACKAGE === "function"
-    ? window.ACT1_PICK_PACKAGE("boss", 16, usedPkgIds)
+    ? window.ACT1_PICK_PACKAGE("boss", 16, usedPkgIds, bossTheme)
     : null;
   let bossMs = bossPkg ? d.getMonstersByIds(bossPkg.monsterIds) : [];
-  if (!bossMs.length) bossMs = pickMons(normalIds, 1);
+  if (!bossMs.length) bossMs = pickMonsByTheme(bossTheme, "boss", 1);
   stages.push({
     label: "보스 스테이지", type: "boss", isDimmed: false,
     packageId: bossPkg ? bossPkg.id : null,
+    packageName: bossPkg ? bossPkg.name : null,
+    packageTheme: bossPkg ? bossPkg.theme : bossTheme,
+    packageThemeLabel: bossPkg ? bossPkg.themeLabel : (d.monsterThemeLabels ? d.monsterThemeLabels[bossTheme] : null),
     getMonsters: (m => () => cloneMons(m))(bossMs.slice()),
   });
   popupGetters.push((m => () => m)(bossMs.slice()));

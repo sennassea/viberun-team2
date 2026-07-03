@@ -189,7 +189,7 @@
     return spawnCheatMonsterDefs(defs, options);
   }
 
-  /* CHEAT.monster.spawnPackage("G05", true) */
+  /* CHEAT.monster.spawnPackage("HN01", true) */
   function cheatMonsterSpawnPackage(packageId, replaceCurrent){
     if(!mRequireBattle()) return [];
     const d = getMonsterDataApi();
@@ -226,7 +226,7 @@
     return rows;
   }
 
-  /* CHEAT.monster.packages() / CHEAT.monster.packages("G05") */
+  /* CHEAT.monster.packages() / CHEAT.monster.packages("HN01") */
   function cheatMonsterPackages(query){
     const q = String(query || "").toLowerCase();
     const packages = window.ACT1_ENCOUNTER_PACKAGES || [];
@@ -280,7 +280,7 @@
         'CHEAT.monster.spawn("child_spirit_lost")            몬스터 1마리 소환',
         'CHEAT.monster.spawn("child_spirit_lost", 2)         몬스터 2마리 소환',
         'CHEAT.monster.spawn("child_spirit_lost", 1, {hp:1}) 체력 1로 소환',
-        'CHEAT.monster.spawnPackage("G05", true)             현재 적을 G05 패키지로 교체',
+        'CHEAT.monster.spawnPackage("HN01", true)            현재 적을 HN01 패키지로 교체',
         'CHEAT.monster.list("아이")                          몬스터 ID 검색',
         "CHEAT.monster.packages()                            전투 패키지 목록 출력",
         "CHEAT.monster.clearDead()                           죽은 몬스터 정리",
