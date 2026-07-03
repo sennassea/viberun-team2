@@ -237,6 +237,26 @@ const DMAP_EMOJI = {
   merchant: "🛍️",
 };
 
+const DMAP_ICON = {
+  enemy: "assets/map_icons/enemy.png",
+  elite: "assets/map_icons/elite.png",
+  event: "assets/map_icons/event.png",
+  shop: "assets/map_icons/shop.png",
+  merchant: "assets/map_icons/shop.png",
+  rest: "assets/map_icons/rest.png",
+  boss: "assets/map_icons/boss.png",
+  lobby: "assets/map_icons/start.png",
+  start: "assets/map_icons/start.png",
+};
+
+function mapIconPath(type) {
+  return DMAP_ICON[type] || DMAP_ICON.enemy;
+}
+
+function mapLegendIconHtml(item) {
+  return '<img src="' + mapIconPath(item.type) + '" alt="' + item.label + '">';
+}
+
 function getTutorialMapCurrentLabel(currentNodeId) {
   const stage = Array.isArray(MAP_STAGES) ? MAP_STAGES[0] : null;
   const isTutorialMap = !!(stage && stage.packageId === "tutorial_battle");
@@ -323,8 +343,8 @@ function renderCanvas(currentNodeId) {
       attrs.push(`data-nextstage="${node.stageIndex}"`);
     }
 
-    const emoji     = DMAP_EMOJI[node.type] || node.emoji;
-    const emojiSize = node.type === "boss" ? 20 : (cur ? 17 : 15);
+    const iconPath  = mapIconPath(node.type);
+    const iconSize  = node.type === "boss" ? 62 : (cur ? 58 : 50);
 
     // 딤드 노드 "준비중" 배지
     const dimmedBadge = (node.isDimmed && !past && !cur)
@@ -335,7 +355,7 @@ function renderCanvas(currentNodeId) {
       ${cur  ? `<circle r="36" class="mnode-pulse"/>` : ""}
       ${next ? `<circle r="30" class="mnode-pulse-next"/>` : ""}
       <circle r="${r}" class="mnode-bg"/>
-      <text text-anchor="middle" dominant-baseline="central" font-size="${emojiSize}" class="mnode-emoji">${emoji}</text>
+      <image href="${iconPath}" x="${-iconSize / 2}" y="${-iconSize / 2}" width="${iconSize}" height="${iconSize}" class="mnode-icon" preserveAspectRatio="xMidYMid meet"/>
       ${dimmedBadge}
     </g>`;
   }));
@@ -428,7 +448,7 @@ function buildOverlay() {
 
   const legendHtml = DMAP_LEGEND_DATA.map(item =>
     `<div class="legend-item dmap-legend-item" data-type="${item.type}" data-tip="${item.tip.replace(/"/g, '&quot;')}">
-      <span class="leg-ico dmap-leg-ico ${item.type}">${item.icon}</span>
+      <span class="leg-ico dmap-leg-ico ${item.type}">${mapLegendIconHtml(item)}</span>
       <span class="dmap-leg-label">${item.label}</span>
     </div>`
   ).join("");
