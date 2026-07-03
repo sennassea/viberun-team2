@@ -1,4 +1,5 @@
 node_modules/
+.edge-tutorial-map-test/
 
 android/.gradle/
 android/build/

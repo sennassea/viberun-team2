@@ -1,5 +1,0 @@
-2026/07/03-17:23:14.790 4fd0 Log #3: 1 ops saved to Table #4 OK
-2026/07/03-17:23:14.801 4fd0 Archiving C:\Users\whekg\stslike\viberun-team2\.edge-tutorial-map-test\Default\Site Characteristics Database/000003.log: OK
-2026/07/03-17:23:14.802 4fd0 Table #4: 1 entries OK
-2026/07/03-17:23:14.807 4fd0 Archiving C:\Users\whekg\stslike\viberun-team2\.edge-tutorial-map-test\Default\Site Characteristics Database/MANIFEST-000001: OK
-2026/07/03-17:23:14.822 4fd0 **** Repaired leveldb C:\Users\whekg\stslike\viberun-team2\.edge-tutorial-map-test\Default\Site Characteristics Database; recovered 1 files; 130 bytes. Some data may have been lost. ****
