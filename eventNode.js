@@ -326,6 +326,13 @@ function eventCardHtml(key){
   if(!c) return "";
   const label = typeof typeLabel === "function" ? typeLabel(c.type) : c.type;
   const selected = eventState.cardSelected === key ? " selected" : "";
+  if(typeof cardFaceHtml === "function"){
+    return (
+      '<button type="button" class="event-card event-card-frame card-frame-card cost-' + escapeEventHtml(c.type) + selected + '" data-key="' + escapeEventHtml(key) + '">' +
+        cardFaceHtml(c) +
+      '</button>'
+    );
+  }
   return (
     '<button type="button" class="event-card' + selected + '" data-key="' + key + '">' +
       '<div class="event-card-cost">' + c.cost + '</div>' +

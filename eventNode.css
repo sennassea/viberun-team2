@@ -127,6 +127,13 @@
 }
 .event-card:hover{ transform:translateY(-.4cqh); border-color:var(--ev-gold); }
 .event-card.selected{ border-color:var(--ev-gold-deep); box-shadow:0 0 0 .22cqh var(--ev-gold); background:rgba(255,250,235,.95); }
+.event-card.event-card-frame{
+  position:relative; display:block; justify-self:center; width:min(15cqw,21cqh); height:auto; aspect-ratio:2/3;
+  padding:0; gap:0; border:0; border-radius:0; overflow:hidden; background:#f5efe4;
+}
+.event-card.event-card-frame.selected{
+  box-shadow:0 0 0 .35cqh var(--ev-gold), 0 .9cqh 1.6cqh rgba(90,70,35,.22); background:#f5efe4;
+}
 .event-card-cost{
   width:3.4cqh; height:3.4cqh; border-radius:50%; display:grid; place-items:center;
   background:#3f8fe0; color:#fff; font-weight:900; font-size:1.5cqh; align-self:flex-start;
