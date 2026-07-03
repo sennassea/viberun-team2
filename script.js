@@ -538,7 +538,9 @@ function pickBattleBackground(enemies){
 function applyBattleBackground(){
   const game = document.querySelector("#game");
   if(!game) return;
-  const bg = S && S.tutorialMode ? { ...TUTORIAL_BATTLE_BACKGROUND } : pickBattleBackground(S.enemies);
+  const bg = S && S.tutorialMode
+    ? (S.battleBackground || { ...TUTORIAL_BATTLE_BACKGROUND })
+    : pickBattleBackground(S.enemies);
   S.battleBackground = bg;
   game.style.setProperty("--battle-bg-image", 'url("' + bg.url + '")');
   game.dataset.battleTheme = bg.theme;
@@ -1730,8 +1732,31 @@ function renderHud(){
   $("#hudMoonShard").textContent   = S.moonShards;
   $("#hudDeck").textContent        = STARTER_DECK.length;
   $("#hudTurnNum").textContent     = S.turn;
+  renderBattleProgressHud();
   renderSideItemSlots();
   renderProfileStatuses();
+}
+
+function renderBattleProgressHud(){
+  const region = document.querySelector(".progress-region");
+  const floor = document.getElementById("hudFloor");
+  const turn = document.getElementById("hudTurn");
+  if(S && S.tutorialMode){
+    if(region) region.innerHTML = '<span>튜토리얼 구역</span>';
+    if(floor) floor.style.display = "none";
+    if(turn && turn.previousElementSibling && turn.previousElementSibling.classList.contains("progress-separator")){
+      turn.previousElementSibling.style.display = "none";
+    }
+    return;
+  }
+  if(region) region.innerHTML = '<span class="progress-icon">🏥</span><span>병원</span>';
+  if(floor){
+    floor.style.display = "";
+    floor.textContent = "1F";
+  }
+  if(turn && turn.previousElementSibling && turn.previousElementSibling.classList.contains("progress-separator")){
+    turn.previousElementSibling.style.display = "";
+  }
 }
 
 function renderProfileStatuses(){
