@@ -5,10 +5,11 @@
 
    현재 구현 범위:
    - 승리: ① 신령의 은혜 신령 출현 연출 → ② 동자승의 끝없는 여정 선택 화면
-     → ③ 전투 요약 화면
+     → ③ 전투 요약 화면 → ④ 전투 상세 화면
    - 패배: 동자승 패배 연출은 아직 없으므로 결과 즉시 ③ 전투 요약 화면으로
-     진입한다.
-   전투 상세 화면은 이후 단계에서 추가한다.
+     진입한 뒤 ④ 전투 상세 화면으로 이어진다.
+   전투 상세 화면의 "메인 메뉴로 돌아가기"는 현재 오버레이만 닫으며, 실제
+   메인 메뉴 복귀 로직은 이후 단계에서 연결한다.
    이 파일이 처리하지 못하는 결과는 endGame()의 기존 종료 UI로 폴백된다.
 
    script.js / startBlessing.js 이후에 로드되어야 한다.
@@ -29,7 +30,45 @@ const NPC_DONGJASEUNG = {
   defeatLine2: "더 잘 해보지 그랬느냐?"
 };
 
+/* ── 노드 타입별 표시 정보 (전투 상세 화면의 "밟은 노드 루트"용) ──────────
+   에셋이 없으므로 emoji로 임시 대체한다. mapNodeLogic.js의 ACT1_NODE_INFO와
+   동일한 emoji를 사용해 기존 여정 화면과 시각적으로 통일한다. */
+const RR_NODE_TYPE_INFO = {
+  start: { emoji: "🚪", label: "시작" },
+  lobby: { emoji: "🚪", label: "시작" },
+  enemy: { emoji: "👺", label: "일반 전투" },
+  elite: { emoji: "👹", label: "엘리트" },
+  boss:  { emoji: "💀", label: "보스" },
+  event: { emoji: "❓", label: "이벤트" },
+  shop:  { emoji: "🛒", label: "상점" },
+  rest:  { emoji: "🛖", label: "휴식" }
+};
+
 let rrOverlayEl = null;
+
+/* ── 노드 진입 시 루트 기록 ──────────────────────────────────────────────
+   script.js / mapSystem.js / eventNode.js / shopNode.js / restNode.js가
+   모두 window.startStage를 감싸고 있으므로, 이 파일이 가장 마지막에
+   로드되는 점을 이용해 한 번 더 감싸서 노드 타입에 관계없이 방문 기록을
+   남긴다. 기존 노드 진입 로직은 그대로 호출만 위임하고 수정하지 않는다. */
+(function initRrRouteTracking(){
+  const prevStartStage = window.startStage;
+  window.startStage = function rrWrappedStartStage(stageIdx){
+    recordVisitedNode(stageIdx);
+    if(typeof prevStartStage === "function") return prevStartStage(stageIdx);
+  };
+})();
+
+function recordVisitedNode(stageIdx){
+  const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
+  if(!run || !run.runStats) return;
+  if(!Array.isArray(run.runStats.route)) run.runStats.route = [];
+  const route = run.runStats.route;
+  if(route.some(node => node.stageIndex === stageIdx)) return;
+
+  const stage = typeof MAP_STAGES !== "undefined" ? MAP_STAGES[stageIdx] : null;
+  route.push({ stageIndex: stageIdx, type: stage ? stage.type : "unknown" });
+}
 
 /* ── DOM 생성 ────────────────────────────────────────────────────────────── */
 function ensureRrOverlay(){
@@ -189,8 +228,175 @@ function renderRunSummary(snapshot, onFinish){
 
   panelSlot.querySelector("#rrSummaryNext").addEventListener("click", (event) => {
     event.stopPropagation();
+    renderRunDetail(snapshot, onFinish);
+  });
+}
+
+/* ── 전투 상세 화면 (기획서 §4-2, §10-2) ────────────────────────────────────
+   전투 요약의 "다음" 클릭 시 진입. 캐릭터 없이 중앙 패널로 표시하며,
+   노드 루트 / 법구 종류 / 약병 종류는 가로 드래그로 넘겨볼 수 있다. */
+function renderRunDetail(snapshot, onFinish){
+  const overlay = ensureRrOverlay();
+
+  const characterWrap = overlay.querySelector("#rrCharacterWrap");
+  characterWrap.innerHTML = "";
+
+  const routeHtml = snapshot.route.length
+    ? snapshot.route.map((node, index) =>
+        rrRouteNodeHtml(node) + (index < snapshot.route.length - 1 ? '<div class="rr-route-arrow">→</div>' : '')
+      ).join("")
+    : '<div class="rr-empty-text">기록 없음</div>';
+
+  const relicTrackHtml = snapshot.relics.length
+    ? snapshot.relics.map(relic => rrItemCardHtml(relic.emoji, relic.name)).join("")
+    : '<div class="rr-empty-text">없음</div>';
+
+  const potionTrackHtml = snapshot.usedPotions.length
+    ? snapshot.usedPotions.map(potion => rrItemCardHtml(potion.emoji, potion.name, potion.count)).join("")
+    : '<div class="rr-empty-text">없음</div>';
+
+  const panelSlot = overlay.querySelector("#rrPanelSlot");
+  panelSlot.innerHTML =
+    '<div class="rr-detail-panel">' +
+      '<div class="rr-detail-titlebar"><span>전투 상세</span></div>' +
+      '<div class="rr-detail-section">' +
+        '<div class="rr-detail-section-title">❀ 밟은 노드 루트 ❀</div>' +
+        rrDragWrapHtml(routeHtml, "rr-route-viewport") +
+      '</div>' +
+      '<div class="rr-detail-grid">' +
+        '<div class="rr-detail-stack">' +
+          '<div class="rr-detail-tile">' +
+            '<div class="rr-detail-tile-icon">⏳</div>' +
+            '<div class="rr-detail-tile-body">' +
+              '<div class="rr-detail-tile-label">플레이타임</div>' +
+              '<div class="rr-detail-tile-value">' + formatRrPlayTime(snapshot.playTimeMs) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<button type="button" class="rr-detail-tile rr-detail-tile--button" id="rrDetailDeckBtn">' +
+            '<div class="rr-detail-tile-icon">🃏</div>' +
+            '<div class="rr-detail-tile-body">' +
+              '<div class="rr-detail-tile-label">수집한 주문 수</div>' +
+              '<div class="rr-detail-tile-value">' + snapshot.deckCount + '장</div>' +
+            '</div>' +
+          '</button>' +
+        '</div>' +
+        '<div class="rr-detail-stack">' +
+          '<div class="rr-detail-section rr-detail-section--tight">' +
+            '<div class="rr-detail-section-title">수집한 법구 종류</div>' +
+            rrDragWrapHtml(relicTrackHtml, "rr-item-viewport") +
+          '</div>' +
+          '<div class="rr-detail-section rr-detail-section--tight">' +
+            '<div class="rr-detail-section-title">사용한 약병 종류</div>' +
+            rrDragWrapHtml(potionTrackHtml, "rr-item-viewport") +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<button type="button" class="rr-detail-finish" id="rrDetailFinish">메인 메뉴로 돌아가기</button>' +
+    '</div>';
+
+  overlay.classList.add("show");
+  overlay.setAttribute("aria-hidden", "false");
+
+  rrInitDragScroll(panelSlot);
+
+  const deckBtn = panelSlot.querySelector("#rrDetailDeckBtn");
+  if(deckBtn){
+    deckBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if(typeof window.OPEN_DECK_VIEWER === "function") window.OPEN_DECK_VIEWER("all");
+    });
+  }
+
+  panelSlot.querySelector("#rrDetailFinish").addEventListener("click", (event) => {
+    event.stopPropagation();
+    // 현재는 오버레이만 닫는다. 실제 메인 메뉴 복귀 로직은 다음 단계에서 연결한다.
     closeRrOverlay();
-    if(typeof onFinish === "function") onFinish();
+  });
+}
+
+function rrRouteNodeHtml(node){
+  const info = RR_NODE_TYPE_INFO[node.type] || { emoji: "❔", label: node.type };
+  return '<div class="rr-route-node">' +
+    '<div class="rr-route-node-icon">' + info.emoji + '</div>' +
+    '<div class="rr-route-node-label">' + info.label + '</div>' +
+  '</div>';
+}
+
+function rrItemCardHtml(emoji, name, count){
+  const badge = count > 1 ? '<div class="rr-item-card-count">x' + count + '</div>' : '';
+  return '<div class="rr-item-card">' +
+    badge +
+    '<div class="rr-item-card-icon">' + (emoji || "❔") + '</div>' +
+    '<div class="rr-item-card-name">' + (name || "") + '</div>' +
+  '</div>';
+}
+
+function rrDragWrapHtml(innerHtml, viewportClass){
+  return '<div class="rr-drag-wrap">' +
+    '<div class="rr-drag-scroll ' + viewportClass + '" data-rr-drag-scroll>' + innerHtml + '</div>' +
+    '<div class="rr-fade rr-fade-left" aria-hidden="true"></div>' +
+    '<div class="rr-fade rr-fade-right" aria-hidden="true"></div>' +
+  '</div>';
+}
+
+function formatRrPlayTime(ms){
+  const totalSeconds = Math.max(0, Math.floor((ms || 0) / 1000));
+  const hh = Math.floor(totalSeconds / 3600);
+  const mm = Math.floor((totalSeconds % 3600) / 60);
+  const ss = totalSeconds % 60;
+  const pad = n => String(n).padStart(2, "0");
+  return pad(hh) + ":" + pad(mm) + ":" + pad(ss);
+}
+
+/* ── 가로 드래그 스크롤 (기획서 §10-3, §10-6) ───────────────────────────── */
+function rrEnableDragScroll(container){
+  if(!container || container.dataset.rrDragReady === "1") return;
+  container.dataset.rrDragReady = "1";
+
+  let dragging = false, moved = false, startX = 0, startScrollLeft = 0, pointerId = null;
+
+  container.addEventListener("pointerdown", (event) => {
+    if(container.scrollWidth <= container.clientWidth) return;
+    dragging = true;
+    moved = false;
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    startScrollLeft = container.scrollLeft;
+    container.classList.add("rr-dragging");
+    container.setPointerCapture?.(pointerId);
+  });
+  container.addEventListener("pointermove", (event) => {
+    if(!dragging) return;
+    const diff = event.clientX - startX;
+    if(Math.abs(diff) > 4) moved = true;
+    container.scrollLeft = startScrollLeft - diff;
+  });
+  const stopDrag = (event) => {
+    if(!dragging) return;
+    dragging = false;
+    container.classList.remove("rr-dragging");
+    try{ container.releasePointerCapture?.(event.pointerId); }catch(error){}
+  };
+  container.addEventListener("pointerup", stopDrag);
+  container.addEventListener("pointercancel", stopDrag);
+  container.addEventListener("pointerleave", stopDrag);
+  // 드래그 후 발생하는 click을 무시해 버튼 오작동을 막는다 (기획서 §10-8)
+  container.addEventListener("click", (event) => {
+    if(!moved) return;
+    event.preventDefault();
+    event.stopPropagation();
+    moved = false;
+  }, true);
+}
+
+function rrInitDragScroll(root){
+  if(!root) return;
+  root.querySelectorAll("[data-rr-drag-scroll]").forEach(viewport => {
+    rrEnableDragScroll(viewport);
+    requestAnimationFrame(() => {
+      const wrap = viewport.closest(".rr-drag-wrap");
+      if(wrap) wrap.classList.toggle("rr-scrollable", viewport.scrollWidth > viewport.clientWidth + 1);
+    });
   });
 }
 
@@ -199,6 +405,10 @@ function buildRunResultSnapshot(result){
   const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
   const stats = (run && run.runStats) || {};
   const cleared = stats.cleared || {};
+  const relics = (run && Array.isArray(run.relics)) ? run.relics : [];
+  const deck = typeof STARTER_DECK !== "undefined" && Array.isArray(STARTER_DECK)
+    ? STARTER_DECK
+    : ((run && Array.isArray(run.deck)) ? run.deck : []);
 
   let highestFloor = 0;
   if(typeof nodeFloorIdx === "function" && typeof getCurrentNodeId === "function"){
@@ -213,9 +423,28 @@ function buildRunResultSnapshot(result){
       elite: cleared.elite || 0,
       boss:  cleared.boss  || 0
     },
-    relicCount: (run && Array.isArray(run.relics)) ? run.relics.length : 0,
-    usedPotionCount: stats.usedPotionCount || 0
+    relicCount: relics.length,
+    relics: relics.map(relic => ({ name: relic.name, emoji: relic.emoji })),
+    usedPotionCount: stats.usedPotionCount || 0,
+    usedPotions: summarizeRrPotions(stats.usedPotions || []),
+    deckCount: deck.length,
+    route: Array.isArray(stats.route) ? stats.route : [],
+    playTimeMs: Date.now() - (stats.startedAt || Date.now())
   };
+}
+
+function summarizeRrPotions(list){
+  const order = [];
+  const byId = {};
+  list.forEach(potion => {
+    if(!potion || !potion.id) return;
+    if(!byId[potion.id]){
+      byId[potion.id] = { id: potion.id, name: potion.name, emoji: potion.emoji, count: 0 };
+      order.push(byId[potion.id]);
+    }
+    byId[potion.id].count += 1;
+  });
+  return order;
 }
 
 /* ── 전역 인터페이스 ─────────────────────────────────────────────────────── */
@@ -331,6 +560,69 @@ function ensureRrStyles(){
       "letter-spacing:.15cqh;cursor:pointer;box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.4);}" +
     ".rr-summary-next:hover{filter:brightness(1.08);}" +
 
+    /* 전투 상세 화면 (기획서 §4-2, §10-2) — 요약 화면과 동일하게 캐릭터 없이 중앙 패널로 표시한다 */
+    ".rr-detail-panel{position:absolute;left:50%;top:4%;bottom:4%;transform:translateX(-50%);" +
+      "width:82%;min-width:60cqh;max-width:98cqh;z-index:1;display:flex;flex-direction:column;" +
+      "padding:4.2cqh 3cqw 2.4cqh;border-radius:1.8cqh;gap:1.6cqh;" +
+      "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
+      "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
+    ".rr-detail-titlebar{position:absolute;top:-2.4cqh;left:50%;transform:translateX(-50%);" +
+      "padding:1.1cqh 3.6cqw;border-radius:1cqh;white-space:nowrap;" +
+      "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.22cqh solid #e8c874;" +
+      "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
+    ".rr-detail-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
+    ".rr-detail-section{display:flex;flex-direction:column;gap:.7cqh;min-height:0;}" +
+    ".rr-detail-section-title{text-align:center;font-size:1.5cqh;font-weight:800;color:#8a6a3c;letter-spacing:.05cqh;}" +
+    ".rr-detail-grid{flex:1;min-height:0;display:grid;grid-template-columns:30% 1fr;gap:1.4cqh 1.4cqw;}" +
+    ".rr-detail-stack{display:flex;flex-direction:column;gap:1.4cqh;min-height:0;}" +
+    ".rr-detail-stack .rr-detail-tile,.rr-detail-stack .rr-detail-section--tight{flex:1;min-height:0;}" +
+    ".rr-detail-tile{display:flex;align-items:center;gap:1cqw;padding:1.2cqh 1.2cqw;border-radius:1.2cqh;margin:0;" +
+      "border:.16cqh solid rgba(150,110,60,.5);background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,.1));" +
+      "font:inherit;text-align:left;cursor:default;}" +
+    "button.rr-detail-tile--button{cursor:pointer;}" +
+    "button.rr-detail-tile--button:hover{border-color:#cf5b52;background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(255,255,255,.16));}" +
+    ".rr-detail-tile-icon{flex:0 0 auto;width:4.6cqh;text-align:center;font-size:2.8cqh;line-height:1;}" +
+    ".rr-detail-tile-body{min-width:0;display:flex;flex-direction:column;gap:.3cqh;}" +
+    ".rr-detail-tile-label{font-size:1.35cqh;font-weight:800;color:#7a6142;}" +
+    ".rr-detail-tile-value{font-size:2cqh;font-weight:900;color:#4a3524;}" +
+    ".rr-detail-section--tight{border-radius:1.2cqh;border:.16cqh solid rgba(150,110,60,.4);" +
+      "background:rgba(255,255,255,.22);padding:.9cqh 1cqw;}" +
+    ".rr-detail-finish{width:100%;padding:1.4cqh 0;border:.2cqh solid #e8c874;border-radius:2.6cqh;" +
+      "background:linear-gradient(160deg,#cf5b52,#8f2f2f);color:#fbe9c8;font-size:1.9cqh;font-weight:900;" +
+      "letter-spacing:.1cqh;cursor:pointer;box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.4);}" +
+    ".rr-detail-finish:hover{filter:brightness(1.08);}" +
+
+    /* 가로 드래그 스크롤 (기획서 §10-3~§10-6) */
+    ".rr-drag-wrap{position:relative;min-height:0;flex:1;}" +
+    ".rr-drag-scroll{height:100%;overflow-x:auto;overflow-y:hidden;cursor:grab;user-select:none;" +
+      "-webkit-overflow-scrolling:touch;touch-action:pan-x;scrollbar-width:none;padding:.3cqh .2cqw;box-sizing:border-box;}" +
+    ".rr-drag-scroll::-webkit-scrollbar{display:none;}" +
+    ".rr-drag-scroll.rr-dragging{cursor:grabbing;}" +
+    ".rr-fade{position:absolute;top:0;bottom:0;width:3cqh;pointer-events:none;opacity:0;transition:opacity .15s ease;}" +
+    ".rr-fade-left{left:0;background:linear-gradient(90deg,#efe0bd,rgba(239,224,189,0));}" +
+    ".rr-fade-right{right:0;background:linear-gradient(270deg,#efe0bd,rgba(239,224,189,0));}" +
+    ".rr-drag-wrap.rr-scrollable .rr-fade{opacity:1;}" +
+    ".rr-empty-text{width:100%;text-align:center;font-size:1.6cqh;font-weight:800;color:#8a7350;padding:.8cqh 0;}" +
+
+    ".rr-route-viewport{display:flex;flex-wrap:nowrap;align-items:center;gap:.6cqw;}" +
+    ".rr-route-node{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:.4cqh;width:7.6cqh;}" +
+    ".rr-route-node-icon{width:5.6cqh;height:5.6cqh;border-radius:50%;display:grid;place-items:center;font-size:2.6cqh;" +
+      "background:linear-gradient(160deg,#fff7d7,#f6e6bf);border:.16cqh solid rgba(150,110,60,.45);" +
+      "box-shadow:0 .4cqh .9cqh rgba(0,0,0,.18);}" +
+    ".rr-route-node-label{font-size:1.15cqh;font-weight:800;color:#5a4326;text-align:center;line-height:1.2;}" +
+    ".rr-route-arrow{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:2.2cqh;color:#b98a3c;font-size:1.6cqh;font-weight:900;}" +
+
+    ".rr-item-viewport{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:.9cqw;}" +
+    ".rr-item-card{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:.35cqh;" +
+      "width:7.4cqh;}" +
+    ".rr-item-card-icon{width:5cqh;height:5cqh;border-radius:50%;display:grid;place-items:center;font-size:2.4cqh;" +
+      "background:linear-gradient(160deg,#fff7d7,#f6e6bf);border:.16cqh solid rgba(150,110,60,.45);" +
+      "box-shadow:0 .4cqh .9cqh rgba(0,0,0,.18);}" +
+    ".rr-item-card-name{font-size:1.1cqh;font-weight:800;color:#5a4326;text-align:center;line-height:1.2;}" +
+    ".rr-item-card-count{position:absolute;top:-.4cqh;right:.4cqh;min-width:2.2cqh;height:2.2cqh;padding:0 .3cqh;" +
+      "border-radius:1.1cqh;background:#a5322a;color:#fbe9c8;font-size:1.1cqh;font-weight:900;" +
+      "display:grid;place-items:center;box-shadow:0 .2cqh .5cqh rgba(0,0,0,.3);}" +
+
     "@media (max-width:900px){" +
       ".rr-frame{width:94%;height:84%;}" +
       ".rr-character-wrap{width:56%;height:56%;left:50%;transform:translateX(-50%);bottom:auto;top:2%;}" +
@@ -339,6 +631,8 @@ function ensureRrStyles(){
       ".rr-choice-panel{right:5%;left:5%;width:auto;top:auto;bottom:3%;height:56%;padding-top:3.6cqh;}" +
       ".rr-choice-cards{flex-direction:column;gap:1cqh;}" +
       ".rr-summary-panel{left:5%;right:5%;width:auto;transform:none;top:4%;bottom:4%;min-width:0;}" +
+      ".rr-detail-panel{left:4%;right:4%;width:auto;transform:none;top:3%;bottom:3%;min-width:0;padding:3.6cqh 2.4cqw 2cqh;}" +
+      ".rr-detail-grid{grid-template-columns:1fr;}" +
     "}";
   document.head.appendChild(style);
 }
