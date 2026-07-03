@@ -8,6 +8,7 @@
 .eff-row{display:flex; align-items:center; gap:.7cqw; padding:.55cqh 0;}
 .eff-ico{width:3.4cqh; height:3.4cqh; border-radius:.9cqh; flex:none; display:grid; place-items:center;
   font-size:2cqh; background:linear-gradient(160deg,#eaf3ff,#d6e8ff); border:0.15cqh solid var(--c-panel-line);}
+.eff-ico img{width:100%; height:100%; object-fit:contain; display:block;}
 .eff-txt b{font-size:1.7cqh;} .eff-txt span{display:block; font-size:1.35cqh; color:var(--c-ink-soft);}
 .eff-empty{font-size:1.6cqh; color:var(--c-ink-soft); text-align:center; padding:1cqh 0;}
 

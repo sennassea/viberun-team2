@@ -100,6 +100,12 @@ function normalizeStatusDataFixedMapping(){
   };
 }
 normalizeStatusDataFixedMapping();
+Object.assign(STATUS_DATA.agitation, { iconImage: "assets/status_icons/agitation.png" });
+Object.assign(STATUS_DATA.mark, { iconImage: "assets/status_icons/mark.png" });
+Object.assign(STATUS_DATA.fracture, { iconImage: "assets/status_icons/fracture.png" });
+Object.assign(STATUS_DATA.recollection, { iconImage: "assets/status_icons/recollection.png" });
+if(STATUS_DATA.anxiety) Object.assign(STATUS_DATA.anxiety, { iconImage: "assets/status_icons/anxiety.png" });
+if(STATUS_DATA.lethargy) Object.assign(STATUS_DATA.lethargy, { iconImage: "assets/status_icons/lethargy.png" });
 
 const MAX_ENERGY        = 3;
 const ENERGY_SLOT_COUNT = 8;
@@ -2196,16 +2202,18 @@ function resourceCount(value){
 
 function renderEffects(){
   const rows = [];
-  if(S.player.block  > 0)        rows.push(eff("🛡️","마음의 결계","결계 "+S.player.block));
-  if(S.player.weak   > 0)        rows.push(eff("🌀","동요","정화 피해 25% 감소 ("+S.player.weak+"턴)"));
-  if((S.player.fracture||0) > 0) rows.push(eff("💔","균열","받는 정화 피해 25% 증가 ("+S.player.fracture+"턴)"));
-  if((S.player.anxiety||0)  > 0) rows.push(eff("💭","불안","다음 턴 주문 뽑기 -1 ("+S.player.anxiety+"턴)"));
-  if((S.player.lethargy||0) > 0) rows.push(eff("🌫️","무기력","다음 턴 정신력 -1 ("+S.player.lethargy+"턴)"));
-  rows.push(eff("💚","치유의 향기","회복 주문 보유"));
+  if(S.player.block  > 0)        rows.push(eff("assets/status_icons/block.png","마음의 결계","결계 "+S.player.block));
+  if(S.player.weak   > 0)        rows.push(eff("assets/status_icons/agitation.png","동요","정화 피해 25% 감소 ("+S.player.weak+"턴)"));
+  if((S.player.fracture||0) > 0) rows.push(eff("assets/status_icons/fracture.png","균열","받는 정화 피해 25% 증가 ("+S.player.fracture+"턴)"));
+  if((S.player.anxiety||0)  > 0) rows.push(eff("assets/status_icons/anxiety.png","불안","다음 턴 주문 뽑기 -1 ("+S.player.anxiety+"턴)"));
+  if((S.player.lethargy||0) > 0) rows.push(eff("assets/status_icons/lethargy.png","무기력","다음 턴 정신력 -1 ("+S.player.lethargy+"턴)"));
   $("#effList").innerHTML = rows.join("") || '<div class="eff-empty">효과 없음</div>';
 }
 function eff(ico, name, sub){
-  return '<div class="eff-row"><div class="eff-ico">'+ico+'</div>'
+  const iconHtml = typeof ico === "string" && ico.indexOf("assets/") === 0
+    ? '<img src="'+escapeHtml(ico)+'" alt="'+escapeHtml(name)+'">'
+    : ico;
+  return '<div class="eff-row"><div class="eff-ico">'+iconHtml+'</div>'
        +'<div class="eff-txt"><b>'+name+'</b><span>'+sub+'</span></div></div>';
 }
 
