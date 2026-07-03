@@ -49,6 +49,20 @@
       maxStack: 99,
       showOnEnemy: true
     },
+    recollection: {
+      id: "recollection",
+      name: "회상",
+      shortName: "회상",
+      icon: "🕯️",
+      iconImage: "",
+      color: "#b58cff",
+      description: "해제되기 전까지 매 턴마다 수치만큼 정화 피해를 받습니다.",
+      decayTiming: "afterEnemyAction",
+      decayAmount: 1,
+      decayTimingText: "대상 턴 종료 시 1 감소합니다.",
+      maxStack: 99,
+      showOnEnemy: true
+    },
     anxiety: {
       id: "anxiety",
       legacyKey: "anxiety",
