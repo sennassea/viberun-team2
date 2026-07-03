@@ -357,9 +357,24 @@
       ".card-detail-card .deck-viewer-count{position:absolute;top:.7cqh;right:.7cqw;min-width:3.7cqh;height:3.1cqh;display:grid;place-items:center;border-radius:1.55cqh;background:var(--c-gold);color:#fff;font-size:1.65cqh;font-weight:900;}" +
       ".card-detail-card .cost{position:absolute;top:-1cqh;left:-.9cqw;width:4.8cqh;height:4.8cqh;border-radius:50%;display:grid;place-items:center;font-size:2.45cqh;font-weight:900;color:#fff;background:radial-gradient(circle at 35% 30%,#bfe6ff,#3f8fe0 70%);border:.25cqh solid #eaf6ff;box-shadow:0 0 .8cqh rgba(80,170,255,.7);}" +
       ".card-detail-card .cname{font-size:2.35cqh;font-weight:900;margin-top:.3cqh;padding:0 2cqh;text-align:center;}" +
-      ".card-detail-card .art{width:100%;height:16cqh;margin:1cqh 0;border-radius:1.2cqh;display:grid;place-items:center;font-size:9cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.18cqh solid #d6e6f5;}" +
+      ".card-detail-card .art{width:100%;height:16cqh;margin:1cqh 0;border-radius:1.2cqh;display:grid;place-items:center;font-size:9cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.18cqh solid #d6e6f5;overflow:hidden;}" +
+      ".card-detail-card .art img{width:100%;height:100%;object-fit:cover;display:block;}" +
       ".card-detail-card .type{font-size:1.55cqh;font-weight:800;color:#fff;padding:.15cqh .9cqw;border-radius:.8cqh;margin-bottom:.8cqh;}" +
       ".card-detail-card .desc{font-size:1.7cqh;text-align:center;color:var(--c-ink);line-height:1.35;white-space:pre-line;}" +
+      ".deck-viewer-card.card-frame-card,.card-detail-card.card-frame-card{aspect-ratio:2/3;padding:0;border:0;overflow:hidden;background:#f5efe4;}" +
+      ".deck-viewer-card.card-frame-card{min-height:25cqh;}" +
+      ".card-detail-card.card-frame-card{height:45cqh;}" +
+      ".deck-viewer-card.card-frame-card .card-art-layer,.card-detail-card.card-frame-card .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);pointer-events:none;}" +
+      ".deck-viewer-card.card-frame-card .card-art-layer img,.card-detail-card.card-frame-card .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none;}" +
+      ".deck-viewer-card.card-frame-card .card-frame-layer,.card-detail-card.card-frame-card .card-frame-layer{position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:fill;pointer-events:none;}" +
+      ".deck-viewer-card.card-frame-card .card-text-layer,.card-detail-card.card-frame-card .card-text-layer{position:absolute;inset:0;z-index:3;pointer-events:none;font-weight:900;color:#10243f;}" +
+      ".deck-viewer-card.card-frame-card .card-cost-text{position:absolute;left:6.2%;top:2.4%;width:18.8%;height:13.9%;display:grid;place-items:center;color:#2b3848;font-size:2.25cqh;line-height:1;text-shadow:0 .08cqh 0 rgba(255,255,255,.95);}" +
+      ".deck-viewer-card.card-frame-card .card-name-text{position:absolute;left:26%;right:6.5%;top:5.9%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.35cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}" +
+      ".deck-viewer-card.card-frame-card .card-desc-text{position:absolute;left:12.5%;right:12.5%;top:74.2%;bottom:7.4%;display:block;text-align:center;font-size:1.02cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}" +
+      ".card-detail-card.card-frame-card .card-cost-text{position:absolute;left:6.2%;top:2.4%;width:18.8%;height:13.9%;display:grid;place-items:center;color:#2b3848;font-size:3.4cqh;line-height:1;text-shadow:0 .08cqh 0 rgba(255,255,255,.95);}" +
+      ".card-detail-card.card-frame-card .card-name-text{position:absolute;left:26%;right:6.5%;top:5.9%;height:10%;display:grid;place-items:center;text-align:center;font-size:2.15cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}" +
+      ".card-detail-card.card-frame-card .card-desc-text{position:absolute;left:12.5%;right:12.5%;top:74.2%;bottom:7.4%;display:block;text-align:center;font-size:1.7cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}" +
+      ".deck-viewer-card.card-frame-card .card-hit-layer,.card-detail-card.card-frame-card .card-hit-layer{position:absolute;inset:0;z-index:4;background:transparent;cursor:inherit;}" +
       ".card-detail-upgrade-toggle{height:4.2cqh;min-width:13cqw;border-radius:2.1cqh;border:.22cqh solid var(--c-gold);background:linear-gradient(180deg,#fff8d9,#ffe59a);color:#7a5510;font-size:1.8cqh;font-weight:900;cursor:pointer;box-shadow:0 .5cqh 1cqh rgba(80,60,20,.16);}" +
       ".card-detail-upgrade-toggle:hover,.card-detail-upgrade-toggle:focus-visible{outline:none;transform:translateY(-.2cqh);box-shadow:0 .7cqh 1.3cqh rgba(80,60,20,.22);}" +
       ".card-detail-upgrade-toggle.active{background:linear-gradient(180deg,#eaf7ff,#cfe9ff);border-color:var(--c-blue);color:var(--c-blue-deep);}" +
@@ -754,13 +769,9 @@
         '<div class="codex-locked-text">미발견 주문</div>' +
       '</button>';
     }
-    return '<button type="button" class="deck-viewer-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="' + entry.count + '">' +
+    return '<button type="button" class="deck-viewer-card card-frame-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="' + entry.count + '">' +
       '<div class="deck-viewer-count">x' + entry.count + '</div>' +
-      '<div class="cost">' + card.cost + '</div>' +
-      '<div class="cname">' + escapeHtml(card.name) + '</div>' +
-      '<div class="art">' + escapeHtml(card.emoji) + '</div>' +
-      '<div class="type ' + escapeAttr(card.type) + '">' + escapeHtml(getTypeLabel(card.type)) + '</div>' +
-      '<div class="desc">' + escapeHtml(card.desc) + '</div>' +
+      cardFaceHtml(card) +
     '</button>';
   }
 
@@ -825,13 +836,9 @@
 
   function detailCardFaceHtml(entry, displayCard, isUpgrade){
     const card = displayCard || entry.card;
-    return '<div class="card-detail-card cost-' + escapeAttr(card.type) + (isUpgrade ? ' upgraded' : '') + '">' +
+    return '<div class="card-detail-card card-frame-card cost-' + escapeAttr(card.type) + (isUpgrade ? ' upgraded' : '') + '">' +
       '<div class="deck-viewer-count">x' + entry.count + '</div>' +
-      '<div class="cost">' + escapeHtml(card.cost) + '</div>' +
-      '<div class="cname">' + escapeHtml(card.name) + '</div>' +
-      '<div class="art">' + escapeHtml(card.emoji) + '</div>' +
-      '<div class="type ' + escapeAttr(card.type) + '">' + escapeHtml(getTypeLabel(card.type)) + '</div>' +
-      '<div class="desc">' + escapeHtml(card.desc) + '</div>' +
+      cardFaceHtml(card) +
     '</div>';
   }
 
@@ -944,6 +951,34 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function cardArtHtml(card){
+    if(card && card.art){
+      return '<img src="' + escapeAttr(card.art) + '" alt="' + escapeAttr(card.name || "") + '">';
+    }
+    return escapeHtml(card && card.emoji ? card.emoji : "?");
+  }
+
+  function cardFramePath(card){
+    if(card && card.type === "status"){
+      return "assets/card_frames/card-frame-status.png";
+    }
+    const type = card && ["attack", "defense", "skill"].includes(card.type) ? card.type : "skill";
+    const rarity = card && card.rarity ? card.rarity : "common";
+    return "assets/card_frames/card-frame-" + type + "-" + rarity + ".png";
+  }
+
+  function cardFaceHtml(card){
+    const safeCard = card || {};
+    return '<div class="card-art-layer">' + cardArtHtml(safeCard) + '</div>' +
+      '<img class="card-frame-layer" src="' + escapeAttr(cardFramePath(safeCard)) + '" alt="" aria-hidden="true" draggable="false">' +
+      '<div class="card-text-layer">' +
+        '<div class="card-cost-text">' + escapeHtml(safeCard.cost ?? "") + '</div>' +
+        '<div class="card-name-text">' + escapeHtml(safeCard.name || "") + '</div>' +
+        '<div class="card-desc-text">' + escapeHtml(safeCard.desc || "") + '</div>' +
+      '</div>' +
+      '<div class="card-hit-layer" aria-hidden="true"></div>';
   }
 
   function escapeAttr(value){

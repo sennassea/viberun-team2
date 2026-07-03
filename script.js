@@ -777,6 +777,34 @@ function escapeHtml(value){
     .replace(/'/g, "&#39;");
 }
 
+function cardArtHtml(card){
+  if(card && card.art){
+    return '<img src="'+escapeHtml(card.art)+'" alt="'+escapeHtml(card.name || "")+'">';
+  }
+  return escapeHtml(card && card.emoji ? card.emoji : "?");
+}
+
+function cardFramePath(card){
+  if(card && card.type === "status"){
+    return "assets/card_frames/card-frame-status.png";
+  }
+  const type = card && ["attack", "defense", "skill"].includes(card.type) ? card.type : "skill";
+  const rarity = card && card.rarity ? card.rarity : "common";
+  return "assets/card_frames/card-frame-" + type + "-" + rarity + ".png";
+}
+
+function cardFaceHtml(card){
+  const safeCard = card || {};
+  return '<div class="card-art-layer">' + cardArtHtml(safeCard) + '</div>' +
+    '<img class="card-frame-layer" src="' + escapeHtml(cardFramePath(safeCard)) + '" alt="" aria-hidden="true" draggable="false">' +
+    '<div class="card-text-layer">' +
+      '<div class="card-cost-text">' + escapeHtml(safeCard.cost ?? "") + '</div>' +
+      '<div class="card-name-text">' + escapeHtml(safeCard.name || "") + '</div>' +
+      '<div class="card-desc-text">' + escapeHtml(safeCard.desc || "") + '</div>' +
+    '</div>' +
+    '<div class="card-hit-layer" aria-hidden="true"></div>';
+}
+
 function statusTooltipText(statusId, count){
   const data = STATUS_DATA[statusId] || {};
   const lines = [];
@@ -1596,13 +1624,8 @@ function renderRewardOverlay(keys){
 function rewardCardHtml(key){
   const c = CARD_DB[key];
   if(!c) return "";
-  return '<button type="button" class="reward-card cost-'+c.type+'" data-card="'+key+'">' +
-    '<div class="cost">'+c.cost+'</div>' +
-    '<div class="cname">'+c.name+'</div>' +
-    '<div class="art">'+c.emoji+'</div>' +
-    '<div class="type '+c.type+'">'+typeLabel(c.type)+'</div>' +
-    '<div class="reward-meta">'+(c.attr||"-")+' · '+(c.rarity||"common")+'</div>' +
-    '<div class="desc">'+c.desc+'</div>' +
+  return '<button type="button" class="reward-card card-frame-card cost-'+c.type+'" data-card="'+key+'">' +
+    cardFaceHtml(c) +
   '</button>';
 }
 
@@ -2294,14 +2317,9 @@ function renderHand(){
   S.hand.forEach((key, i) => {
     const c  = CARD_DB[key];
     const el = document.createElement("div");
-    el.className     = "card cost-"+c.type;
+    el.className     = "card card-frame-card cost-"+c.type;
     el.dataset.index = i;
-    el.innerHTML =
-      '<div class="cost">'+c.cost+'</div>'+
-      '<div class="cname">'+c.name+'</div>'+
-      '<div class="art">'+c.emoji+'</div>'+
-      '<div class="type '+c.type+'">'+typeLabel(c.type)+'</div>'+
-      '<div class="desc">'+c.desc+'</div>';
+    el.innerHTML = cardFaceHtml(c);
     attachDrag(el, i);
     h.appendChild(el);
   });
@@ -2388,10 +2406,8 @@ let dragState = null;
 function beginDrag(cardEl, index){
   const c     = CARD_DB[S.hand[index]];
   const clone = $("#dragClone");
-  clone.innerHTML = '<div class="card cost-'+c.type+'" style="width:100%;height:100%">'+
-    '<div class="cost">'+c.cost+'</div><div class="cname">'+c.name+'</div>'+
-    '<div class="art">'+c.emoji+'</div><div class="type '+c.type+'">'+typeLabel(c.type)+'</div>'+
-    '<div class="desc">'+c.desc+'</div></div>';
+  clone.innerHTML = '<div class="card card-frame-card cost-'+c.type+'" style="width:100%;height:100%">'+
+    cardFaceHtml(c) + '</div>';
   if(c.target==="enemy"){
     cardEl.classList.add("targeting");
   } else {
@@ -2510,6 +2526,15 @@ function injectRewardStyles(){
     .reward-meta{font-size:1.25cqh;font-weight:800;color:var(--c-ink-soft);margin-bottom:.4cqh;}
     .reward-card .desc{font-size:1.45cqh;line-height:1.35;white-space:pre-line;}
     .reward-skip{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#fff;cursor:pointer;color:var(--c-ink-soft);}
+    .reward-card.card-frame-card{aspect-ratio:2/3;min-height:0;height:32cqh;padding:0;border:0;overflow:hidden;background:#f5efe4;}
+    .reward-card.card-frame-card .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);pointer-events:none;}
+    .reward-card.card-frame-card .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none;}
+    .reward-card.card-frame-card .card-frame-layer{position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:fill;pointer-events:none;}
+    .reward-card.card-frame-card .card-text-layer{position:absolute;inset:0;z-index:3;pointer-events:none;font-weight:900;color:#10243f;}
+    .reward-card.card-frame-card .card-cost-text{position:absolute;left:6.2%;top:2.4%;width:18.8%;height:13.9%;display:grid;place-items:center;color:#2b3848;font-size:3cqh;line-height:1;text-shadow:0 .08cqh 0 rgba(255,255,255,.95);}
+    .reward-card.card-frame-card .card-name-text{position:absolute;left:26%;right:6.5%;top:5.9%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.85cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}
+    .reward-card.card-frame-card .card-desc-text{position:absolute;left:12.5%;right:12.5%;top:74.2%;bottom:7.4%;display:block;text-align:center;font-size:1.25cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}
+    .reward-card.card-frame-card .card-hit-layer{position:absolute;inset:0;z-index:4;background:transparent;cursor:inherit;}
     #battleVictoryOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.64);backdrop-filter:blur(.5cqh);}
     #battleVictoryOverlay.show{display:grid;}
     .victory-reward-panel{width:min(62cqw,82cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.95);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;display:flex;flex-direction:column;gap:2cqh;}

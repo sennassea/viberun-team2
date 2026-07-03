@@ -107,6 +107,59 @@ if(window.BOHYUN_LIFE_SYSTEM && typeof window.BOHYUN_LIFE_SYSTEM.getStatusCardDb
   Object.assign(CARD_DB, window.BOHYUN_LIFE_SYSTEM.getStatusCardDb());
 }
 
+const CARD_ART_BASE = "assets/card_art/";
+const CARD_ART_FILES = {
+  altar_preparation: "altar_preparation.jpg",
+  barrier_charge: "barrier_charge.jpg",
+  bell_shake: "bell_shake.jpg",
+  breath_order: "breath_order.jpg",
+  calm_breath: "calm_breath.jpg",
+  clear_mind_art: "clear_mind_art.jpg",
+  collapsed_ward: "collapsed_ward.jpg",
+  deep_sigh: "deep_sigh.jpg",
+  exorcism_talisman: "exorcism_talisman.jpg",
+  fast_chanting: "fast_chanting.jpg",
+  five_direction_barrier: "five_direction_barrier.jpg",
+  folded_ward: "folded_ward.jpg",
+  guardian_script: "guardian_script.jpg",
+  guardian_talisman: "guardian_talisman.jpg",
+  guiding_rite: "guiding_rite.jpg",
+  intrusive_thought: "distraction.jpg",
+  hesitation: "hesitation.jpg",
+  last_struggle: "last_struggle.jpg",
+  lotus_crossing: "lotus_crossing.jpg",
+  lullaby_chant: "lullaby_chant.jpg",
+  memory_doll: "memory_doll.jpg",
+  mind_collapse: "mind_collapse.jpg",
+  mind_training: "mind_training.jpg",
+  path_of_light: "path_of_light.jpg",
+  purification_wave: "purification_wave.jpg",
+  purifying_talisman: "purifying_talisman.jpg",
+  quiet_steps: "quiet_steps.jpg",
+  regret: "regret.jpg",
+  release_touch: "release_touch.jpg",
+  requiem_script: "requiem_script.jpg",
+  returning_wall: "returning_wall.jpg",
+  reverse_barrier: "reverse_barrier.jpg",
+  rosary_throw: "rosary_throw.jpg",
+  shaking_heart: "shaking_heart.jpg",
+  short_meditation: "short_meditation.jpg",
+  silent_ward: "silent_ward.jpg",
+  small_passing_rite: "small_passing_rite.jpg",
+  soul_passing: "soul_passing.jpg",
+  spirit_guidance: "spirit_guidance.jpg",
+  tearful_memory: "tearful_memory.jpg",
+  uneasy_silence: "uneasy_silence.jpg",
+  unread_letter: "unread_letter.jpg",
+  unsent_words: "unsent_words.jpg"
+};
+
+Object.entries(CARD_ART_FILES).forEach(([key, file]) => {
+  if(CARD_DB[key]){
+    CARD_DB[key].art = CARD_ART_BASE + file;
+  }
+});
+
 const BASE_STARTER_DECK = [
   "rosary_throw","rosary_throw","rosary_throw","rosary_throw",
   "bell_shake","bell_shake",
