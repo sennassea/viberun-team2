@@ -12,7 +12,7 @@
   let closeMapWrapped = false;
   let tutorialMapIntroActive = false;
   let tutorialMapNodeSelectActive = false;
-  const MAP_INTRO_DIALOGUE_IDS = ["M-001", "M-002", "M-003", "M-004", "M-005", "M-006", "M-007", "M-008", "M-009", "M-010", "M-011", "M-012", "M-013"];
+  const MAP_INTRO_DIALOGUE_IDS = ["M-001", "M-002", "M-003", "M-004", "M-005", "M-006", "M-007", "M-008", "M-009", "M-010", "M-011", "M-012", "M-013", "M-014", "M-015"];
   const MAP_LEGEND_DIALOGUE_TYPES = {
     "M-008": "enemy",
     "M-009": "elite",
@@ -374,7 +374,7 @@
     let node = null;
     if(dialogueId === "M-002" || dialogueId === "M-003"){
       node = overlay.querySelector("#mapCanvas .mnode-current");
-    } else if(dialogueId === "M-004"){
+    } else if(dialogueId === "M-004" || dialogueId === "M-014" || dialogueId === "M-015"){
       node = overlay.querySelector('#mapCanvas [data-nodeid="tutorial_battle"]');
     } else if(dialogueId === "M-005"){
       const path = overlay.querySelector("#mapCanvas .mpath");
@@ -434,6 +434,44 @@
     item.classList.add("tutorial-map-focus-legend-item");
   }
 
+  function showTutorialMapBattleTransition(stageIdx){
+    const dialogue = getTutorialMapDialogue("M-016");
+    if(!dialogue){
+      enterTutorialBattleFromMap(stageIdx);
+      return;
+    }
+
+    tutorialMapIntroActive = true;
+    disableTutorialMapNodeSelect();
+    showTutorialMapClickBlocker();
+    clearTutorialMapHighlight();
+    applyTutorialMapHighlight("M-015");
+    setTutorialMapStep(dialogue.id);
+    renderTutorialMapDialogue(dialogue, () => {
+      enterTutorialBattleFromMap(stageIdx);
+    });
+  }
+
+  function enterTutorialBattleFromMap(stageIdx){
+    tutorialMapIntroActive = false;
+    disableTutorialMapNodeSelect();
+    removeTutorialMapClickBlocker();
+    removeTutorialMapDialogue();
+    clearTutorialMapHighlight();
+
+    if(window.MAP_STATE){
+      window.MAP_STATE.currentStage = stageIdx;
+      window.MAP_STATE.proceedMode = false;
+      window.MAP_STATE.startMapMode = false;
+    }
+    tutorialMapActive = false;
+    const overlay = document.getElementById("mapOverlay");
+    if(overlay) overlay.remove();
+    if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.startTutorialBattle === "function"){
+      window.TUTORIAL_BATTLE.startTutorialBattle();
+    }
+  }
+
   function setTutorialMapStep(step){
     if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.setTutorialStep === "function"){
       window.TUTORIAL_BATTLE.setTutorialStep(step);
@@ -461,19 +499,7 @@
       if(tutorialMapActive){
         if(tutorialMapIntroActive) return;
         console.log("[Tutorial] 튜토리얼 전투 노드 클릭", stageIdx);
-        disableTutorialMapNodeSelect();
-        clearTutorialMapHighlight();
-        if(window.MAP_STATE){
-          window.MAP_STATE.currentStage = stageIdx;
-          window.MAP_STATE.proceedMode = false;
-          window.MAP_STATE.startMapMode = false;
-        }
-        tutorialMapActive = false;
-        const overlay = document.getElementById("mapOverlay");
-        if(overlay) overlay.remove();
-        if(window.TUTORIAL_BATTLE && typeof window.TUTORIAL_BATTLE.startTutorialBattle === "function"){
-          window.TUTORIAL_BATTLE.startTutorialBattle();
-        }
+        showTutorialMapBattleTransition(stageIdx);
         return;
       }
       return originalStartStage.apply(this, arguments);

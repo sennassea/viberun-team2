@@ -14,7 +14,7 @@
     tutorialBattleExitTarget: "newbieStart",
     tutorialEncounterId: "stage_tutorial_child_spirit"
   };
-  const BATTLE_INTRO_DIALOGUE_IDS = ["W-001", "W-002", "W-003"];
+  const BATTLE_INTRO_DIALOGUE_IDS = ["W-001", "W-002", "W-003", "W-004", "W-005", "W-006", "W-007", "W-008"];
   const BATTLE_UI_GUIDE_STEPS = [
     { id: "W-009", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"] },
     { id: "W-015", target: "#energy" },
