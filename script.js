@@ -71,7 +71,8 @@ normalizeStatusDataFixedMapping();
 const MAX_ENERGY        = 3;
 const ENERGY_SLOT_COUNT = 8;
 const DRAW_PER_TURN     = 5;
-const STARTING_GOLD     = 120;
+const BALANCE_CONFIG     = window.BOHYUN_BALANCE || {};
+const STARTING_GOLD     = Number.isFinite(BALANCE_CONFIG.startGold) ? BALANCE_CONFIG.startGold : 100;
 const STARTING_MOON_SHARDS = 0;
 const BASIC_SUMMON_MONSTER_BY_THEME = {
   hospital: "nurse_spirit",
@@ -811,8 +812,24 @@ function playCard(handIndex, targetEnemy){
         gainPlayerBlock(e.v); break;
       case "damageByBlockRatio":
         applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.player.block || 0) * e.v), targetEnemy), S.player.weak); break;
+      case "damageByBlockRatioConsume": {
+        const currentBlock = Number.isFinite(S.player.block) ? Math.max(0, S.player.block) : 0;
+        const ratio = Number.isFinite(e.v) ? e.v : 0;
+        const damage = Math.floor(currentBlock * ratio);
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(damage, targetEnemy), S.player.weak);
+        const consumeRatio = Number.isFinite(e.consumeRatio) ? e.consumeRatio : 0.5;
+        const consumed = Math.ceil(currentBlock * consumeRatio);
+        S.player.block = Math.max(0, currentBlock - consumed);
+        break;
+      }
       case "damageByBlockGainedThisTurn":
         applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.blockGainedThisTurn || 0) * e.v), targetEnemy), S.player.weak); break;
+      case "damageByWeak": {
+        const weak = targetEnemy ? Math.max(0, targetEnemy.weak || 0) : 0;
+        const amount = Math.floor((e.base || 0) + weak * (e.per || 0));
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
+        break;
+      }
       case "blockGainPlusThisTurn":
         gainPlayerBlock((e.v || 0) + (S.blockGainedThisTurn || 0)); break;
       case "draw":
@@ -896,7 +913,10 @@ function nodeClear(){
 
   const nodeType = S.battleNodeType || "enemy";
   applyRelicTrigger("battleEnd");
-  if(nodeType==="boss")  return endGame("win");   // 보스 클리어 → 게임 승리 (기획서 §6)
+  if(nodeType==="boss"){
+    grantBattleGoldReward();
+    return endGame("win");
+  }
   if(nodeType==="elite") grantRelic();             // 엘리트 → 유물 추가 (기획서 §10)
   openBattleVictoryReward();
 }
@@ -925,6 +945,35 @@ function proceedToMap(){
   if(typeof openMap==="function") openMap();
 }
 
+function getBalanceBattleGold(nodeType){
+  const table = (BALANCE_CONFIG && BALANCE_CONFIG.battleGold) || {};
+  const key = nodeType === "boss" ? "boss" : (nodeType === "elite" ? "elite" : "enemy");
+  const rule = table[key] || {};
+  const fallback = key === "boss" ? 100 : (key === "elite" ? 45 : 20);
+  const amount = Number.isFinite(rule.amount) ? rule.amount : fallback;
+  const min = Number.isFinite(rule.min) ? rule.min : 0;
+  const max = Number.isFinite(rule.max) ? rule.max : Number.MAX_SAFE_INTEGER;
+  return Math.max(min, Math.min(max, Math.floor(amount)));
+}
+
+function getBattleVictoryGoldAmount(){
+  const override = S && Number.isFinite(S.battleVictoryGoldOverride)
+    ? Math.floor(S.battleVictoryGoldOverride)
+    : null;
+  if(override !== null) return Math.max(0, override);
+  return getBalanceBattleGold(S && S.battleNodeType);
+}
+
+function grantBattleGoldReward(){
+  const amount = getBattleVictoryGoldAmount();
+  if(amount <= 0) return 0;
+  S.gold = (typeof S.gold === "number" ? S.gold : STARTING_GOLD) + amount;
+  syncRunStateFromCombat();
+  renderHud();
+  toast("골드 +" + amount);
+  return amount;
+}
+
 function getPotionSlotLimit(){
   if(typeof window.POTION_SLOT_LIMIT === "number") return window.POTION_SLOT_LIMIT;
   if(typeof POTION_SLOT_LIMIT === "number") return POTION_SLOT_LIMIT;
@@ -950,12 +999,15 @@ function isVictoryRewardDone(id){
   return !!(S && S.victoryRewardDone && S.victoryRewardDone[id]);
 }
 
-const BATTLE_VICTORY_BASE_REWARDS = [
-  { id:"gold", name:"복채", icon:"복", value:"+20", amount:20, doneText:"수령 완료" },
-  { id:"card", name:"주문 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
-];
 const BATTLE_VICTORY_RELIC_CHANCE = 0.5;
 const BATTLE_VICTORY_POTION_CHANCE = 0.5;
+function createBattleVictoryBaseRewards(){
+  const gold = getBattleVictoryGoldAmount();
+  return [
+    { id:"gold", name:"복채", icon:"복", value:"+" + gold, amount:gold, doneText:"수령 완료" },
+    { id:"card", name:"주문 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
+  ];
+}
 const BATTLE_VICTORY_POTION_CANDIDATES = (typeof window.POTION_DB !== "undefined") ? window.POTION_DB : [
   { id:"cheongsim_pill", name:"청심환", icon:"藥", emoji:"💊", desc:"정신력을 18 회복합니다.", type:"heal", effect:"healPlayerHp", value:18, target:"player" },
   { id:"focus_talisman", name:"집중부", icon:"符", emoji:"🔖", desc:"이번 턴 정신력을 1 회복합니다.", type:"energy", effect:"gainEnergy", value:1, target:"player" },
@@ -1066,7 +1118,7 @@ function renderBattleVictoryOverlay(){
 
 function getBattleVictoryRewards(){
   if(!S.victoryRewards){
-    S.victoryRewards = BATTLE_VICTORY_BASE_REWARDS.slice();
+    S.victoryRewards = createBattleVictoryBaseRewards();
     const relicReward = buildBattleVictoryOptionalReward("relic", BATTLE_VICTORY_RELIC_CHANCE);
     const potionReward = buildBattleVictoryOptionalReward("potion", BATTLE_VICTORY_POTION_CHANCE);
     if(relicReward) S.victoryRewards.push(relicReward);
@@ -1153,6 +1205,7 @@ function completeBattleVictoryReward(id, host){
   if(id === "gold"){
     const reward = getBattleVictoryRewards().find(item => item.id === "gold");
     S.gold = (typeof S.gold === "number" ? S.gold : STARTING_GOLD) + ((reward && reward.amount) || 0);
+    syncRunStateFromCombat();
     renderHud();
   }
   markVictoryRewardDone(id, "수령 완료");

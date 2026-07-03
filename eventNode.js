@@ -23,7 +23,8 @@
    ========================================================================= */
 
 const EVENT_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#dock", "#hint"];
-const EVENT_RELIC_FALLBACK_GOLD = 80;
+const EVENT_BALANCE = window.BOHYUN_BALANCE || {};
+const EVENT_RELIC_FALLBACK_GOLD = EVENT_BALANCE.eventRelicFallbackGold || 70;
 const EVENT_CHOICE_ICONS = ["❤️", "🔍", "🌙", "✨"];
 
 let eventOverlayEl = null;
@@ -428,7 +429,7 @@ function selectEventChoice(choiceId){
     return;
   }
   if(combatEffect){
-    triggerEventCombat(combatEffect.combatType);
+    triggerEventCombat(combatEffect);
     return;
   }
 
@@ -761,7 +762,8 @@ function skipEventPotion(){
 }
 
 /* ── 전투 전환 ───────────────────────────────────────────────────────────── */
-function triggerEventCombat(combatType){
+function triggerEventCombat(combatEffect){
+  const combatType = combatEffect && combatEffect.combatType;
   restoreEventMapOverrides();
   closeEventOverlayOnly();
   eventState = null;
@@ -798,7 +800,12 @@ function triggerEventCombat(combatType){
 
   d.monsters.splice(0, d.monsters.length, ...mons);
   if(typeof newGame === "function") newGame();
-  if(typeof S !== "undefined" && S) S.battleNodeType = nodeType;
+  if(typeof S !== "undefined" && S){
+    S.battleNodeType = nodeType;
+    if(Number.isFinite(combatEffect && combatEffect.victoryGold)){
+      S.battleVictoryGoldOverride = Math.max(0, Math.floor(combatEffect.victoryGold));
+    }
+  }
 }
 
 window.EVENT_NODE_OPEN = openEventNode;

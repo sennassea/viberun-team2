@@ -14,10 +14,11 @@
 /* ── 화면 이용 중 감춰둘 전투 화면 요소 (restNode.js와 동일 패턴) ───────── */
 const SHOP_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#dock", "#hint"];
 
-/* ── 임시 테스트 가격 (기획서 9장 가격 권장안 기준. 정식 가격 기획 전까지 사용) ──
-   주문: 50-90 / 약병: 40-80 / 법구: 80-140 골드, 새로고침 20 골드 시작 */
-const SHOP_CARD_PRICE_BY_RARITY = { common: 50, uncommon: 70, rare: 90 };
-const SHOP_DEFAULT_CARD_PRICE   = 60;
+/* ── 상점 가격. 카드 가격은 balanceData.js에서 관리합니다. ──
+   주문: 일반 50-70 / 희귀·강력 90-130 기준, 새로고침 20 골드 시작 */
+const SHOP_BALANCE = window.BOHYUN_BALANCE || {};
+const SHOP_CARD_PRICE_BY_RARITY = SHOP_BALANCE.shopCardPriceByRarity || { common: 60, uncommon: 90, rare: 120 };
+const SHOP_DEFAULT_CARD_PRICE   = SHOP_BALANCE.shopDefaultCardPrice || 60;
 const SHOP_RELIC_PRICE = { common: 80, uncommon: 110, rare: 145 };
 
 /* 약병 DB는 potion.js의 POTION_DB를 사용합니다. */

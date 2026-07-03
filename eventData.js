@@ -90,8 +90,8 @@
           label: "선택지 C",
           desc: "약장 주변을 살펴 소액을 챙긴다.",
           outcomes: [
-            { kind: "positive", icon: "coin", text: "골드 +18", chance: 100,
-              effects: [{ type: "gold", value: 18 }] }
+            { kind: "positive", icon: "coin", text: "골드 +30", chance: 100,
+              effects: [{ type: "gold", value: 30 }] }
           ]
         }
       ]
@@ -181,8 +181,8 @@
           label: "선택지 C",
           desc: "위험 없이 주변을 탐색한다.",
           outcomes: [
-            { kind: "positive", icon: "coin", text: "골드 +22", chance: 65,
-              effects: [{ type: "gold", value: 22 }] },
+            { kind: "positive", icon: "coin", text: "골드 +30", chance: 65,
+              effects: [{ type: "gold", value: 30 }] },
             { kind: "negative", icon: "minus", text: "정신력 -5", chance: 35,
               effects: [{ type: "spirit", value: -5 }] }
           ]
@@ -536,8 +536,8 @@
           label: "기습 전투",
           desc: "이벤트를 확인하자마자 전투가 시작된다.",
           outcomes: [
-            { kind: "negative", icon: "sword", text: "일반 전투 / 승리 시 골드 +10", chance: 100,
-              effects: [{ type: "combatEvent", combatType: "normal", victoryGold: 10 }] }
+            { kind: "negative", icon: "sword", text: "일반 전투 / 승리 시 골드 +20", chance: 100,
+              effects: [{ type: "combatEvent", combatType: "normal", victoryGold: 20 }] }
           ]
         }
       ]
