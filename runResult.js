@@ -8,11 +8,12 @@
      → ③ 전투 요약 화면 → ④ 전투 상세 화면
    - 패배: 동자승 패배 연출은 아직 없으므로 결과 즉시 ③ 전투 요약 화면으로
      진입한 뒤 ④ 전투 상세 화면으로 이어진다.
-   전투 상세 화면의 "메인 메뉴로 돌아가기"는 현재 오버레이만 닫으며, 실제
-   메인 메뉴 복귀 로직은 이후 단계에서 연결한다.
+   전투 상세 화면의 "메인 메뉴로 돌아가기"는 오버레이를 닫고
+   startMenu.js의 returnToStartScreen()을 호출해 새 게임을 바로 시작하지
+   않고 시작 화면(메인 메뉴)으로 돌아간다.
    이 파일이 처리하지 못하는 결과는 endGame()의 기존 종료 UI로 폴백된다.
 
-   script.js / startBlessing.js 이후에 로드되어야 한다.
+   script.js / startMenu.js / startBlessing.js 이후에 로드되어야 한다.
    ========================================================================= */
 
 /* ── 동자승 NPC 데이터 (기획서 §5-3) ────────────────────────────────────────
@@ -309,8 +310,9 @@ function renderRunDetail(snapshot, onFinish){
 
   panelSlot.querySelector("#rrDetailFinish").addEventListener("click", (event) => {
     event.stopPropagation();
-    // 현재는 오버레이만 닫는다. 실제 메인 메뉴 복귀 로직은 다음 단계에서 연결한다.
     closeRrOverlay();
+    // 새 게임을 바로 시작하지 않고 시작 화면(메인 메뉴)으로 돌아간다 (startMenu.js).
+    if(typeof returnToStartScreen === "function") returnToStartScreen();
   });
 }
 
