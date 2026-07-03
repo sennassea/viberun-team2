@@ -113,6 +113,10 @@ const BATTLE_BACKGROUND_BY_THEME = {
     "assets/background/school_03_music_room_night.jpg"
   ]
 };
+const TUTORIAL_BATTLE_BACKGROUND = {
+  theme: "tutorial",
+  url: "assets/background/shrine_01_main.jpg"
+};
 
 let S;
 let RUN_STATE = null;
@@ -453,8 +457,9 @@ function newGame(options={}){
     battleStartApplied: false,
     // 노드 컨텍스트 (기획서 §2)
     battleStage: curStage || null,
-    battleNodeType:  curStage ? (curStage.type      || "enemy") : "enemy",
-    battlePackageId: curStage ? (curStage.packageId || null)    : null,
+    tutorialMode: !!options.tutorial,
+    battleNodeType:  options.tutorial ? "tutorial" : (curStage ? (curStage.type      || "enemy") : "enemy"),
+    battlePackageId: options.tutorial ? (options.tutorialEncounterId || "stage_tutorial_child_spirit") : (curStage ? (curStage.packageId || null)    : null),
     battleBackground: null,
     encounterCleared: false,
     firstAttackUsed: false,
@@ -479,15 +484,31 @@ function newGame(options={}){
 
 // MONSTER_DEFS(패키지 몬스터 전체)를 한 번에 전장에 배치
 function spawnPackageEnemies(){
+  const tutorialMonsters = S.tutorialMode ? getTutorialEncounterMonsters(S.battlePackageId) : null;
   const stageMonsters = S.battleStage && typeof S.battleStage.getMonsters === "function"
     ? S.battleStage.getMonsters()
     : null;
-  const defs = Array.isArray(stageMonsters) && stageMonsters.length ? stageMonsters : MONSTER_DEFS;
+  const defs = Array.isArray(tutorialMonsters) && tutorialMonsters.length
+    ? tutorialMonsters
+    : (Array.isArray(stageMonsters) && stageMonsters.length ? stageMonsters : MONSTER_DEFS);
   if(!defs.length){ S.enemies = []; S.selectedId = null; return; }
   S.enemies = defs.map((def, i) => {
     return createCombatEnemy(def, i);
   });
   S.selectedId = S.enemies[0]?.id || null;
+}
+
+function getTutorialEncounterMonsters(encounterId){
+  const data = window.BOHYUN_COMBAT_DATA;
+  if(data && typeof data.getEncounterMonsters === "function"){
+    const encounterMonsters = data.getEncounterMonsters(encounterId || "stage_tutorial_child_spirit");
+    if(encounterMonsters.length) return encounterMonsters;
+  }
+  if(data && typeof data.getMonsterById === "function"){
+    const fallbackMonster = data.getMonsterById("child_spirit");
+    if(fallbackMonster) return [fallbackMonster];
+  }
+  return [];
 }
 
 function pickBattleTheme(enemies){
@@ -517,7 +538,9 @@ function pickBattleBackground(enemies){
 function applyBattleBackground(){
   const game = document.querySelector("#game");
   if(!game) return;
-  const bg = pickBattleBackground(S.enemies);
+  const bg = S && S.tutorialMode
+    ? (S.battleBackground || { ...TUTORIAL_BATTLE_BACKGROUND })
+    : pickBattleBackground(S.enemies);
   S.battleBackground = bg;
   game.style.setProperty("--battle-bg-image", 'url("' + bg.url + '")');
   game.dataset.battleTheme = bg.theme;
@@ -1709,8 +1732,31 @@ function renderHud(){
   $("#hudMoonShard").textContent   = S.moonShards;
   $("#hudDeck").textContent        = STARTER_DECK.length;
   $("#hudTurnNum").textContent     = S.turn;
+  renderBattleProgressHud();
   renderSideItemSlots();
   renderProfileStatuses();
+}
+
+function renderBattleProgressHud(){
+  const region = document.querySelector(".progress-region");
+  const floor = document.getElementById("hudFloor");
+  const turn = document.getElementById("hudTurn");
+  if(S && S.tutorialMode){
+    if(region) region.innerHTML = '<span>튜토리얼 구역</span>';
+    if(floor) floor.style.display = "none";
+    if(turn && turn.previousElementSibling && turn.previousElementSibling.classList.contains("progress-separator")){
+      turn.previousElementSibling.style.display = "none";
+    }
+    return;
+  }
+  if(region) region.innerHTML = '<span class="progress-icon">🏥</span><span>병원</span>';
+  if(floor){
+    floor.style.display = "";
+    floor.textContent = "1F";
+  }
+  if(turn && turn.previousElementSibling && turn.previousElementSibling.classList.contains("progress-separator")){
+    turn.previousElementSibling.style.display = "";
+  }
 }
 
 function renderProfileStatuses(){
