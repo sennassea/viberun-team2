@@ -608,20 +608,18 @@ function ensureRrStyles(){
   const style = document.createElement("style");
   style.id = "runResultStyles";
   style.textContent =
-    ".rr-overlay{position:absolute;inset:0;z-index:90;display:none;align-items:center;justify-content:center;cursor:pointer;}" +
+    ".rr-overlay{position:absolute;inset:0;z-index:240;display:none;align-items:center;justify-content:center;cursor:pointer;background:transparent;}" +
     ".rr-overlay.show{display:flex;}" +
-    /* 결과 UI가 열려도 기존 우상단 메뉴(여정/보유 주문/가방/설정)는 그대로 클릭 가능해야 한다
-       (기획서 §5, §6). rr-overlay(z-index:90)보다 위, 각 메뉴 팝업(z-index:95 이상)보다는
-       아래에 오도록 z-index를 둔다. */
-    "body.result-ui-open .top-hud{z-index:92;pointer-events:auto;}" +
-    ".rr-backdrop{position:absolute;inset:0;background:transparent;pointer-events:none;}" +
+    /* 결과 연출은 전투 화면 위에 얹고, 뒤 전투 화면은 살짝 어둡게 눌러준다. */
+    "body.result-ui-open .top-hud{z-index:30;}" +
+    ".rr-backdrop{position:absolute;inset:0;background:rgba(8,10,16,.38);pointer-events:none;}" +
     ".rr-frame{position:relative;width:88%;height:76%;}" +
-    ".rr-character-wrap{position:absolute;left:2%;bottom:-2%;width:52%;height:128%;z-index:2;" +
+    ".rr-character-wrap{position:absolute;left:3%;bottom:-5%;width:50%;height:118%;z-index:2;" +
       "display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}" +
     ".rr-character-wrap img{width:100%;height:100%;object-fit:contain;object-position:bottom;" +
       "filter:drop-shadow(0 1.4cqh 2cqh rgba(0,0,0,.55));}" +
-    ".rr-character-emoji{font-size:20cqh;line-height:1;}" +
-    ".rr-dialog-panel{position:absolute;left:40%;right:4%;top:20%;bottom:8%;z-index:1;" +
+    ".rr-character-emoji{font-size:17cqh;line-height:1;}" +
+    ".rr-dialog-panel{position:absolute;left:40%;right:7%;top:24%;bottom:12%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
       "padding:3cqh 3cqw;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
@@ -641,7 +639,7 @@ function ensureRrStyles(){
     "@keyframes rrPulse{0%,100%{opacity:.5;}50%{opacity:1;}}" +
 
     /* 끝없는 여정 선택 패널 (기획서 §3-1) — 승리 연출과 동일한 rr-frame 크기를 공유한다 */
-    ".rr-choice-panel{position:absolute;left:40%;right:4%;top:13%;bottom:9%;z-index:1;" +
+    ".rr-choice-panel{position:absolute;left:40%;right:7%;top:18%;bottom:12%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;gap:1.6cqh;" +
       "padding:4.2cqh 3cqw 2.6cqh;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
@@ -761,10 +759,10 @@ function ensureRrStyles(){
 
     "@media (max-width:900px){" +
       ".rr-frame{width:94%;height:84%;}" +
-      ".rr-character-wrap{width:56%;height:56%;left:50%;transform:translateX(-50%);bottom:auto;top:2%;}" +
-      ".rr-dialog-panel{right:5%;left:5%;width:auto;top:auto;bottom:3%;height:44%;}" +
+      ".rr-character-wrap{width:52%;height:52%;left:50%;transform:translateX(-50%);bottom:auto;top:4%;}" +
+      ".rr-dialog-panel{right:7%;left:7%;width:auto;top:auto;bottom:5%;height:36%;}" +
       ".rr-badge{top:-3.4cqh;}" +
-      ".rr-choice-panel{right:5%;left:5%;width:auto;top:auto;bottom:3%;height:56%;padding-top:3.6cqh;}" +
+      ".rr-choice-panel{right:7%;left:7%;width:auto;top:auto;bottom:5%;height:48%;padding-top:3.2cqh;}" +
       ".rr-choice-cards{flex-direction:column;gap:1cqh;}" +
       ".rr-summary-panel{left:5%;right:5%;width:auto;transform:none;top:4%;bottom:4%;min-width:0;}" +
       ".rr-detail-panel{left:4%;right:4%;width:auto;transform:none;top:3%;bottom:3%;min-width:0;padding:3.6cqh 2.4cqw 2cqh;}" +
