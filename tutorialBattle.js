@@ -15,6 +15,8 @@
     tutorialEncounterId: "stage_tutorial_child_spirit"
   };
   const BATTLE_INTRO_DIALOGUE_IDS = ["W-001", "W-002", "W-003", "W-004", "W-005", "W-006", "W-007", "W-008"];
+  const BATTLE_INTRO_ENEMY_HIGHLIGHT_IDS = new Set(["W-004"]);
+  const BATTLE_ENEMY_HIGHLIGHT_SELECTOR = ".combatant.enemy:not(.dead)";
   const BATTLE_UI_GUIDE_STEPS = [
     { id: "W-009", target: [".player-info-card .hud-hp-row", ".player-info-card .hud-hpbar"] },
     { id: "W-015", target: "#energy" },
@@ -211,6 +213,7 @@
       return;
     }
     if(index >= ids.length){
+      clearTutorialBattleHighlight();
       removeTutorialBattleIntroOverlay();
       setTutorialStep("battle_intro_completed");
       console.log("tutorial battle intro completed");
@@ -224,8 +227,12 @@
       return;
     }
 
+    clearTutorialBattleHighlight();
     setTutorialStep(dialogue.id);
-    renderTutorialBattleIntroDialogue(dialogue, () => {
+    const targetSelector = BATTLE_INTRO_ENEMY_HIGHLIGHT_IDS.has(dialogue.id)
+      ? BATTLE_ENEMY_HIGHLIGHT_SELECTOR
+      : dialogue.targetSelector;
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector }, () => {
       showTutorialBattleIntroDialogueSequence(ids, index + 1);
     });
   }
@@ -270,6 +277,7 @@
       nextButton.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
+        clearTutorialBattleHighlight();
         onNext();
       });
     }
@@ -372,8 +380,45 @@
 
   function getTutorialBattleHighlightRect(targets){
     if(!targets.length) return null;
+    const enemyRect = getTutorialBattleEnemyHighlightRect(targets);
+    if(enemyRect) return enemyRect;
     return targets.reduce((rect, target) => {
       const next = target.getBoundingClientRect();
+      if(!rect) return next;
+      const left = Math.min(rect.left, next.left);
+      const top = Math.min(rect.top, next.top);
+      const right = Math.max(rect.right, next.right);
+      const bottom = Math.max(rect.bottom, next.bottom);
+      return { left, top, right, bottom, width: right - left, height: bottom - top };
+    }, null);
+  }
+
+  function getTutorialBattleEnemyHighlightRect(targets){
+    const enemies = targets.filter(target =>
+      target &&
+      target.classList &&
+      target.classList.contains("combatant") &&
+      target.classList.contains("enemy")
+    );
+    if(!enemies.length || enemies.length !== targets.length) return null;
+
+    return enemies.reduce((rect, enemy) => {
+      const enemyBox = enemy.getBoundingClientRect();
+      const hpbar = enemy.querySelector(".hpbar");
+      const info = enemy.querySelector(".combatant-info");
+      const avatar = enemy.querySelector(".avatar");
+      const hpbarBox = hpbar ? hpbar.getBoundingClientRect() : null;
+      const infoBox = info ? info.getBoundingClientRect() : null;
+      const avatarBox = avatar ? avatar.getBoundingClientRect() : null;
+      const bottomSource = hpbarBox || infoBox || avatarBox || enemyBox;
+      const next = {
+        left: enemyBox.left,
+        top: enemyBox.top,
+        right: enemyBox.right,
+        bottom: Math.min(enemyBox.bottom, bottomSource.bottom),
+        width: enemyBox.width,
+        height: Math.max(1, Math.min(enemyBox.bottom, bottomSource.bottom) - enemyBox.top)
+      };
       if(!rect) return next;
       const left = Math.min(rect.left, next.left);
       const top = Math.min(rect.top, next.top);
