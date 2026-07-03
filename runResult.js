@@ -96,6 +96,7 @@ function closeRrOverlay(){
   if(!rrOverlayEl) return;
   rrOverlayEl.classList.remove("show");
   rrOverlayEl.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("result-ui-open");
 }
 
 /* ── 승리 연출: 신령의 은혜 신령 출현 ─────────────────────────────────────── */
@@ -126,6 +127,7 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("result-ui-open");
 
   const handleContinue = (event) => {
     event.preventDefault();
@@ -164,6 +166,7 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("result-ui-open");
 
   const handleContinue = (event) => {
     event.preventDefault();
@@ -210,6 +213,7 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("result-ui-open");
 
   const endlessCard = panelSlot.querySelector("#rrChoiceEndless");
   const finishCard = panelSlot.querySelector("#rrChoiceFinish");
@@ -264,6 +268,7 @@ function renderRunSummary(snapshot, onFinish){
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("result-ui-open");
 
   panelSlot.querySelector("#rrSummaryNext").addEventListener("click", (event) => {
     event.stopPropagation();
@@ -335,6 +340,7 @@ function renderRunDetail(snapshot, onFinish){
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("result-ui-open");
 
   rrInitDragScroll(panelSlot);
 
@@ -517,6 +523,10 @@ function ensureRrStyles(){
   style.textContent =
     ".rr-overlay{position:absolute;inset:0;z-index:90;display:none;align-items:center;justify-content:center;cursor:pointer;}" +
     ".rr-overlay.show{display:flex;}" +
+    /* 결과 UI가 열려도 기존 우상단 메뉴(여정/보유 주문/가방/설정)는 그대로 클릭 가능해야 한다
+       (기획서 §5, §6). rr-overlay(z-index:90)보다 위, 각 메뉴 팝업(z-index:95 이상)보다는
+       아래에 오도록 z-index를 둔다. */
+    "body.result-ui-open .top-hud{z-index:92;pointer-events:auto;}" +
     ".rr-backdrop{position:absolute;inset:0;" +
       "background-image:radial-gradient(120% 90% at 50% 28%,rgba(30,20,15,.35) 0%,rgba(10,7,10,.72) 60%,rgba(4,4,8,.88) 100%);}" +
     ".rr-frame{position:relative;width:88%;height:76%;}" +
@@ -525,7 +535,7 @@ function ensureRrStyles(){
     ".rr-character-wrap img{width:100%;height:100%;object-fit:contain;object-position:bottom;" +
       "filter:drop-shadow(0 1.4cqh 2cqh rgba(0,0,0,.55));}" +
     ".rr-character-emoji{font-size:20cqh;line-height:1;}" +
-    ".rr-dialog-panel{position:absolute;left:40%;right:4%;top:14%;bottom:14%;z-index:1;" +
+    ".rr-dialog-panel{position:absolute;left:40%;right:4%;top:20%;bottom:8%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
       "padding:3cqh 3cqw;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
@@ -545,7 +555,7 @@ function ensureRrStyles(){
     "@keyframes rrPulse{0%,100%{opacity:.5;}50%{opacity:1;}}" +
 
     /* 끝없는 여정 선택 패널 (기획서 §3-1) — 승리 연출과 동일한 rr-frame 크기를 공유한다 */
-    ".rr-choice-panel{position:absolute;left:40%;right:4%;top:9%;bottom:9%;z-index:1;" +
+    ".rr-choice-panel{position:absolute;left:40%;right:4%;top:13%;bottom:9%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;gap:1.6cqh;" +
       "padding:4.2cqh 3cqw 2.6cqh;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
@@ -575,7 +585,7 @@ function ensureRrStyles(){
     "@keyframes rrShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-.6cqw);}75%{transform:translateX(.6cqw);}}" +
 
     /* 전투 요약 화면 (기획서 §4-1, §10-1) — 캐릭터 없이 중앙 패널로 표시한다 */
-    ".rr-summary-panel{position:absolute;left:50%;top:6%;bottom:6%;transform:translateX(-50%);" +
+    ".rr-summary-panel{position:absolute;left:50%;top:13%;bottom:6%;transform:translateX(-50%);" +
       "width:56%;min-width:44cqh;z-index:1;display:flex;flex-direction:column;align-items:center;" +
       "padding:5.4cqh 3.4cqw 3cqh;border-radius:1.8cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
@@ -601,7 +611,7 @@ function ensureRrStyles(){
     ".rr-summary-next:hover{filter:brightness(1.08);}" +
 
     /* 전투 상세 화면 (기획서 §4-2, §10-2) — 요약 화면과 동일하게 캐릭터 없이 중앙 패널로 표시한다 */
-    ".rr-detail-panel{position:absolute;left:50%;top:4%;bottom:4%;transform:translateX(-50%);" +
+    ".rr-detail-panel{position:absolute;left:50%;top:11%;bottom:4%;transform:translateX(-50%);" +
       "width:82%;min-width:60cqh;max-width:98cqh;z-index:1;display:flex;flex-direction:column;" +
       "padding:4.2cqh 3cqw 2.4cqh;border-radius:1.8cqh;gap:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
