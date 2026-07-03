@@ -62,10 +62,12 @@
     { id: "W-043", target: ".card-hand-area", dialogueClass: "tutorial-battle-intro-dialogue-top" },
     { id: "W-044" }
   ];
-  const FINAL_ATTACK_GUIDE_STEPS = [
+  const FINAL_ATTACK_INTRO_STEPS = [
     { id: "W-045", target: ".enemy .hpbar" },
-    { id: "W-046" },
-    { id: "W-047", target: BATTLE_ENEMY_HIGHLIGHT_SELECTOR },
+    { id: "W-046" }
+  ];
+  const FINAL_LOW_HP_GUIDE_STEPS = [
+    { id: "W-047", target: ".enemy .hpbar" },
     { id: "W-048", target: ".enemy .hpbar" },
     { id: "W-049", target: BATTLE_ENEMY_HIGHLIGHT_SELECTOR },
     { id: "W-050", target: ".enemy .hpbar" },
@@ -82,11 +84,15 @@
   let skillCardState = null;
   let finalAttackCardState = null;
   let tutorialFirstNewTurnSkillCardGuaranteed = false;
+  let finalFreePlayActive = false;
+  let finalLowHpGuideShown = false;
+  let finalPurifiedReadyLogged = false;
 
   function startTutorialBattle(){
     state.isTutorialBattleActive = true;
     state.currentTutorialStep = state.currentTutorialStep || "start";
     tutorialFirstNewTurnSkillCardGuaranteed = false;
+    resetTutorialFinalFreePlayState();
     applyTutorialBattleRootState(true);
     if(typeof window.startTutorialBattle === "function"){
       window.startTutorialBattle();
@@ -103,6 +109,7 @@
     cleanupFinalAttackCardStep();
     cleanupEndTurnStep();
     tutorialFirstNewTurnSkillCardGuaranteed = false;
+    resetTutorialFinalFreePlayState();
     state.isTutorialBattleActive = false;
     state.currentTutorialStep = null;
     applyTutorialBattleRootState(false);
@@ -598,8 +605,14 @@
     if(onFinalAttackCardPlayed(cardKey, card, handIndex)) return;
     if(onSkillCardPlayed(cardKey, card, handIndex)) return;
     if(onBlockCardPlayed(cardKey, card, handIndex)) return;
-    if(!firstAttackCardState || !firstAttackCardState.active) return;
-    if(cardKey !== firstAttackCardState.cardKey || handIndex !== firstAttackCardState.handIndex) return;
+    if(!firstAttackCardState || !firstAttackCardState.active){
+      checkTutorialFinalFreePlayProgress();
+      return;
+    }
+    if(cardKey !== firstAttackCardState.cardKey || handIndex !== firstAttackCardState.handIndex){
+      checkTutorialFinalFreePlayProgress();
+      return;
+    }
     cleanupFirstAttackCardStep();
     setTutorialStep("first_attack_card_used");
     console.log("tutorial first attack card used");
@@ -1076,30 +1089,107 @@
 
   function finishTutorialPostEnemyGuide(){
     setTutorialStep("post_enemy_guide_completed");
-    showTutorialFinalAttackGuideSequence(FINAL_ATTACK_GUIDE_STEPS, 0);
+    showTutorialFinalAttackIntroSequence(FINAL_ATTACK_INTRO_STEPS, 0);
   }
 
-  function showTutorialFinalAttackGuideSequence(steps, index){
+  function showTutorialFinalAttackIntroSequence(steps, index){
     if(!tutorialBattleIntroActive || !isTutorialBattle()){
       cleanupTutorialBattleIntro();
       return;
     }
     if(index >= steps.length){
-      startTutorialFinalAttackCardStep();
+      startTutorialFinalFreePlay();
       return;
     }
 
     const step = steps[index];
     const dialogue = getTutorialBattleDialogue(step.id);
     if(!dialogue){
-      showTutorialFinalAttackGuideSequence(steps, index + 1);
+      showTutorialFinalAttackIntroSequence(steps, index + 1);
       return;
     }
 
     setTutorialStep(dialogue.id);
     renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: step.target, dialogueClass: step.dialogueClass }, () => {
-      showTutorialFinalAttackGuideSequence(steps, index + 1);
+      showTutorialFinalAttackIntroSequence(steps, index + 1);
     });
+  }
+
+  function startTutorialFinalFreePlay(){
+    cleanupTutorialBattleIntro();
+    finalFreePlayActive = true;
+    setTutorialStep("final_free_play");
+    if(typeof S !== "undefined" && S && !S.over) S.busy = false;
+    if(typeof updateEndBtn === "function") updateEndBtn();
+    checkTutorialFinalFreePlayProgress();
+  }
+
+  function checkTutorialFinalFreePlayProgress(){
+    if(!isTutorialBattle() || !finalFreePlayActive) return;
+    const enemy = getTutorialFinalTargetEnemy();
+    if(!enemy) return;
+    if(enemy.hp <= 0){
+      markTutorialEnemyPurifiedReady();
+      return;
+    }
+    if(enemy.hp < 10 && !finalLowHpGuideShown){
+      finalLowHpGuideShown = true;
+      showTutorialFinalLowHpGuideSequence(FINAL_LOW_HP_GUIDE_STEPS, 0);
+    }
+  }
+
+  function getTutorialFinalTargetEnemy(){
+    if(typeof S === "undefined" || !S || !Array.isArray(S.enemies)) return null;
+    return S.enemies.find(enemy => enemy && enemy.hp > 0) || S.enemies.find(enemy => enemy && enemy.hp <= 0) || null;
+  }
+
+  function markTutorialEnemyPurifiedReady(){
+    if(finalPurifiedReadyLogged) return;
+    finalPurifiedReadyLogged = true;
+    finalFreePlayActive = false;
+    setTutorialStep("enemy_purified_ready");
+    console.log("tutorial enemy purified ready");
+  }
+
+  function showTutorialFinalLowHpGuideSequence(steps, index){
+    if(!isTutorialBattle()){
+      cleanupTutorialBattleIntro();
+      return;
+    }
+    if(index >= steps.length){
+      finishTutorialFinalLowHpGuide();
+      return;
+    }
+
+    const step = steps[index];
+    const dialogue = getTutorialBattleDialogue(step.id);
+    if(!dialogue){
+      showTutorialFinalLowHpGuideSequence(steps, index + 1);
+      return;
+    }
+
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    setTutorialStep(dialogue.id);
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: step.target, dialogueClass: step.dialogueClass }, () => {
+      showTutorialFinalLowHpGuideSequence(steps, index + 1);
+    });
+  }
+
+  function finishTutorialFinalLowHpGuide(){
+    cleanupTutorialBattleIntro();
+    finalFreePlayActive = true;
+    setTutorialStep("final_free_play");
+    if(typeof S !== "undefined" && S && !S.over) S.busy = false;
+    if(typeof updateEndBtn === "function") updateEndBtn();
+    checkTutorialFinalFreePlayProgress();
+  }
+
+  function resetTutorialFinalFreePlayState(){
+    finalFreePlayActive = false;
+    finalLowHpGuideShown = false;
+    finalPurifiedReadyLogged = false;
   }
 
   function finishTutorialEnemyActionGuide(){
