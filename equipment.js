@@ -338,6 +338,92 @@ const RELIC_MASTER_DB = [
         "timing": "damageModifier"
       }
     ]
+  },
+  {
+    "id": "thunder_spirit_bell",
+    "dataId": "RE013",
+    "name": "뇌령방울",
+    "emoji": "🔔",
+    "deck": "범용",
+    "rarity": "rare",
+    "obtainFrom": [
+      "elite",
+      "shop",
+      "event"
+    ],
+    "trigger": "damageModifier",
+    "target": "enemy",
+    "desc": "공격 주문의 정화량이 1 증가합니다.\n먼 천둥을 머금은 작은 방울. 흔들릴 때마다 망설임을 깨웁니다.",
+    "effectText": "공격 주문의 정화량이 1 증가합니다.",
+    "valueText": "공격 정화 +1",
+    "dropWeight": 10,
+    "price": 220,
+    "shopPrice": 220,
+    "fx": [
+      {
+        "t": "damagePlus",
+        "v": 1,
+        "timing": "damageModifier"
+      }
+    ]
+  },
+  {
+    "id": "lotus_seed_bead",
+    "dataId": "RE014",
+    "name": "연씨 염주",
+    "emoji": "📿",
+    "deck": "성불",
+    "rarity": "common",
+    "obtainFrom": [
+      "elite",
+      "shop",
+      "event"
+    ],
+    "trigger": "battleStart",
+    "target": "frontEnemy",
+    "desc": "전투 시작 시 가장 앞의 적에게 성불 표식을 1 부여합니다.\n아직 꽃피지 않은 씨앗을 꿰어 만든 염주. 첫 기도에 길이 열린다.",
+    "effectText": "전투 시작 시 가장 앞의 적에게 성불 표식을 1 부여합니다.",
+    "valueText": "선두 적 성불 표식 +1",
+    "dropWeight": 55,
+    "price": 120,
+    "shopPrice": 120,
+    "fx": [
+      {
+        "t": "applyMark",
+        "v": 1,
+        "timing": "battleStart",
+        "target": "frontEnemy"
+      }
+    ]
+  },
+  {
+    "id": "lizard_tail_charm",
+    "dataId": "RE015",
+    "name": "도마뱀 꼬리 부적",
+    "emoji": "🦎",
+    "deck": "범용",
+    "rarity": "rare",
+    "obtainFrom": [
+      "elite",
+      "shop",
+      "event"
+    ],
+    "trigger": "fatalDamage",
+    "target": "self",
+    "desc": "쓰러질 때 이 법구를 소모하고 최대 정신력의 50%를 회복합니다.\n잘려도 다시 꿈틀대는 마지막 집념. 한 번만 죽음을 미룹니다.",
+    "effectText": "쓰러질 때 이 법구를 소모하고 최대 정신력의 50%를 회복합니다.",
+    "valueText": "1회 부활: 최대 정신력 50%",
+    "dropWeight": 10,
+    "price": 220,
+    "shopPrice": 220,
+    "fx": [
+      {
+        "t": "revive",
+        "v": 0.5,
+        "timing": "fatalDamage",
+        "consume": true
+      }
+    ]
   }
 ];
 
