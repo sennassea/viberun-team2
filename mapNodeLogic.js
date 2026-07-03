@@ -26,12 +26,12 @@ const ACT1_WEIGHTS = {
    ── ──────────────────────────────────────────────────────────────────── */
 const ACT1_NODE_INFO = {
   lobby: { emoji: "🚪", label: "신령의 은혜", isDimmed: false, hasCombat: false },
-  enemy: { emoji: "👺", label: "적",     isDimmed: false, hasCombat: true  },
-  elite: { emoji: "👹", label: "엘리트", isDimmed: false, hasCombat: true  },
-  boss:  { emoji: "💀", label: "보스",   isDimmed: false, hasCombat: true  },
-  event: { emoji: "❓", label: "이벤트", isDimmed: false, hasCombat: false },
-  shop:  { emoji: "🛒", label: "상점",   isDimmed: false, hasCombat: false },
-  rest:  { emoji: "🛖", label: "기도터", isDimmed: false, hasCombat: false },
+  enemy: { emoji: "👺", label: "미련이 느껴지는 곳",       isDimmed: false, hasCombat: true  },
+  elite: { emoji: "👹", label: "기운이 더 무거워 보이는 곳", isDimmed: false, hasCombat: true  },
+  boss:  { emoji: "💀", label: "기운이 엄청 무거운 곳",      isDimmed: false, hasCombat: true  },
+  event: { emoji: "❓", label: "이벤트",                     isDimmed: false, hasCombat: false },
+  shop:  { emoji: "🛒", label: "상점",                       isDimmed: false, hasCombat: false },
+  rest:  { emoji: "🛖", label: "기도터",                     isDimmed: false, hasCombat: false },
 };
 
 /* ── 딤드 노드 툴팁 (기획서 8장) ─────────────────────────────────────── */
@@ -212,8 +212,8 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
 
         const ms  = mons.slice();
         const lbl = type === "elite"
-          ? `${fi}층 엘리트`
-          : `${fi}층 적 ${"ABCD"[ni] || (ni + 1)}`;
+          ? `${fi}층 ${info.label}`
+          : `${fi}층 ${info.label} ${"ABCD"[ni] || (ni + 1)}`;
         stages.push({
           label: lbl, type, isDimmed: info.isDimmed,
           packageId: pkg ? pkg.id : null,
@@ -302,7 +302,7 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   let bossMs = bossPkg ? d.getMonstersByIds(bossPkg.monsterIds) : [];
   if (!bossMs.length) bossMs = pickMonsByTheme(bossTheme, "boss", 1);
   stages.push({
-    label: "보스 스테이지", type: "boss", isDimmed: false,
+    label: `16층 ${ACT1_NODE_INFO.boss.label}`, type: "boss", isDimmed: false,
     packageId: bossPkg ? bossPkg.id : null,
     packageName: bossPkg ? bossPkg.name : null,
     packageTheme: bossPkg ? bossPkg.theme : bossTheme,
@@ -312,7 +312,7 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   popupGetters.push((m => () => m)(bossMs.slice()));
   floors.push([{
     id: "boss_final", type: "boss",
-    emoji: "💀", label: "보스",
+    emoji: "💀", label: ACT1_NODE_INFO.boss.label,
     isDimmed: false, stageIndex: stageIdx++,
   }]);
 

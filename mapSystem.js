@@ -106,18 +106,18 @@ function generateMap(){
       let type, emoji, label, monsters;
 
       if(fi === 1){
-        type = "enemy"; emoji = "👺"; label = "적";
+        type = "enemy"; emoji = "👺"; label = "미련이 느껴지는 곳";
         monsters = pickMonsters(normalIds, d, randInt(1, 2));
       } else if(fi === 5){
-        type = "boss"; emoji = "💀"; label = "보스";
+        type = "boss"; emoji = "💀"; label = "기운이 엄청 무거운 곳";
         monsters = bossIds.map(id => d.getMonsterById(id)).filter(Boolean);
       } else {
         const isElite = eliteNodes.has(`${fi},${ni}`);
         if(isElite){
-          type = "elite"; emoji = "👹"; label = "엘리트";
+          type = "elite"; emoji = "👹"; label = "기운이 더 무거워 보이는 곳";
           monsters = pickMonsters(eliteIds, d, 1);
         } else {
-          type = "enemy"; emoji = "👺"; label = "적";
+          type = "enemy"; emoji = "👺"; label = "미련이 느껴지는 곳";
           monsters = pickMonsters(normalIds, d, randInt(1, 2));
         }
       }
@@ -131,9 +131,9 @@ function generateMap(){
         `node_${fi}_${ni}`;
 
       const stageLabel =
-        fi === 5 ? "보스 스테이지" :
-        type === "elite" ? `${fi}층 엘리트` :
-        `${fi}층 적 ${"ABCD"[ni] || (ni + 1)}`;
+        fi === 5 ? `${fi}층 기운이 엄청 무거운 곳` :
+        type === "elite" ? `${fi}층 기운이 더 무거워 보이는 곳` :
+        `${fi}층 미련이 느껴지는 곳 ${"ABCD"[ni] || (ni + 1)}`;
 
       const stageMons = monsters.slice();
 
@@ -316,9 +316,9 @@ function buildOverlay(){
         </div>
         <div class="map-legend">
           <div class="legend-title">범례</div>
-          <div class="legend-item"><span class="leg-ico enemy">👺</span>적</div>
-          <div class="legend-item"><span class="leg-ico elite">👹</span>엘리트</div>
-          <div class="legend-item"><span class="leg-ico boss">💀</span>보스</div>
+          <div class="legend-item"><span class="leg-ico enemy">👺</span>미련이 느껴지는 곳</div>
+          <div class="legend-item"><span class="leg-ico elite">👹</span>기운이 더 무거워 보이는 곳</div>
+          <div class="legend-item"><span class="leg-ico boss">💀</span>기운이 엄청 무거운 곳</div>
           <div class="legend-item"><span class="leg-ico event">❓</span>이벤트</div>
           <div class="legend-item"><span class="leg-ico shop">🛒</span>상점</div>
           <div class="legend-item"><span class="leg-ico rest">🛖</span>기도터</div>
