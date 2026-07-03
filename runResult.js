@@ -25,7 +25,6 @@ function ensureRrOverlay(){
   overlay.innerHTML =
     '<div class="rr-backdrop"></div>' +
     '<div class="rr-frame">' +
-      '<div class="rr-frame-body"></div>' +
       '<div class="rr-character-wrap" id="rrCharacterWrap"></div>' +
       '<div class="rr-dialog-panel">' +
         '<div class="rr-badge"><span id="rrBadgeText">승리</span></div>' +
@@ -101,10 +100,6 @@ function ensureRrStyles(){
     ".rr-backdrop{position:absolute;inset:0;" +
       "background-image:radial-gradient(120% 90% at 50% 28%,rgba(30,20,15,.35) 0%,rgba(10,7,10,.72) 60%,rgba(4,4,8,.88) 100%);}" +
     ".rr-frame{position:relative;width:88%;height:76%;}" +
-    ".rr-frame-body{position:absolute;inset:0;border-radius:2.2cqh;" +
-      "border:.28cqh solid rgba(212,175,90,.85);" +
-      "background:linear-gradient(160deg,rgba(42,28,22,.55),rgba(16,11,10,.78));" +
-      "box-shadow:0 0 0 .14cqh rgba(255,225,170,.22) inset,0 1.4cqh 3.2cqh rgba(0,0,0,.55);}" +
     ".rr-character-wrap{position:absolute;left:2%;bottom:-2%;width:52%;height:128%;z-index:2;" +
       "display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}" +
     ".rr-character-wrap img{width:100%;height:100%;object-fit:contain;object-position:bottom;" +
