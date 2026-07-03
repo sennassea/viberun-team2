@@ -27,7 +27,8 @@ const PLAYER_DEF   = COMBAT_DATA.character;
 const MONSTER_DEFS = COMBAT_DATA.monsters; // loadStageMonsters()가 패키지 몬스터로 채운다
 const STATUS_DATA  = window.BOHYUN_STATUS_DATA || window.STATUS_DATA || {
   agitation:{ id:"agitation", legacyKey:"weak", name:"동요", shortName:"동요", icon:"🌀", color:"#5577ff", description:"적의 공격 피해가 25% 감소합니다.", decayTiming:"afterEnemyAction", decayAmount:1, decayTimingText:"행동 종료 시 1 감소합니다.", maxStack:99, showOnEnemy:true },
-  mark:{ id:"mark", legacyKey:"mark", name:"성불 표식", shortName:"성불 표식", icon:"🌸", color:"#ff6fb1", description:"일부 성불 주문이 추가 효과를 얻습니다. 표식을 소모하는 주문에 의해 제거됩니다.", maxStack:99, showOnEnemy:true }
+  mark:{ id:"mark", legacyKey:"mark", name:"성불 표식", shortName:"성불 표식", icon:"🌸", color:"#ff6fb1", description:"일부 성불 주문이 추가 효과를 얻습니다. 표식을 소모하는 주문에 의해 제거됩니다.", maxStack:99, showOnEnemy:true },
+  fracture:{ id:"fracture", legacyKey:"fracture", name:"균열", shortName:"균열", icon:"💔", color:"#d94a68", description:"받는 정화 피해가 25% 증가합니다.", decayTiming:"afterEnemyAction", decayAmount:1, decayTimingText:"대상 턴 종료 시 1 감소합니다.", maxStack:99, showOnEnemy:true }
 };
 
 // 상태 아이콘/이름 고정 매핑
@@ -62,6 +63,22 @@ function normalizeStatusDataFixedMapping(){
     iconImage: "",
     color: "#ff6fb1",
     description: "일부 성불 주문이 추가 효과를 얻습니다. 표식을 소모하는 주문에 의해 제거됩니다.",
+    maxStack: 99,
+    showOnEnemy: true
+  };
+  STATUS_DATA.fracture = {
+    ...(STATUS_DATA.fracture || {}),
+    id: "fracture",
+    legacyKey: "fracture",
+    name: "균열",
+    shortName: "균열",
+    icon: "💔",
+    iconImage: "",
+    color: "#d94a68",
+    description: "받는 정화 피해가 25% 증가합니다.",
+    decayTiming: "afterEnemyAction",
+    decayAmount: 1,
+    decayTimingText: "대상 턴 종료 시 1 감소합니다.",
     maxStack: 99,
     showOnEnemy: true
   };
@@ -576,6 +593,7 @@ function applyNextPhaseIfNeeded(enemy){
   const previousSpawnIndex = enemy.spawnIndex;
   const previousSummoned = enemy.summoned;
   const preservedWeak = enemy.weak || 0;
+  const preservedFracture = enemy.fracture || 0;
   const preservedAnxiety = enemy.anxiety || 0;
   const preservedLethargy = enemy.lethargy || 0;
   const preservedStatus = enemy.status ? { ...enemy.status } : {};
@@ -594,6 +612,7 @@ function applyNextPhaseIfNeeded(enemy){
   enemy.hp = enemy.maxHp;
   enemy.block = 0;
   enemy.weak = preservedWeak;
+  enemy.fracture = preservedFracture;
   enemy.anxiety = preservedAnxiety;
   enemy.lethargy = preservedLethargy;
   enemy.mark = preservedMark;
@@ -717,7 +736,7 @@ function statusIconHtml(statusId, count){
 function renderEnemyStatusIcons(enemyLike){
   if(!enemyLike || enemyLike.hideHud) return "";
   ensureEnemyStatus(enemyLike);
-  const orderedStatusIds = ["agitation", "mark", ...Object.keys(STATUS_DATA).filter(id => id !== "agitation" && id !== "mark")];
+  const orderedStatusIds = ["agitation", "fracture", "mark", ...Object.keys(STATUS_DATA).filter(id => !["agitation", "fracture", "mark"].includes(id))];
   const html = orderedStatusIds
     .map(statusId => statusIconHtml(statusId, enemyLike.status?.[statusId] || 0))
     .join("");
@@ -808,6 +827,12 @@ function playCard(handIndex, targetEnemy){
         livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v, en), S.player.weak)); break;
       case "applyWeakAll":
         livingEnemies().forEach(en => addStatus(en, "agitation", e.v)); break;
+      case "applyFracture":
+        if(targetEnemy && targetEnemy.hp > 0) addStatus(targetEnemy, "fracture", e.v || 1);
+        break;
+      case "applyFractureAll":
+        livingEnemies().forEach(en => addStatus(en, "fracture", e.v || 1));
+        break;
       case "block":
         gainPlayerBlock(e.v); break;
       case "damageByBlockRatio":
@@ -1548,6 +1573,7 @@ async function endTurn(){
   applyRelicTrigger("turnEnd");
 
   LIFE.reduceWeak(S.player, 1);
+  LIFE.reduceFracture(S.player, 1);
   LIFE.reduceAnxiety(S.player, 1);
   LIFE.reduceLethargy(S.player, 1);
 
@@ -1583,6 +1609,9 @@ async function endTurn(){
       } else if(mv.role==="counter"){
         LIFE.addLethargy(S.player, mv.v);
         spawnFloat('.player', '무기력', 'dmg');
+      } else if(mv.role==="fracture"){
+        LIFE.addFracture(S.player, mv.v);
+        spawnFloat('.player', '균열', 'dmg');
       } else {
         LIFE.addWeak(S.player, mv.v);
         spawnFloat('.player', '동요', 'dmg');
@@ -2033,6 +2062,7 @@ function renderEffects(){
   const rows = [];
   if(S.player.block  > 0)        rows.push(eff("🛡️","마음의 결계","결계 "+S.player.block));
   if(S.player.weak   > 0)        rows.push(eff("🌀","동요","정화 피해 25% 감소 ("+S.player.weak+"턴)"));
+  if((S.player.fracture||0) > 0) rows.push(eff("💔","균열","받는 정화 피해 25% 증가 ("+S.player.fracture+"턴)"));
   if((S.player.anxiety||0)  > 0) rows.push(eff("💭","불안","다음 턴 주문 뽑기 -1 ("+S.player.anxiety+"턴)"));
   if((S.player.lethargy||0) > 0) rows.push(eff("🌫️","무기력","다음 턴 정신력 -1 ("+S.player.lethargy+"턴)"));
   rows.push(eff("💚","치유의 향기","회복 주문 보유"));
@@ -2056,9 +2086,9 @@ function renderIntents(){
     } else if(m.t==="summon"){
       ico="🚪"; txt=(m.name ? m.name+" / " : "")+"소환"; cls="sum";
     } else {
-      const isAnx = m.role==="anxiety", isLet = m.role==="counter";
-      ico = isAnx ? "💭" : isLet ? "🌫️" : "🌀";
-      txt = (m.name ? m.name+" / " : "")+(isAnx ? "불안 " : isLet ? "무기력 " : "동요 ")+m.v+" 부여";
+      const isAnx = m.role==="anxiety", isLet = m.role==="counter", isFracture = m.role==="fracture";
+      ico = isAnx ? "💭" : isLet ? "🌫️" : isFracture ? "💔" : "🌀";
+      txt = (m.name ? m.name+" / " : "")+(isAnx ? "불안 " : isLet ? "무기력 " : isFracture ? "균열 " : "동요 ")+m.v+" 부여";
       cls = "deb";
     }
     return '<div class="eff-row"><div class="eff-ico">'+ico+'</div>'
@@ -2141,6 +2171,7 @@ function intentBubble(m, weak){
   if(m.t==="summon")     return '<div class="intent deb">🚪 소환</div>';
   if(m.role==="anxiety") return '<div class="intent deb">💭 불안</div>';
   if(m.role==="counter") return '<div class="intent deb">🌫️ 무기력</div>';
+  if(m.role==="fracture") return '<div class="intent deb">💔 균열</div>';
   return '<div class="intent deb">🌀 동요</div>';
 }
 
@@ -2437,6 +2468,7 @@ function injectStatusStyles(){
     .enemy-status-icon b{position:absolute;right:-.55cqh;bottom:-.55cqh;min-width:2cqh;height:2cqh;padding:0 .25cqh;border-radius:999px;display:grid;place-items:center;background:#1f2d45;color:#fff;border:.18cqh solid #fff;font-size:1.25cqh;font-weight:900;box-shadow:0 .2cqh .45cqh rgba(0,0,0,.25);}
     .enemy-status-icon.status-agitation{--status-color:#5577ff !important;}
     .enemy-status-icon.status-mark{--status-color:#ff6fb1 !important;}
+    .enemy-status-icon.status-fracture{--status-color:#d94a68 !important;}
     #enemyStatusTooltip{position:fixed;left:0;top:0;z-index:99999;max-width:28cqw;min-width:17cqw;padding:1.2cqh 1.35cqw;border-radius:.9cqh;background:rgba(20,30,48,.96);color:#edf5ff;box-shadow:0 .55cqh 1.4cqh rgba(0,0,0,.32);border:.12cqh solid rgba(170,190,230,.25);pointer-events:none;opacity:0;transform:translate3d(-9999px,-9999px,0);transition:opacity .08s ease;white-space:pre-line;font-size:1.45cqh;line-height:1.45;text-align:left;}
     #enemyStatusTooltip.show{opacity:1;}
     #enemyStatusTooltip .status-tooltip-title{display:flex;align-items:center;gap:.5cqw;margin-bottom:.55cqh;font-weight:900;font-size:1.65cqh;color:#fff;}

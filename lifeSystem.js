@@ -9,6 +9,7 @@
   const STATUS_META = {
     block: { kind: "buff", icon: "&#128737;&#65039;", label: "마음의 결계", showCount: true },
     weak: { kind: "debuff", icon: "🌀", label: "동요", showCount: true },
+    fracture: { kind: "debuff", icon: "💔", label: "균열", showCount: true },
     anxiety: { kind: "debuff", icon: "💭", label: "불안", showCount: true },
     lethargy: { kind: "debuff", icon: "🌫️", label: "무기력", showCount: true },
     healingAura: { kind: "buff", icon: "💚", label: "치유의 향기", showCount: false }
@@ -78,6 +79,7 @@
         maxHp: characterData.maxHp,
         block: Math.min(characterData.maxHp, characterData.block || 0),
         weak: characterData.weak || 0,
+        fracture: characterData.fracture || 0,
         anxiety: characterData.anxiety || 0,
         lethargy: characterData.lethargy || 0,
         healingAura: characterData.healingAura === false ? 0 : 1
@@ -97,6 +99,7 @@
         maxHp: monsterData.maxHp,
         block: Math.min(monsterData.maxHp, monsterData.block || 0),
         weak: monsterData.weak || 0,
+        fracture: monsterData.fracture || 0,
         anxiety: monsterData.anxiety || 0,
         lethargy: monsterData.lethargy || 0,
         grade: monsterData.grade || "normal",
@@ -114,9 +117,12 @@
         return { rawDamage: 0, finalDamage: 0, absorbed: 0, hpLoss: 0 };
       }
 
-      const finalDamage = attackerWeak > 0
+      const baseDamage = attackerWeak > 0
         ? Math.floor(rawDamage * this.config.weakMultiplier)
         : rawDamage;
+      const finalDamage = (target.fracture || 0) > 0
+        ? Math.floor(baseDamage * 1.25)
+        : baseDamage;
 
       const absorbed = Math.min(target.block || 0, finalDamage);
       const hpLoss = Math.max(0, finalDamage - absorbed);
@@ -153,6 +159,19 @@
       const before = target.weak || 0;
       target.weak = Math.max(0, before - value);
       return before - target.weak;
+    },
+
+    addFracture(target, value){
+      if(!target || value <= 0) return 0;
+      target.fracture = (target.fracture || 0) + value;
+      return value;
+    },
+
+    reduceFracture(target, value){
+      if(!target || value <= 0) return 0;
+      const before = target.fracture || 0;
+      target.fracture = Math.max(0, before - value);
+      return before - target.fracture;
     },
 
     addAnxiety(target, value){
@@ -269,6 +288,9 @@
       }
       if((unit.weak || 0) > 0){
         statuses.push(this.renderStatusIcon("weak", unit.weak));
+      }
+      if((unit.fracture || 0) > 0){
+        statuses.push(this.renderStatusIcon("fracture", unit.fracture));
       }
       if((unit.anxiety || 0) > 0){
         statuses.push(this.renderStatusIcon("anxiety", unit.anxiety));
