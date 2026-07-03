@@ -255,7 +255,7 @@ function applyRelicEffect(relic, effect, context={}){
     case "applyAgitation": {
       const target = effect.target === "frontEnemy" ? livingEnemies()[0] : getSelectedLivingEnemy();
       if(target){
-        LIFE.addWeak(target, effect.v || 1);
+        addStatus(target, "agitation", effect.v || 1);
         applyRelicTrigger("onAgitationApply", { target, amount: effect.v || 1 });
       }
       break;
@@ -807,7 +807,7 @@ function playCard(handIndex, targetEnemy){
       case "damageAll":
         livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v, en), S.player.weak)); break;
       case "applyWeakAll":
-        livingEnemies().forEach(en => LIFE.addWeak(en, e.v)); break;
+        livingEnemies().forEach(en => addStatus(en, "agitation", e.v)); break;
       case "block":
         gainPlayerBlock(e.v); break;
       case "damageByBlockRatio":
@@ -830,6 +830,37 @@ function playCard(handIndex, targetEnemy){
         if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
         break;
       }
+      case "consumeAllAgitationDamage": {
+        if(targetEnemy){
+          const agitation = Math.max(0, getStatus(targetEnemy, "agitation"));
+          const amount = Math.floor((e.base || 0) + agitation * (e.per || 0));
+          setStatus(targetEnemy, "agitation", 0);
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
+        }
+        break;
+      }
+      case "ifAgitationAtLeastDraw":
+        if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)) drawCards(e.v || 1);
+        break;
+      case "ifAgitationAtLeastDamageAll":
+        if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)){
+          livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak));
+        }
+        break;
+      case "transferAgitationOnKill": {
+        if(targetEnemy && targetEnemy.hp <= 0){
+          const currentAgitation = getStatus(targetEnemy, "agitation");
+          if(currentAgitation <= 0) break;
+          const targets = livingEnemies().filter(en => en !== targetEnemy);
+          const amount = Math.max(0, e.v || currentAgitation);
+          if(targets.length && amount > 0){
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            addStatus(target, "agitation", amount);
+            spawnFloat('[data-id="'+target.id+'"]', '동요 '+amount, 'dmg');
+          }
+        }
+        break;
+      }
       case "blockGainPlusThisTurn":
         gainPlayerBlock((e.v || 0) + (S.blockGainedThisTurn || 0)); break;
       case "draw":
@@ -842,8 +873,8 @@ function playCard(handIndex, targetEnemy){
       case "energy":
         S.energy += e.v; break;
       case "applyWeak":
-        if(targetEnemy){
-          LIFE.addWeak(targetEnemy, e.v);
+        if(targetEnemy && targetEnemy.hp > 0){
+          addStatus(targetEnemy, "agitation", e.v);
           applyRelicTrigger("onAgitationApply", { target: targetEnemy, amount: e.v });
         }
         break;
@@ -1950,7 +1981,7 @@ function useWeakPotion(index, targetEnemy){
   if(!potion || potion.type !== "applyWeak") return false;
   if(!targetEnemy || targetEnemy.hp <= 0) return false;
   const amount = typeof potion.value === "number" ? potion.value : 3;
-  LIFE.addWeak(targetEnemy, amount);
+  addStatus(targetEnemy, "agitation", amount);
   applyRelicTrigger("onAgitationApply", { target: targetEnemy, amount });
   S.potions.splice(index, 1);
   syncRunStateFromCombat();
