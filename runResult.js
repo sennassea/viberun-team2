@@ -3,11 +3,13 @@
    최종 승리 / 패배 결과 UI (runResult.js)
    기획서: 최종 승리 / 패배 UI 구현 기획서
 
-   현재 구현 범위: 보스 처치(승리) 후 ① 신령의 은혜 신령 출현 연출 →
-   ② 동자승의 끝없는 여정 선택 화면까지 처리한다.
-   전투 요약/상세, 패배 연출(동자승)은 이후 단계에서 추가한다.
-   이 파일이 처리하지 못하는 결과(패배 등)는 endGame()의 기존 종료 UI로
-   그대로 폴백된다.
+   현재 구현 범위:
+   - 승리: ① 신령의 은혜 신령 출현 연출 → ② 동자승의 끝없는 여정 선택 화면
+     → ③ 전투 요약 화면
+   - 패배: 동자승 패배 연출은 아직 없으므로 결과 즉시 ③ 전투 요약 화면으로
+     진입한다.
+   전투 상세 화면은 이후 단계에서 추가한다.
+   이 파일이 처리하지 못하는 결과는 endGame()의 기존 종료 UI로 폴백된다.
 
    script.js / startBlessing.js 이후에 로드되어야 한다.
    ========================================================================= */
@@ -57,7 +59,7 @@ function closeRrOverlay(){
 }
 
 /* ── 승리 연출: 신령의 은혜 신령 출현 ─────────────────────────────────────── */
-function renderBlessingSpiritAppearance(spirit, onContinue){
+function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
@@ -88,7 +90,7 @@ function renderBlessingSpiritAppearance(spirit, onContinue){
   const handleContinue = (event) => {
     event.preventDefault();
     overlay.removeEventListener("click", handleContinue);
-    renderEndlessJourneyChoice(NPC_DONGJASEUNG, onContinue);
+    renderEndlessJourneyChoice(NPC_DONGJASEUNG, snapshot, onFinish);
   };
   overlay.addEventListener("click", handleContinue);
 }
@@ -96,7 +98,7 @@ function renderBlessingSpiritAppearance(spirit, onContinue){
 /* ── 동자승: 끝없는 여정 선택 화면 (기획서 §3-1, §7-2) ────────────────────
    끝없는 여정은 아직 미개발이므로 딤드 처리하고, 기록 보고 종료만 다음
    단계(onFinish, 현재는 기존 종료 UI로 폴백)로 이어준다. */
-function renderEndlessJourneyChoice(npc, onFinish){
+function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
@@ -143,20 +145,95 @@ function renderEndlessJourneyChoice(npc, onFinish){
 
   finishCard.addEventListener("click", (event) => {
     event.stopPropagation();
+    renderRunSummary(snapshot, onFinish);
+  });
+}
+
+/* ── 전투 요약 화면 (기획서 §4-1, §10-1) ────────────────────────────────────
+   승리: 끝없는 여정 선택에서 "여정 종료" 클릭 시 진입.
+   패배: 동자승 패배 연출이 아직 없으므로 결과 직후 바로 진입한다. */
+function renderRunSummary(snapshot, onFinish){
+  const overlay = ensureRrOverlay();
+
+  const characterWrap = overlay.querySelector("#rrCharacterWrap");
+  characterWrap.innerHTML = "";
+
+  const rows = [
+    { icon:"🗼", label:"진행한 스테이지 수", value:snapshot.highestFloor, unit:"층" },
+    { icon:"💀", label:"클리어 보스 수",     value:snapshot.cleared.boss,  unit:"개" },
+    { icon:"👺", label:"클리어 일반 전투 수", value:snapshot.cleared.enemy, unit:"개" },
+    { icon:"👹", label:"클리어 엘리트 수",    value:snapshot.cleared.elite, unit:"개" },
+    { icon:"🏺", label:"수집한 법구 수",      value:snapshot.relicCount,    unit:"개" },
+    { icon:"🧪", label:"사용한 약병 수",      value:snapshot.usedPotionCount, unit:"개" }
+  ];
+
+  const panelSlot = overlay.querySelector("#rrPanelSlot");
+  panelSlot.innerHTML =
+    '<div class="rr-summary-panel">' +
+      '<div class="rr-summary-titlebar"><span>' + (snapshot.result === "win" ? "전투 요약" : "패배") + '</span></div>' +
+      '<div class="rr-summary-rows">' +
+        rows.map(row =>
+          '<div class="rr-summary-row">' +
+            '<div class="rr-summary-row-icon">' + row.icon + '</div>' +
+            '<div class="rr-summary-row-label">' + row.label + '</div>' +
+            '<div class="rr-summary-row-sep">✦</div>' +
+            '<div class="rr-summary-row-value"><strong>' + row.value + '</strong><span>' + row.unit + '</span></div>' +
+          '</div>'
+        ).join("") +
+      '</div>' +
+      '<button type="button" class="rr-summary-next" id="rrSummaryNext">다음</button>' +
+    '</div>';
+
+  overlay.classList.add("show");
+  overlay.setAttribute("aria-hidden", "false");
+
+  panelSlot.querySelector("#rrSummaryNext").addEventListener("click", (event) => {
+    event.stopPropagation();
     closeRrOverlay();
     if(typeof onFinish === "function") onFinish();
   });
 }
 
+/* ── 결과 스냅샷 생성 (기획서 §7-3) ─────────────────────────────────────── */
+function buildRunResultSnapshot(result){
+  const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
+  const stats = (run && run.runStats) || {};
+  const cleared = stats.cleared || {};
+
+  let highestFloor = 0;
+  if(typeof nodeFloorIdx === "function" && typeof getCurrentNodeId === "function"){
+    highestFloor = Math.max(0, nodeFloorIdx(getCurrentNodeId()));
+  }
+
+  return {
+    result,
+    highestFloor,
+    cleared: {
+      enemy: cleared.enemy || 0,
+      elite: cleared.elite || 0,
+      boss:  cleared.boss  || 0
+    },
+    relicCount: (run && Array.isArray(run.relics)) ? run.relics.length : 0,
+    usedPotionCount: stats.usedPotionCount || 0
+  };
+}
+
 /* ── 전역 인터페이스 ─────────────────────────────────────────────────────── */
 function rrOpen(result, onContinue){
-  if(result !== "win") return false;
+  if(result !== "win" && result !== "lose") return false;
 
-  const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
-  const spirit = run && run.blessingSpirit;
-  if(!spirit) return false;
+  const snapshot = buildRunResultSnapshot(result);
 
-  renderBlessingSpiritAppearance(spirit, onContinue);
+  if(result === "win"){
+    const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
+    const spirit = run && run.blessingSpirit;
+    if(!spirit) return false;
+    renderBlessingSpiritAppearance(spirit, snapshot, onContinue);
+    return true;
+  }
+
+  // 패배: 동자승 패배 연출은 이후 단계에서 추가하고, 현재는 전투 요약으로 바로 진입한다.
+  renderRunSummary(snapshot, onContinue);
   return true;
 }
 
@@ -228,6 +305,32 @@ function ensureRrStyles(){
     ".rr-choice-card--shake{animation:rrShake .35s ease-in-out;}" +
     "@keyframes rrShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-.6cqw);}75%{transform:translateX(.6cqw);}}" +
 
+    /* 전투 요약 화면 (기획서 §4-1, §10-1) — 캐릭터 없이 중앙 패널로 표시한다 */
+    ".rr-summary-panel{position:absolute;left:50%;top:6%;bottom:6%;transform:translateX(-50%);" +
+      "width:56%;min-width:44cqh;z-index:1;display:flex;flex-direction:column;align-items:center;" +
+      "padding:5.4cqh 3.4cqw 3cqh;border-radius:1.8cqh;" +
+      "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
+      "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
+    ".rr-summary-titlebar{position:absolute;top:-3.6cqh;left:50%;transform:translateX(-50%);" +
+      "padding:1.1cqh 3.6cqw;border-radius:1cqh;white-space:nowrap;" +
+      "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.22cqh solid #e8c874;" +
+      "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
+    ".rr-summary-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
+    ".rr-summary-rows{flex:1;width:100%;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:1.2cqh;}" +
+    ".rr-summary-row{display:flex;align-items:center;gap:1.2cqw;padding:.9cqh 0;" +
+      "border-bottom:.14cqh dashed rgba(160,120,70,.4);}" +
+    ".rr-summary-row:last-child{border-bottom:none;}" +
+    ".rr-summary-row-icon{flex:0 0 auto;width:4.6cqh;text-align:center;font-size:3cqh;line-height:1;}" +
+    ".rr-summary-row-label{flex:1;min-width:0;font-size:1.85cqh;font-weight:800;color:#4a3524;}" +
+    ".rr-summary-row-sep{flex:0 0 auto;color:#c79a4a;font-size:1.3cqh;}" +
+    ".rr-summary-row-value{flex:0 0 auto;display:flex;align-items:baseline;gap:.35cqw;justify-content:flex-end;min-width:7cqw;}" +
+    ".rr-summary-row-value strong{font-size:2.6cqh;font-weight:900;color:#a5322a;}" +
+    ".rr-summary-row-value span{font-size:1.3cqh;font-weight:800;color:#6b5236;}" +
+    ".rr-summary-next{margin-top:2.2cqh;width:64%;padding:1.5cqh 0;border:.2cqh solid #e8c874;border-radius:2.6cqh;" +
+      "background:linear-gradient(160deg,#cf5b52,#8f2f2f);color:#fbe9c8;font-size:2.1cqh;font-weight:900;" +
+      "letter-spacing:.15cqh;cursor:pointer;box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.4);}" +
+    ".rr-summary-next:hover{filter:brightness(1.08);}" +
+
     "@media (max-width:900px){" +
       ".rr-frame{width:94%;height:84%;}" +
       ".rr-character-wrap{width:56%;height:56%;left:50%;transform:translateX(-50%);bottom:auto;top:2%;}" +
@@ -235,6 +338,7 @@ function ensureRrStyles(){
       ".rr-badge{top:-3.4cqh;}" +
       ".rr-choice-panel{right:5%;left:5%;width:auto;top:auto;bottom:3%;height:56%;padding-top:3.6cqh;}" +
       ".rr-choice-cards{flex-direction:column;gap:1cqh;}" +
+      ".rr-summary-panel{left:5%;right:5%;width:auto;transform:none;top:4%;bottom:4%;min-width:0;}" +
     "}";
   document.head.appendChild(style);
 }

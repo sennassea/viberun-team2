@@ -150,8 +150,24 @@ function createFreshRunState(){
     relics: [],
     potions: [],
     gold: STARTING_GOLD,
-    moonShards: STARTING_MOON_SHARDS
+    moonShards: STARTING_MOON_SHARDS,
+    // 전투 요약 화면(runResult.js)에서 사용하는 이번 여정 누적 기록 (기획서 §5-1)
+    runStats: {
+      cleared: { enemy: 0, elite: 0, boss: 0 },
+      usedPotionCount: 0
+    }
   };
+}
+
+function recordBattleClear(nodeType){
+  if(!RUN_STATE || !RUN_STATE.runStats || !RUN_STATE.runStats.cleared) return;
+  if(nodeType !== "enemy" && nodeType !== "elite" && nodeType !== "boss") return;
+  RUN_STATE.runStats.cleared[nodeType] += 1;
+}
+
+function recordPotionUsed(){
+  if(!RUN_STATE || !RUN_STATE.runStats) return;
+  RUN_STATE.runStats.usedPotionCount = (RUN_STATE.runStats.usedPotionCount || 0) + 1;
 }
 
 function beginNewRun(){
@@ -1017,6 +1033,7 @@ function nodeClear(){
   S.enemies.forEach(e => toast(e.name+" 성불 완료"));
 
   const nodeType = S.battleNodeType || "enemy";
+  recordBattleClear(nodeType);
   applyRelicTrigger("battleEnd");
   if(nodeType==="boss"){
     grantBattleGoldReward();
@@ -1951,6 +1968,7 @@ function useSelfPotion(index){
   if(!potion || !isSelfUsePotion(potion)) return;
   applySelfPotionEffect(potion);
   S.potions.splice(index, 1);
+  recordPotionUsed();
   syncRunStateFromCombat();
   hidePotionUseButton();
   renderAll();
@@ -2060,6 +2078,7 @@ function useSingleAttackPotion(index, targetEnemy){
   const damage = typeof potion.value === "number" ? potion.value : 5;
   applyDamageWithFeedback(targetEnemy, damage, S.player.weak);
   S.potions.splice(index, 1);
+  recordPotionUsed();
   syncRunStateFromCombat();
   autoSelectTarget();
   if(livingEnemies().length === 0){
@@ -2082,6 +2101,7 @@ function useMarkPotion(index, targetEnemy){
   applyRelicTrigger("onMarkApply", { target: targetEnemy, amount });
   spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
   S.potions.splice(index, 1);
+  recordPotionUsed();
   syncRunStateFromCombat();
   renderAll();
   return true;
@@ -2097,6 +2117,7 @@ function useWeakPotion(index, targetEnemy){
   addStatus(targetEnemy, "agitation", amount);
   applyRelicTrigger("onAgitationApply", { target: targetEnemy, amount });
   S.potions.splice(index, 1);
+  recordPotionUsed();
   syncRunStateFromCombat();
   renderAll();
   return true;
@@ -2111,6 +2132,7 @@ function useAllAttackPotion(index, targetEnemy){
   const damage = typeof potion.value === "number" ? potion.value : 3;
   livingEnemies().forEach(enemy => applyDamageWithFeedback(enemy, damage, S.player.weak));
   S.potions.splice(index, 1);
+  recordPotionUsed();
   syncRunStateFromCombat();
   autoSelectTarget();
   if(livingEnemies().length === 0){
