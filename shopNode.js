@@ -464,6 +464,18 @@ function shopItemTypeLabel(item) {
 function shopProductCardHtml(item) {
   const selected = item.id === SHOP_STATE.selectedId;
   const typeCls  = item.category === "card" ? item.cardType : "";
+  if (item.category === "card" && typeof cardFaceHtml === "function") {
+    const card = CARD_DB[item.sourceKey];
+    if (card) {
+      return (
+        '<button type="button" class="shop-product shop-product-card-frame card-frame-card cost-' + escapeShopHtml(card.type) +
+          (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + escapeShopHtml(item.id) + '">' +
+          cardFaceHtml(card) +
+          '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : "🪙 " + item.price) + '</div>' +
+        '</button>'
+      );
+    }
+  }
   return (
     '<button type="button" class="shop-product' + (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + item.id + '">' +
       '<div class="shop-product-name">' + escapeShopHtml(item.name) + '</div>' +
@@ -499,13 +511,23 @@ function renderShopDetail() {
   else if (potionFull) buyLabel = "슬롯 가득 참";
   else if (goldShort) buyLabel = "골드 부족";
 
-  host.innerHTML =
-    '<div class="shop-detail-name">' + escapeShopHtml(item.name) + '</div>' +
-    '<div class="shop-detail-art">' + escapeShopHtml(item.emoji || "") + '</div>' +
-    '<div class="shop-detail-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
-    '<div class="shop-detail-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
-    '<div class="shop-detail-price">' + (item.soldOut ? "" : "🪙 " + item.price) + '</div>' +
-    '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>';
+  const card = item.category === "card" && typeof cardFaceHtml === "function" ? CARD_DB[item.sourceKey] : null;
+  host.innerHTML = card
+    ? (
+      '<div class="shop-detail-card-preview card-frame-card cost-' + escapeShopHtml(card.type) + '">' +
+        cardFaceHtml(card) +
+      '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : "🪙 " + item.price) + '</div>' +
+      '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
+    )
+    : (
+      '<div class="shop-detail-name">' + escapeShopHtml(item.name) + '</div>' +
+      '<div class="shop-detail-art">' + escapeShopHtml(item.emoji || "") + '</div>' +
+      '<div class="shop-detail-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
+      '<div class="shop-detail-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : "🪙 " + item.price) + '</div>' +
+      '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
+    );
 
   const buyBtn = host.querySelector("#shopBuyBtn");
   if (buyBtn) buyBtn.addEventListener("click", buyCurrentItem);
@@ -600,6 +622,11 @@ function ensureShopStyles() {
     ".shop-product-type{font-size:1.05cqh;font-weight:800;color:#fff;padding:.15cqh .8cqw;border-radius:.7cqh;background:#8a6b3d;}" +
     ".shop-product-desc{font-size:1.05cqh;font-weight:700;color:#6b4a20;text-align:center;line-height:1.3;min-height:3.2cqh;}" +
     ".shop-product-price{font-size:1.3cqh;font-weight:900;color:#a97a1f;}" +
+    ".shop-product.shop-product-card-frame{position:relative;display:block;justify-self:center;width:min(13.5cqw,22cqh);height:auto;aspect-ratio:2/3;" +
+      "min-height:0;padding:0;gap:0;border:0;border-radius:0;overflow:hidden;background:#f5efe4;}" +
+    ".shop-product.shop-product-card-frame.selected{box-shadow:0 0 0 .28cqh rgba(63,143,224,.55),0 .5cqh 1cqh rgba(90,65,25,.14);}" +
+    ".shop-card-price-badge{position:absolute;right:.55cqw;bottom:.55cqh;z-index:5;padding:.28cqh .55cqw;border-radius:.75cqh;" +
+      "background:rgba(255,251,240,.94);border:.14cqh solid rgba(178,140,80,.58);color:#a97a1f;font-size:1.15cqh;font-weight:900;box-shadow:0 .25cqh .6cqh rgba(90,65,25,.18);}" +
 
     ".shop-detail{flex:none;width:17cqw;min-width:22cqh;display:flex;flex-direction:column;align-items:center;gap:.8cqh;" +
       "padding:1.4cqh 1.1cqw;background:rgba(255,251,240,.92);border:.2cqh solid rgba(178,140,80,.5);border-radius:1.3cqh;}" +
@@ -610,6 +637,7 @@ function ensureShopStyles() {
     ".shop-detail-type{font-size:1.15cqh;font-weight:800;color:#fff;padding:.2cqh 1cqw;border-radius:.8cqh;background:#8a6b3d;}" +
     ".shop-detail-desc{font-size:1.2cqh;font-weight:700;color:#6b4a20;text-align:center;line-height:1.4;}" +
     ".shop-detail-price{font-size:1.6cqh;font-weight:900;color:#a97a1f;}" +
+    ".shop-detail-card-preview{position:relative;width:min(14cqw,25cqh);height:auto;aspect-ratio:2/3;flex:none;}" +
     ".shop-buy-btn{width:100%;height:5cqh;border-radius:1.1cqh;font-size:1.9cqh;font-weight:900;cursor:pointer;" +
       "font:inherit;border:.2cqh solid #3f7c4e;background:linear-gradient(180deg,#7fbf8a,#4f9c62);color:#fff;margin-top:auto;}" +
     ".shop-buy-btn:disabled{filter:grayscale(.5) brightness(.92);cursor:default;opacity:.7;}" +
