@@ -60,7 +60,7 @@
       weakMultiplier: WEAK_MULT,
       // true: 슬더스식 턴 종료 후 보호막 제거
       // false: 보호막이 0이 되기 전까지 유지
-      resetPlayerBlockEachTurn: false
+      resetPlayerBlockEachTurn: true
     },
 
     getStatusCardDb(){
