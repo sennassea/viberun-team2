@@ -47,7 +47,9 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .start-screen{
   position:absolute; inset:0; z-index:180; display:flex; flex-direction:column; align-items:center;
   background:
-    radial-gradient(circle at 50% 18%, rgba(184,223,255,.38) 0%, rgba(58,132,205,0) 28%),
+    radial-gradient(circle at 50% 18%, rgba(184,223,255,.2) 0%, rgba(58,132,205,0) 28%),
+    linear-gradient(180deg, rgba(9,28,52,.08) 0%, rgba(9,28,52,.22) 100%),
+    url("assets/background/title_main.jpg") center/cover no-repeat,
     linear-gradient(180deg, #4ca6e8 0%, #2f7ec3 58%, #1d5d98 100%);
 }
 .start-screen.hidden{display:none;}
