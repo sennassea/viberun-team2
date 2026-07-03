@@ -13,12 +13,23 @@
    플레이어가 직접 고르게 한다.
    ========================================================================= */
 
-/* ── 신령 3종 (화면을 열 때마다 랜덤 출현) ───────────────────────────────── */
-const START_BLESSING_SPIRITS = [
-  { emoji: "👻", name: "수호 신령",   dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지." },
-  { emoji: "🧿", name: "인연 신령",   dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마." },
-  { emoji: "🏮", name: "길잡이 신령", dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나." },
-];
+/* ── 신령 3종 (화면을 열 때마다 랜덤 출현) ─────────────────────────────────
+   엔딩 지시서의 선택 신령 ID/대사와 동일한 데이터 원본을 사용한다. */
+const START_BLESSING_ENDING_DATA = window.BOHYUN_RUN_RESULT_DATA && window.BOHYUN_RUN_RESULT_DATA.ending;
+const START_BLESSING_SPIRITS = (START_BLESSING_ENDING_DATA && Array.isArray(START_BLESSING_ENDING_DATA.spirits))
+  ? START_BLESSING_ENDING_DATA.spirits.map(spirit => ({
+      id: spirit.id,
+      image: spirit.image,
+      emoji: spirit.emoji,
+      name: spirit.name,
+      dialogue: spirit.blessingDialogue,
+      victoryLines: spirit.lines
+    }))
+  : [
+      { emoji: "👻", name: "수호 신령",   dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지." },
+      { emoji: "🧿", name: "인연 신령",   dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마." },
+      { emoji: "🏮", name: "길잡이 신령", dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나." },
+    ];
 
 /* ── 은혜 선택지 3종 (테스트 데이터 - 기획서 참고 이미지 예시 기준) ─────────
    주문 ID/희귀도, 결계 수치는 밸런스 단계에서 변경될 수 있는 예시 데이터다. */
@@ -37,32 +48,6 @@ const SB_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#dock
 let sbOverlayEl = null;
 let sbResolved  = false;
 let sbSpirit    = null;
-
-const START_BLESSING_SPIRIT_ASSETS = [
-  {
-    image: "assets/spirits/guardian_spirit.png",
-    emoji: "👻",
-    name: "수호 신령",
-    dialogue: "기특하구나, 빈손으로 들여보낼 수는 없지."
-  },
-  {
-    image: "assets/spirits/bond_spirit.png",
-    emoji: "🧿",
-    name: "인연 신령",
-    dialogue: "얽힌 것은 풀고, 필요한 것은 이어주마."
-  },
-  {
-    image: "assets/spirits/guide_spirit.png",
-    emoji: "🏮",
-    name: "길잡이 신령",
-    dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나."
-  },
-];
-START_BLESSING_SPIRIT_ASSETS.forEach((asset, index) => {
-  if(START_BLESSING_SPIRITS[index]){
-    START_BLESSING_SPIRITS[index] = { ...START_BLESSING_SPIRITS[index], ...asset };
-  }
-});
 
 /* ── 화면 열기 ────────────────────────────────────────────────────────────── */
 window.OPEN_START_BLESSING = function(){
@@ -144,6 +129,7 @@ function selectSbBlessing(blessing){
   sbResolved = true;
 
   applySbBlessing(blessing);
+  saveSbSpiritToRunState();
   closeSbOverlay();
   if(typeof toast === "function") toast(blessing.name + "의 은혜를 받았습니다.");
 
@@ -198,6 +184,24 @@ function applySbBlessing(blessing){
   if(blessing.effect === "firstBattleBlock"){
     run.startBlessingEffect = { type: "firstBattleBlock", value: blessing.value || 8, used: false };
   }
+}
+
+/* ── 이번 런의 신령을 RUN_STATE에 저장 (승리 연출에서 동일한 신령을 재사용) ─
+   기획서 §3-2, §5-2: 승리 연출은 별도 신령 이미지를 새로 지정하지 않고,
+   신령의 은혜에서 사용한 신령 데이터(RUN_STATE.blessingSpirit)를 그대로 읽는다. */
+function saveSbSpiritToRunState(){
+  const run = getSbRunState();
+  if(!run || !sbSpirit) return;
+  run.blessingSpirit = {
+    id: sbSpirit.id || sbSpirit.name,
+    name: sbSpirit.name,
+    image: sbSpirit.image,
+    emoji: sbSpirit.emoji,
+    appearanceTitle: "승리",
+    appearanceLines: (sbSpirit.victoryLines && sbSpirit.victoryLines.length)
+      ? sbSpirit.victoryLines
+      : [sbSpirit.dialogue]
+  };
 }
 
 /* ── mapSystem.js의 getCurrentNodeId() 재정의 ─────────────────────────────

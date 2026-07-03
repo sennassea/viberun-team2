@@ -150,8 +150,31 @@ function createFreshRunState(){
     relics: [],
     potions: [],
     gold: STARTING_GOLD,
-    moonShards: STARTING_MOON_SHARDS
+    moonShards: STARTING_MOON_SHARDS,
+    // 전투 요약/상세 화면(runResult.js)에서 사용하는 이번 여정 누적 기록 (기획서 §5-1)
+    runStats: {
+      startedAt: Date.now(),
+      cleared: { enemy: 0, elite: 0, boss: 0 },
+      usedPotionCount: 0,
+      usedPotions: [],
+      route: [{ stageIndex: -1, type: "start" }]
+    }
   };
+}
+
+function recordBattleClear(nodeType){
+  if(!RUN_STATE || !RUN_STATE.runStats || !RUN_STATE.runStats.cleared) return;
+  if(nodeType !== "enemy" && nodeType !== "elite" && nodeType !== "boss") return;
+  RUN_STATE.runStats.cleared[nodeType] += 1;
+}
+
+function recordPotionUsed(potion){
+  if(!RUN_STATE || !RUN_STATE.runStats) return;
+  RUN_STATE.runStats.usedPotionCount = (RUN_STATE.runStats.usedPotionCount || 0) + 1;
+  if(potion && potion.id){
+    if(!Array.isArray(RUN_STATE.runStats.usedPotions)) RUN_STATE.runStats.usedPotions = [];
+    RUN_STATE.runStats.usedPotions.push({ id: potion.id, name: potion.name, emoji: potion.emoji });
+  }
 }
 
 function beginNewRun(){
@@ -1017,6 +1040,7 @@ function nodeClear(){
   S.enemies.forEach(e => toast(e.name+" 성불 완료"));
 
   const nodeType = S.battleNodeType || "enemy";
+  recordBattleClear(nodeType);
   applyRelicTrigger("battleEnd");
   if(nodeType==="boss"){
     grantBattleGoldReward();
@@ -1707,12 +1731,24 @@ function endGame(result){
   S.over = result; S.busy = false;
   if(S) S.giveUpToStartOnly = false;
   saveCompletedRunRecord(result);
+
+  // 보스 처치(승리) 시 신령의 은혜 신령 출현 연출을 먼저 보여준다.
+  // runResult.js가 처리하지 못하는 결과(패배 등)는 기존 종료 UI로 폴백한다.
+  if(window.RUN_RESULT_UI && typeof window.RUN_RESULT_UI.open === "function" &&
+     window.RUN_RESULT_UI.open(result, () => showLegacyEndOverlay(result, giveUpToStartOnly))){
+    return true;
+  }
+
+  showLegacyEndOverlay(result, giveUpToStartOnly);
+  return true;
+}
+
+function showLegacyEndOverlay(result, giveUpToStartOnly){
   $("#overTitle").textContent = result==="win" ? "🎉 승리!" : "💀 패배...";
   $("#overDesc").textContent  = result==="win" ? "모든 영혼을 성불시켰습니다." : PLAYER_DEF.name+"이 쓰러졌습니다.";
   updateRestartButtonForEndGame(result === "lose" || giveUpToStartOnly);
   $("#returnStart").style.display = result==="lose" ? "block" : "none";
   $("#over").classList.add("show");
-  return true;
 }
 
 function updateRestartButtonForEndGame(removeRestart){
@@ -1939,6 +1975,7 @@ function useSelfPotion(index){
   if(!potion || !isSelfUsePotion(potion)) return;
   applySelfPotionEffect(potion);
   S.potions.splice(index, 1);
+  recordPotionUsed(potion);
   syncRunStateFromCombat();
   hidePotionUseButton();
   renderAll();
@@ -2048,6 +2085,7 @@ function useSingleAttackPotion(index, targetEnemy){
   const damage = typeof potion.value === "number" ? potion.value : 5;
   applyDamageWithFeedback(targetEnemy, damage, S.player.weak);
   S.potions.splice(index, 1);
+  recordPotionUsed(potion);
   syncRunStateFromCombat();
   autoSelectTarget();
   if(livingEnemies().length === 0){
@@ -2070,6 +2108,7 @@ function useMarkPotion(index, targetEnemy){
   applyRelicTrigger("onMarkApply", { target: targetEnemy, amount });
   spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
   S.potions.splice(index, 1);
+  recordPotionUsed(potion);
   syncRunStateFromCombat();
   renderAll();
   return true;
@@ -2085,6 +2124,7 @@ function useWeakPotion(index, targetEnemy){
   addStatus(targetEnemy, "agitation", amount);
   applyRelicTrigger("onAgitationApply", { target: targetEnemy, amount });
   S.potions.splice(index, 1);
+  recordPotionUsed(potion);
   syncRunStateFromCombat();
   renderAll();
   return true;
@@ -2099,6 +2139,7 @@ function useAllAttackPotion(index, targetEnemy){
   const damage = typeof potion.value === "number" ? potion.value : 3;
   livingEnemies().forEach(enemy => applyDamageWithFeedback(enemy, damage, S.player.weak));
   S.potions.splice(index, 1);
+  recordPotionUsed(potion);
   syncRunStateFromCombat();
   autoSelectTarget();
   if(livingEnemies().length === 0){

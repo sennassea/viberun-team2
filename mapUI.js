@@ -385,13 +385,13 @@ const DMAP_LEGEND_DATA = [
   {
     type: "enemy",
     icon: "👊",
-    label: "미련이 느껴지는 곳",
+    label: "노멀",
     tip: "기본적인 위령이 필요한 곳입니다. 승리하면 주문 보상과 골드를 얻을 수 있습니다.",
   },
   {
     type: "elite",
     icon: "👹",
-    label: "기운이 더 무거워 보이는 곳",
+    label: "엘리트",
     tip: "강한 미련이 느껴지는 곳입니다. 위험하지만 더 좋은 보상을 기대할 수 있습니다.",
   },
   {
@@ -415,7 +415,7 @@ const DMAP_LEGEND_DATA = [
   {
     type: "boss",
     icon: "💀",
-    label: "기운이 엄청 무거운 곳",
+    label: "보스",
     tip: "ACT 1의 마지막 전투입니다. 최종 목표를 향해 나아가세요.",
   },
 ];
