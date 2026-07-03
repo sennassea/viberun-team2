@@ -6,8 +6,8 @@
    현재 구현 범위:
    - 승리: ① 신령의 은혜 신령 출현 연출 → ② 동자승의 끝없는 여정 선택 화면
      → ③ 전투 요약 화면 → ④ 전투 상세 화면
-   - 패배: 동자승 패배 연출은 아직 없으므로 결과 즉시 ③ 전투 요약 화면으로
-     진입한 뒤 ④ 전투 상세 화면으로 이어진다.
+   - 패배: ① 동자승 패배 연출(터치 시 바로 전투 요약으로 이동, 끝없는 여정
+     선택 화면은 건너뛴다) → ③ 전투 요약 화면 → ④ 전투 상세 화면
    전투 상세 화면의 "메인 메뉴로 돌아가기"는 오버레이를 닫고
    startMenu.js의 returnToStartScreen()을 호출해 새 게임을 바로 시작하지
    않고 시작 화면(메인 메뉴)으로 돌아간다.
@@ -131,6 +131,44 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
     event.preventDefault();
     overlay.removeEventListener("click", handleContinue);
     renderEndlessJourneyChoice(NPC_DONGJASEUNG, snapshot, onFinish);
+  };
+  overlay.addEventListener("click", handleContinue);
+}
+
+/* ── 패배 연출: 동자승 (기획서 §3-3) ───────────────────────────────────────
+   승리 연출(renderBlessingSpiritAppearance)과 동일한 rr-dialog-panel 구조를
+   재사용해 패널/캐릭터 크기를 그대로 맞춘다. 터치하면 끝없는 여정 선택 화면을
+   거치지 않고 바로 전투 요약 화면으로 이동한다 (기획서 §2-2). */
+function renderDongjaseungDefeat(npc, snapshot, onFinish){
+  const overlay = ensureRrOverlay();
+
+  const characterWrap = overlay.querySelector("#rrCharacterWrap");
+  characterWrap.innerHTML = npc.image
+    ? '<img src="' + npc.image + '" alt="' + (npc.name || "") + '">'
+    : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
+
+  const panelSlot = overlay.querySelector("#rrPanelSlot");
+  panelSlot.innerHTML =
+    '<div class="rr-dialog-panel">' +
+      '<div class="rr-badge"><span id="rrBadgeText">패배</span></div>' +
+      '<div class="rr-lines" id="rrLines"></div>' +
+      '<div class="rr-divider"></div>' +
+      '<div class="rr-continue">✦ 터치하여 계속 ✦</div>' +
+    '</div>';
+
+  overlay.querySelector("#rrBadgeText").textContent = npc.defeatTitle || "패배";
+
+  const dialogLines = [npc.defeatLine1, npc.defeatLine2].filter(Boolean);
+  overlay.querySelector("#rrLines").innerHTML =
+    dialogLines.map(line => '<p>' + line + '</p>').join("");
+
+  overlay.classList.add("show");
+  overlay.setAttribute("aria-hidden", "false");
+
+  const handleContinue = (event) => {
+    event.preventDefault();
+    overlay.removeEventListener("click", handleContinue);
+    renderRunSummary(snapshot, onFinish);
   };
   overlay.addEventListener("click", handleContinue);
 }
@@ -463,8 +501,8 @@ function rrOpen(result, onContinue){
     return true;
   }
 
-  // 패배: 동자승 패배 연출은 이후 단계에서 추가하고, 현재는 전투 요약으로 바로 진입한다.
-  renderRunSummary(snapshot, onContinue);
+  // 패배: 동자승 패배 연출 → (끝없는 여정 선택 없이) 전투 요약으로 이동.
+  renderDongjaseungDefeat(NPC_DONGJASEUNG, snapshot, onContinue);
   return true;
 }
 
