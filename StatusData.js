@@ -34,6 +34,21 @@
       maxStack: 99,
       showOnEnemy: true
     },
+    fracture: {
+      id: "fracture",
+      legacyKey: "fracture",
+      name: "균열",
+      shortName: "균열",
+      icon: "💔",
+      iconImage: "",
+      color: "#d94a68",
+      description: "받는 정화 피해가 25% 증가합니다.",
+      decayTiming: "afterEnemyAction",
+      decayAmount: 1,
+      decayTimingText: "대상 턴 종료 시 1 감소합니다.",
+      maxStack: 99,
+      showOnEnemy: true
+    },
     anxiety: {
       id: "anxiety",
       legacyKey: "anxiety",

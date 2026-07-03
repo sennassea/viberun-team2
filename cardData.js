@@ -62,7 +62,7 @@ const CARD_DB = {
   lullaby_chant:{name:"자장 염송", cost:1, type:"skill", emoji:"🎵", target:"enemy", attr:"동요", rarity:"common",
           desc:"동요를 1 부여합니다.\n주문을 1장 뽑습니다.", fx:[{t:"applyWeak",v:1},{t:"draw",v:1}]},
   shaking_heart:{name:"흔들리는 마음", cost:1, type:"skill", emoji:"💗", target:"enemy", attr:"동요", rarity:"common",
-          desc:"동요를 2 부여합니다. 대상의 동요가 3 이상이면 주문을 1장 뽑습니다.", fx:[{t:"applyWeak",v:2},{t:"ifAgitationAtLeastDraw",threshold:3,v:1}]},
+          desc:"동요와 균열을 1씩 부여합니다. 대상의 동요가 3 이상이면 주문을 1장 뽑습니다.", fx:[{t:"applyWeak",v:1},{t:"applyFracture",v:1},{t:"ifAgitationAtLeastDraw",threshold:3,v:1}]},
   unread_letter:{name:"읽지 못한 편지", cost:1, type:"attack", emoji:"✉️", target:"enemy", attr:"동요", rarity:"common",
           desc:"적의 미련을 5만큼 정화합니다.\n동요를 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyWeak",v:1}]},
   uneasy_silence:{name:"불편한 침묵", cost:1, type:"skill", emoji:"🤫", target:"enemy", attr:"동요", rarity:"common",
@@ -72,11 +72,11 @@ const CARD_DB = {
   tearful_memory:{name:"눈물 젖은 기억", cost:1, type:"attack", emoji:"💧", target:"enemy", attr:"동요", rarity:"uncommon",
           desc:"적의 미련을 6만큼 정화합니다. 동요가 있는 적을 처치하면 다른 적에게 동요를 2 전이합니다.\n대상이 살아 있으면 동요를 1 부여합니다.", fx:[{t:"damage",v:6},{t:"transferAgitationOnKill",v:2},{t:"applyWeak",v:1}]},
   collapsed_ward:{name:"무너진 병실", cost:2, type:"skill", emoji:"🏚️", target:"enemy", attr:"동요", rarity:"uncommon",
-          desc:"모든 적에게 동요를 1 부여합니다.", fx:[{t:"applyWeakAll",v:1}]},
+          desc:"모든 적에게 동요와 균열을 1씩 부여합니다.", fx:[{t:"applyWeakAll",v:1},{t:"applyFractureAll",v:1}]},
   unsent_words:{name:"전하지 못한 말", cost:2, type:"attack", emoji:"💌", target:"enemy", attr:"동요", rarity:"rare",
-          desc:"대상의 모든 동요를 소모하고, 소모한 동요 1마다 5 정화합니다.", fx:[{t:"consumeAllAgitationDamage",per:5}]},
+          desc:"균열을 2 부여합니다. 대상의 모든 동요를 소모하고, 소모한 동요 1마다 4 정화합니다.", fx:[{t:"applyFracture",v:2},{t:"consumeAllAgitationDamage",per:4}]},
   mind_collapse:{name:"마음 붕괴", cost:3, type:"attack", emoji:"💔", target:"enemy", attr:"동요", rarity:"rare",
-          desc:"적의 미련을 12만큼 정화합니다. 동요 1마다 4 추가 정화합니다. 대상의 동요가 5 이상이면 모든 적의 미련을 8 정화합니다.", fx:[{t:"damageByWeak",base:12,per:4},{t:"ifAgitationAtLeastDamageAll",threshold:5,v:8}]},
+          desc:"균열을 2 부여합니다. 적의 미련을 10만큼 정화하고 동요 1마다 3 추가 정화합니다. 대상의 동요가 5 이상이면 모든 적의 미련을 6 정화합니다.", fx:[{t:"applyFracture",v:2},{t:"damageByWeak",base:10,per:3},{t:"ifAgitationAtLeastDamageAll",threshold:5,v:6}]},
 
   // -----------------------------------------------------------------------
   // 성불 주문 10장
