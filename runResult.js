@@ -31,7 +31,7 @@ const NPC_DONGJASEUNG = {
     "아가, 이번 여정은 끝났지만 아직도 수많은 미련이 남았구나.",
     "아가, 이 끝없는 여정을 시작할래?"
   ],
-  defeatTitle: RR_DEFEAT.label || "여정 실패",
+  defeatTitle: RR_DEFEAT.label || "패배",
   defeatLine1: RR_DEFEAT.mainLine || "어라? 벌써 끝이야?",
   defeatLine2: RR_DEFEAT.subLine || "아가, 너무 서두른 거 아니야? 다음엔 더 멀리 가보자."
 };
@@ -42,7 +42,7 @@ const NPC_DONGJASEUNG = {
 const RR_NODE_TYPE_INFO = {
   start: { emoji: "🚪", label: "시작" },
   lobby: { emoji: "🚪", label: "시작" },
-  enemy: { emoji: "👺", label: "일반 전투" },
+  enemy: { emoji: "👺", label: "노멀" },
   elite: { emoji: "👹", label: "엘리트" },
   boss:  { emoji: "💀", label: "보스" },
   event: { emoji: "❓", label: "이벤트" },
@@ -276,7 +276,7 @@ function renderRunSummary(snapshot, onFinish){
   const rows = [
     { icon:"🗼", label:"진행한 스테이지 수", value:snapshot.highestFloor, unit:"층" },
     { icon:"💀", label:"클리어 보스 수",     value:snapshot.cleared.boss,  unit:"개" },
-    { icon:"👺", label:"클리어 일반 전투 수", value:snapshot.cleared.enemy, unit:"개" },
+    { icon:"👺", label:"클리어 노멀 수",      value:snapshot.cleared.enemy, unit:"개" },
     { icon:"👹", label:"클리어 엘리트 수",    value:snapshot.cleared.elite, unit:"개" },
     { icon:"🏺", label:"수집한 법구 수",      value:snapshot.relicCount,    unit:"개" },
     { icon:"🧪", label:"사용한 약병 수",      value:snapshot.usedPotionCount, unit:"개" }

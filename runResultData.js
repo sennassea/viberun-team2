@@ -9,7 +9,7 @@
 window.BOHYUN_RUN_RESULT_DATA = {
   ending: {
     labels: {
-      spirit: "여정 종료",
+      spirit: "승리",
       dongja: "끝없는 여정",
       continue: "터치하여 계속"
     },
@@ -72,7 +72,7 @@ window.BOHYUN_RUN_RESULT_DATA = {
     }
   },
   defeat: {
-    label: "여정 실패",
+    label: "패배",
     speaker: "동자신",
     emoji: "🧒",
     mainLine: "어라? 벌써 끝이야?",

@@ -197,7 +197,7 @@ function saveSbSpiritToRunState(){
     name: sbSpirit.name,
     image: sbSpirit.image,
     emoji: sbSpirit.emoji,
-    appearanceTitle: "여정 종료",
+    appearanceTitle: "승리",
     appearanceLines: (sbSpirit.victoryLines && sbSpirit.victoryLines.length)
       ? sbSpirit.victoryLines
       : [sbSpirit.dialogue]
