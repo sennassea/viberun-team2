@@ -74,6 +74,19 @@
     { id: "W-051", target: ".enemy .hpbar" },
     { id: "W-052", target: BATTLE_ENEMY_HIGHLIGHT_SELECTOR }
   ];
+  const FINAL_ENDING_DIALOGUE_STEPS = [
+    { id: "W-053" },
+    { id: "W-054" },
+    { id: "W-055" },
+    { id: "W-056", systemPopup: true },
+    { id: "W-057" },
+    { id: "W-058" },
+    { id: "W-059" },
+    { id: "W-060" },
+    { id: "W-061" },
+    { id: "W-062" },
+    { id: "W-063" }
+  ];
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
   let tutorialPauseState = null;
   let tutorialBattleIntroActive = false;
@@ -86,7 +99,7 @@
   let tutorialFirstNewTurnSkillCardGuaranteed = false;
   let finalFreePlayActive = false;
   let finalLowHpGuideShown = false;
-  let finalPurifiedReadyLogged = false;
+  let finalEndingDialogueShown = false;
 
   function startTutorialBattle(){
     state.isTutorialBattleActive = true;
@@ -372,6 +385,36 @@
     root.appendChild(overlay);
     if(nextButton) nextButton.focus();
     updateTutorialBattleHighlight(dialogue.targetSelector, { separate: !!dialogue.separateHighlights });
+  }
+
+  function renderTutorialBattleSystemPopup(dialogue, onNext){
+    const root = document.getElementById("game");
+    if(!root) return;
+    removeTutorialBattleIntroOverlay();
+
+    const overlay = document.createElement("div");
+    overlay.className = "tutorial-battle-intro-overlay";
+    overlay.innerHTML =
+      '<div class="tutorial-battle-system-popup" role="dialog" aria-modal="true">' +
+        '<div class="tutorial-battle-system-text">' + renderTutorialBattleIntroText(dialogue.text || "") + '</div>' +
+        '<div class="tutorial-battle-system-actions">' +
+          '<button type="button" class="tutorial-battle-intro-next">다음</button>' +
+        '</div>' +
+      '</div>';
+    overlay.addEventListener("click", event => {
+      if(event.target && typeof event.target.closest === "function" && event.target.closest(".tutorial-battle-intro-next")) return;
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
+    const nextButton = overlay.querySelector(".tutorial-battle-intro-next");
+    nextButton.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      if(typeof onNext === "function") onNext();
+    });
+    root.appendChild(overlay);
+    nextButton.focus();
+    clearTutorialBattleHighlight();
   }
 
   function blockTutorialBattleIntroEvent(event){
@@ -1128,8 +1171,13 @@
     if(!isTutorialBattle() || !finalFreePlayActive) return;
     const enemy = getTutorialFinalTargetEnemy();
     if(!enemy) return;
+    if(enemy.hp <= 0 && !finalLowHpGuideShown){
+      finalLowHpGuideShown = true;
+      showTutorialFinalLowHpGuideSequence(FINAL_LOW_HP_GUIDE_STEPS, 0);
+      return;
+    }
     if(enemy.hp <= 0){
-      markTutorialEnemyPurifiedReady();
+      startTutorialFinalEndingDialogue();
       return;
     }
     if(enemy.hp < 10 && !finalLowHpGuideShown){
@@ -1138,17 +1186,27 @@
     }
   }
 
+  function shouldDelayTutorialCompletion(){
+    if(!isTutorialBattle()) return false;
+    if(getTutorialStep() === "ending_dialogue_completed") return false;
+    return !!(finalFreePlayActive || finalLowHpGuideShown || finalEndingDialogueShown);
+  }
+
+  function onTutorialVictoryPending(){
+    checkTutorialFinalFreePlayProgress();
+    return shouldDelayTutorialCompletion();
+  }
+
   function getTutorialFinalTargetEnemy(){
     if(typeof S === "undefined" || !S || !Array.isArray(S.enemies)) return null;
     return S.enemies.find(enemy => enemy && enemy.hp > 0) || S.enemies.find(enemy => enemy && enemy.hp <= 0) || null;
   }
 
-  function markTutorialEnemyPurifiedReady(){
-    if(finalPurifiedReadyLogged) return;
-    finalPurifiedReadyLogged = true;
+  function startTutorialFinalEndingDialogue(){
+    if(finalEndingDialogueShown) return;
+    finalEndingDialogueShown = true;
     finalFreePlayActive = false;
-    setTutorialStep("enemy_purified_ready");
-    console.log("tutorial enemy purified ready");
+    showTutorialFinalEndingDialogueSequence(FINAL_ENDING_DIALOGUE_STEPS, 0);
   }
 
   function showTutorialFinalLowHpGuideSequence(steps, index){
@@ -1179,6 +1237,10 @@
 
   function finishTutorialFinalLowHpGuide(){
     cleanupTutorialBattleIntro();
+    if(isTutorialFinalTargetPurified()){
+      startTutorialFinalEndingDialogue();
+      return;
+    }
     finalFreePlayActive = true;
     setTutorialStep("final_free_play");
     if(typeof S !== "undefined" && S && !S.over) S.busy = false;
@@ -1186,10 +1248,59 @@
     checkTutorialFinalFreePlayProgress();
   }
 
+  function isTutorialFinalTargetPurified(){
+    const enemy = getTutorialFinalTargetEnemy();
+    return !!(enemy && enemy.hp <= 0);
+  }
+
+  function showTutorialFinalEndingDialogueSequence(steps, index){
+    if(!isTutorialBattle()){
+      cleanupTutorialBattleIntro();
+      return;
+    }
+    if(index >= steps.length){
+      finishTutorialFinalEndingDialogue();
+      return;
+    }
+
+    const step = steps[index];
+    const dialogue = getTutorialBattleDialogue(step.id);
+    if(!dialogue){
+      showTutorialFinalEndingDialogueSequence(steps, index + 1);
+      return;
+    }
+
+    clearTutorialBattleHighlight();
+    ensureTutorialBattleIntroStyles();
+    tutorialBattleIntroActive = true;
+    pauseTutorialBattleIntroCombat();
+    setTutorialStep(dialogue.id);
+    if(step.systemPopup){
+      renderTutorialBattleSystemPopup(dialogue, () => {
+        showTutorialFinalEndingDialogueSequence(steps, index + 1);
+      });
+      return;
+    }
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: step.target, dialogueClass: step.dialogueClass }, () => {
+      showTutorialFinalEndingDialogueSequence(steps, index + 1);
+    });
+  }
+
+  function finishTutorialFinalEndingDialogue(){
+    cleanupTutorialBattleIntro();
+    setTutorialStep("ending_dialogue_completed");
+    if(typeof S !== "undefined" && S && !S.over) S.busy = true;
+    if(typeof updateEndBtn === "function") updateEndBtn();
+    console.log("tutorial ending dialogue completed");
+    if(window.TUTORIAL_SYSTEM && typeof window.TUTORIAL_SYSTEM.completeTutorialBattle === "function"){
+      window.TUTORIAL_SYSTEM.completeTutorialBattle();
+    }
+  }
+
   function resetTutorialFinalFreePlayState(){
     finalFreePlayActive = false;
     finalLowHpGuideShown = false;
-    finalPurifiedReadyLogged = false;
+    finalEndingDialogueShown = false;
   }
 
   function finishTutorialEnemyActionGuide(){
@@ -1222,6 +1333,9 @@
       ".tutorial-battle-intro-overlay{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);display:block;cursor:default;}" +
       ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;--tutorial-dongjasin-avatar-width:7.2cqh;--tutorial-dongjasin-avatar-height:10.2cqh;--tutorial-dongjasin-avatar-left:-9.6cqh;--tutorial-dongjasin-avatar-top:-1.6cqh;--tutorial-dongjasin-avatar-transform:none;transform:translateX(-50%);z-index:281;width:min(54cqw,72cqh);padding:1.6cqh 1.8cqw;border:0.22cqh solid rgba(255,255,255,.88);border-radius:1cqh;background:rgba(244,248,252,.97);color:#243247;box-shadow:0 1.2cqh 2.8cqh rgba(20,35,60,.24);}" +
       ".tutorial-battle-intro-dialogue.tutorial-battle-intro-dialogue-top{top:12cqh;bottom:auto;}" +
+      ".tutorial-battle-system-popup{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:281;width:min(42cqw,62cqh);padding:2.2cqh 2cqw;border:.24cqh solid var(--c-panel-line);border-radius:1.4cqh;background:rgba(255,255,255,.97);box-shadow:0 1.4cqh 3.2cqh rgba(20,35,60,.28);text-align:center;color:var(--c-ink);}" +
+      ".tutorial-battle-system-text{font-size:1.9cqh;line-height:1.5;font-weight:850;color:var(--c-ink);}" +
+      ".tutorial-battle-system-actions{display:flex;justify-content:center;margin-top:1.8cqh;}" +
       ".tutorial-battle-highlight-box{position:absolute;z-index:280;pointer-events:none;border:.28cqh solid #ffd25f;border-radius:1cqh;box-shadow:0 0 0 9999px rgba(12,24,40,.16),0 0 1.4cqh rgba(255,210,95,.86);}" +
       ".tutorial-battle-focus-target{filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.62));}" +
       ".tutorial-first-attack-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
@@ -1547,6 +1661,8 @@
     closeTutorialSettings,
     onCardPlayed,
     onEndTurnClicked,
-    onEnemyTurnCompleted
+    onEnemyTurnCompleted,
+    shouldDelayTutorialCompletion,
+    onTutorialVictoryPending
   };
 })();

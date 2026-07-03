@@ -363,7 +363,7 @@
     const over = document.getElementById("over");
     if(over) over.classList.remove("show");
 
-    if(typeof newGame === "function") newGame({ resetRun: true });
+    if(typeof newGame === "function") newGame({ resetRun: true, tutorial: true, tutorialEncounterId: "stage_tutorial_child_spirit" });
     if(typeof S !== "undefined" && S){
       S.tutorialMode = true;
       S.battleNodeType = "tutorial";
@@ -390,6 +390,14 @@
     const originalNodeClear = nodeClear;
     nodeClear = function tutorialWrappedNodeClear(){
       if(isTutorialBattle()){
+        if(window.TUTORIAL_BATTLE &&
+           typeof window.TUTORIAL_BATTLE.shouldDelayTutorialCompletion === "function" &&
+           window.TUTORIAL_BATTLE.shouldDelayTutorialCompletion()){
+          if(typeof window.TUTORIAL_BATTLE.onTutorialVictoryPending === "function"){
+            window.TUTORIAL_BATTLE.onTutorialVictoryPending();
+          }
+          return;
+        }
         completeTutorialBattle();
         return;
       }
@@ -476,7 +484,7 @@
     popup.innerHTML = `
       <div class="tutorial-complete-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialCompleteTitle">
         <h2 id="tutorialCompleteTitle">튜토리얼 완료</h2>
-        <p>전투의 기본을 모두 배웠어요. 이제 새 게임을 시작할 수 있어요.</p>
+        <p>전투의 기본을 모두 배웠어요.<br>이제 새 게임을 시작할 수 있어요.</p>
         <button type="button" class="tutorial-complete-confirm">확인</button>
       </div>
     `;
@@ -579,6 +587,7 @@
     showGuide: showTutorialGuidePopup,
     startTutorialFlow,
     startTutorialBattle,
+    completeTutorialBattle,
     endTutorialMode: finishTutorialMode,
     start: startTutorialFromMenu,
     isActive: isTutorialBattle
