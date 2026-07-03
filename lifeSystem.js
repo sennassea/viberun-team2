@@ -35,7 +35,7 @@
       target: "none",
       attr: "상태",
       rarity: "status",
-      desc: "사용 불가\n버려지면 스트레스 3을 받고 소멸합니다",
+      desc: "사용 불가\n버려지면 정신력 3을 받고 소멸합니다",
       fx: [],
       unplayable: true,
       damageOnDiscard: 3
