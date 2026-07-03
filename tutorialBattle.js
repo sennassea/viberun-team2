@@ -25,6 +25,7 @@
   const FIRST_ATTACK_COMPLETE_DIALOGUE_ID = "W-022";
   const BLOCK_CARD_DIALOGUE_ID = "W-030";
   const BLOCK_COMPLETE_DIALOGUE_ID = "W-031";
+  const BLOCK_COMPLETE_HIGHLIGHT_SELECTOR = '#profileStatusEffects [data-status="block"]';
   const END_TURN_DIALOGUE_ID = "W-035";
   const ENEMY_ACTION_COMPLETE_DIALOGUE_ID = "W-037";
   const BATTLE_INTRO_BLOCK_EVENTS = ["pointerdown", "mousedown", "mouseup", "click", "touchstart", "touchend"];
@@ -531,7 +532,7 @@
     cleanupBlockCardStep();
     setTutorialStep("block_card_used");
     console.log("tutorial block card used");
-    showTutorialBlockCompleteDialogue();
+    setTimeout(showTutorialBlockCompleteDialogue, 0);
     return true;
   }
 
@@ -546,7 +547,7 @@
     tutorialBattleIntroActive = true;
     pauseTutorialBattleIntroCombat();
     setTutorialStep(dialogue.id);
-    renderTutorialBattleIntroDialogue(dialogue, finishTutorialBlockGuide);
+    renderTutorialBattleIntroDialogue({ ...dialogue, targetSelector: BLOCK_COMPLETE_HIGHLIGHT_SELECTOR }, finishTutorialBlockGuide);
   }
 
   function finishTutorialBlockGuide(){
