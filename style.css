@@ -143,6 +143,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   justify-content:flex-start; align-items:center; gap:.45cqh;}
 .profile-status-effects .status-icon{width:3.35cqh; height:3.35cqh; border-radius:.75cqh; pointer-events:auto;}
 .profile-status-effects .status-symbol{font-size:1.85cqh;}
+.profile-status-effects .status-symbol img{width:100%; height:100%; object-fit:contain; display:block;}
 .profile-status-effects .status-count{right:-.35cqh; bottom:-.45cqh; min-width:1.65cqh; height:1.65cqh; font-size:1.05cqh;}
 .stat{font-size:2.2cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw;}
 .spacer{display:none;}

@@ -268,9 +268,19 @@ function startStage(stageIdx){
 }
 
 /* ── 여정 열기/닫기 ────────────────────────────────────────────────────── */
+function isActiveBattleForMapView(){
+  return !!(
+    typeof S !== "undefined" && S &&
+    !S.over &&
+    !S.encounterCleared &&
+    Array.isArray(S.enemies) &&
+    S.enemies.some(enemy => enemy && enemy.hp > 0)
+  );
+}
+
 function openMap(){
   if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
-  if(typeof clearBattleBackground === "function") clearBattleBackground();
+  if(!isActiveBattleForMapView() && typeof clearBattleBackground === "function") clearBattleBackground();
   let ov = document.getElementById("mapOverlay");
   if(!ov){ ov = buildOverlay(); document.getElementById("game").appendChild(ov); }
   const isStartMap = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;

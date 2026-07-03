@@ -11,9 +11,13 @@
     weak: { kind: "debuff", icon: "🌀", label: "동요", showCount: true },
     fracture: { kind: "debuff", icon: "💔", label: "균열", showCount: true },
     anxiety: { kind: "debuff", icon: "💭", label: "불안", showCount: true },
-    lethargy: { kind: "debuff", icon: "🌫️", label: "무기력", showCount: true },
-    healingAura: { kind: "buff", icon: "💚", label: "치유의 향기", showCount: false }
+    lethargy: { kind: "debuff", icon: "🌫️", label: "무기력", showCount: true }
   };
+  Object.assign(STATUS_META.block, { iconImage: "assets/status_icons/block.png" });
+  Object.assign(STATUS_META.weak, { iconImage: "assets/status_icons/agitation.png" });
+  Object.assign(STATUS_META.fracture, { iconImage: "assets/status_icons/fracture.png" });
+  Object.assign(STATUS_META.anxiety, { iconImage: "assets/status_icons/anxiety.png" });
+  Object.assign(STATUS_META.lethargy, { iconImage: "assets/status_icons/lethargy.png" });
   const STATUS_CARD_DB = {
     intrusive_thought: {
       name: "잡념",
@@ -81,8 +85,7 @@
         weak: characterData.weak || 0,
         fracture: characterData.fracture || 0,
         anxiety: characterData.anxiety || 0,
-        lethargy: characterData.lethargy || 0,
-        healingAura: characterData.healingAura === false ? 0 : 1
+        lethargy: characterData.lethargy || 0
       };
     },
 
@@ -298,20 +301,19 @@
       if((unit.lethargy || 0) > 0){
         statuses.push(this.renderStatusIcon("lethargy", unit.lethargy));
       }
-      if((unit.healingAura || 0) > 0){
-        statuses.push(this.renderStatusIcon("healingAura", unit.healingAura));
-      }
-
       return '<div class="badges">' + statuses.join("") + '</div>';
     },
 
     renderStatusIcon(type, count){
       const meta = STATUS_META[type];
       if(!meta) return "";
+      const iconHtml = meta.iconImage
+        ? '<img src="' + meta.iconImage + '" alt="' + meta.label + '">'
+        : meta.icon;
 
       return '<span class="status-icon ' + meta.kind + ' ' + type + '" data-status="' + type +
         '" aria-label="' + meta.label + '">' +
-        '<span class="status-symbol">' + meta.icon + '</span>' +
+        '<span class="status-symbol">' + iconHtml + '</span>' +
         (meta.showCount === false ? "" : '<span class="status-count">' + count + '</span>') +
         '</span>';
     }
