@@ -264,6 +264,47 @@ function handleMailboxClaimAll(req, res) {
   sendJson(res, 200, { ok: true, claimedMailIds, rewards, wallet: account.wallet });
 }
 
+/* 치트 콘솔 전용 계정 wallet.moonShards 조회/증감/설정 핸들러입니다.
+   전투 상태(S.moonShards)와는 완전히 분리되어 있으며 accountId 기준 wallet만 바꿉니다. */
+function handleWalletCheat(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const op = payload.op;
+  const amount = Math.floor(Number(payload.amount));
+  if (!Number.isFinite(amount)) {
+    sendJson(res, 400, { ok: false, message: "amount는 숫자여야 합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const current = Number(account.wallet.moonShards) || 0;
+
+  if (op === "add") {
+    account.wallet.moonShards = current + amount;
+  } else if (op === "take") {
+    account.wallet.moonShards = Math.max(0, current - amount);
+  } else if (op === "set") {
+    account.wallet.moonShards = Math.max(0, amount);
+  } else {
+    sendJson(res, 400, { ok: false, message: "op은 add/take/set 중 하나여야 합니다." });
+    return;
+  }
+
+  sendJson(res, 200, { ok: true, wallet: account.wallet });
+}
+
 /* ------------------------------------------------------------------------
    /bm-store Mock 핸들러
    - 패키지 구매 결과는 accountId별 dummyInventory에만 저장합니다.
@@ -408,6 +449,11 @@ const server = http.createServer((req, res) => {
 
   if (method === "GET" && pathname === "/wallet") {
     handleWallet(req, res);
+    return;
+  }
+
+  if (method === "POST" && pathname === "/wallet/cheat") {
+    readRequestBody(req).then((body) => handleWalletCheat(req, res, body));
     return;
   }
 
