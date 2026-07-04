@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="hand-layout.css">
 <link rel="stylesheet" href="eventNode.css">
 <link rel="stylesheet" href="auth.css">
+<link rel="stylesheet" href="mailbox.css">
 </head>
 <body>
 
@@ -41,6 +42,7 @@
           <button type="button" class="start-menu-button start-codex-button">도감</button>
           <button type="button" class="start-menu-button start-record-button">기록</button>
         </div>
+        <button type="button" class="start-menu-button start-mailbox-button mailbox-trigger-button">🎁 선물함<span class="mailbox-badge" hidden>0</span></button>
         <button type="button" class="start-menu-button start-settings-button">설정</button>
       </div>
     </div>
@@ -75,6 +77,7 @@
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-map-button">🗺️<span class="sr-only">여정</span></div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-codex-button" id="deckViewerButton">📖 <span id="hudDeck">18</span><span class="sr-only">도감</span></div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-bag-button" id="bagViewerButton">🎒<span class="sr-only">가방</span></div>
+          <div class="hud-card hud-btn top-menu-button mailbox-trigger-button" id="mailboxViewerButton">🎁<span class="mailbox-badge" hidden>0</span><span class="sr-only">선물함</span></div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-settings-button">⚙️</div>
         </div>
       </div>
@@ -163,6 +166,8 @@
 <script src="runRecord.js" defer></script>
 <script src="authService.js" defer></script>
 <script src="loginModal.js" defer></script>
+<script src="mailboxService.js" defer></script>
+<script src="mailboxUI.js" defer></script>
 <script src="startMenu.js" defer></script>
 <script src="tutorialDialogueData.js" defer></script>
 <script src="tutorialSystem.js" defer></script>

@@ -40,19 +40,44 @@ const MIME_TYPES = {
 
 /* ------------------------------------------------------------------------
    In-memory mock 데이터 (서버 재시작 시 초기화됩니다)
+   - mailbox/wallet은 accountId별로 분리해서 저장합니다.
+   - accessToken → accountId 매핑은 /auth/* 응답 발급 시점에 등록합니다.
    ------------------------------------------------------------------------ */
-let mailbox = [
-  {
-    mailId: "mail_test_001",
-    title: "로컬 테스트 선물",
-    message: "로컬 테스트용 달빛조각 선물입니다.",
-    status: "UNCLAIMED",
-    expiresAt: 9999999999999,
-    rewards: [{ type: "moon_shard", amount: 100 }]
-  }
-];
+const accounts = new Map();      // accountId -> { mailbox: [...], wallet: {...} }
+const tokenToAccount = new Map(); // accessToken -> accountId
 
-let wallet = { moonShards: 0 };
+function buildDefaultMailbox() {
+  return [
+    {
+      mailId: "mail_test_001",
+      title: "로컬 테스트 선물",
+      message: "로컬 테스트용 달빛조각 선물입니다.",
+      status: "UNCLAIMED",
+      expiresAt: 9999999999999,
+      rewards: [{ type: "moon_shard", amount: 100 }]
+    }
+  ];
+}
+
+function ensureAccount(accountId) {
+  if (!accounts.has(accountId)) {
+    accounts.set(accountId, { mailbox: buildDefaultMailbox(), wallet: { moonShards: 0 } });
+  }
+  return accounts.get(accountId);
+}
+
+function registerAccessToken(accountId, accessToken) {
+  ensureAccount(accountId);
+  if (accessToken) tokenToAccount.set(accessToken, accountId);
+}
+
+/* Authorization: Bearer {accessToken} 헤더를 읽어 accountId를 식별합니다. */
+function resolveAccountId(req) {
+  const header = req.headers["authorization"] || "";
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+  return tokenToAccount.get(match[1].trim()) || null;
+}
 
 /* ------------------------------------------------------------------------
    공용 유틸
@@ -79,34 +104,40 @@ function readRequestBody(req) {
    /auth/* Mock 핸들러
    ------------------------------------------------------------------------ */
 function handleAuthGuest(res) {
+  const accessToken = "local_access_token";
+  registerAccessToken(GUEST_ACCOUNT_ID, accessToken);
   sendJson(res, 200, {
     accountId: GUEST_ACCOUNT_ID,
     provider: "guest",
     displayName: "Guest",
-    accessToken: "local_access_token",
+    accessToken,
     refreshToken: "local_refresh_token",
     createdAt: Date.now()
   });
 }
 
 function handleAuthLinkGooglePlay(res) {
+  const accessToken = "local_google_access_token";
+  registerAccessToken(GUEST_ACCOUNT_ID, accessToken);
   sendJson(res, 200, {
     accountId: GUEST_ACCOUNT_ID,
     provider: "googlePlay",
     providerUserId: "google_local_user_001",
     displayName: "Google Play User",
-    accessToken: "local_google_access_token",
+    accessToken,
     refreshToken: "local_google_refresh_token"
   });
 }
 
 function handleAuthLinkFacebook(res) {
+  const accessToken = "local_facebook_access_token";
+  registerAccessToken(GUEST_ACCOUNT_ID, accessToken);
   sendJson(res, 200, {
     accountId: GUEST_ACCOUNT_ID,
     provider: "facebook",
     providerUserId: "facebook_local_user_001",
     displayName: "Facebook User",
-    accessToken: "local_facebook_access_token",
+    accessToken,
     refreshToken: "local_facebook_refresh_token"
   });
 }
@@ -114,7 +145,7 @@ function handleAuthLinkFacebook(res) {
 /* ------------------------------------------------------------------------
    /mailbox Mock 핸들러
    ------------------------------------------------------------------------ */
-function applyRewardsToWallet(rewards) {
+function applyRewardsToWallet(wallet, rewards) {
   rewards.forEach((reward) => {
     if (reward.type === "moon_shard") {
       wallet.moonShards += Number(reward.amount) || 0;
@@ -122,12 +153,26 @@ function applyRewardsToWallet(rewards) {
   });
 }
 
-function handleMailboxList(res) {
-  sendJson(res, 200, { items: mailbox, wallet });
+function handleMailboxList(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  sendJson(res, 200, { items: account.mailbox, wallet: account.wallet });
 }
 
-function handleMailboxClaim(res, mailId) {
-  const mail = mailbox.find((item) => item.mailId === mailId);
+function handleMailboxClaim(req, res, mailId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const mail = account.mailbox.find((item) => item.mailId === mailId);
   if (!mail) {
     sendJson(res, 404, { ok: false, message: "존재하지 않는 선물입니다." });
     return;
@@ -139,26 +184,33 @@ function handleMailboxClaim(res, mailId) {
   }
 
   mail.status = "CLAIMED";
-  applyRewardsToWallet(mail.rewards);
+  applyRewardsToWallet(account.wallet, mail.rewards);
 
   sendJson(res, 200, {
     ok: true,
     claimedMailId: mail.mailId,
     rewards: mail.rewards,
-    wallet
+    wallet: account.wallet
   });
 }
 
-function handleMailboxClaimAll(res) {
+function handleMailboxClaimAll(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
   const claimedMailIds = [];
   const rewardTotals = new Map();
 
-  mailbox.forEach((mail) => {
+  account.mailbox.forEach((mail) => {
     if (mail.status !== "UNCLAIMED") return;
 
     mail.status = "CLAIMED";
     claimedMailIds.push(mail.mailId);
-    applyRewardsToWallet(mail.rewards);
+    applyRewardsToWallet(account.wallet, mail.rewards);
 
     mail.rewards.forEach((reward) => {
       rewardTotals.set(reward.type, (rewardTotals.get(reward.type) || 0) + (Number(reward.amount) || 0));
@@ -167,7 +219,7 @@ function handleMailboxClaimAll(res) {
 
   const rewards = Array.from(rewardTotals.entries()).map(([type, amount]) => ({ type, amount }));
 
-  sendJson(res, 200, { ok: true, claimedMailIds, rewards, wallet });
+  sendJson(res, 200, { ok: true, claimedMailIds, rewards, wallet: account.wallet });
 }
 
 /* ------------------------------------------------------------------------
@@ -219,18 +271,18 @@ const server = http.createServer((req, res) => {
   }
 
   if (method === "GET" && pathname === "/mailbox") {
-    handleMailboxList(res);
+    handleMailboxList(req, res);
     return;
   }
 
   if (method === "POST" && pathname === "/mailbox/claim-all") {
-    handleMailboxClaimAll(res);
+    handleMailboxClaimAll(req, res);
     return;
   }
 
   const claimMatch = pathname.match(/^\/mailbox\/([^/]+)\/claim$/);
   if (method === "POST" && claimMatch) {
-    handleMailboxClaim(res, decodeURIComponent(claimMatch[1]));
+    handleMailboxClaim(req, res, decodeURIComponent(claimMatch[1]));
     return;
   }
 
