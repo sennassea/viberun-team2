@@ -83,6 +83,7 @@
 
 /* 선물함 트리거 버튼 공통(메인 메뉴/HUD/맵/상점/이벤트) — 배지 표시를 위한 위치 기준점만 부여합니다. */
 .mailbox-trigger-button{ position:relative; }
+.start-screen .start-mailbox-button{ position:absolute; }
 .mailbox-badge{
   position:absolute; top:-.5cqh; right:-.5cqh; min-width:2cqh; height:2cqh; padding:0 .4cqh;
   border-radius:1cqh; background:var(--c-red); color:#fff; font-size:1.2cqh; font-weight:900;
