@@ -62,6 +62,17 @@ const BM_PACKAGE_PRODUCTS = [
   { id: "order_pack_legend_support", name: "전설 보조 팩", price: 10000, rewardId: "dummy_legend_support_pack", category: "order_pack" }
 ];
 
+/* 달빛조각 충전(테스트 구매) 검증 테이블입니다. 실제 결제 검증 없이 rewardAmount만큼
+   wallet.moonShards를 증가시키며, 차감/잔액 확인은 하지 않습니다. */
+const BM_MOON_CHARGE_PRODUCTS = [
+  { id: "moon_charge_60", name: "달빛조각 60", rewardAmount: 60 },
+  { id: "moon_charge_300", name: "달빛조각 300", rewardAmount: 300 },
+  { id: "moon_charge_980", name: "달빛조각 980", rewardAmount: 980 },
+  { id: "moon_charge_1980", name: "달빛조각 1,980", rewardAmount: 1980 },
+  { id: "moon_charge_3280", name: "달빛조각 3,280", rewardAmount: 3280 },
+  { id: "moon_charge_6480", name: "달빛조각 6,480", rewardAmount: 6480 }
+];
+
 function buildDefaultMailbox() {
   return [
     {
@@ -316,6 +327,32 @@ function handleBMPackagePurchase(req, res, productId) {
   });
 }
 
+/* 달빛조각 충전 테스트 구매입니다. 실제 결제 검증 없이 wallet.moonShards만 증가시키며,
+   차감 대상 잔액 확인은 하지 않습니다. */
+function handleBMMoonChargePurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_MOON_CHARGE_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, message: "존재하지 않는 상품입니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  account.wallet.moonShards = (Number(account.wallet.moonShards) || 0) + product.rewardAmount;
+
+  sendJson(res, 200, {
+    ok: true,
+    productId: product.id,
+    rewardAmount: product.rewardAmount,
+    wallet: account.wallet
+  });
+}
+
 /* ------------------------------------------------------------------------
    정적 파일 서빙 (index.html 및 프로젝트 루트 리소스)
    ------------------------------------------------------------------------ */
@@ -387,6 +424,12 @@ const server = http.createServer((req, res) => {
   const bmPackagePurchaseMatch = pathname.match(/^\/bm-store\/package\/([^/]+)\/purchase$/);
   if (method === "POST" && bmPackagePurchaseMatch) {
     readRequestBody(req).then(() => handleBMPackagePurchase(req, res, decodeURIComponent(bmPackagePurchaseMatch[1])));
+    return;
+  }
+
+  const bmMoonChargePurchaseMatch = pathname.match(/^\/bm-store\/moon-charge\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmMoonChargePurchaseMatch) {
+    readRequestBody(req).then(() => handleBMMoonChargePurchase(req, res, decodeURIComponent(bmMoonChargePurchaseMatch[1])));
     return;
   }
 

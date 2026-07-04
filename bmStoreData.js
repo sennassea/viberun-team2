@@ -27,10 +27,10 @@
       readyMessage: ""
     },
     {
-      id: "moonShardCharge",
+      id: "moon_charge",
       label: "달빛조각 충전",
-      enabled: false,
-      readyMessage: "해당 탭은 준비 중입니다."
+      enabled: true,
+      readyMessage: ""
     }
   ];
 
@@ -139,8 +139,81 @@
     }
   ];
 
+  /* 달빛조각 충전 탭 상품 6종입니다. 실제 결제는 하지 않는 테스트 구매이며,
+     달빛조각 차감 없이 rewardAmount만큼 wallet.moonShards를 증가시킵니다. */
+  const MOON_CHARGE_PRODUCTS = [
+    {
+      id: "moon_charge_60",
+      tab: "moon_charge",
+      name: "달빛조각 60",
+      priceType: "test_cash",
+      price: 1200,
+      rewardType: "moon_shard",
+      rewardAmount: 60,
+      bonusText: "+60 보너스",
+      badge: "첫 2배"
+    },
+    {
+      id: "moon_charge_300",
+      tab: "moon_charge",
+      name: "달빛조각 300",
+      priceType: "test_cash",
+      price: 5900,
+      rewardType: "moon_shard",
+      rewardAmount: 300,
+      bonusText: "+300 보너스",
+      badge: "첫 2배"
+    },
+    {
+      id: "moon_charge_980",
+      tab: "moon_charge",
+      name: "달빛조각 980",
+      priceType: "test_cash",
+      price: 19000,
+      rewardType: "moon_shard",
+      rewardAmount: 980,
+      bonusText: "+980 보너스",
+      badge: "첫 2배"
+    },
+    {
+      id: "moon_charge_1980",
+      tab: "moon_charge",
+      name: "달빛조각 1,980",
+      priceType: "test_cash",
+      price: 37000,
+      rewardType: "moon_shard",
+      rewardAmount: 1980,
+      bonusText: "+1,980 보너스"
+    },
+    {
+      id: "moon_charge_3280",
+      tab: "moon_charge",
+      name: "달빛조각 3,280",
+      priceType: "test_cash",
+      price: 59000,
+      rewardType: "moon_shard",
+      rewardAmount: 3280,
+      bonusText: "+3,280 보너스"
+    },
+    {
+      id: "moon_charge_6480",
+      tab: "moon_charge",
+      name: "달빛조각 6,480",
+      priceType: "test_cash",
+      price: 119000,
+      rewardType: "moon_shard",
+      rewardAmount: 6480,
+      bonusText: "+6,480 보너스",
+      badge: "첫 2배"
+    }
+  ];
+
   function clone(value){
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function allProducts(){
+    return PACKAGE_PRODUCTS.concat(ORDER_PACK_PRODUCTS, MOON_CHARGE_PRODUCTS);
   }
 
   window.VIBERUN_BM_STORE_DATA = {
@@ -148,10 +221,10 @@
       return clone(TABS);
     },
     getProductsByTab(tab){
-      return clone(PACKAGE_PRODUCTS.concat(ORDER_PACK_PRODUCTS).filter(product => product.tab === tab));
+      return clone(allProducts().filter(product => product.tab === tab));
     },
     findProduct(productId){
-      return clone(PACKAGE_PRODUCTS.concat(ORDER_PACK_PRODUCTS).find(product => product.id === productId) || null);
+      return clone(allProducts().find(product => product.id === productId) || null);
     },
     getPackageProducts(){
       return clone(PACKAGE_PRODUCTS);
@@ -164,6 +237,12 @@
     },
     findOrderPackProduct(productId){
       return clone(ORDER_PACK_PRODUCTS.find(product => product.id === productId) || null);
+    },
+    getMoonChargeProducts(){
+      return clone(MOON_CHARGE_PRODUCTS);
+    },
+    findMoonChargeProduct(productId){
+      return clone(MOON_CHARGE_PRODUCTS.find(product => product.id === productId) || null);
     }
   };
 })();

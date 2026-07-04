@@ -153,6 +153,16 @@
     return data && typeof data.findOrderPackProduct === "function" ? data.findOrderPackProduct(productId) : null;
   }
 
+  function getMoonChargeProducts(){
+    const data = getData();
+    return data && typeof data.getMoonChargeProducts === "function" ? data.getMoonChargeProducts() : [];
+  }
+
+  function findMoonChargeProduct(productId){
+    const data = getData();
+    return data && typeof data.findMoonChargeProduct === "function" ? data.findMoonChargeProduct(productId) : null;
+  }
+
   /* 패키지/주문 팩 공통 구매 처리입니다.
      wallet 확인 → 서버 요청 → dummyInventory/wallet 동기화 흐름은 동일하게 재사용합니다. */
   function purchaseFromCatalog(productId, product, endpointBase){
@@ -214,9 +224,53 @@
     return purchaseFromCatalog(productId, findOrderPackProduct(productId), "/bm-store/package");
   }
 
-  /* 활성 탭과 무관하게 UI가 상품 ID만으로 구매를 요청할 수 있도록 두 카탈로그를 모두 조회합니다. */
+  /* 달빛조각 충전은 실제 결제가 아닌 테스트 구매입니다.
+     달빛조각 잔액 확인/차감 없이 rewardAmount만큼 wallet.moonShards만 증가시킵니다. */
+  function purchaseMoonCharge(productId){
+    const account = getAuthAccount();
+    if(!account){
+      return Promise.resolve({
+        ok: false,
+        code: "NOT_LOGGED_IN",
+        message: "로그인이 필요합니다."
+      });
+    }
+
+    const product = findMoonChargeProduct(productId);
+    if(!product){
+      return Promise.resolve({
+        ok: false,
+        code: "UNKNOWN_PRODUCT",
+        message: "존재하지 않는 상품입니다."
+      });
+    }
+
+    if(product.priceType !== "test_cash" || product.rewardType !== "moon_shard"){
+      return Promise.resolve({
+        ok: false,
+        code: "UNSUPPORTED_PRODUCT",
+        message: "현재 구매할 수 없는 상품입니다."
+      });
+    }
+
+    return requestJson("/bm-store/moon-charge/" + encodeURIComponent(product.id) + "/purchase", {
+      method: "POST"
+    }).then(result => {
+      if(!result || !result.ok){
+        if(result && result.wallet) syncWallet(result.wallet);
+        return result || { ok: false, message: "구매에 실패했습니다." };
+      }
+
+      if(result.wallet) result.wallet = syncWallet(result.wallet);
+      return result;
+    });
+  }
+
+  /* 활성 탭과 무관하게 UI가 상품 ID만으로 구매를 요청할 수 있도록 모든 카탈로그를 조회합니다.
+     rewardType이 moon_shard면 충전 테스트 구매로, dummy_item이면 기존 패키지/주문 팩 구매로 분기합니다. */
   function purchaseProduct(productId){
     const product = findProduct(productId);
+    if(product && product.rewardType === "moon_shard") return purchaseMoonCharge(productId);
     return purchaseFromCatalog(productId, product, "/bm-store/package");
   }
 
@@ -235,6 +289,8 @@
     purchasePackage,
     getOrderPackProducts,
     purchaseOrderPack,
+    getMoonChargeProducts,
+    purchaseMoonCharge,
     purchaseProduct,
     fetchDummyInventory,
     getCachedDummyInventory(){

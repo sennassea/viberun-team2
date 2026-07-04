@@ -9,6 +9,7 @@
 (function(){
   const READY_MESSAGE = "해당 탭은 준비 중입니다.";
   const SUCCESS_SUFFIX = "을 구매했습니다. 테스트용 더미 아이템이 지급되었습니다.";
+  const MOON_CHARGE_NOTICE = "테스트 구매입니다. 실제 결제가 발생하지 않습니다.";
   let els = null;
   let purchasingProductId = "";
 
@@ -35,6 +36,10 @@
   function formatCount(value){
     const amount = Math.max(0, Math.floor(Number(value) || 0));
     return amount.toLocaleString("en-US");
+  }
+
+  function formatKRW(value){
+    return "₩" + formatCount(value);
   }
 
   function getTabs(){
@@ -195,6 +200,14 @@
 
       if(result.wallet) state.wallet = result.wallet;
       render();
+
+      const product = findProductById(productId);
+      if(product && product.rewardType === "moon_shard"){
+        const amount = Number(result.rewardAmount != null ? result.rewardAmount : product.rewardAmount) || 0;
+        showToastMessage("테스트 구매 완료: 달빛조각 " + formatCount(amount) + "개를 획득했습니다.", "success");
+        return;
+      }
+
       const productName = result.product && result.product.name ? result.product.name : findProductName(productId);
       showToastMessage(productName + SUCCESS_SUFFIX, "success");
     }).catch(error => {
@@ -205,8 +218,12 @@
     });
   }
 
+  function findProductById(productId){
+    return state.products.find(product => product.id === productId) || null;
+  }
+
   function findProductName(productId){
-    const found = state.products.find(product => product.id === productId);
+    const found = findProductById(productId);
     return found ? found.name : "상품";
   }
 
@@ -243,25 +260,35 @@
 
   function renderProducts(){
     if(!els) return;
-    if(state.activeTab !== "package" && state.activeTab !== "order_pack"){
+    if(state.activeTab !== "package" && state.activeTab !== "order_pack" && state.activeTab !== "moon_charge"){
       els.body.innerHTML = '<div class="bm-store-empty">해당 탭은 준비 중입니다.</div>';
       return;
     }
 
     if(!state.products.length){
-      const emptyText = state.activeTab === "order_pack" ? "판매 중인 주문 팩이 없습니다." : "판매 중인 패키지가 없습니다.";
+      const emptyTextByTab = {
+        order_pack: "판매 중인 주문 팩이 없습니다.",
+        moon_charge: "판매 중인 충전 상품이 없습니다."
+      };
+      const emptyText = emptyTextByTab[state.activeTab] || "판매 중인 패키지가 없습니다.";
       els.body.innerHTML = '<div class="bm-store-empty">' + emptyText + '</div>';
       return;
     }
 
+    const notice = state.activeTab === "moon_charge"
+      ? '<p class="bm-store-charge-notice">' + escapeHtml(MOON_CHARGE_NOTICE) + '</p>'
+      : "";
+
     els.body.innerHTML =
       '<div class="bm-store-package-grid bm-store-product-grid--' + escapeHtml(state.activeTab) + '">' +
         state.products.map(renderProductCard).join("") +
-      '</div>';
+      '</div>' + notice;
   }
 
   function renderProductCard(product){
     const isBusy = purchasingProductId === product.id;
+    const isTestCash = product.priceType === "test_cash";
+    const secondaryText = product.limitText || product.bonusText;
     return (
       '<article class="bm-store-product">' +
         (product.badge ? '<div class="bm-store-badge">' + escapeHtml(product.badge) + '</div>' : "") +
@@ -272,13 +299,15 @@
         '</div>' +
         '<div class="bm-store-product-copy">' +
           '<h3>' + escapeHtml(product.name) + '</h3>' +
-          (product.limitText ? '<p class="bm-store-limit-text">' + escapeHtml(product.limitText) + '</p>' : "") +
-          '<p>' + escapeHtml(product.description) + '</p>' +
+          (secondaryText ? '<p class="bm-store-limit-text">' + escapeHtml(secondaryText) + '</p>' : "") +
+          (product.description ? '<p>' + escapeHtml(product.description) + '</p>' : "") +
+          (isTestCash ? '<p>' + escapeHtml(formatKRW(product.price)) + '</p>' : "") +
         '</div>' +
         '<button type="button" class="bm-store-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
           (isBusy ? " disabled" : "") + '>' +
-          '<span class="bm-store-price-icon" aria-hidden="true">🌙</span>' +
-          '<span>' + (isBusy ? "구매 중..." : formatCount(product.price)) + '</span>' +
+          (isTestCash
+            ? '<span>' + (isBusy ? "구매 중..." : "테스트 구매") + '</span>'
+            : '<span class="bm-store-price-icon" aria-hidden="true">🌙</span><span>' + (isBusy ? "구매 중..." : formatCount(product.price)) + '</span>') +
         '</button>' +
       '</article>'
     );
