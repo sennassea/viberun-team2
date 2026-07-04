@@ -164,6 +164,17 @@ function handleMailboxList(req, res) {
   sendJson(res, 200, { items: account.mailbox, wallet: account.wallet });
 }
 
+function handleWallet(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  sendJson(res, 200, { wallet: account.wallet });
+}
+
 function handleMailboxClaim(req, res, mailId) {
   const accountId = resolveAccountId(req);
   if (!accountId) {
@@ -272,6 +283,11 @@ const server = http.createServer((req, res) => {
 
   if (method === "GET" && pathname === "/mailbox") {
     handleMailboxList(req, res);
+    return;
+  }
+
+  if (method === "GET" && pathname === "/wallet") {
+    handleWallet(req, res);
     return;
   }
 

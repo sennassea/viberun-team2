@@ -125,6 +125,7 @@
 
       state.items = Array.isArray(result.items) ? result.items : [];
       state.wallet = result.wallet || { moonShards: 0 };
+      syncCommonWallet(result.wallet);
       render();
       refreshBadge();
     }).catch(error => {
@@ -149,6 +150,7 @@
 
       if(item) item.status = "CLAIMED";
       state.wallet = result.wallet || state.wallet;
+      syncCommonWallet(result.wallet);
       render();
       refreshBadge();
       if(typeof toast === "function") toast(rewardToastMessage(result.rewards) || "선물을 받았습니다.", "success");
@@ -177,6 +179,7 @@
         if(item) item.status = "CLAIMED";
       });
       state.wallet = result.wallet || state.wallet;
+      syncCommonWallet(result.wallet);
       render();
       refreshBadge();
       if(typeof toast === "function") toast(rewardToastMessage(result.rewards) || "모든 선물을 받았습니다.", "success");
@@ -274,6 +277,12 @@
     els.claimAllBtn.disabled = !state.items.some(item => item.status !== "CLAIMED");
   }
 
+  function syncCommonWallet(wallet){
+    if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.setCachedWallet === "function" && wallet){
+      window.VIBERUN_WALLET.setCachedWallet(wallet);
+    }
+  }
+
   /* 로그인 상태일 때만 조용히 미수령 개수를 조회해 모든 화면의 선물함 버튼 배지를 갱신합니다. */
   function refreshBadge(){
     const auth = window.VIBERUN_AUTH;
@@ -285,6 +294,7 @@
     Promise.resolve(window.VIBERUN_MAILBOX.fetchList()).then(result => {
       if(!result || !result.ok) return;
       const items = Array.isArray(result.items) ? result.items : [];
+      syncCommonWallet(result.wallet);
       const unclaimed = items.filter(item => item.status !== "CLAIMED").length;
       setBadgeCount(unclaimed);
     }).catch(() => {});
