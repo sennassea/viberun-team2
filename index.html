@@ -130,7 +130,6 @@
     <div id="fx"></div>
     <div id="aim"></div>
     <div id="dragClone" style="display:none"></div>
-    <div id="toast"></div>
 
     <!-- 종료 오버레이 -->
     <div id="over"><div class="over-box">
@@ -143,6 +142,12 @@
 
 <!-- 모바일 세로 안내 -->
 <div id="rotate"><div><div class="ico">📱</div><p>기기를 가로로 돌려주세요</p></div></div>
+
+<!-- 전역 토스트 레이어: 어떤 모달/오버레이보다도 위에 표시되어야 하므로 body 최상위에 위치합니다 -->
+<div id="global-toast-layer" class="global-toast-layer" aria-live="polite" aria-atomic="true"></div>
+
+<!-- 전역 토스트 서비스는 다른 모든 UI 스크립트보다 먼저 로드되어야 합니다 -->
+<script src="toastService.js" defer></script>
 
 <!-- 캐릭터/몬스터/라이프는 충돌 방지를 위해 독립 파일로 먼저 로드 -->
 <script src="characterData.js" defer></script>

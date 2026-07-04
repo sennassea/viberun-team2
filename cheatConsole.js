@@ -38,6 +38,10 @@
   function cheatLog(msg){ console.log("[CHEAT] " + msg); }
   function cheatClamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
   function safeToast(msg){ if(typeof toast === "function") toast(msg); }
+  function cheatToast(type, msg){
+    if(typeof window.showToast === "function"){ window.showToast(msg, type); return; }
+    cheatWarn("전역 토스트 서비스가 초기화되지 않았습니다.");
+  }
   function safeRenderAll(){ if(typeof renderAll === "function") renderAll(); }
   function safeRenderHud(){ if(typeof renderHud === "function") renderHud(); }
 
@@ -646,6 +650,7 @@
       "CHEAT.give.gold(999)                            골드 999 획득",
       'CHEAT.card.hand("soul_passing", 1)              손패에 주문 추가',
       'CHEAT.status.clear("player")                    플레이어 상태이상 제거',
+      'CHEAT.toast.success("성공 테스트")                전역 토스트 레이어 테스트',
       "",
       "── 그룹 목록 ──",
       "CHEAT.node   맵 노드 이동 (goto/type/boss/lobby/map)",
@@ -657,7 +662,8 @@
       "CHEAT.status 상태이상 부여/제거 (add/remove/clear)",
       "CHEAT.card   주문 추가/제거/검색 (hand/deck/draw/discard/find/list/remove/removeAll/clear)",
       "CHEAT.dump   현재 상태 출력 (state/cards/enemies)",
-      "CHEAT.reset  전투/런 초기화 (battle/run)"
+      "CHEAT.reset  전투/런 초기화 (battle/run)",
+      "CHEAT.toast  전역 토스트 레이어 노출 테스트 (info/success/warning/error)"
     ].join("\n"));
   }
 
@@ -726,6 +732,12 @@
     reset: {
       battle: cheatResetBattle,
       run: cheatResetRun
+    },
+    toast: {
+      info: (msg) => cheatToast("info", msg || "안내 테스트"),
+      success: (msg) => cheatToast("success", msg || "성공 테스트"),
+      warning: (msg) => cheatToast("warning", msg || "경고 테스트"),
+      error: (msg) => cheatToast("error", msg || "오류 테스트")
     }
   };
 
