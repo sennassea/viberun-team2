@@ -75,6 +75,14 @@
     const skipResultSpeaker = "";
     const skipReactionText = renderTutorialGuideText(skipReactionDialogue.text);
     const skipResultText = renderTutorialGuideText("튜토리얼을 건너뛰겠습니까?");
+    const guideAssetPath = bodyDialogue.dongjasinAssetPath || titleDialogue.dongjasinAssetPath || "";
+    const skipAssetPath = skipReactionDialogue.dongjasinAssetPath || guideAssetPath;
+    const guideAssetHtml = guideAssetPath
+      ? '<img src="' + escapeTutorialGuideHtml(guideAssetPath) + '" alt="" class="tutorial-guide-dongjasin">'
+      : "";
+    const skipAssetHtml = skipAssetPath
+      ? '<img src="' + escapeTutorialGuideHtml(skipAssetPath) + '" alt="" class="tutorial-guide-dongjasin">'
+      : "";
 
     const popup = document.createElement("div");
     popup.id = "tutorialGuidePopup";
@@ -83,6 +91,7 @@
       <div class="tutorial-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialGuideTitle">
         <button type="button" class="tutorial-guide-close" aria-label="튜토리얼 안내 닫기" data-tutorial-close>&times;</button>
         <div class="tutorial-guide-main" data-tutorial-guide-main>
+          ${guideAssetHtml}
           <h2 id="tutorialGuideTitle">${titleText}</h2>
           <p>${bodySpeaker}${bodyText}</p>
           <p>예상 플레이 시간 3~5분</p>
@@ -99,6 +108,7 @@
           </div>
         </div>
         <div class="tutorial-guide-confirm" data-tutorial-skip-confirm hidden>
+          ${skipAssetHtml}
           <h2>${skipReactionSpeaker}${skipReactionText}</h2>
           <p>${skipResultSpeaker}${skipResultText}</p>
           <div class="tutorial-guide-actions">
@@ -155,6 +165,14 @@
         color:#243247;
         box-shadow:0 18px 38px rgba(0, 0, 0, .22);
         padding:28px;
+      }
+      .tutorial-guide-dongjasin{
+        display:block;
+        width:min(148px, 32vw);
+        height:176px;
+        object-fit:contain;
+        object-position:bottom center;
+        margin:0 auto 8px;
       }
       .tutorial-guide-close{
         position:absolute;

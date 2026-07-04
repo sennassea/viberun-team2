@@ -111,10 +111,10 @@
         position:absolute;
         left:50%;
         bottom:2.4cqh;
-        --tutorial-dongjasin-avatar-width:7.2cqh;
-        --tutorial-dongjasin-avatar-height:10.2cqh;
-        --tutorial-dongjasin-avatar-left:-8.8cqh;
-        --tutorial-dongjasin-avatar-top:-1.6cqh;
+        --tutorial-dongjasin-avatar-width:36cqh;
+        --tutorial-dongjasin-avatar-height:64cqh;
+        --tutorial-dongjasin-avatar-left:-35cqh;
+        --tutorial-dongjasin-avatar-top:-41.8cqh;
         --tutorial-dongjasin-avatar-transform:none;
         transform:translateX(-50%);
         z-index:12;
@@ -138,6 +138,13 @@
         width:var(--tutorial-dongjasin-avatar-width);
         height:var(--tutorial-dongjasin-avatar-height);
         pointer-events:none;
+      }
+      #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar img{
+        width:100%;
+        height:100%;
+        object-fit:contain;
+        object-position:bottom center;
+        display:block;
       }
       #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar-placeholder{
         width:100%;
@@ -289,8 +296,11 @@
 
     const box = document.createElement("div");
     box.className = "tutorial-map-dialogue";
+    const avatarImage = dialogue.dongjasinAssetPath
+      ? '<img src="' + escapeTutorialMapHtml(dialogue.dongjasinAssetPath) + '" alt="">'
+      : '<div class="tutorial-dongjasin-avatar-placeholder"></div>';
     const avatarHtml = dialogue.speaker === "동자신"
-      ? '<div class="tutorial-dongjasin-avatar" aria-hidden="true"><div class="tutorial-dongjasin-avatar-placeholder"></div></div>'
+      ? '<div class="tutorial-dongjasin-avatar" aria-hidden="true">' + avatarImage + '</div>'
       : "";
     box.innerHTML =
       avatarHtml +
