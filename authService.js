@@ -174,15 +174,25 @@
     return readySoonResult("facebook");
   }
 
+  /* 로그아웃은 인증 세션만 제거합니다. 저장 데이터/튜토리얼/기록 키는 절대 건드리지 않습니다. */
   function logout(){
-    if(!canUseLocalStorage()) return false;
+    if(!canUseLocalStorage()){
+      return {
+        ok: false,
+        message: "브라우저 저장소를 사용할 수 없어 로그아웃할 수 없습니다."
+      };
+    }
 
     try {
       localStorage.removeItem(AUTH_KEY);
-      return true;
+      return { ok: true };
     } catch(error) {
       console.warn("[Auth] 로그아웃 처리 중 오류가 발생했습니다.", error);
-      return false;
+      return {
+        ok: false,
+        error,
+        message: "로그아웃 처리 중 오류가 발생했습니다."
+      };
     }
   }
 

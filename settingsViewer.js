@@ -107,6 +107,7 @@
               '<button type="button" class="settings-account-login">로그인하기</button>' +
               '<button type="button" class="settings-account-google">Google Play 연동</button>' +
               '<button type="button" class="settings-account-facebook">Facebook 연동</button>' +
+              '<button type="button" class="settings-account-logout">로그아웃</button>' +
             '</div>' +
           '</section>' +
           '<div class="settings-viewer-actions">' +
@@ -143,6 +144,16 @@
             '<div class="settings-viewer-confirm-actions">' +
               '<button type="button" class="settings-viewer-reset-yes">예</button>' +
               '<button type="button" class="settings-viewer-reset-no">아니오</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="settings-viewer-logout-confirm" aria-hidden="true">' +
+          '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsLogoutTitle">' +
+            '<h3 id="settingsLogoutTitle">로그아웃</h3>' +
+            '<p>로그아웃하면 이 기기에서 Guest 로그인 정보가 삭제됩니다.<br>계속하시겠습니까?</p>' +
+            '<div class="settings-viewer-confirm-actions">' +
+              '<button type="button" class="settings-viewer-logout-no">취소</button>' +
+              '<button type="button" class="settings-viewer-logout-yes">로그아웃</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -189,6 +200,9 @@
     overlay.querySelector(".settings-account-login").addEventListener("click", openAccountLogin);
     overlay.querySelector(".settings-account-google").addEventListener("click", showGoogleLinkReady);
     overlay.querySelector(".settings-account-facebook").addEventListener("click", showFacebookLinkReady);
+    overlay.querySelector(".settings-account-logout").addEventListener("click", openLogoutConfirm);
+    overlay.querySelector(".settings-viewer-logout-no").addEventListener("click", closeLogoutConfirm);
+    overlay.querySelector(".settings-viewer-logout-yes").addEventListener("click", confirmLogout);
     document.addEventListener("keydown", event => {
       if(event.key !== "Escape" || !overlay.classList.contains("show")) return;
       if(overlay.querySelector(".settings-viewer-confirm.show")){
@@ -201,6 +215,10 @@
       }
       if(overlay.querySelector(".settings-viewer-reset-confirm.show")){
         closeResetConfirm();
+        return;
+      }
+      if(overlay.querySelector(".settings-viewer-logout-confirm.show")){
+        closeLogoutConfirm();
         return;
       }
       if(overlay.querySelector(".settings-viewer-help-layer.show")){
@@ -224,6 +242,8 @@
       reset: overlay.querySelector(".settings-viewer-reset"),
       resetConfirm: overlay.querySelector(".settings-viewer-reset-confirm"),
       resetNo: overlay.querySelector(".settings-viewer-reset-no"),
+      logoutConfirm: overlay.querySelector(".settings-viewer-logout-confirm"),
+      logoutNo: overlay.querySelector(".settings-viewer-logout-no"),
       close: overlay.querySelector(".settings-viewer-close"),
       confirm: overlay.querySelector(".settings-viewer-confirm"),
       confirmNo: overlay.querySelector(".settings-viewer-confirm-no"),
@@ -235,6 +255,7 @@
       accountLogin: overlay.querySelector(".settings-account-login"),
       accountGoogle: overlay.querySelector(".settings-account-google"),
       accountFacebook: overlay.querySelector(".settings-account-facebook"),
+      accountLogout: overlay.querySelector(".settings-account-logout"),
       volumeInputs: Array.from(overlay.querySelectorAll(".settings-viewer-volume input")),
     };
   }
@@ -357,8 +378,8 @@
       ".settings-viewer-tutorial{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-reset{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-primary{background:var(--c-blue);color:#fff;}" +
-      ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
-      ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show,.settings-viewer-reset-confirm.show{display:grid;}" +
+      ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm,.settings-viewer-logout-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
+      ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show,.settings-viewer-reset-confirm.show,.settings-viewer-logout-confirm.show{display:grid;}" +
       ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:2.2cqh 2cqw;text-align:center;}" +
       ".settings-viewer-confirm-panel h3{font-size:2.4cqh;color:var(--c-ink);margin-bottom:1cqh;}" +
       ".settings-viewer-confirm-panel p{font-size:1.7cqh;line-height:1.45;color:var(--c-ink-soft);font-weight:800;margin-bottom:1.8cqh;}" +
@@ -368,6 +389,8 @@
       ".settings-viewer-confirm-yes{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-reset-no{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-reset-yes{background:#fff1ef;color:var(--c-red-deep);}" +
+      ".settings-viewer-logout-no{background:#fff;color:var(--c-ink-soft);}" +
+      ".settings-viewer-logout-yes{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-save-no{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-save-yes{background:var(--c-blue);color:#fff;}" +
       ".settings-viewer-help-layer{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
@@ -434,6 +457,7 @@
     closeSaveConfirm();
     closeGiveUpConfirm();
     closeResetConfirm();
+    closeLogoutConfirm();
     applyVolumeSettings();
     refreshAccountInfo();
     els.overlay.classList.add("show");
@@ -459,6 +483,7 @@
     if(els.accountLogin) els.accountLogin.style.display = info.isLoggedIn ? "none" : "";
     if(els.accountGoogle) els.accountGoogle.style.display = info.isGuest ? "" : "none";
     if(els.accountFacebook) els.accountFacebook.style.display = info.isGuest ? "" : "none";
+    if(els.accountLogout) els.accountLogout.style.display = info.isLoggedIn ? "" : "none";
   }
 
   /* 설정 팝업을 닫지 않고 로그인 모달만 겹쳐 띄운 뒤, 성공 시 계정 정보 영역만 다시 렌더링합니다. */
@@ -487,6 +512,38 @@
       window.VIBERUN_AUTH.signInFacebook();
     }
     if(typeof toast === "function") toast("아직 준비 중입니다.");
+  }
+
+  function openLogoutConfirm(){
+    if(!els || !els.logoutConfirm) return;
+    els.logoutConfirm.classList.add("show");
+    els.logoutConfirm.setAttribute("aria-hidden", "false");
+    if(els.logoutNo) els.logoutNo.focus();
+  }
+
+  function closeLogoutConfirm(){
+    if(!els || !els.logoutConfirm) return;
+    els.logoutConfirm.classList.remove("show");
+    els.logoutConfirm.setAttribute("aria-hidden", "true");
+    if(els.overlay.classList.contains("show") && els.accountLogout) els.accountLogout.focus();
+  }
+
+  /* viberunAuthSession만 삭제하고, 세이브/볼륨/튜토리얼/도감/기록 데이터는 유지합니다. */
+  function confirmLogout(){
+    if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.logout !== "function"){
+      if(typeof toast === "function") toast("로그아웃 처리 중 오류가 발생했습니다.");
+      return;
+    }
+
+    const result = window.VIBERUN_AUTH.logout();
+    if(!result || !result.ok){
+      if(typeof toast === "function") toast((result && result.message) || "로그아웃 처리 중 오류가 발생했습니다.");
+      return;
+    }
+
+    closeLogoutConfirm();
+    refreshAccountInfo();
+    if(typeof toast === "function") toast("로그아웃되었습니다.");
   }
 
   function isTutorialMapSettings(){
@@ -525,6 +582,7 @@
     closeSaveConfirm();
     closeGiveUpConfirm();
     closeResetConfirm();
+    closeLogoutConfirm();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
     els.overlay.classList.remove("start-mode");

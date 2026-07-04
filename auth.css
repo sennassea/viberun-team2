@@ -132,3 +132,8 @@
   background:var(--c-blue)!important;
   color:#fff!important;
 }
+.settings-account-logout{
+  border-color:rgba(168,46,46,.28)!important;
+  background:#fff1ef!important;
+  color:var(--c-red-deep)!important;
+}
