@@ -5,6 +5,9 @@
    ========================================================================= */
 
 function startNewGameFromMenu(){
+  /* 로그인 이력이 없으면 모달을 먼저 띄우고, 성공 후 이 함수를 다시 호출해 기존 새 게임 흐름을 보존합니다. */
+  if(window.VIBERUN_AUTH && !window.VIBERUN_AUTH.requireLogin(startNewGameFromMenu)) return;
+
   markHasPlayedBefore();
   /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
   if(typeof window.ACT1_START_NEW_GAME === "function"){
@@ -55,6 +58,9 @@ function returnToStartScreen(){
 }
 
 function continueGameFromMenu(){
+  /* 저장 지점 유무 판단은 로그인 성공 뒤 기존 로직에서 처리해 기존 안내 문구와 흐름을 유지합니다. */
+  if(window.VIBERUN_AUTH && !window.VIBERUN_AUTH.requireLogin(continueGameFromMenu)) return;
+
   const saved = readSavedProgress();
   if(!saved){
     showStartNotice("저장 지점이 없습니다.");

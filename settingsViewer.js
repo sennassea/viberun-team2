@@ -95,6 +95,20 @@
             volumeControlHtml("music", "배경 음악", 70) +
             volumeControlHtml("effect", "효과음", 80) +
           '</section>' +
+          '<section class="settings-viewer-section settings-account-section" aria-label="계정 정보">' +
+            '<h3>계정 정보</h3>' +
+            '<div class="settings-account-status">' +
+              accountInfoRowHtml("현재 로그인 상태", "settings-account-login-state") +
+              accountInfoRowHtml("계정 타입", "settings-account-type") +
+              accountInfoRowHtml("UID", "settings-account-uid") +
+              accountInfoRowHtml("연동 상태", "settings-account-linked") +
+            '</div>' +
+            '<div class="settings-account-actions">' +
+              '<button type="button" class="settings-account-login">로그인하기</button>' +
+              '<button type="button" class="settings-account-google">Google Play 연동</button>' +
+              '<button type="button" class="settings-account-facebook">Facebook 연동</button>' +
+            '</div>' +
+          '</section>' +
           '<div class="settings-viewer-actions">' +
             '<button type="button" class="settings-viewer-danger">전투 포기</button>' +
             '<button type="button" class="settings-viewer-primary">저장하기</button>' +
@@ -172,6 +186,9 @@
     overlay.querySelector(".settings-viewer-reset-yes").addEventListener("click", resetAllGameRecords);
     overlay.querySelector(".settings-viewer-confirm-no").addEventListener("click", closeGiveUpConfirm);
     overlay.querySelector(".settings-viewer-confirm-yes").addEventListener("click", confirmGiveUp);
+    overlay.querySelector(".settings-account-login").addEventListener("click", openAccountLogin);
+    overlay.querySelector(".settings-account-google").addEventListener("click", showGoogleLinkReady);
+    overlay.querySelector(".settings-account-facebook").addEventListener("click", showFacebookLinkReady);
     document.addEventListener("keydown", event => {
       if(event.key !== "Escape" || !overlay.classList.contains("show")) return;
       if(overlay.querySelector(".settings-viewer-confirm.show")){
@@ -211,8 +228,22 @@
       confirm: overlay.querySelector(".settings-viewer-confirm"),
       confirmNo: overlay.querySelector(".settings-viewer-confirm-no"),
       actions: overlay.querySelector(".settings-viewer-actions"),
+      accountLoginState: overlay.querySelector(".settings-account-login-state"),
+      accountType: overlay.querySelector(".settings-account-type"),
+      accountUid: overlay.querySelector(".settings-account-uid"),
+      accountLinked: overlay.querySelector(".settings-account-linked"),
+      accountLogin: overlay.querySelector(".settings-account-login"),
+      accountGoogle: overlay.querySelector(".settings-account-google"),
+      accountFacebook: overlay.querySelector(".settings-account-facebook"),
       volumeInputs: Array.from(overlay.querySelectorAll(".settings-viewer-volume input")),
     };
+  }
+
+  function accountInfoRowHtml(label, valueClass){
+    return '<div class="settings-account-row">' +
+      '<span class="settings-account-label">' + label + '</span>' +
+      '<span class="settings-account-value ' + valueClass + '">-</span>' +
+    '</div>';
   }
 
   function volumeControlHtml(id, label, value){
@@ -375,6 +406,7 @@
     const danger = els.overlay.querySelector(".settings-viewer-danger");
     if(danger) danger.style.display = "";
     applyVolumeSettings();
+    refreshAccountInfo();
     pauseCombat();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -403,9 +435,58 @@
     closeGiveUpConfirm();
     closeResetConfirm();
     applyVolumeSettings();
+    refreshAccountInfo();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
     els.close.focus();
+  }
+
+  /* 설정 팝업이 열릴 때마다 최신 계정 세션을 읽어 미로그인/Guest/연동 상태 표시를 갱신합니다. */
+  function refreshAccountInfo(){
+    if(!els || !els.accountLoginState) return;
+
+    const auth = window.VIBERUN_AUTH;
+    const info = auth && typeof auth.getAccountInfo === "function"
+      ? auth.getAccountInfo()
+      : { isLoggedIn: false, uid: "", accountType: "미로그인", isGuest: false, linkedProvider: "" };
+
+    els.accountLoginState.textContent = info.isLoggedIn ? "로그인됨" : "미로그인";
+    els.accountType.textContent = info.isLoggedIn ? info.accountType : "-";
+    els.accountUid.textContent = info.uid || "-";
+    els.accountUid.title = info.uid || "";
+    els.accountLinked.textContent = info.isGuest ? "미연동" : (info.linkedProvider || "-");
+
+    if(els.accountLogin) els.accountLogin.style.display = info.isLoggedIn ? "none" : "";
+    if(els.accountGoogle) els.accountGoogle.style.display = info.isGuest ? "" : "none";
+    if(els.accountFacebook) els.accountFacebook.style.display = info.isGuest ? "" : "none";
+  }
+
+  /* 설정 팝업을 닫지 않고 로그인 모달만 겹쳐 띄운 뒤, 성공 시 계정 정보 영역만 다시 렌더링합니다. */
+  function openAccountLogin(){
+    if(window.VIBERUN_LOGIN_MODAL && typeof window.VIBERUN_LOGIN_MODAL.open === "function"){
+      window.VIBERUN_LOGIN_MODAL.open({
+        onSuccess(){
+          refreshAccountInfo();
+        }
+      });
+      return;
+    }
+
+    if(typeof toast === "function") toast("로그인 창을 불러올 수 없습니다.");
+  }
+
+  function showGoogleLinkReady(){
+    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInGooglePlay === "function"){
+      window.VIBERUN_AUTH.signInGooglePlay();
+    }
+    if(typeof toast === "function") toast("아직 준비 중입니다.");
+  }
+
+  function showFacebookLinkReady(){
+    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInFacebook === "function"){
+      window.VIBERUN_AUTH.signInFacebook();
+    }
+    if(typeof toast === "function") toast("아직 준비 중입니다.");
   }
 
   function isTutorialMapSettings(){
