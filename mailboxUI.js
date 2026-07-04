@@ -3,8 +3,10 @@
 /* =========================================================================
    Mailbox UI (mailboxUI.js)
    - 계정 기반 선물함 1차 기능의 팝업 UI입니다.
-   - 로그인 여부는 VIBERUN_AUTH.requireLogin으로 확인하고, 목록/수령은
+   - 로그인 여부는 VIBERUN_AUTH.requireLogin으로 확인하고, 목록/수령/청약철회는
      mailboxService.js(window.VIBERUN_MAILBOX)를 통해 서버와 통신합니다.
+   - 월영당 구매 상품(source === "bm_purchase")은 수령 전 청약철회가 가능하며,
+     실제 보상 지급은 이 팝업에서 수령하기를 눌렀을 때만 이뤄집니다.
    - RUN_STATE/S.moonShards는 건드리지 않으며, 계정 wallet.moonShards는
      이 팝업 안에서만 표시합니다.
    ========================================================================= */
@@ -35,7 +37,7 @@
       '<div class="mailbox-ui-panel" role="dialog" aria-modal="true" aria-labelledby="mailboxUITitle">' +
         '<div class="mailbox-ui-head">' +
           '<div class="mailbox-ui-title" id="mailboxUITitle">🎁 선물함</div>' +
-          '<div class="mailbox-ui-wallet"><span class="mailbox-wallet-icon">🌙</span><span id="mailboxWalletValue">0</span></div>' +
+          '<button type="button" class="mailbox-ui-wallet" aria-label="월영당 열기"><span class="mailbox-wallet-icon">🌙</span><span id="mailboxWalletValue">0</span></button>' +
           '<button type="button" class="mailbox-ui-close" aria-label="닫기">✕</button>' +
         '</div>' +
         '<div class="mailbox-ui-tabs">' +
@@ -54,6 +56,7 @@
       if(event.target === overlay) closeMailboxUI();
     });
     overlay.querySelector(".mailbox-ui-close").addEventListener("click", closeMailboxUI);
+    overlay.querySelector(".mailbox-ui-wallet").addEventListener("click", openBMStoreFromMailbox);
     overlay.querySelector("#mailboxCloseBtn").addEventListener("click", closeMailboxUI);
     overlay.querySelector("#mailboxClaimAllBtn").addEventListener("click", handleClaimAll);
     overlay.querySelectorAll(".mailbox-tab").forEach(tab => {
@@ -63,8 +66,14 @@
       });
     });
     overlay.querySelector("#mailboxUIBody").addEventListener("click", event => {
-      const btn = event.target.closest(".mailbox-claim-btn");
-      if(btn && !btn.disabled) handleClaimOne(btn.dataset.mailId);
+      const claimBtn = event.target.closest(".mailbox-claim-btn");
+      if(claimBtn && !claimBtn.disabled){
+        handleClaimOne(claimBtn.dataset.mailId);
+        return;
+      }
+
+      const refundBtn = event.target.closest(".mailbox-refund-btn");
+      if(refundBtn && !refundBtn.disabled) handleRefund(refundBtn.dataset.mailId);
     });
 
     (document.querySelector("#game") || document.body).appendChild(overlay);
@@ -105,6 +114,17 @@
     els.overlay.setAttribute("aria-hidden", "true");
   }
 
+  function openBMStoreFromMailbox(event){
+    if(event) event.preventDefault();
+    if(window.VIBERUN_BM_STORE_UI && typeof window.VIBERUN_BM_STORE_UI.open === "function"){
+      window.VIBERUN_BM_STORE_UI.open();
+      return;
+    }
+
+    if(typeof toast === "function") toast("월영당을 불러오지 못했습니다.", "error");
+    else if(typeof window.showToast === "function") window.showToast("월영당을 불러오지 못했습니다.", "error");
+  }
+
   function updateActiveTab(){
     if(!els) return;
     els.tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.filter === state.filter));
@@ -139,7 +159,7 @@
   function handleClaimOne(mailId){
     if(!mailId) return;
     const item = state.items.find(i => i.mailId === mailId);
-    if(item && item.status === "CLAIMED") return;
+    if(item && (item.status === "CLAIMED" || item.status === "REFUNDED")) return;
 
     Promise.resolve(window.VIBERUN_MAILBOX.claim(mailId)).then(result => {
       if(!result || !result.ok){
@@ -148,20 +168,55 @@
         return;
       }
 
-      if(item) item.status = "CLAIMED";
+      if(item){
+        item.status = "CLAIMED";
+        item.claimedAt = Date.now();
+      }
       state.wallet = result.wallet || state.wallet;
       syncCommonWallet(result.wallet);
       render();
       refreshBadge();
-      if(typeof toast === "function") toast(rewardToastMessage(result.rewards) || "선물을 받았습니다.", "success");
+
+      const message = item && item.source === "bm_purchase"
+        ? purchaseClaimToastMessage(item)
+        : (rewardToastMessage(result.rewards) || "선물을 받았습니다.");
+      if(typeof toast === "function") toast(message, "success");
     }).catch(error => {
       console.warn("[MailboxUI] 개별 수령 중 오류가 발생했습니다.", error);
       if(typeof toast === "function") toast("선물 수령에 실패했습니다.", "error");
     });
   }
 
+  function handleRefund(mailId){
+    if(!mailId) return;
+    const item = state.items.find(i => i.mailId === mailId);
+    if(!item || !isRefundEligible(item)) return;
+
+    const confirmed = window.confirm("이 상품의 구매를 취소하시겠습니까? 취소 후에는 수령할 수 없습니다.");
+    if(!confirmed) return;
+
+    Promise.resolve(window.VIBERUN_MAILBOX.refund(mailId)).then(result => {
+      if(!result || !result.ok){
+        if(typeof toast === "function") toast((result && result.message) || "청약철회에 실패했습니다.", "error");
+        if(result && result.status === 409) loadMailbox();
+        return;
+      }
+
+      item.status = "REFUNDED";
+      item.refundedAt = Date.now();
+      state.wallet = result.wallet || state.wallet;
+      syncCommonWallet(result.wallet);
+      render();
+      refreshBadge();
+      if(typeof toast === "function") toast("청약철회가 완료되었습니다.", "success");
+    }).catch(error => {
+      console.warn("[MailboxUI] 청약철회 중 오류가 발생했습니다.", error);
+      if(typeof toast === "function") toast("청약철회에 실패했습니다.", "error");
+    });
+  }
+
   function handleClaimAll(){
-    const hasUnclaimed = state.items.some(item => item.status !== "CLAIMED");
+    const hasUnclaimed = state.items.some(item => item.status !== "CLAIMED" && item.status !== "REFUNDED");
     if(!hasUnclaimed){
       if(typeof toast === "function") toast("받을 선물이 없습니다.", "info");
       return;
@@ -176,7 +231,10 @@
       const claimedIds = Array.isArray(result.claimedMailIds) ? result.claimedMailIds : [];
       claimedIds.forEach(mailId => {
         const item = state.items.find(i => i.mailId === mailId);
-        if(item) item.status = "CLAIMED";
+        if(item){
+          item.status = "CLAIMED";
+          item.claimedAt = Date.now();
+        }
       });
       state.wallet = result.wallet || state.wallet;
       syncCommonWallet(result.wallet);
@@ -193,6 +251,7 @@
     if(!reward) return "";
     const amount = Number(reward.amount) || 0;
     if(reward.type === "moon_shard") return "🌙 " + amount;
+    if(reward.type === "dummy_item") return "테스트용 더미 아이템";
     return String(reward.type || "") + " " + amount;
   }
 
@@ -200,6 +259,15 @@
     if(!Array.isArray(rewards) || rewards.length === 0) return "";
     const parts = rewards.map(rewardLabel).filter(Boolean);
     return parts.length ? parts.join(" ") + " 획득!" : "";
+  }
+
+  /* 구매 상품 메일 전용 수령 완료 토스트 문구입니다. 예: "초심자 스타터 팩을 수령했습니다.",
+     "달빛조각 300개를 수령했습니다." */
+  function purchaseClaimToastMessage(item){
+    const rewards = Array.isArray(item.rewards) ? item.rewards : [];
+    const moonShardReward = rewards.find(reward => reward.type === "moon_shard");
+    if(moonShardReward) return "달빛조각 " + (Number(moonShardReward.amount) || 0) + "개를 수령했습니다.";
+    return (item.productName || "상품") + "을 수령했습니다.";
   }
 
   function formatExpiry(expiresAt){
@@ -215,7 +283,81 @@
     return "곧 만료됩니다";
   }
 
+  function formatPurchaseDate(purchasedAt){
+    const date = new Date(Number(purchasedAt) || 0);
+    if(Number.isNaN(date.getTime())) return "";
+    const pad = n => String(n).padStart(2, "0");
+    return date.getFullYear() + "." + pad(date.getMonth() + 1) + "." + pad(date.getDate());
+  }
+
+  /* 청약철회 가능 조건: 구매 메일 + 수령 전(PURCHASED_UNCLAIMED) + 7일 이내 + 미환불. */
+  function isRefundEligible(item){
+    return item.source === "bm_purchase" &&
+      item.status === "PURCHASED_UNCLAIMED" &&
+      Number(item.refundUntil) > Date.now();
+  }
+
+  function formatRefundWindow(item){
+    if(item.status === "CLAIMED") return "수령 완료 (청약철회 불가)";
+    if(item.status === "REFUNDED") return "청약철회 완료";
+    if(item.status === "EXPIRED_REFUND") return "청약철회 기간 만료";
+
+    const diff = Number(item.refundUntil) - Date.now();
+    if(!Number.isFinite(diff) || diff <= 0) return "청약철회 기간 만료";
+
+    const dayMs = 86400000;
+    const hourMs = 3600000;
+    const days = Math.floor(diff / dayMs);
+    const hours = Math.floor((diff % dayMs) / hourMs);
+    if(days > 0) return "청약철회 가능: " + days + "일 " + hours + "시간 남음";
+    if(hours > 0) return "청약철회 가능: " + hours + "시간 남음";
+    return "청약철회 가능: 곧 만료";
+  }
+
+  function renderPurchaseItem(item){
+    const claimed = item.status === "CLAIMED";
+    const refunded = item.status === "REFUNDED";
+    const canClaim = !claimed && !refunded;
+    const canRefund = isRefundEligible(item);
+    const rewardsHtml = (Array.isArray(item.rewards) ? item.rewards : [])
+      .map(reward => '<span class="mailbox-item-reward">' + escapeHtml(rewardLabel(reward)) + '</span>')
+      .join("");
+
+    let claimLabel = "수령하기";
+    if(claimed) claimLabel = "수령 완료";
+    else if(refunded) claimLabel = "청약철회됨";
+
+    return (
+      '<div class="mailbox-item mailbox-item-purchase' + (claimed ? " claimed" : "") + (refunded ? " refunded" : "") + '">' +
+        '<div class="mailbox-item-icon">🌙</div>' +
+        '<div class="mailbox-item-body">' +
+          '<div class="mailbox-item-purchase-tag">월영당 구매 상품</div>' +
+          '<div class="mailbox-item-title">' + escapeHtml(item.productName || "") + '</div>' +
+          (item.productDescription ? '<div class="mailbox-item-desc">' + escapeHtml(item.productDescription) + '</div>' : "") +
+          '<div class="mailbox-item-purchase-meta">' +
+            '<span>구매일: ' + escapeHtml(formatPurchaseDate(item.purchasedAt)) + '</span>' +
+            '<span>' + escapeHtml(formatRefundWindow(item)) + '</span>' +
+          '</div>' +
+          '<div class="mailbox-item-meta">' +
+            '<span class="mailbox-item-reward-label">보상:</span>' +
+            rewardsHtml +
+          '</div>' +
+        '</div>' +
+        '<div class="mailbox-item-actions">' +
+          '<button type="button" class="mailbox-claim-btn" data-mail-id="' + escapeHtml(item.mailId) + '"' + (canClaim ? "" : " disabled") + '>' +
+            claimLabel +
+          '</button>' +
+          (canRefund
+            ? '<button type="button" class="mailbox-refund-btn" data-mail-id="' + escapeHtml(item.mailId) + '">청약철회</button>'
+            : "") +
+        '</div>' +
+      '</div>'
+    );
+  }
+
   function renderItem(item){
+    if(item.source === "bm_purchase") return renderPurchaseItem(item);
+
     const claimed = item.status === "CLAIMED";
     const rewardsHtml = (Array.isArray(item.rewards) ? item.rewards : [])
       .map(reward => '<span class="mailbox-item-reward">' + escapeHtml(rewardLabel(reward)) + '</span>')
@@ -260,21 +402,42 @@
       return;
     }
 
+    const isResolved = item => item.status === "CLAIMED" || item.status === "REFUNDED";
     const filtered = state.items.filter(item => {
-      if(state.filter === "unclaimed") return item.status !== "CLAIMED";
-      if(state.filter === "claimed") return item.status === "CLAIMED";
+      if(state.filter === "unclaimed") return !isResolved(item);
+      if(state.filter === "claimed") return isResolved(item);
       return true;
     });
 
-    if(filtered.length === 0){
+    const sorted = sortMailboxItems(filtered);
+
+    if(sorted.length === 0){
       els.body.innerHTML = '<div class="mailbox-status-msg">' +
         (state.filter === "claimed" ? "수령한 선물이 없습니다." : "받을 선물이 없습니다.") +
         '</div>';
     } else {
-      els.body.innerHTML = filtered.map(renderItem).join("");
+      els.body.innerHTML = sorted.map(renderItem).join("");
     }
 
-    els.claimAllBtn.disabled = !state.items.some(item => item.status !== "CLAIMED");
+    els.claimAllBtn.disabled = !state.items.some(item => item.status !== "CLAIMED" && item.status !== "REFUNDED");
+  }
+
+  /* 정렬 우선순위: 1) 미수령 구매 상품 2) 일반 미수령 선물 3) 수령 완료 상품 4) 청약철회 완료 상품 */
+  function mailboxSortRank(item){
+    if(item.source === "bm_purchase" && item.status !== "CLAIMED" && item.status !== "REFUNDED") return 0;
+    if(item.source !== "bm_purchase" && item.status !== "CLAIMED") return 1;
+    if(item.status === "CLAIMED") return 2;
+    return 3;
+  }
+
+  function sortMailboxItems(items){
+    return items
+      .map((item, index) => ({ item, index }))
+      .sort((a, b) => {
+        const rankDiff = mailboxSortRank(a.item) - mailboxSortRank(b.item);
+        return rankDiff !== 0 ? rankDiff : a.index - b.index;
+      })
+      .map(entry => entry.item);
   }
 
   function syncCommonWallet(wallet){
@@ -316,6 +479,12 @@
     close: closeMailboxUI,
     refreshBadge
   };
+
+  window.addEventListener("viberun:wallet-changed", event => {
+    const wallet = event && event.detail ? event.detail.wallet : null;
+    if(wallet) state.wallet = wallet;
+    if(els) render();
+  });
 
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", refreshBadge);

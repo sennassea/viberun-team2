@@ -5,7 +5,7 @@
    - 메인 시작 화면 우상단에 계정 wallet.moonShards 보유량을 표시합니다.
    - 표시/숨김은 로그인 상태와 시작 화면 DOM만 기준으로 처리하며 전투 HUD에는
      관여하지 않습니다.
-   - 플러스 버튼은 1차 구현에서 BM UI를 열지 않고 준비 중 토스트만 표시합니다.
+   - 달빛조각 UI 클릭 시 월영당 BM UI를 열고, UI 객체가 없을 때만 안전 토스트를 표시합니다.
    ========================================================================= */
 (function(){
   let walletEl = null;
@@ -41,10 +41,13 @@
   function handlePlusClick(event){
     if(event) event.preventDefault();
     if(event) event.stopPropagation();
-    if(typeof toast === "function") {
-      toast("달빛조각 충전은 준비 중입니다.", "info");
+
+    if(window.VIBERUN_BM_STORE_UI && typeof window.VIBERUN_BM_STORE_UI.open === "function"){
+      window.VIBERUN_BM_STORE_UI.open();
+    } else if(typeof toast === "function") {
+      toast("월영당을 불러오지 못했습니다.", "error");
     } else if(typeof window.showToast === "function") {
-      window.showToast("달빛조각 충전은 준비 중입니다.", "info");
+      window.showToast("월영당을 불러오지 못했습니다.", "error");
     }
   }
 

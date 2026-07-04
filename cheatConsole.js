@@ -281,11 +281,8 @@
     safeRenderHud();
   }
   function cheatGiveMoon(n){
-    if(!requireBattle() || !requirePositive(n)) return;
-    const v = Math.floor(Number(n));
-    S.moonShards += v;
-    CHEAT_RUN_STATE.moonDelta += v;
-    safeRenderHud();
+    console.warn("CHEAT.give.moon은 deprecated입니다. CHEAT.wallet.moon.add(amount)를 사용하세요.");
+    cheatWalletMoonAdd(n);
   }
   function cheatTakeGold(n){
     if(!requireBattle() || !requirePositive(n)) return;
@@ -295,11 +292,110 @@
     safeRenderHud();
   }
   function cheatTakeMoon(n){
-    if(!requireBattle() || !requirePositive(n)) return;
-    const v = Math.min(Math.floor(Number(n)), S.moonShards);
-    S.moonShards = Math.max(0, S.moonShards - v);
-    CHEAT_RUN_STATE.moonDelta -= v;
-    safeRenderHud();
+    console.warn("CHEAT.take.moon은 deprecated입니다. CHEAT.wallet.moon.take(amount)를 사용하세요.");
+    cheatWalletMoonTake(n);
+  }
+
+  /* =========================================================================
+     BM 계정 달빛조각(wallet.moonShards) 치트
+     - 전투 상태 S.moonShards는 절대 건드리지 않고, accountId 기준
+       wallet.moonShards만 서버(local-mock-server.js `/wallet/cheat`)에 반영한다.
+     - 서버 반영 후 window.VIBERUN_WALLET.setCachedWallet()을 호출해
+       viberun:wallet-changed 이벤트를 발행, 메인/선물함/월영당 UI를 동기화한다.
+     ========================================================================= */
+  function requireLoggedInAccount(){
+    const auth = window.VIBERUN_AUTH;
+    const account = auth && typeof auth.getAccountInfo === "function" ? auth.getAccountInfo() : null;
+    if(!account || !account.isLoggedIn){
+      cheatWarn("로그인이 필요합니다. Guest/Google/Facebook 로그인 후 다시 시도하세요.");
+      return null;
+    }
+    return account;
+  }
+
+  function requireFiniteAmount(n){
+    const v = Number(n);
+    if(!Number.isFinite(v)){ cheatWarn("수량은 숫자여야 합니다."); return null; }
+    return v;
+  }
+
+  function requestWalletCheat(op, amount){
+    const account = requireLoggedInAccount();
+    if(!account) return Promise.resolve(null);
+
+    const token = String(account.accessToken || "");
+    const base = (window.VIBERUN_WALLET_API_BASE || window.VIBERUN_AUTH_API_BASE || "").replace(/\/$/, "");
+    if(typeof fetch !== "function" || !token){
+      cheatWarn("wallet 치트 API를 사용할 수 없는 환경입니다.");
+      return Promise.resolve(null);
+    }
+
+    return fetch(base + "/wallet/cheat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({ op, amount })
+    }).then(response => response.text().then(text => {
+      let body = {};
+      try { body = text ? JSON.parse(text) : {}; } catch(error) { body = {}; }
+      if(!response.ok || !body.ok || !body.wallet){
+        cheatWarn("wallet 치트 요청이 실패했습니다: " + (body.message || response.statusText));
+        return null;
+      }
+      if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.setCachedWallet === "function"){
+        window.VIBERUN_WALLET.setCachedWallet(body.wallet);
+      }
+      return body.wallet;
+    })).catch(error => {
+      cheatWarn("wallet 치트 요청 중 오류가 발생했습니다: " + error);
+      return null;
+    });
+  }
+
+  function cheatWalletMoonAdd(amount){
+    const v = requireFiniteAmount(amount);
+    if(v === null || v <= 0){ cheatWarn("수량은 0보다 커야 합니다."); return; }
+    const delta = Math.floor(v);
+    requestWalletCheat("add", delta).then(wallet => {
+      if(wallet) cheatLog("계정 달빛조각 " + delta + " 증가 → 현재 " + wallet.moonShards);
+    });
+  }
+
+  function cheatWalletMoonTake(amount){
+    const v = requireFiniteAmount(amount);
+    if(v === null || v <= 0){ cheatWarn("수량은 0보다 커야 합니다."); return; }
+    const delta = Math.floor(v);
+    requestWalletCheat("take", delta).then(wallet => {
+      if(wallet) cheatLog("계정 달빛조각 " + delta + " 감소 → 현재 " + wallet.moonShards);
+    });
+  }
+
+  function cheatWalletMoonSet(amount){
+    const v = requireFiniteAmount(amount);
+    if(v === null){ return; }
+    const target = Math.max(0, Math.floor(v));
+    requestWalletCheat("set", target).then(wallet => {
+      if(wallet) cheatLog("계정 달빛조각을 " + target + "로 설정 → 현재 " + wallet.moonShards);
+    });
+  }
+
+  function cheatWalletMoonGet(){
+    const account = requireLoggedInAccount();
+    if(!account) return;
+
+    const cached = window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.getCachedWallet === "function"
+      ? window.VIBERUN_WALLET.getCachedWallet()
+      : null;
+    if(cached){
+      cheatLog("현재 계정 달빛조각: " + cached.moonShards);
+      return;
+    }
+
+    if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.fetchWallet === "function"){
+      Promise.resolve(window.VIBERUN_WALLET.fetchWallet()).then(result => {
+        if(result && result.ok && result.wallet) cheatLog("현재 계정 달빛조각: " + result.wallet.moonShards);
+        else cheatWarn("wallet 조회에 실패했습니다.");
+      });
+    }
   }
 
   function cheatGiveRelicRandom(){
@@ -657,13 +753,21 @@
       "CHEAT.kill   몬스터/플레이어 즉사 (enemy/player)",
       "CHEAT.hp     체력/정신력 변경 (player/enemy)",
       "CHEAT.atk    공격력/피해량 변경 (player.add|mul|set|reset, enemy(i).set)",
-      "CHEAT.give   돈/아이템 획득 (gold/moon/relicRandom/relic/potionTest/potion)",
-      "CHEAT.take   돈/아이템 제거 (gold/moon/relic/potion)",
+      "CHEAT.give   돈/아이템 획득 (gold/moon[deprecated]/relicRandom/relic/potionTest/potion)",
+      "CHEAT.take   돈/아이템 제거 (gold/moon[deprecated]/relic/potion)",
       "CHEAT.status 상태이상 부여/제거 (add/remove/clear)",
       "CHEAT.card   주문 추가/제거/검색 (hand/deck/draw/discard/find/list/remove/removeAll/clear)",
       "CHEAT.dump   현재 상태 출력 (state/cards/enemies)",
       "CHEAT.reset  전투/런 초기화 (battle/run)",
-      "CHEAT.toast  전역 토스트 레이어 노출 테스트 (info/success/warning/error)"
+      "CHEAT.toast  전역 토스트 레이어 노출 테스트 (info/success/warning/error)",
+      "",
+      "── BM 계정 달빛조각 치트 ──",
+      "CHEAT.wallet.moon.add(1000)  // 계정 달빛조각 1000개 추가",
+      "CHEAT.wallet.moon.take(100)  // 계정 달빛조각 100개 차감",
+      "CHEAT.wallet.moon.set(5000)  // 계정 달빛조각 5000개로 설정",
+      "CHEAT.wallet.moon.get()      // 현재 계정 달빛조각 확인",
+      "",
+      "※ CHEAT.give.moon / CHEAT.take.moon은 deprecated입니다. 위 CHEAT.wallet.moon.* 을 사용하세요."
     ].join("\n"));
   }
 
@@ -707,6 +811,14 @@
       moon: cheatTakeMoon,
       relic: cheatTakeRelic,
       potion: cheatTakePotion
+    },
+    wallet: {
+      moon: {
+        add: cheatWalletMoonAdd,
+        take: cheatWalletMoonTake,
+        set: cheatWalletMoonSet,
+        get: cheatWalletMoonGet
+      }
     },
     status: {
       add: cheatStatusAdd,

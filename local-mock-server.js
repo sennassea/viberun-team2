@@ -20,9 +20,18 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const PORT = 5173;
+const PORT = Number(process.env.PORT) || 5173;
 const ROOT_DIR = __dirname;
 const GUEST_ACCOUNT_ID = "acc_local_guest_001";
+const INITIAL_MOCK_MOON_SHARDS = Math.max(0, Math.floor(Number(
+  process.env.INITIAL_MOCK_MOON_SHARDS || process.env.INITIAL_MOON_SHARDS
+) || 0));
+const REFUND_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+let mailIdCounter = 0;
+function nextMailId() {
+  mailIdCounter += 1;
+  return "purchase_mail_" + Date.now() + "_" + mailIdCounter;
+}
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -40,11 +49,35 @@ const MIME_TYPES = {
 
 /* ------------------------------------------------------------------------
    In-memory mock 데이터 (서버 재시작 시 초기화됩니다)
-   - mailbox/wallet은 accountId별로 분리해서 저장합니다.
+   - mailbox/wallet/dummyInventory는 accountId별로 분리해서 저장합니다.
    - accessToken → accountId 매핑은 /auth/* 응답 발급 시점에 등록합니다.
    ------------------------------------------------------------------------ */
-const accounts = new Map();      // accountId -> { mailbox: [...], wallet: {...} }
+const accounts = new Map();      // accountId -> { mailbox: [...], wallet: {...}, dummyInventory: [...] }
 const tokenToAccount = new Map(); // accessToken -> accountId
+
+/* 월영당 로컬 Mock 검증용 상품 테이블입니다.
+   UI 표시 데이터는 bmStoreData.js가 관리하며, 이 테이블은 서버 차감/지급 검증만 담당합니다. */
+const BM_PACKAGE_PRODUCTS = [
+  { id: "starter_pack", name: "초심자 스타터 팩", price: 7500, rewardId: "dummy_starter_pack", category: "package", description: "지금 시작하면 모험이 더욱 특별해집니다." },
+  { id: "growth_package", name: "성장 패키지", price: 2980, rewardId: "dummy_growth_package", category: "package", description: "성장에 필요한 물품이 담긴 패키지입니다." },
+  { id: "rare_package", name: "희귀 장신 패키지", price: 6500, rewardId: "dummy_rare_package", category: "package", description: "희귀한 장신구가 담긴 패키지입니다." },
+  { id: "spring_blessing_box", name: "봄날의 축복 상자", price: 2400, rewardId: "dummy_spring_blessing_box", category: "package", description: "계절 한정 축복 상자입니다." },
+  { id: "order_pack_summon_charm", name: "소환 부적 팩", price: 1000, rewardId: "dummy_summon_charm_pack", category: "order_pack", description: "소환을 바꾸는 주문 부적" },
+  { id: "order_pack_soul_charm", name: "영혼 부적 팩", price: 2000, rewardId: "dummy_soul_charm_pack", category: "order_pack", description: "영혼을 모으는 주문 부적" },
+  { id: "order_pack_divine_charm", name: "신력 부적 팩", price: 3000, rewardId: "dummy_divine_charm_pack", category: "order_pack", description: "강력한 인연 소환 주문 부적" },
+  { id: "order_pack_legend_support", name: "전설 보조 팩", price: 10000, rewardId: "dummy_legend_support_pack", category: "order_pack", description: "전설 등급 신력 확정 소환" }
+];
+
+/* 달빛조각 충전(테스트 구매) 검증 테이블입니다. 실제 결제 검증 없이 rewardAmount만큼
+   wallet.moonShards를 증가시키며, 차감/잔액 확인은 하지 않습니다. */
+const BM_MOON_CHARGE_PRODUCTS = [
+  { id: "moon_charge_60", name: "달빛조각 60", price: 1200, rewardAmount: 60 },
+  { id: "moon_charge_300", name: "달빛조각 300", price: 5900, rewardAmount: 300 },
+  { id: "moon_charge_980", name: "달빛조각 980", price: 19000, rewardAmount: 980 },
+  { id: "moon_charge_1980", name: "달빛조각 1,980", price: 37000, rewardAmount: 1980 },
+  { id: "moon_charge_3280", name: "달빛조각 3,280", price: 59000, rewardAmount: 3280 },
+  { id: "moon_charge_6480", name: "달빛조각 6,480", price: 119000, rewardAmount: 6480 }
+];
 
 function buildDefaultMailbox() {
   return [
@@ -61,7 +94,11 @@ function buildDefaultMailbox() {
 
 function ensureAccount(accountId) {
   if (!accounts.has(accountId)) {
-    accounts.set(accountId, { mailbox: buildDefaultMailbox(), wallet: { moonShards: 0 } });
+    accounts.set(accountId, {
+      mailbox: buildDefaultMailbox(),
+      wallet: { moonShards: INITIAL_MOCK_MOON_SHARDS },
+      dummyInventory: []
+    });
   }
   return accounts.get(accountId);
 }
@@ -145,10 +182,31 @@ function handleAuthLinkFacebook(res) {
 /* ------------------------------------------------------------------------
    /mailbox Mock 핸들러
    ------------------------------------------------------------------------ */
-function applyRewardsToWallet(wallet, rewards) {
-  rewards.forEach((reward) => {
+/* 선물함 메일의 rewards를 실제로 지급합니다.
+   moon_shard는 wallet.moonShards에, dummy_item은 dummyInventory에 지급하며,
+   패키지/주문 팩/충전 상품 모두 이 함수를 통해서만 실제 보상을 받습니다. */
+function applyMailRewards(account, mail) {
+  (mail.rewards || []).forEach((reward) => {
     if (reward.type === "moon_shard") {
-      wallet.moonShards += Number(reward.amount) || 0;
+      account.wallet.moonShards = (Number(account.wallet.moonShards) || 0) + (Number(reward.amount) || 0);
+    } else if (reward.type === "dummy_item") {
+      account.dummyInventory.push({
+        id: reward.dummyRewardId,
+        name: mail.productName || reward.dummyRewardId,
+        category: mail.productCategory || "package",
+        obtainedAt: Date.now()
+      });
+    }
+  });
+}
+
+/* 청약철회 기간(7일)이 지난 미수령 구매 메일을 EXPIRED_REFUND로 전환합니다.
+   수령은 계속 가능하지만 더 이상 청약철회 버튼은 노출되지 않습니다. */
+function refreshMailStatuses(account) {
+  const now = Date.now();
+  account.mailbox.forEach((mail) => {
+    if (mail.source === "bm_purchase" && mail.status === "PURCHASED_UNCLAIMED" && Number(mail.refundUntil) <= now) {
+      mail.status = "EXPIRED_REFUND";
     }
   });
 }
@@ -161,6 +219,7 @@ function handleMailboxList(req, res) {
   }
 
   const account = ensureAccount(accountId);
+  refreshMailStatuses(account);
   sendJson(res, 200, { items: account.mailbox, wallet: account.wallet });
 }
 
@@ -183,6 +242,7 @@ function handleMailboxClaim(req, res, mailId) {
   }
 
   const account = ensureAccount(accountId);
+  refreshMailStatuses(account);
   const mail = account.mailbox.find((item) => item.mailId === mailId);
   if (!mail) {
     sendJson(res, 404, { ok: false, message: "존재하지 않는 선물입니다." });
@@ -194,8 +254,14 @@ function handleMailboxClaim(req, res, mailId) {
     return;
   }
 
+  if (mail.status === "REFUNDED") {
+    sendJson(res, 409, { ok: false, message: "청약철회된 상품은 수령할 수 없습니다." });
+    return;
+  }
+
   mail.status = "CLAIMED";
-  applyRewardsToWallet(account.wallet, mail.rewards);
+  mail.claimedAt = Date.now();
+  applyMailRewards(account, mail);
 
   sendJson(res, 200, {
     ok: true,
@@ -213,15 +279,17 @@ function handleMailboxClaimAll(req, res) {
   }
 
   const account = ensureAccount(accountId);
+  refreshMailStatuses(account);
   const claimedMailIds = [];
   const rewardTotals = new Map();
 
   account.mailbox.forEach((mail) => {
-    if (mail.status !== "UNCLAIMED") return;
+    if (mail.status !== "UNCLAIMED" && mail.status !== "PURCHASED_UNCLAIMED" && mail.status !== "EXPIRED_REFUND") return;
 
     mail.status = "CLAIMED";
+    mail.claimedAt = Date.now();
     claimedMailIds.push(mail.mailId);
-    applyRewardsToWallet(account.wallet, mail.rewards);
+    applyMailRewards(account, mail);
 
     mail.rewards.forEach((reward) => {
       rewardTotals.set(reward.type, (rewardTotals.get(reward.type) || 0) + (Number(reward.amount) || 0));
@@ -231,6 +299,218 @@ function handleMailboxClaimAll(req, res) {
   const rewards = Array.from(rewardTotals.entries()).map(([type, amount]) => ({ type, amount }));
 
   sendJson(res, 200, { ok: true, claimedMailIds, rewards, wallet: account.wallet });
+}
+
+/* 치트 콘솔 전용 계정 wallet.moonShards 조회/증감/설정 핸들러입니다.
+   전투 상태(S.moonShards)와는 완전히 분리되어 있으며 accountId 기준 wallet만 바꿉니다. */
+function handleWalletCheat(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const op = payload.op;
+  const amount = Math.floor(Number(payload.amount));
+  if (!Number.isFinite(amount)) {
+    sendJson(res, 400, { ok: false, message: "amount는 숫자여야 합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const current = Number(account.wallet.moonShards) || 0;
+
+  if (op === "add") {
+    account.wallet.moonShards = current + amount;
+  } else if (op === "take") {
+    account.wallet.moonShards = Math.max(0, current - amount);
+  } else if (op === "set") {
+    account.wallet.moonShards = Math.max(0, amount);
+  } else {
+    sendJson(res, 400, { ok: false, message: "op은 add/take/set 중 하나여야 합니다." });
+    return;
+  }
+
+  sendJson(res, 200, { ok: true, wallet: account.wallet });
+}
+
+/* ------------------------------------------------------------------------
+   /bm-store Mock 핸들러
+   - 구매는 즉시 dummyInventory/wallet.moonShards를 지급하지 않고 선물함 구매 메일만 생성합니다.
+   - 실제 지급은 /mailbox/{mailId}/claim에서만 이뤄지며, 수령 전 상품은 /mailbox/{mailId}/refund로
+     청약철회할 수 있습니다.
+   - 카드/법구/골드/포션/전투 보상 데이터와 절대 연결하지 않습니다.
+   ------------------------------------------------------------------------ */
+function handleDummyInventory(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  sendJson(res, 200, {
+    ok: true,
+    dummyInventory: account.dummyInventory,
+    wallet: account.wallet
+  });
+}
+
+/* 패키지/주문 팩 구매입니다. 달빛조각 결제는 구매 시점에 즉시 차감하지만,
+   실제 보상(더미 아이템)은 지급하지 않고 선물함 구매 메일만 생성합니다.
+   실제 지급은 선물함에서 "수령하기"를 누른 시점에만 이뤄집니다. */
+function handleBMPackagePurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_PACKAGE_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, message: "존재하지 않는 상품입니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const currentMoonShards = Number(account.wallet.moonShards) || 0;
+  if (currentMoonShards < product.price) {
+    sendJson(res, 400, {
+      ok: false,
+      code: "INSUFFICIENT_MOON_SHARDS",
+      message: "달빛조각이 부족합니다.",
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  account.wallet.moonShards = currentMoonShards - product.price;
+
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productDescription: product.description || "",
+    productCategory: product.category || "package",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "moon_shard",
+    paidAmount: product.price,
+    rewards: [{ type: "dummy_item", dummyRewardId: product.rewardId, amount: 1 }]
+  };
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    mail,
+    wallet: account.wallet
+  });
+}
+
+/* 달빛조각 충전 테스트 구매입니다. 실제 결제 검증이 없고 wallet.moonShards도 즉시 증가시키지 않으며,
+   충전될 달빛조각은 선물함 구매 메일로만 생성됩니다. */
+function handleBMMoonChargePurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_MOON_CHARGE_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, message: "존재하지 않는 상품입니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productDescription: product.description || "",
+    productCategory: "moon_charge",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "test_cash",
+    paidAmount: product.price,
+    rewards: [{ type: "moon_shard", amount: product.rewardAmount }]
+  };
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    productId: product.id,
+    rewardAmount: product.rewardAmount,
+    mail,
+    wallet: account.wallet
+  });
+}
+
+/* 청약철회입니다. 수령 전 구매 메일이며 7일 이내인 경우에만 허용하고,
+   moon_shard로 결제한 상품은 paidAmount만큼 wallet을 환급합니다. */
+function handleMailboxRefund(req, res, mailId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  refreshMailStatuses(account);
+  const mail = account.mailbox.find((item) => item.mailId === mailId);
+  if (!mail) {
+    sendJson(res, 404, { ok: false, message: "존재하지 않는 선물입니다." });
+    return;
+  }
+
+  if (mail.source !== "bm_purchase") {
+    sendJson(res, 400, { ok: false, message: "청약철회할 수 없는 선물입니다." });
+    return;
+  }
+
+  if (mail.status !== "PURCHASED_UNCLAIMED") {
+    sendJson(res, 409, { ok: false, message: "청약철회할 수 없는 상태입니다." });
+    return;
+  }
+
+  if (Number(mail.refundUntil) <= Date.now()) {
+    mail.status = "EXPIRED_REFUND";
+    sendJson(res, 409, { ok: false, message: "청약철회 기간이 지났습니다." });
+    return;
+  }
+
+  if (mail.priceType === "moon_shard") {
+    account.wallet.moonShards = (Number(account.wallet.moonShards) || 0) + (Number(mail.paidAmount) || 0);
+  }
+
+  mail.status = "REFUNDED";
+  mail.refundedAt = Date.now();
+
+  sendJson(res, 200, {
+    ok: true,
+    refundedMailId: mail.mailId,
+    mail,
+    wallet: account.wallet
+  });
 }
 
 /* ------------------------------------------------------------------------
@@ -291,14 +571,42 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (method === "POST" && pathname === "/wallet/cheat") {
+    readRequestBody(req).then((body) => handleWalletCheat(req, res, body));
+    return;
+  }
+
   if (method === "POST" && pathname === "/mailbox/claim-all") {
     handleMailboxClaimAll(req, res);
+    return;
+  }
+
+  if (method === "GET" && pathname === "/bm-store/dummy-inventory") {
+    handleDummyInventory(req, res);
+    return;
+  }
+
+  const bmPackagePurchaseMatch = pathname.match(/^\/bm-store\/package\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmPackagePurchaseMatch) {
+    readRequestBody(req).then(() => handleBMPackagePurchase(req, res, decodeURIComponent(bmPackagePurchaseMatch[1])));
+    return;
+  }
+
+  const bmMoonChargePurchaseMatch = pathname.match(/^\/bm-store\/moon-charge\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmMoonChargePurchaseMatch) {
+    readRequestBody(req).then(() => handleBMMoonChargePurchase(req, res, decodeURIComponent(bmMoonChargePurchaseMatch[1])));
     return;
   }
 
   const claimMatch = pathname.match(/^\/mailbox\/([^/]+)\/claim$/);
   if (method === "POST" && claimMatch) {
     handleMailboxClaim(req, res, decodeURIComponent(claimMatch[1]));
+    return;
+  }
+
+  const refundMatch = pathname.match(/^\/mailbox\/([^/]+)\/refund$/);
+  if (method === "POST" && refundMatch) {
+    handleMailboxRefund(req, res, decodeURIComponent(refundMatch[1]));
     return;
   }
 
