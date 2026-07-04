@@ -424,6 +424,60 @@ const RELIC_MASTER_DB = [
         "consume": true
       }
     ]
+  },
+  {
+    "id": "sealed_talisman",
+    "dataId": "RE016",
+    "name": "봉인 부적",
+    "emoji": "📿",
+    "deck": "은혜",
+    "rarity": "blessing",
+    "obtainFrom": [],
+    "trigger": "none",
+    "target": "self",
+    "desc": "희귀 부적 주문 1장을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.",
+    "effectText": "희귀 부적 주문 1장을 얻습니다.",
+    "valueText": "신령의 은혜: 희귀 주문 획득",
+    "dropWeight": 0,
+    "price": 0,
+    "shopPrice": 0,
+    "fx": []
+  },
+  {
+    "id": "red_thread",
+    "dataId": "RE017",
+    "name": "붉은 실 매듭",
+    "emoji": "🪢",
+    "deck": "은혜",
+    "rarity": "blessing",
+    "obtainFrom": [],
+    "trigger": "none",
+    "target": "self",
+    "desc": "기본 주문 1장을 제거합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.",
+    "effectText": "기본 주문 1장을 제거합니다.",
+    "valueText": "신령의 은혜: 기본 주문 제거",
+    "dropWeight": 0,
+    "price": 0,
+    "shopPrice": 0,
+    "fx": []
+  },
+  {
+    "id": "clear_bell",
+    "dataId": "RE018",
+    "name": "맑은 방울",
+    "emoji": "🔔",
+    "deck": "은혜",
+    "rarity": "blessing",
+    "obtainFrom": [],
+    "trigger": "none",
+    "target": "self",
+    "desc": "첫 전투 시작 시 결계 8을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.",
+    "effectText": "첫 전투 시작 시 결계 8을 얻습니다.",
+    "valueText": "신령의 은혜: 첫 전투 결계 +8",
+    "dropWeight": 0,
+    "price": 0,
+    "shopPrice": 0,
+    "fx": []
   }
 ];
 

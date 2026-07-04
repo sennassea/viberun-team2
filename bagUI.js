@@ -21,7 +21,10 @@
   let selectedPotionIdx = null;
 
   function getRelics() {
-    return (typeof S !== "undefined" && S && Array.isArray(S.relics)) ? S.relics : [];
+    if (typeof S !== "undefined" && S && Array.isArray(S.relics)) return S.relics;
+    // 신령의 은혜 화면 등 첫 전투 진입 전(S 미생성 상태)에도 보유 법구를 보여준다.
+    if (typeof RUN_STATE !== "undefined" && RUN_STATE && Array.isArray(RUN_STATE.relics)) return RUN_STATE.relics;
+    return [];
   }
   function getPotions() {
     return (typeof S !== "undefined" && S && Array.isArray(S.potions)) ? S.potions : [];

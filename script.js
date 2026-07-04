@@ -1216,7 +1216,10 @@ function skipRewardCard(){
 
 function grantRelic(){
   if(!S.relics) S.relics = [];
-  const relic = RELIC_DB[Math.floor(Math.random()*RELIC_DB.length)];
+  // obtainFrom에 "elite"가 없는 법구(예: 신령의 은혜 전용 법구)는 드랍 후보에서 제외한다.
+  const pool = RELIC_DB.filter(item => Array.isArray(item.obtainFrom) && item.obtainFrom.includes("elite"));
+  const list = pool.length ? pool : RELIC_DB;
+  const relic = list[Math.floor(Math.random()*list.length)];
   S.relics.push(relic);
   toast("법구 획득: "+relic.emoji+" "+relic.name);
   renderHud();

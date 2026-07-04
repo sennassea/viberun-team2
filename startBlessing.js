@@ -149,6 +149,7 @@ function selectSbBlessing(blessing){
   sbResolved = true;
 
   applySbBlessing(blessing);
+  grantSbBlessingRelic(blessing);
   saveSbSpiritToRunState();
   /* 신령의 은혜 화면은 여기서 닫지 않는다. 여정(맵) 오버레이가 그 위에
      반투명하게 떠야 하므로(플레이어가 맵만 닫고 은혜 화면으로 돌아올 수도
@@ -206,6 +207,30 @@ function applySbBlessing(blessing){
   if(blessing.effect === "firstBattleBlock"){
     run.startBlessingEffect = { type: "firstBattleBlock", value: blessing.value || 8, used: false };
   }
+}
+
+/* ── 고른 은혜를 동일한 이름의 법구로 가방에 지급 ─────────────────────────
+   효과 자체는 위 applySbBlessing()에서 그대로 적용된다(덱 변경/전투 시작
+   결계 예약 등). 여기서는 플레이어가 가방에서 확인할 수 있도록 같은 이름의
+   법구 항목만 추가하며, fx는 비워두어 법구 전투 효과 시스템(applyRelicTrigger)과
+   중복 적용되지 않게 한다. */
+function grantSbBlessingRelic(blessing){
+  const run = getSbRunState();
+  if(!run || !blessing) return;
+  if(!Array.isArray(run.relics)) run.relics = [];
+  if(run.relics.some(relic => relic && relic.id === blessing.id)) return;
+  // EquipmentData(RELIC_DB)에 같은 id로 등록된 은혜 전용 법구 데이터를 그대로 사용한다
+  // (법구 도감에도 노출되도록). DB를 찾지 못하는 예외 상황에서만 최소 데이터로 대체한다.
+  const master = (typeof RELIC_DB !== "undefined" && Array.isArray(RELIC_DB))
+    ? RELIC_DB.find(item => item && item.id === blessing.id)
+    : null;
+  run.relics.push(master ? { ...master } : {
+    id: blessing.id,
+    name: blessing.name,
+    emoji: blessing.icon,
+    desc: blessing.desc,
+    fx: []
+  });
 }
 
 /* ── 이번 런의 신령을 RUN_STATE에 저장 (승리 연출에서 동일한 신령을 재사용) ─
