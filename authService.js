@@ -7,6 +7,7 @@
    ========================================================================= */
 (function(){
   const AUTH_KEY = "viberunAuthSession";
+  const AUTH_API_BASE = (window.VIBERUN_AUTH_API_BASE || "").replace(/\/$/, "");
   const MAILBOX_CONTEXT_VERSION = 1;
   const PROVIDER_CONFIG = {
     googlePlay: {
@@ -44,7 +45,7 @@
       const raw = localStorage.getItem(AUTH_KEY);
       if(!raw) return null;
 
-      const session = JSON.parse(raw);
+      const session = normalizeStoredSession(JSON.parse(raw));
       if(!isValidSession(session)){
         localStorage.removeItem(AUTH_KEY);
         return null;
@@ -68,8 +69,19 @@
     }
 
     try {
-      localStorage.setItem(AUTH_KEY, JSON.stringify(session));
-      return { ok: true, session };
+      const normalizedSession = normalizeStoredSession(session);
+      if(!isValidSession(normalizedSession)){
+        return {
+          ok: false,
+          message: "로그인 세션 정보가 올바르지 않습니다."
+        };
+      }
+
+      const storedSession = Object.assign({}, normalizedSession);
+      delete storedSession.uid;
+
+      localStorage.setItem(AUTH_KEY, JSON.stringify(storedSession));
+      return { ok: true, session: normalizedSession };
     } catch(error) {
       console.warn("[Auth] 로그인 세션 저장에 실패했습니다.", error);
       return {
@@ -82,11 +94,80 @@
   function isValidSession(session){
     return !!(
       session &&
-      typeof session.uid === "string" &&
-      session.uid.length > 0 &&
+      typeof session.accountId === "string" &&
+      session.accountId.length > 0 &&
       typeof session.provider === "string" &&
       session.provider.length > 0
     );
+  }
+
+  /* All stored sessions pass through this adapter so old uid-only data still loads, while new saves are accountId based. */
+  function normalizeStoredSession(session){
+    if(!session || typeof session !== "object") return null;
+
+    const accountId = String(session.accountId || session.uid || "").trim();
+    const provider = String(session.provider || "guest").trim();
+    if(!accountId || !provider) return null;
+
+    return {
+      accountId,
+      uid: accountId,
+      provider,
+      providerUserId: String(session.providerUserId || "").trim(),
+      displayName: String(session.displayName || "").trim(),
+      accessToken: String(session.accessToken || "").trim(),
+      refreshToken: String(session.refreshToken || "").trim(),
+      isGuest: typeof session.isGuest === "boolean" ? session.isGuest : provider === "guest",
+      createdAt: Number(session.createdAt) || Date.now(),
+      lastLoginAt: Number(session.lastLoginAt) || Date.now(),
+      linkedProvider: session.linkedProvider || (provider === "guest" ? "" : provider)
+    };
+  }
+
+  /* Sends auth requests to the configured backend and preserves server error codes for UI-specific messages. */
+  function requestAuthJson(path, options){
+    if(typeof fetch !== "function"){
+      return Promise.resolve({
+        ok: false,
+        code: "FETCH_UNAVAILABLE",
+        message: "네트워크 요청을 사용할 수 없는 환경입니다."
+      });
+    }
+
+    const requestOptions = options || {};
+    const headers = Object.assign({ "Content-Type": "application/json" }, requestOptions.headers || {});
+
+    return fetch(AUTH_API_BASE + path, Object.assign({}, requestOptions, { headers }))
+      .then(response => response.text().then(text => {
+        let body = {};
+        if(text){
+          try {
+            body = JSON.parse(text);
+          } catch(error) {
+            console.warn("[Auth] 서버 응답 JSON 파싱 실패:", error);
+            body = { message: text };
+          }
+        }
+
+        if(response.ok) return { ok: true, body };
+
+        return {
+          ok: false,
+          status: response.status,
+          code: body.code || body.errorCode || body.error || "",
+          message: body.message || "서버 인증 요청에 실패했습니다.",
+          body
+        };
+      }))
+      .catch(error => {
+        console.warn("[Auth] 서버 인증 요청 중 네트워크 오류가 발생했습니다.", error);
+        return {
+          ok: false,
+          code: "NETWORK_ERROR",
+          error,
+          message: "서버와 연결할 수 없습니다. 네트워크 상태를 확인해 주세요."
+        };
+      });
   }
 
   /* 외부 계정 로그인 결과에 uid가 없을 때만 임시 UID를 만듭니다. 실제 빌드에서는 서버 검증 UID로 교체되어야 합니다. */
@@ -99,17 +180,6 @@
     const randomPart = Math.random().toString(36).slice(2, 12);
     const timePart = Date.now().toString(36);
     return prefix + timePart + "_" + randomPart;
-  }
-
-  /* crypto.randomUUID를 우선 사용하고, 미지원 환경에서는 시간값과 난수를 섞어 충돌 가능성을 낮춥니다. */
-  function createGuestUid(){
-    if(window.crypto && typeof window.crypto.randomUUID === "function"){
-      return "guest_" + window.crypto.randomUUID();
-    }
-
-    const randomPart = Math.random().toString(36).slice(2, 12);
-    const timePart = Date.now().toString(36);
-    return "guest_" + timePart + "_" + randomPart;
   }
 
   /* 설정 UI와 향후 선물함에서 같은 형태로 계정 정보를 읽을 수 있게 표준 응답을 만듭니다. */
@@ -127,13 +197,17 @@
 
     return {
       isLoggedIn: true,
-      uid: session.uid,
+      accountId: session.accountId,
+      uid: session.accountId,
       provider: session.provider,
       accountType: session.provider === "guest"
         ? "Guest"
         : ((PROVIDER_CONFIG[session.provider] && PROVIDER_CONFIG[session.provider].accountType) || session.provider),
       isGuest: session.provider === "guest" || !!session.isGuest,
-      linkedProvider: session.linkedProvider || "",
+      linkedProvider: session.linkedProvider || (session.provider === "guest" ? "" : session.provider),
+      providerUserId: session.providerUserId || "",
+      accessToken: session.accessToken || "",
+      refreshToken: session.refreshToken || "",
       displayName: session.displayName || "",
       createdAt: session.createdAt || 0,
       lastLoginAt: session.lastLoginAt || 0
@@ -169,30 +243,50 @@
   /* 1차 실제 구현 대상입니다. 기존 Guest 세션이 있으면 새 UID를 만들지 않고 재사용합니다. */
   function signInGuest(){
     const existing = readSession();
-    if(existing) return { ok: true, account: buildAccountInfo(existing) };
+    if(existing) return Promise.resolve({ ok: true, account: buildAccountInfo(existing) });
 
-    const now = Date.now();
-    const session = {
-      uid: createGuestUid(),
-      provider: "guest",
-      isGuest: true,
-      createdAt: now,
-      lastLoginAt: now,
-      linkedProvider: ""
-    };
-    const result = writeSession(session);
-    if(!result.ok) return result;
+    return requestAuthJson("/auth/guest", { method: "POST" }).then(response => {
+      if(!response.ok) return response;
 
-    return { ok: true, account: buildAccountInfo(session) };
+      const body = response.body || {};
+      const now = Date.now();
+      const session = {
+        accountId: String(body.accountId || "").trim(),
+        provider: body.provider || "guest",
+        providerUserId: "",
+        displayName: body.displayName || "",
+        accessToken: body.accessToken || "",
+        refreshToken: body.refreshToken || "",
+        isGuest: true,
+        createdAt: Number(body.createdAt) || now,
+        lastLoginAt: now
+      };
+      if(!session.accountId || !session.accessToken || !session.refreshToken){
+        return {
+          ok: false,
+          code: "INVALID_AUTH_RESPONSE",
+          message: "서버 Guest 인증 응답이 올바르지 않습니다."
+        };
+      }
+
+      const result = writeSession(session);
+      if(!result.ok) return result;
+
+      return { ok: true, account: buildAccountInfo(result.session) };
+    });
   }
 
   /* SDK/네이티브 브리지가 반환한 값을 세션에 저장 가능한 최소 필드로 정규화합니다. */
   function normalizeProviderPayload(provider, payload){
     const source = payload && typeof payload === "object" ? payload : {};
+    const tokenString = typeof payload === "string" ? payload.trim() : "";
     const uid = String(source.uid || source.playerId || source.userId || source.id || "").trim();
     return {
       uid: uid || createProviderUid(provider),
+      providerUserId: String(source.providerUserId || uid || "").trim(),
       displayName: String(source.displayName || source.name || "").trim(),
+      googlePlayToken: source.googlePlayToken || source.idToken || source.serverAuthCode || source.authCode || source.accessToken || tokenString,
+      facebookAccessToken: source.facebookAccessToken || source.accessToken || tokenString,
       authCode: source.authCode || "",
       accessToken: source.accessToken || "",
       raw: source.raw || null
@@ -201,28 +295,92 @@
 
   /* Guest에서 외부 계정으로 승격될 때 기존 생성 시각을 유지해 진행 데이터와 계정 이력을 끊지 않습니다. */
   function writeProviderSession(provider, payload){
+    return linkProviderSession(provider, payload);
+  }
+
+  /* Links an external provider to the current guest account without changing accountId. */
+  function linkProviderSession(provider, payload){
     if(!PROVIDER_CONFIG[provider]){
-      return { ok: false, provider, message: "지원하지 않는 로그인 방식입니다." };
+      return Promise.resolve({ ok: false, provider, message: "지원하지 않는 로그인 방식입니다." });
     }
 
     const existing = readSession();
-    const normalized = normalizeProviderPayload(provider, payload);
-    const now = Date.now();
-    const session = {
-      uid: normalized.uid,
-      provider,
-      isGuest: false,
-      createdAt: existing && existing.createdAt ? existing.createdAt : now,
-      lastLoginAt: now,
-      linkedProvider: provider,
-      previousGuestUid: existing && existing.provider === "guest" ? existing.uid : "",
-      displayName: normalized.displayName,
-      hasProviderCredential: !!(normalized.authCode || normalized.accessToken)
-    };
+    if(!existing || !existing.accountId || !existing.accessToken || !existing.isGuest){
+      return Promise.resolve({
+        ok: false,
+        provider,
+        code: "GUEST_SESSION_REQUIRED",
+        message: "Guest 계정으로 로그인한 뒤 계정 연동을 진행해 주세요."
+      });
+    }
 
-    const result = writeSession(session);
-    if(!result.ok) return result;
-    return { ok: true, provider, account: buildAccountInfo(session) };
+    const normalized = normalizeProviderPayload(provider, payload);
+    const linkPath = provider === "facebook" ? "/auth/link/facebook" : "/auth/link/google-play";
+    const requestBody = provider === "facebook"
+      ? { facebookAccessToken: normalized.facebookAccessToken }
+      : { googlePlayToken: normalized.googlePlayToken };
+
+    if(!requestBody.facebookAccessToken && !requestBody.googlePlayToken){
+      return Promise.resolve({
+        ok: false,
+        provider,
+        code: "PROVIDER_TOKEN_REQUIRED",
+        message: "provider 인증 토큰을 확인할 수 없습니다."
+      });
+    }
+
+    return requestAuthJson(linkPath, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + existing.accessToken },
+      body: JSON.stringify(requestBody)
+    }).then(response => {
+      if(!response.ok){
+        if(response.code === "ACCOUNT_ALREADY_LINKED"){
+          response.message = "이미 다른 계정에 연결된 로그인입니다.";
+        }
+        return Object.assign({ provider }, response);
+      }
+
+      const body = response.body || {};
+      const returnedAccountId = String(body.accountId || "").trim();
+      if(returnedAccountId !== existing.accountId){
+        console.warn("[Auth] Provider link returned a different accountId.", {
+          currentAccountId: existing.accountId,
+          returnedAccountId
+        });
+        return {
+          ok: false,
+          provider,
+          code: "ACCOUNT_ID_MISMATCH",
+          message: "계정 연동 응답의 accountId가 현재 Guest 계정과 다릅니다."
+        };
+      }
+
+      const session = {
+        accountId: existing.accountId,
+        provider: body.provider || provider,
+        providerUserId: body.providerUserId || normalized.providerUserId,
+        displayName: body.displayName || normalized.displayName,
+        accessToken: body.accessToken || "",
+        refreshToken: body.refreshToken || "",
+        isGuest: false,
+        createdAt: existing.createdAt || Date.now(),
+        lastLoginAt: Date.now(),
+        linkedProvider: body.provider || provider
+      };
+      if(!session.accessToken || !session.refreshToken){
+        return {
+          ok: false,
+          provider,
+          code: "INVALID_AUTH_RESPONSE",
+          message: "계정 연동 토큰 응답이 올바르지 않습니다."
+        };
+      }
+
+      const result = writeSession(session);
+      if(!result.ok) return result;
+      return { ok: true, provider, account: buildAccountInfo(result.session) };
+    });
   }
 
   /* window.VIBERUN_AUTH_PROVIDERS 또는 앱 브리지에 실제 SDK 함수를 연결해 provider 로그인을 실행합니다. */
@@ -272,7 +430,7 @@
         if(!payload || payload.cancelled){
           return { ok: false, provider, message: config.accountType + " 로그인이 취소되었습니다." };
         }
-        return writeProviderSession(provider, payload);
+        return linkProviderSession(provider, payload);
       }).catch(error => {
         console.warn("[Auth] " + config.accountType + " 로그인 처리 중 오류가 발생했습니다.", error);
         return {
@@ -313,12 +471,13 @@
 
   /* Promise를 반환하지 않는 네이티브 SDK 브리지가 콜백으로 로그인 완료를 알려올 때 사용하는 진입점입니다. */
   function completeProviderLogin(provider, payload){
-    const result = writeProviderSession(provider, payload);
-    if(pendingProviderRequests[provider]){
-      pendingProviderRequests[provider].resolve(result);
+    const resultPromise = Promise.resolve(linkProviderSession(provider, payload));
+    const pendingRequest = pendingProviderRequests[provider];
+    if(pendingRequest){
+      resultPromise.then(result => pendingRequest.resolve(result));
       delete pendingProviderRequests[provider];
     }
-    return result;
+    return resultPromise;
   }
 
   function signInGooglePlay(){

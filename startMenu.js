@@ -117,10 +117,12 @@ function isUsableSavedProgress(saved){
 }
 
 function isSavedProgressForCurrentAccount(saved){
-  if(!saved || !saved.accountUid) return true;
+  const savedAccountId = saved && (saved.accountId || saved.accountUid);
+  if(!savedAccountId) return true;
   if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.getAccountInfo !== "function") return true;
   const account = window.VIBERUN_AUTH.getAccountInfo();
-  return !!(account && account.isLoggedIn && account.uid === saved.accountUid);
+  const currentAccountId = account && (account.accountId || account.uid);
+  return !!(account && account.isLoggedIn && currentAccountId === savedAccountId);
 }
 
 function showStartNotice(message){

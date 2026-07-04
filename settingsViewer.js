@@ -344,10 +344,12 @@
   }
 
   function isSavedProgressForCurrentAccount(saved){
-    if(!saved || !saved.accountUid) return true;
+    const savedAccountId = saved && (saved.accountId || saved.accountUid);
+    if(!savedAccountId) return true;
     if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.getAccountInfo !== "function") return true;
     const account = window.VIBERUN_AUTH.getAccountInfo();
-    return !!(account && account.isLoggedIn && account.uid === saved.accountUid);
+    const currentAccountId = account && (account.accountId || account.uid);
+    return !!(account && account.isLoggedIn && currentAccountId === savedAccountId);
   }
 
   function saveProgressAndExit(){
@@ -368,7 +370,8 @@
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         savedAt: Date.now(),
-        accountUid: account && account.isLoggedIn ? account.uid : null,
+        accountId: account && account.isLoggedIn ? (account.accountId || account.uid) : null,
+        accountUid: account && account.isLoggedIn ? (account.accountId || account.uid) : null,
         state,
         starterDeck,
         mapState,
@@ -568,7 +571,13 @@
 
   /* provider별 원문 오류를 설정 화면 계정 섹션에서 쓰는 짧은 고정 문구로 변환합니다. */
   function normalizeSettingsAccountMessage(result, label){
+    if(result && result.code === "ACCOUNT_ALREADY_LINKED"){
+      return { text: "이미 다른 계정에 연결된 로그인입니다.", type: "error" };
+    }
     const rawMessage = result && result.message ? String(result.message) : "";
+    if(rawMessage.includes("이미 다른 계정에 연결된 로그인")){
+      return { text: "이미 다른 계정에 연결된 로그인입니다.", type: "error" };
+    }
     if(rawMessage.includes("Android 모바일 빌드")){
       return { text: "Google Play 로그인은 Android 모바일 빌드에서 사용할 수 있습니다.", type: "info" };
     }
