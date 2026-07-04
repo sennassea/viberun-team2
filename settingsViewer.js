@@ -3,6 +3,23 @@
 (function(){
   const SAVE_KEY = "viberunSaveState";
   const VOLUME_KEY = "viberunVolumeSettings";
+  const LOGOUT_FIRST_VISIT_KEYS = [
+    SAVE_KEY,
+    "viberunTutorialComplete",
+    "viberunTutorialCompleted",
+    "viberunTutorialWasSkipped",
+    "viberunTutorialInProgress",
+    "viberunHasPlayedBefore",
+    "hasPlayedBefore",
+    "tutorialCompleted",
+    "hasSeenTutorial",
+    "firstTutorialDone",
+    "onboardingCompleted",
+    "viberunFirstVisitCompleted",
+    "viberunStartMenuState",
+    "viberunLastProgress",
+    "viberunCurrentRun"
+  ];
   const RESET_KEYS = [
     SAVE_KEY,
     VOLUME_KEY,
@@ -150,7 +167,7 @@
         '<div class="settings-viewer-logout-confirm" aria-hidden="true">' +
           '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsLogoutTitle">' +
             '<h3 id="settingsLogoutTitle">로그아웃</h3>' +
-            '<p>로그아웃하면 이 기기에서 Guest 로그인 정보가 삭제됩니다.<br>계속하시겠습니까?</p>' +
+            '<p>로그아웃하면 현재 계정의 진행 상태를 이어서 불러올 수 없으며,<br>처음 접속한 상태의 메인 화면으로 돌아갑니다.<br>계속하시겠습니까?</p>' +
             '<div class="settings-viewer-confirm-actions">' +
               '<button type="button" class="settings-viewer-logout-no">취소</button>' +
               '<button type="button" class="settings-viewer-logout-yes">로그아웃</button>' +
@@ -303,11 +320,13 @@
 
   function restoreSavedProgress(){
     if(typeof localStorage === "undefined") return;
+    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.isLoggedIn === "function" && !window.VIBERUN_AUTH.isLoggedIn()) return;
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if(!raw) return;
       const saved = JSON.parse(raw);
       if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
+      if(!isSavedProgressForCurrentAccount(saved)) return;
       if(typeof S !== "undefined") S = saved.state;
       if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
       if(window.MAP_STATE && saved.mapState){
@@ -322,6 +341,13 @@
     }
   }
 
+  function isSavedProgressForCurrentAccount(saved){
+    if(!saved || !saved.accountUid) return true;
+    if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.getAccountInfo !== "function") return true;
+    const account = window.VIBERUN_AUTH.getAccountInfo();
+    return !!(account && account.isLoggedIn && account.uid === saved.accountUid);
+  }
+
   function saveProgressAndExit(){
     if(typeof localStorage === "undefined" || typeof S === "undefined" || !S || S.over) return;
 
@@ -333,10 +359,14 @@
       proceedMode: !!window.MAP_STATE.proceedMode,
       floorLabel: (document.querySelector("#hudFloor") || {}).textContent || "",
     } : null;
+    const account = window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.getAccountInfo === "function"
+      ? window.VIBERUN_AUTH.getAccountInfo()
+      : null;
 
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         savedAt: Date.now(),
+        accountUid: account && account.isLoggedIn ? account.uid : null,
         state,
         starterDeck,
         mapState,
@@ -528,7 +558,7 @@
     if(els.overlay.classList.contains("show") && els.accountLogout) els.accountLogout.focus();
   }
 
-  /* viberunAuthSession만 삭제하고, 세이브/볼륨/튜토리얼/도감/기록 데이터는 유지합니다. */
+  /* 로그아웃 후 계정 진행 저장과 튜토리얼 완료 상태를 지워 첫 방문 메인 메뉴로 되돌립니다. */
   function confirmLogout(){
     if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.logout !== "function"){
       if(typeof toast === "function") toast("로그아웃 처리 중 오류가 발생했습니다.");
@@ -541,9 +571,43 @@
       return;
     }
 
+    resetLogoutFirstVisitData();
     closeLogoutConfirm();
-    refreshAccountInfo();
+    closeSettingsViewer();
+    returnToFirstVisitStartMenu();
     if(typeof toast === "function") toast("로그아웃되었습니다.");
+  }
+
+  function resetLogoutFirstVisitData(){
+    if(typeof localStorage === "undefined") return;
+    LOGOUT_FIRST_VISIT_KEYS.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+      } catch(error) {
+        console.warn("[Auth] 로그아웃 후 첫 방문 데이터 정리 실패:", key, error);
+      }
+    });
+  }
+
+  function returnToFirstVisitStartMenu(){
+    const options = {
+      forceFirstVisit: true,
+      forceTutorialVisible: true,
+      ignoreSavedProgress: true
+    };
+
+    if(typeof window.showStartMenu === "function"){
+      window.showStartMenu(options);
+      return;
+    }
+
+    if(typeof window.returnToMainMenu === "function"){
+      window.returnToMainMenu(options);
+      return;
+    }
+
+    // 시작 메뉴 강제 렌더 API가 없는 구버전 구조에서는 위에서 localStorage 키를 지운 뒤 새로고침해야 첫 방문 메뉴가 보장됩니다.
+    location.reload();
   }
 
   function isTutorialMapSettings(){

@@ -87,11 +87,13 @@ function continueGameFromMenu(){
 
 function readSavedProgress(){
   if(typeof localStorage === "undefined") return null;
+  if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.isLoggedIn === "function" && !window.VIBERUN_AUTH.isLoggedIn()) return null;
   try {
     const raw = localStorage.getItem("viberunSaveState");
     if(!raw) return null;
     const saved = JSON.parse(raw);
     if(!isUsableSavedProgress(saved)) return null;
+    if(!isSavedProgressForCurrentAccount(saved)) return null;
     return saved;
   } catch(error) {
     localStorage.removeItem("viberunSaveState");
@@ -112,6 +114,13 @@ function isUsableSavedProgress(saved){
     Array.isArray(saved.starterDeck) &&
     saved.starterDeck.length > 0
   );
+}
+
+function isSavedProgressForCurrentAccount(saved){
+  if(!saved || !saved.accountUid) return true;
+  if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.getAccountInfo !== "function") return true;
+  const account = window.VIBERUN_AUTH.getAccountInfo();
+  return !!(account && account.isLoggedIn && account.uid === saved.accountUid);
 }
 
 function showStartNotice(message){
@@ -142,7 +151,19 @@ function showStartScreenAfterSave(){
   updateStartScreenMode();
 }
 
-function updateStartScreenMode(){
+function showStartMenu(options={}){
+  $("#over").classList.remove("show");
+  closeRewardOverlay();
+  const startScreen = $("#startScreen");
+  if(startScreen) startScreen.classList.remove("hidden");
+  updateContinueButtonInfo({ ignoreSavedProgress: !!options.ignoreSavedProgress });
+  updateStartScreenMode({
+    forceFirstVisit: !!options.forceFirstVisit,
+    forceTutorialVisible: !!options.forceTutorialVisible
+  });
+}
+
+function updateStartScreenMode(options={}){
   const tutorial = document.querySelector(".start-tutorial-button");
   const newGame = document.querySelector(".start-new-game");
   const continueGame = document.querySelector(".start-continue-game");
@@ -150,7 +171,7 @@ function updateStartScreenMode(){
   const record = document.querySelector(".start-record-button");
   const settings = document.querySelector(".start-settings-button");
   const codexRecordRow = codex && record ? codex.closest(".start-menu-row") : null;
-  const isNewbie = shouldShowNewbieStartMenu();
+  const isNewbie = options.forceFirstVisit || options.forceTutorialVisible || shouldShowNewbieStartMenu();
 
   setStartMenuVisible(tutorial, isNewbie);
   setStartMenuVisible(newGame, !isNewbie);
@@ -194,13 +215,13 @@ function markHasPlayedBefore(){
   } catch(error) {}
 }
 
-function updateContinueButtonInfo(){
+function updateContinueButtonInfo(options={}){
   const button = document.querySelector(".start-continue-game");
   if(!button) return;
   const status = button.querySelector(".continue-status");
   if(!status) return;
 
-  const saved = readSavedProgress();
+  const saved = options.ignoreSavedProgress ? null : readSavedProgress();
   if(!saved){
     button.classList.remove("has-save");
     status.textContent = "신령의 은혜";
@@ -227,6 +248,9 @@ document.querySelectorAll(".start-new-game").forEach(button => {
 document.querySelectorAll(".start-continue-game").forEach(button => {
   button.addEventListener("click", continueGameFromMenu);
 });
+
+window.showStartMenu = showStartMenu;
+window.returnToMainMenu = showStartMenu;
 
 updateContinueButtonInfo();
 updateStartScreenMode();

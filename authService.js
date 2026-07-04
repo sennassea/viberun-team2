@@ -174,7 +174,7 @@
     return readySoonResult("facebook");
   }
 
-  /* 로그아웃은 인증 세션만 제거합니다. 저장 데이터/튜토리얼/기록 키는 절대 건드리지 않습니다. */
+  /* 로그아웃은 인증 세션을 제거하고, 첫 방문 메뉴 복귀에 필요한 이전 계정 정보를 반환합니다. */
   function logout(){
     if(!canUseLocalStorage()){
       return {
@@ -184,8 +184,14 @@
     }
 
     try {
+      const previousAccount = getAccountInfo();
       localStorage.removeItem(AUTH_KEY);
-      return { ok: true };
+      return {
+        ok: true,
+        previousUid: previousAccount && previousAccount.uid ? previousAccount.uid : null,
+        previousProvider: previousAccount && previousAccount.provider ? previousAccount.provider : null,
+        shouldReturnToFirstVisitMenu: true
+      };
     } catch(error) {
       console.warn("[Auth] 로그아웃 처리 중 오류가 발생했습니다.", error);
       return {
