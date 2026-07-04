@@ -100,20 +100,27 @@
     }
 
     try {
-      const result = window.VIBERUN_AUTH.signInGuest();
-      if(!result || !result.ok){
-        showLoginMessage((result && result.message) || "게스트 계정 연동에 실패했습니다.", "error");
-        return;
-      }
+      setPending(true);
+      Promise.resolve(window.VIBERUN_AUTH.signInGuest()).then(result => {
+        if(!result || !result.ok){
+          showLoginMessage((result && result.message) || "Guest 계정 로그인에 실패했습니다.", "error");
+          return;
+        }
 
-      clearLoginMessage();
-      finishLoginSuccess();
+        clearLoginMessage();
+        finishLoginSuccess();
+      }).catch(error => {
+        console.warn("[Auth] Guest 로그인 처리 중 오류가 발생했습니다.", error);
+        showLoginMessage("Guest 계정 로그인에 실패했습니다.", "error");
+      }).finally(() => {
+        setPending(false);
+      });
     } catch(error) {
-      console.warn("[Auth] Guest 로그인 처리 중 오류가 발생했습니다.", error);
-      showLoginMessage("게스트 계정 연동에 실패했습니다.", "error");
+      setPending(false);
+      console.warn("[Auth] Guest 로그인 호출 중 오류가 발생했습니다.", error);
+      showLoginMessage("Guest 계정 로그인에 실패했습니다.", "error");
     }
   }
-
   function signInGooglePlay(){
     signInProvider("signInGooglePlay", "Google Play");
   }
@@ -151,7 +158,13 @@
 
   /* SDK별 실패 원인을 사용자가 이해하기 쉬운 고정 문구로 정리합니다. */
   function normalizeLoginErrorMessage(result, label){
+    if(result && result.code === "ACCOUNT_ALREADY_LINKED"){
+      return { text: "이미 다른 계정에 연결된 로그인입니다.", type: "error" };
+    }
     const rawMessage = result && result.message ? String(result.message) : "";
+    if(rawMessage.includes("이미 다른 계정에 연결된 로그인")){
+      return { text: "이미 다른 계정에 연결된 로그인입니다.", type: "error" };
+    }
     if(rawMessage.includes("Android 모바일 빌드")){
       return { text: "Google Play 로그인은 Android 모바일 빌드에서 사용할 수 있습니다.", type: "info" };
     }
