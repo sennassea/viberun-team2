@@ -49,9 +49,9 @@
         '</div>' +
         '<p class="auth-login-desc">플레이 데이터를 저장하고 보상을 받기 위해 계정을 선택해 주세요.</p>' +
         '<div class="auth-login-actions">' +
-          '<button type="button" class="auth-login-button auth-login-guest">Guest로 시작</button>' +
           '<button type="button" class="auth-login-button auth-login-google">Google Play</button>' +
           '<button type="button" class="auth-login-button auth-login-facebook">Facebook</button>' +
+          '<button type="button" class="auth-login-button auth-login-guest">Guest로 시작</button>' +
         '</div>' +
         '<p class="auth-login-note">Guest 계정은 앱/브라우저 데이터 삭제 시 복구할 수 없습니다.</p>' +
       '</div>';
