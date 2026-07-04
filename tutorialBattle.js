@@ -353,8 +353,11 @@
     overlay.className = "tutorial-battle-intro-overlay";
     overlay.setAttribute("aria-hidden", "false");
     const dialogueClass = "tutorial-battle-intro-dialogue" + (dialogue.dialogueClass ? " " + dialogue.dialogueClass : "");
+    const avatarImage = dialogue.dongjasinAssetPath
+      ? '<img src="' + escapeTutorialBattleIntroHtml(dialogue.dongjasinAssetPath) + '" alt="">'
+      : '<div class="tutorial-dongjasin-avatar-placeholder"></div>';
     const avatarHtml = dialogue.speaker === "동자신"
-      ? '<div class="tutorial-dongjasin-avatar" aria-hidden="true"><div class="tutorial-dongjasin-avatar-placeholder"></div></div>'
+      ? '<div class="tutorial-dongjasin-avatar" aria-hidden="true">' + avatarImage + '</div>'
       : "";
     overlay.innerHTML =
       '<div class="' + dialogueClass + '" role="dialog" aria-modal="true">' +
@@ -1331,8 +1334,8 @@
     style.id = "tutorialBattleIntroStyles";
     style.textContent =
       ".tutorial-battle-intro-overlay{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);display:block;cursor:default;}" +
-      ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;--tutorial-dongjasin-avatar-width:7.2cqh;--tutorial-dongjasin-avatar-height:10.2cqh;--tutorial-dongjasin-avatar-left:-9.6cqh;--tutorial-dongjasin-avatar-top:-1.6cqh;--tutorial-dongjasin-avatar-transform:none;transform:translateX(-50%);z-index:281;width:min(54cqw,72cqh);padding:1.6cqh 1.8cqw;border:0.22cqh solid rgba(255,255,255,.88);border-radius:1cqh;background:rgba(244,248,252,.97);color:#243247;box-shadow:0 1.2cqh 2.8cqh rgba(20,35,60,.24);}" +
-      ".tutorial-battle-intro-dialogue.tutorial-battle-intro-dialogue-top{top:12cqh;bottom:auto;}" +
+      ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;--tutorial-dongjasin-avatar-width:36cqh;--tutorial-dongjasin-avatar-height:64cqh;--tutorial-dongjasin-avatar-left:-35cqh;--tutorial-dongjasin-avatar-top:-41.8cqh;--tutorial-dongjasin-avatar-transform:none;transform:translateX(-50%);z-index:281;width:min(54cqw,72cqh);padding:1.6cqh 1.8cqw;border:0.22cqh solid rgba(255,255,255,.88);border-radius:1cqh;background:rgba(244,248,252,.97);color:#243247;box-shadow:0 1.2cqh 2.8cqh rgba(20,35,60,.24);}" +
+      ".tutorial-battle-intro-dialogue.tutorial-battle-intro-dialogue-top{top:12cqh;bottom:auto;--tutorial-dongjasin-avatar-top:-18cqh;}" +
       ".tutorial-battle-system-popup{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:281;width:min(42cqw,62cqh);padding:2.2cqh 2cqw;border:.24cqh solid var(--c-panel-line);border-radius:1.4cqh;background:rgba(255,255,255,.97);box-shadow:0 1.4cqh 3.2cqh rgba(20,35,60,.28);text-align:center;color:var(--c-ink);}" +
       ".tutorial-battle-system-text{font-size:1.9cqh;line-height:1.5;font-weight:850;color:var(--c-ink);}" +
       ".tutorial-battle-system-actions{display:flex;justify-content:center;margin-top:1.8cqh;}" +
@@ -1347,6 +1350,7 @@
       ".tutorial-battle-intro-content{display:block;}" +
       ".tutorial-battle-intro-body{min-width:0;}" +
       ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar{position:absolute;left:var(--tutorial-dongjasin-avatar-left);top:var(--tutorial-dongjasin-avatar-top);transform:var(--tutorial-dongjasin-avatar-transform);width:var(--tutorial-dongjasin-avatar-width);height:var(--tutorial-dongjasin-avatar-height);pointer-events:none;}" +
+      ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar img{width:100%;height:100%;object-fit:contain;object-position:bottom center;display:block;}" +
       ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar-placeholder{width:100%;height:100%;border:.22cqh solid rgba(47,102,168,.45);border-radius:46% 46% 42% 42% / 38% 38% 52% 52%;background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(220,234,250,.96));box-shadow:0 .45cqh 1cqh rgba(20,35,60,.16);}" +
       ".tutorial-battle-intro-speaker{margin-bottom:.7cqh;font-size:1.7cqh;font-weight:900;color:#2f66a8;}" +
       ".tutorial-battle-intro-text{font-size:1.9cqh;line-height:1.45;font-weight:800;}" +

@@ -86,6 +86,105 @@ const TUTORIAL_DIALOGUE_DATA = [
   { id: "W-063", part: "완료", section: "완료", condition: "W-062 이후", speaker: "동자신", text: "자, 이제 진짜로 가보자.<br>내가 계속 지켜볼게.",purpose: "본 게임 진입 연결", target: "전체" }
 ];
 
+const TUTORIAL_DONGJASIN_ASSET_BASE = "assets/characters/dongjasin/";
+const TUTORIAL_DONGJASIN_ASSET_BY_ID = Object.freeze({
+  "T-001": { cutId: "C-001", asset: "dgs_idle_default" },
+  "T-002": { cutId: "C-001", asset: "dgs_idle_default" },
+  "S-001": { cutId: "C-002", asset: "dgs_tease_smile" },
+  "S-002": { cutId: "C-002", asset: "dgs_tease_smile" },
+  "M-001": { cutId: "M-CUT-001", asset: "dgs_greeting_wave" },
+  "M-002": { cutId: "M-CUT-002", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "M-003": { cutId: "M-CUT-002", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "M-004": { cutId: "M-CUT-003", asset: "dgs_guide_forward" },
+  "M-005": { cutId: "M-CUT-003", asset: "dgs_guide_forward" },
+  "M-006": { cutId: "M-CUT-004", asset: "dgs_present_open" },
+  "M-007": { cutId: "M-CUT-004", asset: "dgs_present_open" },
+  "M-008": { cutId: "M-CUT-005", asset: "dgs_point_up" },
+  "M-009": { cutId: "M-CUT-006", asset: "dgs_plead_soft" },
+  "M-010": { cutId: "M-CUT-007", asset: "dgs_surprised" },
+  "M-011": { cutId: "M-CUT-008", asset: "dgs_present_open" },
+  "M-012": { cutId: "M-CUT-009", asset: "dgs_serious_gentle" },
+  "M-013": { cutId: "M-CUT-010", asset: "dgs_serious_gentle" },
+  "M-014": { cutId: "M-CUT-011", asset: "dgs_guide_forward" },
+  "M-015": { cutId: "M-CUT-011", asset: "dgs_guide_forward" },
+  "M-016": { cutId: "M-CUT-012", asset: "dgs_cheer_big", altAsset: "dgs_guide_forward" },
+  "W-001": { cutId: "W-CUT-001", asset: "dgs_greeting_wave", altAsset: "dgs_tease_smile" },
+  "W-002": { cutId: "W-CUT-001", asset: "dgs_greeting_wave", altAsset: "dgs_tease_smile" },
+  "W-003": { cutId: "W-CUT-001", asset: "dgs_greeting_wave", altAsset: "dgs_tease_smile" },
+  "W-004": { cutId: "W-CUT-002", asset: "dgs_serious_gentle" },
+  "W-005": { cutId: "W-CUT-002", asset: "dgs_serious_gentle" },
+  "W-006": { cutId: "W-CUT-002", asset: "dgs_serious_gentle" },
+  "W-007": { cutId: "W-CUT-002", asset: "dgs_serious_gentle" },
+  "W-008": { cutId: "W-CUT-003", asset: "dgs_present_open" },
+  "W-009": { cutId: "W-CUT-004", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "W-010": { cutId: "W-CUT-004", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "W-011": { cutId: "W-CUT-004", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "W-012": { cutId: "W-CUT-005", asset: "dgs_serious_gentle" },
+  "W-013": { cutId: "W-CUT-005", asset: "dgs_serious_gentle" },
+  "W-014": { cutId: "W-CUT-005", asset: "dgs_serious_gentle" },
+  "W-015": { cutId: "W-CUT-006", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "W-016": { cutId: "W-CUT-006", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "W-017": { cutId: "W-CUT-006", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "W-018": { cutId: "W-CUT-006", asset: "dgs_point_up", altAsset: "dgs_tease_smile" },
+  "W-019": { cutId: "W-CUT-007", asset: "dgs_guide_forward" },
+  "W-020": { cutId: "W-CUT-007", asset: "dgs_guide_forward" },
+  "W-021": { cutId: "W-CUT-007", asset: "dgs_guide_forward" },
+  "W-022": { cutId: "W-CUT-008", asset: "dgs_cheer_big" },
+  "W-023": { cutId: "W-CUT-008", asset: "dgs_cheer_big" },
+  "W-024": { cutId: "W-CUT-009", asset: "dgs_surprised" },
+  "W-025": { cutId: "W-CUT-009", asset: "dgs_surprised" },
+  "W-026": { cutId: "W-CUT-009", asset: "dgs_surprised" },
+  "W-027": { cutId: "W-CUT-010", asset: "dgs_plead_soft", altAsset: "dgs_guide_forward" },
+  "W-028": { cutId: "W-CUT-010", asset: "dgs_plead_soft", altAsset: "dgs_guide_forward" },
+  "W-029": { cutId: "W-CUT-010", asset: "dgs_plead_soft", altAsset: "dgs_guide_forward" },
+  "W-030": { cutId: "W-CUT-010", asset: "dgs_plead_soft", altAsset: "dgs_guide_forward" },
+  "W-031": { cutId: "W-CUT-011", asset: "dgs_cheer_big" },
+  "W-032": { cutId: "W-CUT-011", asset: "dgs_cheer_big" },
+  "W-033": { cutId: "W-CUT-012", asset: "dgs_guide_forward" },
+  "W-034": { cutId: "W-CUT-012", asset: "dgs_guide_forward" },
+  "W-035": { cutId: "W-CUT-012", asset: "dgs_guide_forward" },
+  "W-036": { cutId: "W-CUT-013", asset: "dgs_cheer_big", altAsset: "dgs_tease_smile" },
+  "W-037": { cutId: "W-CUT-013", asset: "dgs_cheer_big", altAsset: "dgs_tease_smile" },
+  "W-038": { cutId: "W-CUT-013", asset: "dgs_cheer_big", altAsset: "dgs_tease_smile" },
+  "W-039": { cutId: "W-CUT-014", asset: "dgs_present_open" },
+  "W-040": { cutId: "W-CUT-014", asset: "dgs_present_open" },
+  "W-041": { cutId: "W-CUT-014", asset: "dgs_present_open" },
+  "W-042": { cutId: "W-CUT-014", asset: "dgs_present_open" },
+  "W-043": { cutId: "W-CUT-015", asset: "dgs_cheer_big", altAsset: "dgs_serious_gentle" },
+  "W-044": { cutId: "W-CUT-015", asset: "dgs_cheer_big", altAsset: "dgs_serious_gentle" },
+  "W-045": { cutId: "W-CUT-016", asset: "dgs_guide_forward" },
+  "W-046": { cutId: "W-CUT-016", asset: "dgs_guide_forward" },
+  "W-047": { cutId: "W-CUT-017", asset: "dgs_serious_gentle" },
+  "W-048": { cutId: "W-CUT-017", asset: "dgs_serious_gentle" },
+  "W-049": { cutId: "W-CUT-017", asset: "dgs_serious_gentle" },
+  "W-050": { cutId: "W-CUT-017", asset: "dgs_serious_gentle" },
+  "W-051": { cutId: "W-CUT-018", asset: "dgs_plead_soft", altAsset: "dgs_serious_gentle" },
+  "W-052": { cutId: "W-CUT-018", asset: "dgs_plead_soft", altAsset: "dgs_serious_gentle" },
+  "W-053": { cutId: "W-CUT-019", asset: "dgs_serious_gentle" },
+  "W-054": { cutId: "W-CUT-019", asset: "dgs_serious_gentle" },
+  "W-055": { cutId: "W-CUT-019", asset: "dgs_serious_gentle" },
+  "W-056": { cutId: "W-CUT-019", asset: "dgs_serious_gentle" },
+  "W-057": { cutId: "W-CUT-020", asset: "dgs_cheer_big" },
+  "W-058": { cutId: "W-CUT-020", asset: "dgs_cheer_big" },
+  "W-059": { cutId: "W-CUT-021", asset: "dgs_serious_gentle", altAsset: "dgs_greeting_wave" },
+  "W-060": { cutId: "W-CUT-021", asset: "dgs_serious_gentle", altAsset: "dgs_greeting_wave" },
+  "W-061": { cutId: "W-CUT-021", asset: "dgs_serious_gentle", altAsset: "dgs_greeting_wave" },
+  "W-062": { cutId: "W-CUT-021", asset: "dgs_serious_gentle", altAsset: "dgs_greeting_wave" },
+  "W-063": { cutId: "W-CUT-021", asset: "dgs_serious_gentle", altAsset: "dgs_greeting_wave" },
+});
+
+TUTORIAL_DIALOGUE_DATA.forEach(dialogue => {
+  const assetMeta = TUTORIAL_DONGJASIN_ASSET_BY_ID[dialogue.id];
+  if(!assetMeta) return;
+  dialogue.cutId = assetMeta.cutId;
+  dialogue.dongjasinAsset = assetMeta.asset;
+  dialogue.dongjasinAssetPath = TUTORIAL_DONGJASIN_ASSET_BASE + assetMeta.asset + ".png";
+  if(assetMeta.altAsset){
+    dialogue.dongjasinAltAsset = assetMeta.altAsset;
+    dialogue.dongjasinAltAssetPath = TUTORIAL_DONGJASIN_ASSET_BASE + assetMeta.altAsset + ".png";
+  }
+});
+
 const TUTORIAL_DIALOGUE_BY_ID = TUTORIAL_DIALOGUE_DATA.reduce((map, dialogue) => {
   map[dialogue.id] = dialogue;
   return map;
@@ -103,5 +202,7 @@ function getTutorialDialoguesByIds(ids){
 }
 
 window.TUTORIAL_DIALOGUE_DATA = TUTORIAL_DIALOGUE_DATA;
+window.TUTORIAL_DONGJASIN_ASSET_BY_ID = TUTORIAL_DONGJASIN_ASSET_BY_ID;
+window.TUTORIAL_DONGJASIN_ASSET_BASE = TUTORIAL_DONGJASIN_ASSET_BASE;
 window.getTutorialDialogueById = getTutorialDialogueById;
 window.getTutorialDialoguesByIds = getTutorialDialoguesByIds;
