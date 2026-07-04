@@ -16,6 +16,17 @@ const PRAYER_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#
    기획서 5-3 예시(정신력 78 -> 108, +30)에 맞춰 최대 정신력의 25%를 회복한다. */
 const PRAYER_REST_HEAL_RATIO = 0.25;
 
+/* ── 정리하기(주문 제거) 복채 비용 ────────────────────────────────────────
+   해당 런에서 사용한 횟수(0-based)에 따라 1회차 70, 2회차 110, 3회차 이상 160 복채. */
+const PRAYER_CARD_REMOVE_COST_TABLE = [70, 110, 160];
+
+function getCardRemoveCost(){
+  const count = (typeof S !== "undefined" && S && typeof S.cleanseCount === "number") ? S.cleanseCount : 0;
+  const idx = Math.min(count, PRAYER_CARD_REMOVE_COST_TABLE.length - 1);
+  return PRAYER_CARD_REMOVE_COST_TABLE[idx];
+}
+window.getCardRemoveCost = getCardRemoveCost;
+
 let prayerOverlayEl   = null;
 let prayerSelected    = null;
 
@@ -297,9 +308,14 @@ function renderPrayerCardPreviews(){
   }
 
   const cleanseExtra = prayerOverlayEl.querySelector('[data-extra="cleanse"]');
+  const cleanseCard  = prayerOverlayEl.querySelector('.prayer-card[data-choice="cleanse"]');
   if(cleanseExtra){
-    cleanseExtra.className = "prayer-card-extra prayer-card-pill";
-    cleanseExtra.textContent = "덱에서 주문 1장을 제거";
+    const cost         = getCardRemoveCost();
+    const currentGold  = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
+    const notEnough    = currentGold < cost;
+    cleanseExtra.className = "prayer-card-extra prayer-card-pill" + (notEnough ? " insufficient" : "");
+    cleanseExtra.textContent = "덱에서 주문 1장을 제거 (🪙" + cost + " 복채)";
+    if(cleanseCard) cleanseCard.classList.toggle("disabled", notEnough);
   }
 }
 
@@ -362,6 +378,7 @@ function ensurePrayerStyles(){
     ".prayer-card-preview{background:rgba(110,175,110,.2);border:.15cqh solid rgba(80,140,80,.4);color:#2f5f30;}" +
     ".prayer-card-preview.full{background:rgba(140,140,140,.2);border-color:rgba(110,110,110,.4);color:#5a5a5a;}" +
     ".prayer-card-pill{background:rgba(200,150,80,.18);border:.15cqh solid rgba(178,140,80,.42);color:#8a6b3d;}" +
+    ".prayer-card-pill.insufficient{background:rgba(201,74,61,.16);border-color:rgba(168,46,46,.45);color:#a82e2e;}" +
     ".prayer-tip{position:absolute;bottom:0;display:flex;align-items:center;gap:.6cqw;max-width:15cqw;}" +
     ".prayer-tip-left{left:0;}" +
     ".prayer-tip-right{right:0;flex-direction:row-reverse;text-align:right;}" +

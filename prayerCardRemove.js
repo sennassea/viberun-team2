@@ -38,6 +38,14 @@
     return typeof STARTER_DECK !== "undefined" ? STARTER_DECK : [];
   }
 
+  function getRemoveCost() {
+    return typeof getCardRemoveCost === "function" ? getCardRemoveCost() : 0;
+  }
+
+  function getCurrentGold() {
+    return (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
+  }
+
   /* 동일 주문ID를 묶어 보유 수량과 최초 등장 순서를 함께 기록한다 */
   function getUniqueEntries() {
     const deck = getDeck();
@@ -94,6 +102,8 @@
         "border:0.3cqh solid var(--pcr-gold);border-radius:1.6cqh;box-shadow:0 2cqh 4cqh rgba(30,20,10,.5),inset 0 0 3cqh rgba(255,250,230,.5);color:var(--pcr-ink);}" +
       ".pcr-title{font-size:2.6cqh;font-weight:900;}" +
       ".pcr-guide{font-size:1.4cqh;font-weight:700;color:var(--pcr-ink-soft);}" +
+      ".pcr-cost{font-size:1.35cqh;font-weight:900;color:var(--pcr-gold-deep);}" +
+      ".pcr-cost.insufficient{color:var(--pcr-red-deep);}" +
       ".pcr-toolbar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:.8cqw;}" +
       ".pcr-toolbar select,.pcr-toolbar input{height:3.6cqh;border-radius:.8cqh;border:0.16cqh solid var(--pcr-beige-deep);" +
         "background:#fff;color:var(--pcr-ink);font:inherit;font-size:1.3cqh;padding:0 .6cqw;}" +
@@ -152,6 +162,7 @@
       '<div class="pcr-panel" role="dialog" aria-modal="true" aria-labelledby="pcrTitle">' +
         '<div class="pcr-title" id="pcrTitle">주문 제거</div>' +
         '<div class="pcr-guide">제거할 주문 1장을 선택하세요</div>' +
+        '<div class="pcr-cost" id="pcrCost"></div>' +
         '<div class="pcr-toolbar">' +
           '<span class="pcr-count" id="pcrCount"></span>' +
           '<select id="pcrTypeFilter">' + typeOptionsHtml + '</select>' +
@@ -199,6 +210,7 @@
       overlay,
       grid: overlay.querySelector("#pcrGrid"),
       count: overlay.querySelector("#pcrCount"),
+      cost: overlay.querySelector("#pcrCost"),
       attrFilterSelect: overlay.querySelector("#pcrAttrFilter"),
       selectedInfo: overlay.querySelector("#pcrSelectedInfo"),
       deckCount: overlay.querySelector("#pcrDeckCount"),
@@ -240,6 +252,11 @@
 
     els.count.textContent = "보유 주문 " + deck.length + "장 / " + allEntries.length + "종류";
 
+    const cost = getRemoveCost();
+    const enoughGold = getCurrentGold() >= cost;
+    els.cost.textContent = "제거 비용: 🪙" + cost + " 복채";
+    els.cost.classList.toggle("insufficient", !enoughGold);
+
     if (allEntries.length === 0) {
       els.grid.innerHTML = '<div class="pcr-empty">보유한 주문이 없습니다.</div>';
     } else {
@@ -258,7 +275,7 @@
   function selectCard(key) {
     if (typeof CARD_DB === "undefined" || !CARD_DB[key]) return;
     selectedKey = key;
-    els.confirm.disabled = false;
+    els.confirm.disabled = getCurrentGold() < getRemoveCost();
     render();
   }
 
@@ -276,13 +293,22 @@
   /* ── 확정 (취소 없음 - 반드시 주문을 제거해야 맵으로 복귀) ───────────── */
   function confirmRemove() {
     if (!selectedKey) return;
+    const cost = getRemoveCost();
+    if (getCurrentGold() < cost) {
+      if (typeof toast === "function") toast("복채가 부족합니다.");
+      render();
+      return;
+    }
     const deck = getDeck();
     const idx = deck.indexOf(selectedKey);
     if (idx === -1) return;
     const card = typeof CARD_DB !== "undefined" ? CARD_DB[selectedKey] : null;
     deck.splice(idx, 1);
+    S.gold -= cost;
+    S.cleanseCount = (typeof S.cleanseCount === "number" ? S.cleanseCount : 0) + 1;
+    if (typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
     if (typeof renderHud === "function") renderHud();
-    if (typeof toast === "function" && card) toast(card.name + " 주문을 덱에서 제거했습니다.");
+    if (typeof toast === "function" && card) toast(card.name + " 주문을 덱에서 제거했습니다. (🪙" + cost + " 복채 사용)");
 
     if (els) {
       els.overlay.classList.remove("show");
