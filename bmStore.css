@@ -52,39 +52,36 @@
 .bm-store-panel::after{ right:3.1cqw; transform:rotate(22deg); }
 
 .bm-store-title-ornament{
-  position:absolute;
-  left:50%;
-  top:.7cqh;
-  width:20cqw;
-  height:6.4cqh;
-  transform:translateX(-50%);
-  border:.2cqh solid rgba(176,125,29,.5);
-  border-radius:50% 50% 1.6cqh 1.6cqh;
-  background:linear-gradient(180deg,rgba(255,252,239,.88),rgba(238,213,172,.72));
-  box-shadow:inset 0 .2cqh .5cqh rgba(255,255,255,.72);
-  pointer-events:none;
+  display:none;
 }
 
 .bm-store-head{
   position:relative;
   z-index:1;
-  display:grid;
-  grid-template-columns:1fr auto;
-  align-items:center;
-  gap:1.4cqw;
   min-height:9.4cqh;
   padding:1.1cqh 0 1.3cqh;
   border-bottom:.18cqh solid rgba(166,111,47,.36);
 }
 .bm-store-heading{
-  min-width:0;
+  width:100%;
+  max-width:calc(100% - 22cqw);
+  margin:0 auto;
   text-align:center;
-  padding-left:8cqw;
 }
 .bm-store-heading h2{
-  margin:0 0 1.2cqh;
-  font-size:4.8cqh;
-  line-height:.95;
+  min-width:18cqw;
+  min-height:5.6cqh;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 0 .95cqh;
+  padding:.15cqh 2.4cqw .35cqh;
+  border:.2cqh solid rgba(176,125,29,.5);
+  border-radius:2.4cqh 2.4cqh 1.2cqh 1.2cqh;
+  background:linear-gradient(180deg,rgba(255,252,239,.9),rgba(238,213,172,.76));
+  box-shadow:inset 0 .2cqh .5cqh rgba(255,255,255,.72);
+  font-size:4.4cqh;
+  line-height:1;
   font-weight:900;
   letter-spacing:0;
   color:#4b2b1a;
@@ -99,10 +96,13 @@
   word-break:keep-all;
 }
 .bm-store-head-actions{
+  position:absolute;
+  right:0;
+  top:50%;
+  transform:translateY(-50%);
   display:flex;
   align-items:center;
   gap:.8cqw;
-  justify-self:end;
 }
 .bm-store-wallet{
   height:5.2cqh;
@@ -374,18 +374,21 @@
     max-height:86cqh;
     padding:2cqh 1.8cqw 1.4cqh;
   }
-  .bm-store-title-ornament{ width:27cqw; }
+  .bm-store-title-ornament{ display:none; }
   .bm-store-head{
-    grid-template-columns:1fr;
-    gap:.8cqh;
+    min-height:10.8cqh;
   }
-  .bm-store-heading{ padding-left:0; padding-right:0; }
-  .bm-store-heading h2{ font-size:4.2cqh; }
+  .bm-store-heading{ max-width:calc(100% - 18cqw); }
+  .bm-store-heading h2{
+    min-width:22cqw;
+    min-height:5.2cqh;
+    font-size:3.8cqh;
+  }
   .bm-store-heading p{ font-size:1.9cqh; }
   .bm-store-head-actions{
-    position:absolute;
     right:0;
     top:.4cqh;
+    transform:none;
   }
   .bm-store-wallet{
     min-width:10cqw;
