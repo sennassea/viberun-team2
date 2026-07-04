@@ -9,6 +9,8 @@
   let detailEntries = [];
   let activeDetailIndex = -1;
   let showUpgradePreview = false;
+  let pickMode = null;
+  let selectedPickKey = null;
 
   const SORT_OPTIONS = [
     { id: "order", label: "최신순" },
@@ -98,6 +100,7 @@
     window.BOHYUN_MARK_CARDS_ENCOUNTERED = markEncounteredCards;
     window.DECK_VIEWER_CLOSE = closeDeckViewer;
     window.OPEN_DECK_VIEWER = openDeckViewer;
+    window.OPEN_DECK_VIEWER_CARD_PICK = openDeckViewerCardPick;
   }
 
   function bindOpenTrigger(trigger){
@@ -194,6 +197,10 @@
         '</div>' +
         '</div>' +
         '<div class="deck-viewer-grid"></div>' +
+        '<div class="deck-viewer-pick-footer" hidden>' +
+          '<div class="deck-viewer-pick-help">기본 카드 1장을 선택하세요.</div>' +
+          '<button type="button" class="deck-viewer-pick-confirm" disabled>제거</button>' +
+        '</div>' +
         '<div class="card-detail-backdrop" aria-hidden="true">' +
           '<div class="card-detail-panel" role="dialog" aria-modal="true" aria-labelledby="cardDetailTitle">' +
             '<button type="button" class="card-detail-close" aria-label="닫기">×</button>' +
@@ -239,9 +246,14 @@
       searchState[activeTab] = event.target.value;
       renderDeckViewer();
     });
+    overlay.querySelector(".deck-viewer-pick-confirm").addEventListener("click", confirmPickCard);
     overlay.querySelector(".deck-viewer-grid").addEventListener("click", event => {
       const cardEl = event.target.closest(".deck-viewer-card");
       if(!cardEl) return;
+      if(pickMode){
+        handlePickCard(cardEl);
+        return;
+      }
       openCardDetail(cardEl.dataset.cardKey);
     });
     overlay.querySelector(".card-detail-backdrop").addEventListener("click", event => {
@@ -300,6 +312,9 @@
       filterAttribute: overlay.querySelector(".deck-viewer-filter-attribute"),
       search: overlay.querySelector(".deck-viewer-search-input"),
       grid: overlay.querySelector(".deck-viewer-grid"),
+      pickFooter: overlay.querySelector(".deck-viewer-pick-footer"),
+      pickHelp: overlay.querySelector(".deck-viewer-pick-help"),
+      pickConfirm: overlay.querySelector(".deck-viewer-pick-confirm"),
       detailBackdrop: overlay.querySelector(".card-detail-backdrop"),
       detailBody: overlay.querySelector(".card-detail-body"),
       detailClose: overlay.querySelector(".card-detail-close"),
@@ -326,6 +341,13 @@
       ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}" +
       ".deck-viewer-card{font:inherit;color:var(--c-ink);cursor:pointer;text-align:inherit;transition:transform .14s ease,box-shadow .14s ease;}" +
       ".deck-viewer-card:hover,.deck-viewer-card:focus-visible{transform:translateY(-.6cqh);box-shadow:0 .9cqh 1.8cqh rgba(40,70,120,.28);outline:none;}" +
+      ".deck-viewer.pick-mode .deck-viewer-card.pick-disabled{filter:grayscale(.8) opacity(.45);cursor:not-allowed;}" +
+      ".deck-viewer.pick-mode .deck-viewer-card.pick-disabled:hover,.deck-viewer.pick-mode .deck-viewer-card.pick-disabled:focus-visible{transform:none;box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18);}" +
+      ".deck-viewer.pick-mode .deck-viewer-card.pick-selected{box-shadow:0 0 0 .32cqh var(--c-gold),0 .9cqh 1.8cqh rgba(40,70,120,.28);}" +
+      ".deck-viewer-pick-footer{flex:none;display:flex;align-items:center;justify-content:flex-end;gap:1cqw;padding-top:1cqh;}" +
+      ".deck-viewer-pick-help{flex:1;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
+      ".deck-viewer-pick-confirm{min-width:11cqw;height:4.6cqh;border-radius:1cqh;border:.22cqh solid var(--c-gold);background:linear-gradient(180deg,#fff8d9,#ffe59a);color:#7a5510;font:inherit;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
+      ".deck-viewer-pick-confirm:disabled{filter:grayscale(.6);opacity:.55;cursor:not-allowed;}" +
       ".deck-viewer.codex-mode{z-index:240;}" +
       ".codex-section-tabs{display:none;gap:.8cqw;margin:0 0 1.1cqh;}" +
       ".codex-section-tab{height:4.2cqh;min-width:8.5cqw;border-radius:1cqh;border:.2cqh solid var(--c-panel-line);background:rgba(255,255,255,.78);color:var(--c-ink);font-size:1.75cqh;font-weight:900;cursor:pointer;}" +
@@ -403,6 +425,7 @@
   function openDeckViewer(tabId){
     if(!els) return;
     if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
+    clearPickMode();
     viewerMode = "deck";
     if(tabId) activeTab = tabId;
     els.overlay.classList.remove("codex-mode");
@@ -419,6 +442,48 @@
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
     els.close.focus();
+  }
+
+  function openDeckViewerCardPick(options = {}){
+    if(!els) return Promise.resolve(null);
+    if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
+
+    return new Promise(resolve => {
+      viewerMode = "deck";
+      activeTab = "all";
+      selectedPickKey = null;
+      pickMode = {
+        title: options.title || "카드 선택",
+        confirmText: options.confirmText || "확인",
+        disabledText: options.disabledText || "선택할 수 없는 카드입니다.",
+        isSelectable: typeof options.isSelectable === "function" ? options.isSelectable : () => true,
+        onConfirm: typeof options.onConfirm === "function" ? options.onConfirm : null,
+        resolve
+      };
+
+      els.overlay.classList.remove("codex-mode");
+      els.overlay.classList.add("pick-mode");
+      els.title.textContent = pickMode.title;
+      els.tabsWrap.style.display = "none";
+      if(els.codexTabsWrap) els.codexTabsWrap.style.display = "none";
+      if(els.codexHome) els.codexHome.style.display = "none";
+      if(els.controls) els.controls.style.display = "";
+      if(els.grid) els.grid.style.display = "";
+      if(els.pickFooter) els.pickFooter.hidden = false;
+      if(els.pickHelp) els.pickHelp.textContent = "기본 카드 1장을 선택하세요.";
+      if(els.pickConfirm){
+        els.pickConfirm.textContent = pickMode.confirmText;
+        els.pickConfirm.disabled = true;
+      }
+      els.filterType.disabled = false;
+      els.filterAttribute.disabled = false;
+      if(els.filterWrap) els.filterWrap.classList.remove("disabled");
+      closeCardDetail();
+      renderDeckViewer();
+      els.overlay.classList.add("show");
+      els.overlay.setAttribute("aria-hidden", "false");
+      els.grid.focus();
+    });
   }
 
   function openCodexHome(){
@@ -459,11 +524,55 @@
 
   function closeDeckViewer(){
     if(!els) return;
+    if(pickMode){
+      if(typeof toast === "function") toast("카드를 선택해야 은혜를 완료할 수 있습니다.");
+      return;
+    }
     closeCardDetail();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
     els.overlay.classList.remove("codex-mode");
     viewerMode = "deck";
+  }
+
+  function clearPickMode(){
+    pickMode = null;
+    selectedPickKey = null;
+    if(!els) return;
+    els.overlay.classList.remove("pick-mode");
+    if(els.pickFooter) els.pickFooter.hidden = true;
+    if(els.pickConfirm) els.pickConfirm.disabled = true;
+  }
+
+  function handlePickCard(cardEl){
+    if(!pickMode || !cardEl) return;
+    const key = cardEl.dataset.cardKey;
+    if(!key || !pickMode.isSelectable(key)){
+      if(typeof toast === "function") toast(pickMode.disabledText);
+      return;
+    }
+    selectedPickKey = key;
+    if(els.pickHelp){
+      const card = getCard(key);
+      els.pickHelp.textContent = (card && card.name ? card.name : key) + " 선택됨";
+    }
+    if(els.pickConfirm) els.pickConfirm.disabled = false;
+    renderDeckViewer();
+  }
+
+  function confirmPickCard(){
+    if(!pickMode || !selectedPickKey) return;
+    const mode = pickMode;
+    try {
+      if(mode.onConfirm) mode.onConfirm(selectedPickKey);
+    } catch(error) {
+      console.warn("[DeckViewer] 카드 선택 처리 중 오류가 발생했습니다.", error);
+    }
+    clearPickMode();
+    closeCardDetail();
+    els.overlay.classList.remove("show");
+    els.overlay.setAttribute("aria-hidden", "true");
+    mode.resolve(selectedPickKey);
   }
 
   function openCardDetail(key){
@@ -536,11 +645,23 @@
     els.grid.innerHTML = entries.length
       ? entries.map(deckCardHtml).join("")
       : '<div class="deck-viewer-empty">표시할 주문이 없습니다.</div>';
+    decoratePickCards();
     if(entries.length === 0){
       const empty = els.grid.querySelector(".deck-viewer-empty");
       if(empty) empty.textContent = EMPTY_TEXT[tab.id] || "해당하는 주문이 없습니다.";
       if(empty && cards.length > 0) empty.textContent = "조건에 맞는 주문이 없습니다.";
     }
+  }
+
+  function decoratePickCards(){
+    if(!pickMode || !els || !els.grid) return;
+    els.grid.querySelectorAll(".deck-viewer-card[data-card-key]").forEach(cardEl => {
+      const key = cardEl.dataset.cardKey;
+      const selectable = !!(key && pickMode.isSelectable(key));
+      cardEl.classList.toggle("pick-disabled", !selectable);
+      cardEl.classList.toggle("pick-selected", selectable && key === selectedPickKey);
+      cardEl.setAttribute("aria-disabled", selectable ? "false" : "true");
+    });
   }
 
   function renderCodexViewer(){

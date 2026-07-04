@@ -401,6 +401,7 @@ function getRelicCandidatesBySource(source, options = {}) {
   );
   return db.filter(item => {
     if (!item || ownedIds.has(item.id)) return false;
+    if (item.category === "blessingRelic" || item.source === "startBlessing") return false;
     if (source && Array.isArray(item.obtainFrom) && !item.obtainFrom.includes(source)) {
       return false;
     }
@@ -459,14 +460,35 @@ function applyBattleStartRelics(){
   }
 
   // 2. 신령의 은혜 전투 시작 효과 처리
-  // 예: firstBattleBlock 은혜 선택 시 첫 전투 시작에 결계 부여
+  // 선택 화면에서 예약된 시작 전용 법구 효과만 여기서 소모한다.
   const run = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
-  const effect = run && run.startBlessingEffect;
-  if(effect && !effect.used && effect.type === "firstBattleBlock"){
-    const blockValue = Number(effect.value || 8);
+  const effects = (run && run.startBlessingEffects) || {};
+  const legacyBlock = run && run.startBlessingEffect;
+
+  const anxietyEffect = effects.firstBattleAnxiety;
+  if(anxietyEffect && !anxietyEffect.used){
+    S.player.anxiety = (S.player.anxiety || 0) + Number(anxietyEffect.value || 1);
+    anxietyEffect.used = true;
+    toast("은혜4 발동: 불안 1");
+  }
+
+  const hpOneEffect = effects.nextThreeNormalFirstEnemyHpOne;
+  if(hpOneEffect && (hpOneEffect.remaining || 0) > 0 && S.battleNodeType === "enemy"){
+    const target = livingEnemies()[0];
+    if(target){
+      target.hp = Math.min(target.hp, 1);
+      hpOneEffect.remaining -= 1;
+      toast("은혜11 발동: 첫 번째 적 정신력 1");
+    }
+  }
+
+  const blockEffect = effects.firstBattleBlock || legacyBlock;
+  if(blockEffect && !blockEffect.used && blockEffect.type === "firstBattleBlock"){
+    const blockValue = Number(blockEffect.value || 10);
     if(typeof LIFE !== "undefined" && LIFE && typeof LIFE.addBlock === "function"){
       LIFE.addBlock(S.player, blockValue);
-      effect.used = true;
+      blockEffect.used = true;
+      toast("은혜12 발동: 결계 " + blockValue);
     }else{
       console.warn("[BattleStart] LIFE.addBlock 함수가 없어 신령의 은혜 결계 효과를 적용하지 못했습니다.");
     }
@@ -1222,8 +1244,9 @@ function grantRelic(source = "elite"){
   if(!S.relics) S.relics = [];
   // 이벤트 전투는 source를 "event"로 넘겨 일반 엘리트 법구 풀을 건드리지 않는다.
   const pool = RELIC_DB.filter(item => Array.isArray(item.obtainFrom) && item.obtainFrom.includes(source));
-  const list = pool.length ? pool : RELIC_DB;
+  const list = (pool.length ? pool : RELIC_DB).filter(item => item && item.category !== "blessingRelic" && item.source !== "startBlessing");
   const relic = list[Math.floor(Math.random()*list.length)];
+  if(!relic) return;
   S.relics.push(relic);
   toast("법구 획득: "+relic.emoji+" "+relic.name);
   renderHud();

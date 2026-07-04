@@ -31,15 +31,23 @@ const START_BLESSING_SPIRITS = (START_BLESSING_ENDING_DATA && Array.isArray(STAR
       { emoji: "🏮", name: "길잡이 신령", dialogue: "길은 어둡지만, 네 손엔 아직 빛이 남아 있구나." },
     ];
 
-/* ── 은혜 선택지 3종 (테스트 데이터 - 기획서 참고 이미지 예시 기준) ─────────
-   주문 ID/희귀도, 결계 수치는 밸런스 단계에서 변경될 수 있는 예시 데이터다. */
+/* ── 시작 전용 은혜 법구 15종 (엑셀 지시서 기준) ───────────────────────── */
 const START_BLESSINGS = [
-  { id: "sealed_talisman", icon: "📿", name: "봉인 부적",
-    desc: "희귀 부적 주문 1장을 얻습니다.", effect: "gainRareCard" },
-  { id: "red_thread", icon: "🪢", name: "붉은 실 매듭",
-    desc: "기본 주문 1장을 제거합니다.", effect: "removeStarterCard" },
-  { id: "clear_bell", icon: "🔔", name: "맑은 방울",
-    desc: "첫 전투 시작 시 결계 8을 얻습니다.", effect: "firstBattleBlock", value: 8 },
+  { id:"blessing_relic_01", icon:"🌒", name:"은혜1",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.", effect:"gainRandomRelicLoseHp" },
+  { id:"blessing_relic_02", icon:"🃏", name:"은혜2",  spirit:"길잡이 신령", desc:"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", effect:"chooseRareCardAddStatus" },
+  { id:"blessing_relic_03", icon:"🪙", name:"은혜3",  spirit:"길잡이 신령", desc:"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.", effect:"gainGoldLoseMaxHp" },
+  { id:"blessing_relic_04", icon:"⚗️", name:"은혜4",  spirit:"길잡이 신령", desc:"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.", effect:"gainPotionsFirstBattleAnxiety" },
+  { id:"blessing_relic_05", icon:"🏺", name:"은혜5",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.", effect:"gainRandomRelicLoseAllGold" },
+  { id:"blessing_relic_06", icon:"✂️", name:"은혜6",  spirit:"인연 신령", desc:"기본 카드 1장을 선택하여 제거합니다.", effect:"chooseRemoveStarterCard" },
+  { id:"blessing_relic_07", icon:"🔀", name:"은혜7",  spirit:"인연 신령", desc:"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.", effect:"randomRemoveStarterGainCommon" },
+  { id:"blessing_relic_08", icon:"🧹", name:"은혜8",  spirit:"인연 신령", desc:"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.", effect:"removeTwoCardsLoseAllGold" },
+  { id:"blessing_relic_09", icon:"📜", name:"은혜9",  spirit:"인연 신령", desc:"Common 카드 3장 중 1장을 선택해 얻습니다.", effect:"chooseCommonCard" },
+  { id:"blessing_relic_10", icon:"🍃", name:"은혜10", spirit:"인연 신령", desc:"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", effect:"gainRandomCommonCostDownRun" },
+  { id:"blessing_relic_11", icon:"🕯️", name:"은혜11", spirit:"수호 신령", desc:"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.", effect:"nextThreeNormalFirstEnemyHpOne" },
+  { id:"blessing_relic_12", icon:"🛡️", name:"은혜12", spirit:"수호 신령", desc:"첫 전투 시작 시 결계 10을 얻습니다.", effect:"firstBattleBlock", value:10 },
+  { id:"blessing_relic_13", icon:"💗", name:"은혜13", spirit:"수호 신령", desc:"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.", effect:"gainMaxHpAndHeal", value:8 },
+  { id:"blessing_relic_14", icon:"💰", name:"은혜14", spirit:"수호 신령", desc:"복채 80을 얻습니다.", effect:"gainGold", value:80 },
+  { id:"blessing_relic_15", icon:"🧪", name:"은혜15", spirit:"수호 신령", desc:"무작위 약병 1개를 얻습니다.", effect:"gainRandomPotion" },
 ];
 
 /* ── 신령의 은혜 화면이 열려있는 동안 감춰둘 전투 화면 요소 (restNode.js와 동일 패턴) */
@@ -148,9 +156,20 @@ function selectSbBlessing(blessing){
   if(sbResolved || !blessing) return;
   sbResolved = true;
 
-  applySbBlessing(blessing);
   grantSbBlessingRelic(blessing);
   saveSbSpiritToRunState();
+  const pending = applySbBlessing(blessing);
+  if(pending && typeof pending.then === "function"){
+    pending.then(() => completeSbBlessing(blessing)).catch(error => {
+      console.warn("[StartBlessing] 은혜 적용 중 오류가 발생했습니다.", error);
+      completeSbBlessing(blessing);
+    });
+    return;
+  }
+  completeSbBlessing(blessing);
+}
+
+function completeSbBlessing(blessing){
   /* 신령의 은혜 화면은 여기서 닫지 않는다. 여정(맵) 오버레이가 그 위에
      반투명하게 떠야 하므로(플레이어가 맵만 닫고 은혜 화면으로 돌아올 수도
      있음), 실제 전투 진입 시점(startStage 후킹)에서만 배경을 정리한다. */
@@ -176,37 +195,214 @@ function sbSetDeck(deck){
   if(!run || typeof STARTER_DECK === "undefined") return;
   run.deck = [...deck];
   STARTER_DECK = [...run.deck];
+  if(typeof window.BOHYUN_MARK_CARDS_ENCOUNTERED === "function"){
+    window.BOHYUN_MARK_CARDS_ENCOUNTERED(run.deck);
+  }
 }
 
 function applySbBlessing(blessing){
   const run = getSbRunState();
   if(!run || typeof CARD_DB === "undefined") return;
 
-  if(blessing.effect === "gainRareCard"){
-    const rareKeys = Object.keys(CARD_DB).filter(key => CARD_DB[key].rarity === "rare");
-    if(rareKeys.length){
-      const key = rareKeys[Math.floor(Math.random() * rareKeys.length)];
-      sbSetDeck([...run.deck, key]);
-    }
-    return;
+  switch(blessing.effect){
+    case "gainRandomRelicLoseHp":
+      addSbRandomRelic();
+      run.player.hp = Math.max(1, (run.player.hp || 1) - 12);
+      break;
+    case "chooseRareCardAddStatus":
+      addSbRandomCardByRarity("rare");
+      addSbRandomStatusCard();
+      break;
+    case "gainGoldLoseMaxHp":
+      run.gold = (run.gold || 0) + 120;
+      run.player.maxHp = Math.max(1, (run.player.maxHp || 1) - 8);
+      run.player.hp = Math.max(1, Math.min(run.player.hp || 1, run.player.maxHp));
+      break;
+    case "gainPotionsFirstBattleAnxiety":
+      addSbRandomPotion(2);
+      setSbBattleEffect("firstBattleAnxiety", { used:false, value:1 });
+      break;
+    case "gainRandomRelicLoseAllGold":
+      addSbRandomRelic();
+      run.gold = 0;
+      break;
+    case "chooseRemoveStarterCard":
+      return chooseSbStarterCardToRemove();
+    case "randomRemoveStarterGainCommon":
+      removeSbRandomStarterCard();
+      addSbRandomCardByRarity("common");
+      break;
+    case "removeTwoCardsLoseAllGold":
+      removeSbRandomCards(2);
+      run.gold = 0;
+      break;
+    case "chooseCommonCard":
+      addSbRandomCardByRarity("common");
+      break;
+    case "gainRandomCommonCostDownRun":
+      addSbDiscountedCommonCard();
+      break;
+    case "nextThreeNormalFirstEnemyHpOne":
+      setSbBattleEffect("nextThreeNormalFirstEnemyHpOne", { remaining:3 });
+      break;
+    case "firstBattleBlock":
+      setSbBattleEffect("firstBattleBlock", { used:false, value:blessing.value || 10 });
+      break;
+    case "gainMaxHpAndHeal":
+      run.player.maxHp = (run.player.maxHp || 1) + (blessing.value || 8);
+      run.player.hp = Math.min(run.player.maxHp, (run.player.hp || 0) + (blessing.value || 8));
+      break;
+    case "gainGold":
+      run.gold = (run.gold || 0) + (blessing.value || 80);
+      break;
+    case "gainRandomPotion":
+      addSbRandomPotion(1);
+      break;
   }
+}
 
-  if(blessing.effect === "removeStarterCard"){
-    const targets = run.deck
-      .map((key, index) => ({ key, index }))
-      .filter(x => CARD_DB[x.key] && CARD_DB[x.key].rarity === "starter");
-    if(targets.length){
-      const target = targets[Math.floor(Math.random() * targets.length)];
-      const nextDeck = [...run.deck];
-      nextDeck.splice(target.index, 1);
-      sbSetDeck(nextDeck);
-    }
-    return;
-  }
+function getSbStarterTargets(){
+  const run = getSbRunState();
+  if(!run || typeof CARD_DB === "undefined") return [];
+  return run.deck
+    .map((key, index) => ({ key, index, card: CARD_DB[key] }))
+    .filter(item => item.card && (item.card.rarity === "starter" || item.card.rarity === "basic"));
+}
 
-  if(blessing.effect === "firstBattleBlock"){
-    run.startBlessingEffect = { type: "firstBattleBlock", value: blessing.value || 8, used: false };
+function pickSbRandom(list){
+  if(!Array.isArray(list) || list.length === 0) return null;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function removeSbDeckCardAt(index){
+  const run = getSbRunState();
+  if(!run || index < 0 || index >= run.deck.length) return null;
+  const nextDeck = [...run.deck];
+  const removed = nextDeck.splice(index, 1)[0];
+  sbSetDeck(nextDeck);
+  return removed;
+}
+
+function removeSbRandomStarterCard(){
+  const target = pickSbRandom(getSbStarterTargets());
+  if(!target) return null;
+  return removeSbDeckCardAt(target.index);
+}
+
+function removeSbRandomCards(count){
+  const run = getSbRunState();
+  if(!run) return;
+  const nextDeck = [...run.deck];
+  for(let i = 0; i < count && nextDeck.length > 0; i++){
+    const index = Math.floor(Math.random() * nextDeck.length);
+    nextDeck.splice(index, 1);
   }
+  sbSetDeck(nextDeck);
+}
+
+function chooseSbStarterCardToRemove(){
+  const targets = getSbStarterTargets();
+  if(targets.length === 0){
+    if(typeof toast === "function") toast("제거할 기본 카드가 없습니다.");
+    return null;
+  }
+  if(typeof window.OPEN_DECK_VIEWER_CARD_PICK !== "function"){
+    console.warn("[StartBlessing] 덱 뷰어 선택 모드를 찾지 못해 기본 카드 1장을 무작위로 제거합니다.");
+    removeSbRandomStarterCard();
+    return null;
+  }
+  return window.OPEN_DECK_VIEWER_CARD_PICK({
+    title: "제거할 기본 카드 선택",
+    confirmText: "제거",
+    isSelectable: key => !!(CARD_DB[key] && (CARD_DB[key].rarity === "starter" || CARD_DB[key].rarity === "basic")),
+    disabledText: "기본 카드만 제거할 수 있습니다.",
+    onConfirm: key => {
+      const run = getSbRunState();
+      const index = run ? run.deck.findIndex(deckKey => deckKey === key && CARD_DB[deckKey] && (CARD_DB[deckKey].rarity === "starter" || CARD_DB[deckKey].rarity === "basic")) : -1;
+      const removed = removeSbDeckCardAt(index);
+      if(removed && typeof toast === "function") toast("카드 제거: " + (CARD_DB[removed]?.name || removed));
+    }
+  });
+}
+
+function addSbRandomCardByRarity(rarity){
+  if(typeof CARD_DB === "undefined") return null;
+  const keys = Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity);
+  const key = pickSbRandom(keys);
+  if(!key) return null;
+  const run = getSbRunState();
+  sbSetDeck([...(run.deck || []), key]);
+  return key;
+}
+
+function addSbRandomStatusCard(){
+  if(typeof CARD_DB === "undefined") return null;
+  const keys = Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === "status");
+  const key = pickSbRandom(keys);
+  if(!key) return null;
+  const run = getSbRunState();
+  sbSetDeck([...(run.deck || []), key]);
+  return key;
+}
+
+function addSbDiscountedCommonCard(){
+  const baseKey = addSbRandomCardByRarity("common");
+  const run = getSbRunState();
+  if(!baseKey || !run || typeof CARD_DB === "undefined") return null;
+  const tempKey = baseKey + "_blessing_cost_down_" + Date.now();
+  const baseCard = CARD_DB[baseKey];
+  CARD_DB[tempKey] = {
+    ...baseCard,
+    name: baseCard.name + " - 은혜",
+    cost: Math.max(0, (baseCard.cost || 0) - 1),
+    blessingBaseCard: baseKey,
+    temporaryRunCard: true
+  };
+  const nextDeck = [...run.deck];
+  const addedIndex = nextDeck.lastIndexOf(baseKey);
+  if(addedIndex >= 0) nextDeck[addedIndex] = tempKey;
+  sbSetDeck(nextDeck);
+  return tempKey;
+}
+
+function getSbRegularRelicPool(){
+  const db = (typeof RELIC_DB !== "undefined" && Array.isArray(RELIC_DB)) ? RELIC_DB : [];
+  const run = getSbRunState();
+  const ownedIds = new Set((run && Array.isArray(run.relics) ? run.relics : []).map(relic => relic && relic.id).filter(Boolean));
+  return db.filter(relic =>
+    relic && relic.category !== "blessingRelic" && relic.source !== "startBlessing" &&
+    relic.dropWeight !== 0 && !ownedIds.has(relic.id)
+  );
+}
+
+function addSbRandomRelic(){
+  const run = getSbRunState();
+  if(!run) return null;
+  if(!Array.isArray(run.relics)) run.relics = [];
+  const pool = getSbRegularRelicPool();
+  const relic = pickSbRandom(pool);
+  if(!relic) return null;
+  run.relics.push({ ...relic });
+  return relic;
+}
+
+function addSbRandomPotion(count){
+  const run = getSbRunState();
+  if(!run || typeof POTION_DB === "undefined" || !Array.isArray(POTION_DB)) return;
+  if(!Array.isArray(run.potions)) run.potions = [];
+  const limit = typeof POTION_SLOT_LIMIT === "number" ? POTION_SLOT_LIMIT : 3;
+  for(let i = 0; i < count && run.potions.length < limit; i++){
+    const potion = pickSbRandom(POTION_DB);
+    if(potion) run.potions.push({ ...potion });
+  }
+}
+
+function setSbBattleEffect(type, data){
+  const run = getSbRunState();
+  if(!run) return;
+  if(!run.startBlessingEffects) run.startBlessingEffects = {};
+  run.startBlessingEffects[type] = { type, ...data };
+  if(type === "firstBattleBlock") run.startBlessingEffect = run.startBlessingEffects[type];
 }
 
 /* ── 고른 은혜를 동일한 이름의 법구로 가방에 지급 ─────────────────────────
@@ -335,13 +531,39 @@ function renderSbOverlay(){
   sbOverlayEl.querySelector("#sbDialogue").textContent    = '"' + sbSpirit.dialogue + '"';
 
   const choices = sbOverlayEl.querySelector("#sbChoices");
-  choices.innerHTML = START_BLESSINGS.map(sbChoiceHtml).join("");
+  const visibleBlessings = getSbVisibleBlessings();
+  choices.innerHTML = visibleBlessings.map(sbChoiceHtml).join("");
   choices.querySelectorAll(".sb-card[data-id]").forEach(card => {
     card.addEventListener("click", () => {
-      const blessing = START_BLESSINGS.find(b => b.id === card.dataset.id);
+      const blessing = visibleBlessings.find(b => b.id === card.dataset.id);
       selectSbBlessing(blessing);
     });
   });
+}
+
+function getSbVisibleBlessings(){
+  const spiritName = getSbSpiritGroup(sbSpirit);
+  const mapped = START_BLESSINGS.filter(blessing => blessing.spirit === spiritName);
+  const pool = mapped.length ? mapped : START_BLESSINGS;
+  return shuffleSbList(pool).slice(0, 3);
+}
+
+function getSbSpiritGroup(spirit){
+  const id = String((spirit && spirit.id) || "");
+  const name = String((spirit && spirit.name) || "");
+  if(id === "GENERAL_CHOE" || name.includes("수호") || name.includes("장군")) return "수호 신령";
+  if(id === "CHILSEONG" || name.includes("인연") || name.includes("칠성")) return "인연 신령";
+  if(id === "OGU_BARI" || name.includes("길잡이") || name.includes("오구") || name.includes("바리")) return "길잡이 신령";
+  return name;
+}
+
+function shuffleSbList(list){
+  const result = [...list];
+  for(let i = result.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
 }
 
 /* ── 스타일 (기획서 11장: 배경과 어우러지는 반투명 청록/금색 톤) ─────────── */
