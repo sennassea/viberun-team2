@@ -107,6 +107,7 @@
     tutorialFirstNewTurnSkillCardGuaranteed = false;
     resetTutorialFinalFreePlayState();
     applyTutorialBattleRootState(true);
+    preloadTutorialDongjasinAssets();
     if(typeof window.startTutorialBattle === "function"){
       window.startTutorialBattle();
     }
@@ -300,6 +301,19 @@
     setTimeout(startTutorialBattleIntro, 0);
   }
 
+  function preloadTutorialDongjasinAssets(){
+    if(!Array.isArray(window.TUTORIAL_DIALOGUE_DATA)) return;
+    const paths = new Set();
+    window.TUTORIAL_DIALOGUE_DATA.forEach(dialogue => {
+      if(dialogue && dialogue.dongjasinAssetPath) paths.add(dialogue.dongjasinAssetPath);
+      if(dialogue && dialogue.dongjasinAltAssetPath) paths.add(dialogue.dongjasinAltAssetPath);
+    });
+    paths.forEach(path => {
+      const image = new Image();
+      image.src = path;
+    });
+  }
+
   function startTutorialBattleIntro(){
     if(!isTutorialBattle()) return;
     ensureTutorialBattleIntroStyles();
@@ -378,9 +392,13 @@
     });
     const nextButton = overlay.querySelector(".tutorial-battle-intro-next");
     if(nextButton){
+      let nextHandled = false;
       nextButton.addEventListener("click", event => {
         event.preventDefault();
         event.stopPropagation();
+        if(nextHandled) return;
+        nextHandled = true;
+        nextButton.disabled = true;
         clearTutorialBattleHighlight();
         onNext();
       });
@@ -1116,8 +1134,20 @@
         startTutorialSkillCardStep();
         return;
       }
+      if(step.id === "W-038"){
+        deferTutorialBattleTransition(() => showTutorialPostEnemyGuideSequence(steps, index + 1));
+        return;
+      }
       showTutorialPostEnemyGuideSequence(steps, index + 1);
     });
+  }
+
+  function deferTutorialBattleTransition(callback){
+    if(typeof requestAnimationFrame === "function"){
+      requestAnimationFrame(() => setTimeout(callback, 0));
+      return;
+    }
+    setTimeout(callback, 0);
   }
 
   function getPostEnemyGuideStepIndex(id){
