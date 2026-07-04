@@ -531,17 +531,32 @@
   }
 
   function showGoogleLinkReady(){
-    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInGooglePlay === "function"){
-      window.VIBERUN_AUTH.signInGooglePlay();
-    }
-    if(typeof toast === "function") toast("아직 준비 중입니다.");
+    linkProviderAccount("signInGooglePlay", "Google Play");
   }
 
   function showFacebookLinkReady(){
-    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInFacebook === "function"){
-      window.VIBERUN_AUTH.signInFacebook();
+    linkProviderAccount("signInFacebook", "Facebook");
+  }
+
+  /* 설정 > 계정 정보에서 Guest 계정을 외부 provider 세션으로 승격하고, 성공 시 표시 정보를 즉시 갱신합니다. */
+  function linkProviderAccount(methodName, label){
+    if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH[methodName] !== "function"){
+      if(typeof toast === "function") toast(label + " 로그인 서비스를 불러올 수 없습니다.");
+      return;
     }
-    if(typeof toast === "function") toast("아직 준비 중입니다.");
+
+    Promise.resolve(window.VIBERUN_AUTH[methodName]()).then(result => {
+      if(!result || !result.ok){
+        if(typeof toast === "function") toast((result && result.message) || (label + " 연동에 실패했습니다."));
+        return;
+      }
+
+      refreshAccountInfo();
+      if(typeof toast === "function") toast(label + " 계정으로 로그인되었습니다.");
+    }).catch(error => {
+      console.warn("[Auth] " + label + " 계정 연동 중 오류가 발생했습니다.", error);
+      if(typeof toast === "function") toast(label + " 연동에 실패했습니다.");
+    });
   }
 
   function openLogoutConfirm(){

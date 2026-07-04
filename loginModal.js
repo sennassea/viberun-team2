@@ -3,7 +3,7 @@
 /* =========================================================================
    Login Modal
    - 새 게임/이어하기 진입 전 계정 선택을 받는 1차 UI입니다.
-   - Guest만 실제 세션을 생성하고, 외부 계정은 준비 중 안내만 표시합니다.
+   - Guest와 외부 provider 로그인 결과를 같은 성공 콜백 흐름으로 전달합니다.
    ========================================================================= */
 (function(){
   let modal = null;
@@ -72,6 +72,23 @@
     return overlay;
   }
 
+  /* 로그인 성공 후 모달 상태를 정리하고, 새 게임/이어하기에서 넘겨준 원래 콜백을 이어서 실행합니다. */
+  function finishLoginSuccess(){
+    const onSuccess = successCallback;
+    close(false);
+    successCallback = null;
+    cancelCallback = null;
+    if(typeof onSuccess === "function") onSuccess();
+  }
+
+  /* provider 로그인 중 중복 클릭을 막아 SDK 팝업/네이티브 브리지가 여러 번 뜨는 상황을 방지합니다. */
+  function setPending(isPending){
+    if(!modal) return;
+    Array.from(modal.querySelectorAll(".auth-login-button, .auth-login-close")).forEach(button => {
+      button.disabled = !!isPending;
+    });
+  }
+
   /* Guest 선택 시 authService에 세션 생성을 맡기고, 성공 후 원래 게임 흐름 콜백을 실행합니다. */
   function signInGuest(){
     if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.signInGuest !== "function"){
@@ -86,11 +103,7 @@
         return;
       }
 
-      const onSuccess = successCallback;
-      close(false);
-      successCallback = null;
-      cancelCallback = null;
-      if(typeof onSuccess === "function") onSuccess();
+      finishLoginSuccess();
     } catch(error) {
       console.warn("[Auth] Guest 로그인 처리 중 오류가 발생했습니다.", error);
       showMessage("Guest 로그인에 실패했습니다.");
@@ -98,17 +111,34 @@
   }
 
   function signInGooglePlay(){
-    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInGooglePlay === "function"){
-      window.VIBERUN_AUTH.signInGooglePlay();
-    }
-    showMessage("아직 준비 중입니다.");
+    signInProvider("signInGooglePlay", "Google Play");
   }
 
   function signInFacebook(){
-    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInFacebook === "function"){
-      window.VIBERUN_AUTH.signInFacebook();
+    signInProvider("signInFacebook", "Facebook");
+  }
+
+  /* 외부 SDK/앱 브리지 로그인은 비동기일 수 있으므로 Promise로 감싸 결과를 표준 처리합니다. */
+  function signInProvider(methodName, label){
+    if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH[methodName] !== "function"){
+      showMessage(label + " 로그인 서비스를 불러올 수 없습니다.");
+      return;
     }
-    showMessage("아직 준비 중입니다.");
+
+    setPending(true);
+    Promise.resolve(window.VIBERUN_AUTH[methodName]()).then(result => {
+      if(!result || !result.ok){
+        showMessage((result && result.message) || (label + " 로그인에 실패했습니다."));
+        return;
+      }
+
+      finishLoginSuccess();
+    }).catch(error => {
+      console.warn("[Auth] " + label + " 로그인 처리 중 오류가 발생했습니다.", error);
+      showMessage(label + " 로그인에 실패했습니다.");
+    }).finally(() => {
+      setPending(false);
+    });
   }
 
   /* 기존 toast가 있으면 재사용하고, 초기 로딩 상황에서는 시작 화면 알림/alert로 안전하게 대체합니다. */
