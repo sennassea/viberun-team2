@@ -9,10 +9,10 @@
 (function(){
   const TABS = [
     {
-      id: "recommend",
+      id: "recommended",
       label: "추천",
-      enabled: false,
-      readyMessage: "해당 탭은 준비 중입니다."
+      enabled: true,
+      readyMessage: ""
     },
     {
       id: "package",
@@ -44,7 +44,10 @@
       rewardType: "dummy_item",
       dummyRewardId: "dummy_starter_pack",
       rewardId: "dummy_starter_pack",
-      description: "지금 시작하면 모험이 더욱 특별해집니다."
+      description: "지금 시작하면 모험이 더욱 특별해집니다.",
+      recommended: true,
+      recommendOrder: 10,
+      recommendBadge: "첫 구매 추천"
     },
     {
       id: "growth_package",
@@ -78,7 +81,10 @@
       dummyRewardId: "dummy_spring_blessing_box",
       rewardId: "dummy_spring_blessing_box",
       badge: "20% OFF",
-      description: "계절 한정 축복 상자입니다."
+      description: "계절 한정 축복 상자입니다.",
+      recommended: true,
+      recommendOrder: 20,
+      recommendBadge: "20% OFF"
     }
   ];
 
@@ -96,7 +102,10 @@
       rewardId: "dummy_summon_charm_pack",
       description: "소환을 바꾸는 주문 부적",
       limitText: "매일 1회",
-      icon: "📜"
+      icon: "📜",
+      recommended: true,
+      recommendOrder: 30,
+      recommendBadge: "매일 추천"
     },
     {
       id: "order_pack_soul_charm",
@@ -162,7 +171,10 @@
       rewardType: "moon_shard",
       rewardAmount: 300,
       bonusText: "+300 보너스",
-      badge: "첫 2배"
+      badge: "첫 2배",
+      recommended: true,
+      recommendOrder: 40,
+      recommendBadge: "충전 추천"
     },
     {
       id: "moon_charge_980",
@@ -173,7 +185,10 @@
       rewardType: "moon_shard",
       rewardAmount: 980,
       bonusText: "+980 보너스",
-      badge: "첫 2배"
+      badge: "첫 2배",
+      recommended: true,
+      recommendOrder: 50,
+      recommendBadge: "인기"
     },
     {
       id: "moon_charge_1980",
@@ -243,6 +258,13 @@
     },
     findMoonChargeProduct(productId){
       return clone(MOON_CHARGE_PRODUCTS.find(product => product.id === productId) || null);
+    },
+    getRecommendedProducts(){
+      return clone(
+        allProducts()
+          .filter(product => product.recommended === true)
+          .sort((a, b) => (Number(a.recommendOrder) || 0) - (Number(b.recommendOrder) || 0))
+      );
     }
   };
 })();

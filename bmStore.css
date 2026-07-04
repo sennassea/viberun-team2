@@ -371,6 +371,14 @@
   min-width:0;
   justify-self:center;
 }
+.bm-store-recommend-notice{
+  margin:0 0 .8cqh;
+  color:#6b4c31;
+  font-size:1.65cqh;
+  font-weight:850;
+  text-align:center;
+  word-break:keep-all;
+}
 .bm-store-charge-notice{
   margin:.6cqh 0 0;
   color:#6b4c31;

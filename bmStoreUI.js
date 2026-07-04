@@ -10,6 +10,8 @@
   const READY_MESSAGE = "해당 탭은 준비 중입니다.";
   const SUCCESS_SUFFIX = "을 구매했습니다. 테스트용 더미 아이템이 지급되었습니다.";
   const MOON_CHARGE_NOTICE = "테스트 구매입니다. 실제 결제가 발생하지 않습니다.";
+  const RECOMMENDED_NOTICE = "운영자가 추천하는 특별 상품입니다.";
+  const RECOMMENDED_CASH_NOTICE = "테스트 구매 상품은 실제 결제가 발생하지 않습니다.";
   let els = null;
   let purchasingProductId = "";
 
@@ -50,6 +52,9 @@
   function getProductsForTab(tabId){
     const service = window.VIBERUN_BM_STORE_SERVICE;
     if(!service) return [];
+    if(tabId === "recommended" && typeof service.getRecommendedProducts === "function"){
+      return service.getRecommendedProducts();
+    }
     if(typeof service.getProductsByTab === "function") return service.getProductsByTab(tabId);
     if(tabId === "package" && typeof service.getPackageProducts === "function"){
       return service.getPackageProducts();
@@ -260,7 +265,8 @@
 
   function renderProducts(){
     if(!els) return;
-    if(state.activeTab !== "package" && state.activeTab !== "order_pack" && state.activeTab !== "moon_charge"){
+    const knownTabs = ["package", "order_pack", "moon_charge", "recommended"];
+    if(knownTabs.indexOf(state.activeTab) === -1){
       els.body.innerHTML = '<div class="bm-store-empty">해당 탭은 준비 중입니다.</div>';
       return;
     }
@@ -268,18 +274,27 @@
     if(!state.products.length){
       const emptyTextByTab = {
         order_pack: "판매 중인 주문 팩이 없습니다.",
-        moon_charge: "판매 중인 충전 상품이 없습니다."
+        moon_charge: "판매 중인 충전 상품이 없습니다.",
+        recommended: "현재 추천 상품이 없습니다."
       };
       const emptyText = emptyTextByTab[state.activeTab] || "판매 중인 패키지가 없습니다.";
-      els.body.innerHTML = '<div class="bm-store-empty">' + emptyText + '</div>';
+      els.body.innerHTML = (state.activeTab === "recommended"
+        ? '<p class="bm-store-recommend-notice">' + escapeHtml(RECOMMENDED_NOTICE) + '</p>'
+        : "") + '<div class="bm-store-empty">' + emptyText + '</div>';
       return;
     }
 
-    const notice = state.activeTab === "moon_charge"
-      ? '<p class="bm-store-charge-notice">' + escapeHtml(MOON_CHARGE_NOTICE) + '</p>'
+    const heading = state.activeTab === "recommended"
+      ? '<p class="bm-store-recommend-notice">' + escapeHtml(RECOMMENDED_NOTICE) + '</p>'
       : "";
 
-    els.body.innerHTML =
+    const hasTestCash = state.activeTab === "recommended" &&
+      state.products.some(product => product.priceType === "test_cash");
+    const notice = state.activeTab === "moon_charge"
+      ? '<p class="bm-store-charge-notice">' + escapeHtml(MOON_CHARGE_NOTICE) + '</p>'
+      : (hasTestCash ? '<p class="bm-store-charge-notice">' + escapeHtml(RECOMMENDED_CASH_NOTICE) + '</p>' : "");
+
+    els.body.innerHTML = heading +
       '<div class="bm-store-package-grid bm-store-product-grid--' + escapeHtml(state.activeTab) + '">' +
         state.products.map(renderProductCard).join("") +
       '</div>' + notice;
@@ -289,9 +304,12 @@
     const isBusy = purchasingProductId === product.id;
     const isTestCash = product.priceType === "test_cash";
     const secondaryText = product.limitText || product.bonusText;
+    const badgeText = state.activeTab === "recommended"
+      ? (product.recommendBadge || product.badge)
+      : product.badge;
     return (
       '<article class="bm-store-product">' +
-        (product.badge ? '<div class="bm-store-badge">' + escapeHtml(product.badge) + '</div>' : "") +
+        (badgeText ? '<div class="bm-store-badge">' + escapeHtml(badgeText) + '</div>' : "") +
         '<div class="bm-store-product-art" aria-hidden="true">' +
           (product.icon
             ? '<span class="bm-store-art-icon">' + escapeHtml(product.icon) + '</span>'

@@ -158,6 +158,13 @@
     return data && typeof data.getMoonChargeProducts === "function" ? data.getMoonChargeProducts() : [];
   }
 
+  /* 추천탭 전용 조회 함수입니다. 패키지/주문 팩/충전 상품 중 recommended === true인
+     상품만 recommendOrder 오름차순으로 가져오며, 구매는 기존 purchaseProduct를 그대로 사용합니다. */
+  function getRecommendedProducts(){
+    const data = getData();
+    return data && typeof data.getRecommendedProducts === "function" ? data.getRecommendedProducts() : [];
+  }
+
   function findMoonChargeProduct(productId){
     const data = getData();
     return data && typeof data.findMoonChargeProduct === "function" ? data.findMoonChargeProduct(productId) : null;
@@ -291,6 +298,7 @@
     purchaseOrderPack,
     getMoonChargeProducts,
     purchaseMoonCharge,
+    getRecommendedProducts,
     purchaseProduct,
     fetchDummyInventory,
     getCachedDummyInventory(){
