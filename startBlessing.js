@@ -210,9 +210,11 @@ function applySbBlessing(blessing){
       run.player.hp = Math.max(1, (run.player.hp || 1) - 12);
       break;
     case "chooseRareCardAddStatus":
-      addSbRandomCardByRarity("rare");
-      addSbRandomStatusCard();
-      break;
+      return chooseSbCardRewardByRarity("rare", {
+        title: "정화 보상",
+        desc: "Rare 카드 3장 중 1장을 선택해 덱에 추가하세요.",
+        afterChoose: addSbRandomStatusCard
+      });
     case "gainGoldLoseMaxHp":
       run.gold = (run.gold || 0) + 120;
       run.player.maxHp = Math.max(1, (run.player.maxHp || 1) - 8);
@@ -237,8 +239,10 @@ function applySbBlessing(blessing){
       run.gold = 0;
       break;
     case "chooseCommonCard":
-      addSbRandomCardByRarity("common");
-      break;
+      return chooseSbCardRewardByRarity("common", {
+        title: "정화 보상",
+        desc: "Common 카드 3장 중 1장을 선택해 덱에 추가하세요."
+      });
     case "gainRandomCommonCostDownRun":
       addSbDiscountedCommonCard();
       break;
@@ -333,6 +337,31 @@ function addSbRandomCardByRarity(rarity){
   const run = getSbRunState();
   sbSetDeck([...(run.deck || []), key]);
   return key;
+}
+
+function chooseSbCardRewardByRarity(rarity, options = {}){
+  if(typeof CARD_DB === "undefined") return null;
+  const keys = shuffleSbList(Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity)).slice(0, 3);
+  if(keys.length === 0){
+    console.warn("[StartBlessing] 선택 가능한 " + rarity + " 카드가 없어 카드 보상을 건너뜁니다.");
+    return null;
+  }
+  if(typeof window.OPEN_CARD_REWARD_PICK !== "function"){
+    console.warn("[StartBlessing] 정화 보상 UI를 찾지 못해 무작위 " + rarity + " 카드 1장을 지급합니다.");
+    addSbRandomCardByRarity(rarity);
+    if(typeof options.afterChoose === "function") options.afterChoose();
+    return null;
+  }
+  return window.OPEN_CARD_REWARD_PICK({
+    keys,
+    title: options.title || "정화 보상",
+    desc: options.desc || "새로운 주문 1장을 선택해 덱에 추가하세요.",
+    onChoose: key => {
+      const run = getSbRunState();
+      sbSetDeck([...(run.deck || []), key]);
+      if(typeof options.afterChoose === "function") options.afterChoose();
+    }
+  });
 }
 
 function addSbRandomStatusCard(){

@@ -1113,6 +1113,8 @@ function getRandomRewardKeys(count){
   return shuffle([...CARD_REWARD_POOL]).slice(0, count);
 }
 
+let cardRewardPickMode = null;
+
 function openCardReward(){
   S.busy = true; S.rewardOpen = true;
   renderRewardOverlay(getRandomRewardKeys(3));
@@ -1213,6 +1215,10 @@ const BATTLE_VICTORY_POTION_CANDIDATES = (typeof window.POTION_DB !== "undefined
 ];
 
 function chooseRewardCard(key){
+  if(cardRewardPickMode){
+    resolveCardRewardPick(key);
+    return;
+  }
   if(!S || !S.rewardOpen) return;
   const card = CARD_DB[key];
   if(!card) return;
@@ -1230,6 +1236,10 @@ function chooseRewardCard(key){
 }
 
 function skipRewardCard(){
+  if(cardRewardPickMode){
+    if(typeof toast === "function") toast("카드를 선택해야 은혜를 완료할 수 있습니다.");
+    return;
+  }
   if(!S || !S.rewardOpen) return;
   if(S.victoryCardRewardOpen){
     finishBattleVictoryCardReward();
@@ -1658,6 +1668,53 @@ function renderRewardOverlay(keys){
   );
   ov.classList.add("show");
 }
+
+function openCardRewardPick(options = {}){
+  const keys = Array.isArray(options.keys) ? options.keys.filter(key => CARD_DB[key]) : [];
+  if(keys.length === 0) return Promise.resolve(null);
+
+  return new Promise(resolve => {
+    cardRewardPickMode = {
+      resolve,
+      onChoose: typeof options.onChoose === "function" ? options.onChoose : null,
+      title: options.title || "정화 보상",
+      desc: options.desc || "새로운 주문 1장을 선택해 덱에 추가하세요."
+    };
+
+    const ov = ensureRewardOverlay();
+    const title = ov.querySelector(".reward-panel h2");
+    const desc = ov.querySelector(".reward-panel p");
+    const skip = ov.querySelector(".reward-skip");
+    if(title) title.textContent = cardRewardPickMode.title;
+    if(desc) desc.textContent = cardRewardPickMode.desc;
+    if(skip) skip.style.display = "none";
+    renderRewardOverlay(keys);
+  });
+}
+
+function resolveCardRewardPick(key){
+  const mode = cardRewardPickMode;
+  const card = CARD_DB[key];
+  if(!mode || !card) return;
+  try {
+    if(mode.onChoose) mode.onChoose(key);
+  } catch(error) {
+    console.warn("[CardReward] 선택 보상 처리 중 오류가 발생했습니다.", error);
+  }
+  cardRewardPickMode = null;
+  const ov = ensureRewardOverlay();
+  const title = ov.querySelector(".reward-panel h2");
+  const desc = ov.querySelector(".reward-panel p");
+  const skip = ov.querySelector(".reward-skip");
+  if(title) title.textContent = "정화 보상";
+  if(desc) desc.textContent = "새로운 주문 1장을 선택해 덱에 추가하세요.";
+  if(skip) skip.style.display = "";
+  closeRewardOverlay();
+  if(typeof toast === "function") toast(card.name + " 획득");
+  mode.resolve(key);
+}
+
+window.OPEN_CARD_REWARD_PICK = openCardRewardPick;
 
 function rewardCardHtml(key){
   const c = CARD_DB[key];
