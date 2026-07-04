@@ -20,7 +20,7 @@
 .bm-store-panel{
   position:relative;
   width:min(82cqw,128cqh);
-  max-height:84cqh;
+  height:84cqh;
   display:flex;
   flex-direction:column;
   gap:1.4cqh;
@@ -416,7 +416,7 @@
 @media (max-width:720px){
   .bm-store-panel{
     width:92cqw;
-    max-height:86cqh;
+    height:86cqh;
     padding:2cqh 1.8cqw 1.4cqh;
   }
   .bm-store-title-ornament{ display:none; }
