@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="eventNode.css">
 <link rel="stylesheet" href="auth.css">
 <link rel="stylesheet" href="mailbox.css">
+<link rel="stylesheet" href="wallet.css">
 </head>
 <body>
 
@@ -48,6 +49,11 @@
         <span class="start-mailbox-icon" aria-hidden="true">🎁</span>
         <span class="start-mailbox-label">선물함</span>
         <span class="mailbox-badge" hidden>0</span>
+      </button>
+      <button type="button" class="start-moon-wallet" hidden aria-label="달빛조각 보유량">
+        <span class="start-moon-icon" aria-hidden="true">🌙</span>
+        <span class="start-moon-count">0</span>
+        <span class="start-moon-plus" aria-hidden="true">＋</span>
       </button>
     </div>
 
@@ -170,7 +176,9 @@
 <script src="authService.js" defer></script>
 <script src="loginModal.js" defer></script>
 <script src="mailboxService.js" defer></script>
+<script src="walletService.js" defer></script>
 <script src="mailboxUI.js" defer></script>
+<script src="walletUI.js" defer></script>
 <script src="startMenu.js" defer></script>
 <script src="tutorialDialogueData.js" defer></script>
 <script src="tutorialSystem.js" defer></script>
