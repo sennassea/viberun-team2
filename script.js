@@ -2511,11 +2511,9 @@ function spawnFloat(sel, text, kind){
   setTimeout(() => el.remove(), 900);
 }
 
-let toastT;
-function toast(msg){
-  const t = $("#toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1200);
+/* 전역 토스트는 모든 모달/오버레이보다 위에 떠야 하므로 toastService.js의 전역 레이어를 통해 표시합니다. */
+function toast(msg, type){
+  if(typeof window.showToast === "function") window.showToast(msg, type);
 }
 function flashEnergy(){ const e=$("#energy"); e.classList.add("flash"); setTimeout(()=>e.classList.remove("flash"),350); }
 const wait = ms => new Promise(r => setTimeout(r, ms));
