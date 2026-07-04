@@ -269,7 +269,7 @@ function getTutorialMapCurrentLabel(currentNodeId) {
   if(currentNodeId === "tutorial_battle" || (window.MAP_STATE && window.MAP_STATE.currentStage === 0)){
     return "튜토리얼 구역";
   }
-  return "집";
+  return "튜토리얼";
 }
 
 /* ── renderCanvas 오버라이드 ────────────────────────────────────────────── */
@@ -461,7 +461,11 @@ function buildOverlay() {
           <span>현재 위치</span>
           <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
         </div>
-        <span class="map-title dmap-title">🗺️ 여정</span>
+        <span class="map-title dmap-title" aria-label="여정">
+          <span class="dmap-title-emoji" aria-hidden="true">🗺️</span>
+          <span class="dmap-title-char dmap-title-left" aria-hidden="true">여</span>
+          <span class="dmap-title-char dmap-title-right" aria-hidden="true">정</span>
+        </span>
         <button class="map-close dmap-close" id="mapClose" aria-label="닫기">✕</button>
       </div>
       <div class="map-body dmap-body">
@@ -480,9 +484,9 @@ function buildOverlay() {
       </div>
       <div class="dmap-bottom">
         <div class="dmap-action-bar">
-          <button class="dmap-action-btn" id="dMapDeckBtn">📖 보유 주문</button>
-          <button class="dmap-action-btn" id="dMapItemBtn">🎒 가방</button>
-          <button class="dmap-action-btn" id="dMapSettingsBtn">⚙️ 설정</button>
+          <button class="dmap-action-btn ui-asset-button ui-codex-button" id="dMapDeckBtn">📖 보유 주문</button>
+          <button class="dmap-action-btn ui-asset-button ui-bag-button" id="dMapItemBtn">🎒 가방</button>
+          <button class="dmap-action-btn ui-asset-button ui-settings-button" id="dMapSettingsBtn">⚙️ 설정</button>
         </div>
         <div class="map-footer dmap-footer" id="mapFooter"></div>
       </div>

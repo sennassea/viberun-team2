@@ -45,8 +45,6 @@
     openMap();
     const overlay = document.getElementById("mapOverlay");
     if(overlay) overlay.classList.add("tutorial-map-mode");
-    const title = document.querySelector("#mapOverlay .map-title");
-    if(title) title.textContent = "🗺️ 튜토리얼 여정";
     startTutorialMapIntro();
   }
 
@@ -75,7 +73,7 @@
       [],
       [],
       [],
-      [{ id: "start", type: "start", emoji: "🚪", label: "집" }],
+      [{ id: "start", type: "start", emoji: "🚪", label: "튜토리얼" }],
       [{ id: "tutorial_battle", type: "enemy", emoji: "👺", label: "튜토리얼 구역", stageIndex: 0 }],
       [],
       [],
@@ -211,9 +209,9 @@
         isolation:isolate;
         opacity:1 !important;
         filter:none !important;
-        background:rgba(244,248,252,.98) !important;
-        border-color:#ffd25f !important;
-        box-shadow:0 0 0 .36cqh #ffd25f,0 0 2.4cqh rgba(255,210,95,.95),0 1cqh 2.4cqh rgba(20,35,60,.26) !important;
+        background:transparent !important;
+        border-color:transparent !important;
+        box-shadow:none !important;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-panel{
         position:relative;
