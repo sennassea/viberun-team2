@@ -74,6 +74,20 @@ function closeSbOverlay(){
   showSbChrome();
 }
 
+/* ── startStage 후킹 (restNode.js와 동일한 override 패턴) ─────────────────
+   은혜 선택 직후에는 여정(맵) 오버레이가 신령의 은혜 화면 위에 반투명하게
+   떠 있는 상태를 유지해야 한다(플레이어가 맵만 닫고 은혜 화면으로 돌아올
+   수도 있으므로). 실제 전투/노드 진입이 확정되는 startStage 시점에만
+   신령의 은혜 화면을 닫고 전투 크롬을 복원해, 맵이 열리는 순간 아직
+   초기화되지 않은 전투 화면이 잠깐 노출되는 문제를 막는다. */
+const SB_ORIGINAL_START_STAGE = window.startStage;
+if(typeof SB_ORIGINAL_START_STAGE === "function"){
+  window.startStage = function(stageIdx){
+    if(sbOverlayEl && sbOverlayEl.classList.contains("show")) closeSbOverlay();
+    return SB_ORIGINAL_START_STAGE(stageIdx);
+  };
+}
+
 function hideSbChrome(){
   SB_HIDE_SELECTORS.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
@@ -130,7 +144,9 @@ function selectSbBlessing(blessing){
 
   applySbBlessing(blessing);
   saveSbSpiritToRunState();
-  closeSbOverlay();
+  /* 신령의 은혜 화면은 여기서 닫지 않는다. 여정(맵) 오버레이가 그 위에
+     반투명하게 떠야 하므로(플레이어가 맵만 닫고 은혜 화면으로 돌아올 수도
+     있음), 실제 전투 진입 시점(startStage 후킹)에서만 배경을 정리한다. */
   if(typeof toast === "function") toast(blessing.name + "의 은혜를 받았습니다.");
 
   if(window.MAP_STATE){
