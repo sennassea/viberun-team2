@@ -12,7 +12,7 @@
     googlePlay: {
       accountType: "Google Play",
       bridgeMethod: "signInGooglePlay",
-      message: "Google Play 로그인 SDK 또는 앱 브리지가 연결되지 않았습니다."
+      message: "Google Play 로그인은 Android 모바일 빌드에서 사용할 수 있습니다."
     },
     facebook: {
       accountType: "Facebook",

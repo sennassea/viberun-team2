@@ -17,6 +17,7 @@
     cancelCallback = typeof config.onCancel === "function" ? config.onCancel : null;
 
     if(!modal) modal = createModal();
+    clearLoginMessage();
     modal.classList.add("show");
     modal.setAttribute("aria-hidden", "false");
     const guestButton = modal.querySelector(".auth-login-guest");
@@ -53,6 +54,7 @@
           '<button type="button" class="auth-login-button auth-login-facebook">Facebook</button>' +
           '<button type="button" class="auth-login-button auth-login-guest">Guest로 시작</button>' +
         '</div>' +
+        '<div class="auth-login-message" role="alert" aria-live="polite"></div>' +
         '<p class="auth-login-note">Guest 계정은 앱/브라우저 데이터 삭제 시 복구할 수 없습니다.</p>' +
       '</div>';
 
@@ -91,22 +93,24 @@
 
   /* Guest 선택 시 authService에 세션 생성을 맡기고, 성공 후 원래 게임 흐름 콜백을 실행합니다. */
   function signInGuest(){
+    clearLoginMessage();
     if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.signInGuest !== "function"){
-      showMessage("로그인 서비스를 불러올 수 없습니다.");
+      showLoginMessage("로그인 서비스를 불러올 수 없습니다.", "error");
       return;
     }
 
     try {
       const result = window.VIBERUN_AUTH.signInGuest();
       if(!result || !result.ok){
-        showMessage((result && result.message) || "Guest 로그인에 실패했습니다.");
+        showLoginMessage((result && result.message) || "게스트 계정 연동에 실패했습니다.", "error");
         return;
       }
 
+      clearLoginMessage();
       finishLoginSuccess();
     } catch(error) {
       console.warn("[Auth] Guest 로그인 처리 중 오류가 발생했습니다.", error);
-      showMessage("Guest 로그인에 실패했습니다.");
+      showLoginMessage("게스트 계정 연동에 실패했습니다.", "error");
     }
   }
 
@@ -120,38 +124,75 @@
 
   /* 외부 SDK/앱 브리지 로그인은 비동기일 수 있으므로 Promise로 감싸 결과를 표준 처리합니다. */
   function signInProvider(methodName, label){
+    clearLoginMessage();
     if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH[methodName] !== "function"){
-      showMessage(label + " 로그인 서비스를 불러올 수 없습니다.");
+      showLoginMessage(label + " 로그인 서비스를 불러올 수 없습니다.", "error");
       return;
     }
 
     setPending(true);
     Promise.resolve(window.VIBERUN_AUTH[methodName]()).then(result => {
       if(!result || !result.ok){
-        showMessage((result && result.message) || (label + " 로그인에 실패했습니다."));
+        const message = normalizeLoginErrorMessage(result, label);
+        showLoginMessage(message.text, message.type);
         return;
       }
 
+      clearLoginMessage();
       finishLoginSuccess();
     }).catch(error => {
       console.warn("[Auth] " + label + " 로그인 처리 중 오류가 발생했습니다.", error);
-      showMessage(label + " 로그인에 실패했습니다.");
+      const message = normalizeLoginErrorMessage({ message: error && error.message }, label);
+      showLoginMessage(message.text, message.type);
     }).finally(() => {
       setPending(false);
     });
   }
 
-  /* 기존 toast가 있으면 재사용하고, 초기 로딩 상황에서는 시작 화면 알림/alert로 안전하게 대체합니다. */
-  function showMessage(message){
-    if(typeof toast === "function"){
-      toast(message);
+  /* SDK별 실패 원인을 사용자가 이해하기 쉬운 고정 문구로 정리합니다. */
+  function normalizeLoginErrorMessage(result, label){
+    const rawMessage = result && result.message ? String(result.message) : "";
+    if(rawMessage.includes("Android 모바일 빌드")){
+      return { text: "Google Play 로그인은 Android 모바일 빌드에서 사용할 수 있습니다.", type: "info" };
+    }
+    if(rawMessage.includes("취소")){
+      return { text: "로그인이 취소되었습니다.", type: "info" };
+    }
+    if(rawMessage.includes("이미") && rawMessage.includes("연결")){
+      return { text: "이미 다른 계정에 연결된 로그인입니다.", type: "error" };
+    }
+    if(rawMessage.includes("서버") || rawMessage.includes("네트워크")){
+      return { text: "서버와 연결할 수 없습니다. 네트워크 상태를 확인해 주세요.", type: "error" };
+    }
+    if(label === "Facebook"){
+      return { text: "Facebook 로그인에 실패했습니다. 다시 시도해 주세요.", type: "error" };
+    }
+    if(label === "Google Play"){
+      return { text: "Google Play 로그인에 실패했습니다. 다시 시도해 주세요.", type: "error" };
+    }
+    return { text: rawMessage || "로그인에 실패했습니다. 다시 시도해 주세요.", type: "error" };
+  }
+
+  /* 로그인 관련 안내는 전역 toast 대신 모달 내부에 표시해 오버레이 뒤로 가려지지 않게 합니다. */
+  function showLoginMessage(message, type){
+    const messageEl = modal && modal.querySelector(".auth-login-message");
+    if(!messageEl){
+      console.warn("[LoginModal] message element not found:", message);
       return;
     }
-    if(typeof showStartNotice === "function"){
-      showStartNotice(message);
-      return;
-    }
-    window.alert(message);
+
+    messageEl.textContent = message;
+    messageEl.classList.add("is-visible");
+    messageEl.classList.toggle("auth-login-message--error", type !== "info");
+    messageEl.classList.toggle("auth-login-message--info", type === "info");
+  }
+
+  function clearLoginMessage(){
+    const messageEl = modal && modal.querySelector(".auth-login-message");
+    if(!messageEl) return;
+
+    messageEl.textContent = "";
+    messageEl.classList.remove("is-visible", "auth-login-message--error", "auth-login-message--info");
   }
 
   window.VIBERUN_LOGIN_MODAL = {
