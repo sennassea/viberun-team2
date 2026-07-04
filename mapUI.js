@@ -486,7 +486,6 @@ function buildOverlay() {
         <div class="dmap-action-bar">
           <button class="dmap-action-btn ui-asset-button ui-codex-button" id="dMapDeckBtn">📖 보유 주문</button>
           <button class="dmap-action-btn ui-asset-button ui-bag-button" id="dMapItemBtn">🎒 가방</button>
-          <button class="dmap-action-btn mailbox-trigger-button" id="dMapMailboxBtn">🎁 선물함<span class="mailbox-badge" hidden>0</span></button>
           <button class="dmap-action-btn ui-asset-button ui-settings-button" id="dMapSettingsBtn">⚙️ 설정</button>
         </div>
         <div class="map-footer dmap-footer" id="mapFooter"></div>
@@ -518,19 +517,6 @@ function buildOverlay() {
     // 예외 상황: bagUI.js 로드 실패 또는 전역 함수 누락
     const footer = document.getElementById("mapFooter");
     if (footer) footer.textContent = "가방 기능을 불러올 수 없습니다. bagUI.js 로드 상태를 확인하세요.";
-  });
-
-  /* 선물함 확인: 기존 선물함 UI 열기 */
-  div.querySelector("#dMapMailboxBtn").addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMapPopupViews("mailbox");
-    if (window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.open === "function") {
-      window.VIBERUN_MAILBOX_UI.open({ mode: "map" });
-      return;
-    }
-    const footer = document.getElementById("mapFooter");
-    if (footer) footer.textContent = "선물함 기능을 불러올 수 없습니다. mailboxUI.js 로드 상태를 확인하세요.";
   });
 
   /* 설정: 기존 설정 버튼 트리거 */
