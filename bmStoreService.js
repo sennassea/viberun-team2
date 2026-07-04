@@ -3,8 +3,8 @@
 /* =========================================================================
    BM Store Service
    - 월영당 상품 목록 제공과 패키지 구매 처리를 담당합니다.
-   - 구매는 accountId 기준 dummyInventory에만 저장되며 카드/법구/골드/포션/전투 보상과
-     연결하지 않습니다.
+   - 구매 즉시 dummyInventory/wallet.moonShards로 보상을 지급하지 않으며, 서버가 구매 상품을
+     선물함 구매 메일로 생성합니다. 실제 지급은 선물함에서 수령할 때만 이뤄집니다.
    - wallet.moonShards는 walletService의 캐시/이벤트와 동기화해 메인/선물함/BM UI가
      같은 수량을 표시하도록 유지합니다.
    ========================================================================= */
@@ -171,7 +171,8 @@
   }
 
   /* 패키지/주문 팩 공통 구매 처리입니다.
-     wallet 확인 → 서버 요청 → dummyInventory/wallet 동기화 흐름은 동일하게 재사용합니다. */
+     wallet 확인 → 서버 요청 → wallet 동기화 흐름은 동일하게 재사용하며, 실제 보상은
+     서버가 생성한 선물함 구매 메일(result.mail)을 통해서만 지급됩니다. */
   function purchaseFromCatalog(productId, product, endpointBase){
     const account = getAuthAccount();
     if(!account){
@@ -216,7 +217,6 @@
           return result || { ok: false, message: "구매에 실패했습니다." };
         }
 
-        if(Array.isArray(result.dummyInventory)) cachedDummyInventory = result.dummyInventory.slice();
         if(result.wallet) result.wallet = syncWallet(result.wallet);
         return result;
       });

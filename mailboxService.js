@@ -88,9 +88,16 @@
     return requestMailboxJson("/mailbox/claim-all", { method: "POST" });
   }
 
+  /* POST /mailbox/{mailId}/refund → { refundedMailId, mail, wallet }
+     수령 전 구매 상품에 한해 7일 이내 청약철회를 요청합니다. */
+  function refundMail(mailId){
+    return requestMailboxJson("/mailbox/" + encodeURIComponent(mailId) + "/refund", { method: "POST" });
+  }
+
   window.VIBERUN_MAILBOX = {
     fetchList: fetchMailboxList,
     claim: claimMail,
-    claimAll: claimAllMail
+    claimAll: claimAllMail,
+    refund: refundMail
   };
 })();

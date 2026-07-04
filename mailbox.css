@@ -71,6 +71,23 @@
 }
 .mailbox-claim-btn:disabled{ background:#e6e9ee; color:var(--c-ink-soft); cursor:default; border-color:var(--c-panel-line); }
 
+/* 월영당 구매 상품 카드 전용 스타일입니다. */
+.mailbox-item-purchase{ align-items:stretch; border-color:rgba(231,181,74,.5); }
+.mailbox-item-purchase.refunded{ opacity:.55; }
+.mailbox-item-purchase-tag{
+  align-self:flex-start; font-size:1.15cqh; font-weight:900; color:var(--c-gold-deep);
+  background:rgba(231,181,74,.14); border-radius:.7cqh; padding:.2cqh .7cqw; margin-bottom:.3cqh;
+}
+.mailbox-item-purchase-meta{
+  display:flex; flex-wrap:wrap; gap:.8cqw; font-size:1.3cqh; font-weight:800; color:var(--c-ink-soft);
+}
+.mailbox-item-reward-label{ color:var(--c-ink-soft); font-weight:800; }
+.mailbox-item-actions{ flex:none; display:flex; flex-direction:column; gap:.6cqh; }
+.mailbox-refund-btn{
+  flex:none; height:4.4cqh; min-width:8cqw; border-radius:1cqh; border:0.2cqh solid var(--c-red-deep);
+  background:#fff; color:var(--c-red-deep); font:inherit; font-size:1.5cqh; font-weight:900; cursor:pointer;
+}
+
 .mailbox-ui-actions{ flex:none; display:flex; gap:1cqw; }
 .mailbox-claim-all-btn{
   flex:1; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);

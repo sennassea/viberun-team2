@@ -8,7 +8,8 @@
    ========================================================================= */
 (function(){
   const READY_MESSAGE = "해당 탭은 준비 중입니다.";
-  const SUCCESS_SUFFIX = "을 구매했습니다. 테스트용 더미 아이템이 지급되었습니다.";
+  const PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 수령할 수 있습니다.";
+  const MOON_CHARGE_SUCCESS_MESSAGE = "테스트 구매가 완료되었습니다. 선물함에서 달빛조각을 수령할 수 있습니다.";
   const MOON_CHARGE_NOTICE = "테스트 구매입니다. 실제 결제가 발생하지 않습니다.";
   const RECOMMENDED_NOTICE = "운영자가 추천하는 특별 상품입니다.";
   const RECOMMENDED_CASH_NOTICE = "테스트 구매 상품은 실제 결제가 발생하지 않습니다.";
@@ -206,15 +207,17 @@
       if(result.wallet) state.wallet = result.wallet;
       render();
 
+      if(window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.refreshBadge === "function"){
+        window.VIBERUN_MAILBOX_UI.refreshBadge();
+      }
+
       const product = findProductById(productId);
       if(product && product.rewardType === "moon_shard"){
-        const amount = Number(result.rewardAmount != null ? result.rewardAmount : product.rewardAmount) || 0;
-        showToastMessage("테스트 구매 완료: 달빛조각 " + formatCount(amount) + "개를 획득했습니다.", "success");
+        showToastMessage(MOON_CHARGE_SUCCESS_MESSAGE, "success");
         return;
       }
 
-      const productName = result.product && result.product.name ? result.product.name : findProductName(productId);
-      showToastMessage(productName + SUCCESS_SUFFIX, "success");
+      showToastMessage(PURCHASE_SUCCESS_MESSAGE, "success");
     }).catch(error => {
       console.warn("[BMStoreUI] 패키지 구매 중 오류가 발생했습니다.", error);
       purchasingProductId = "";
@@ -225,11 +228,6 @@
 
   function findProductById(productId){
     return state.products.find(product => product.id === productId) || null;
-  }
-
-  function findProductName(productId){
-    const found = findProductById(productId);
-    return found ? found.name : "상품";
   }
 
   function render(){
