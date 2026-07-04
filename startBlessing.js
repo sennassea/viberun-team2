@@ -74,6 +74,20 @@ function closeSbOverlay(){
   showSbChrome();
 }
 
+/* ── startStage 후킹 (restNode.js와 동일한 override 패턴) ─────────────────
+   은혜 선택 직후에는 여정(맵) 오버레이가 신령의 은혜 화면 위에 반투명하게
+   떠 있는 상태를 유지해야 한다(플레이어가 맵만 닫고 은혜 화면으로 돌아올
+   수도 있으므로). 실제 전투/노드 진입이 확정되는 startStage 시점에만
+   신령의 은혜 화면을 닫고 전투 크롬을 복원해, 맵이 열리는 순간 아직
+   초기화되지 않은 전투 화면이 잠깐 노출되는 문제를 막는다. */
+const SB_ORIGINAL_START_STAGE = window.startStage;
+if(typeof SB_ORIGINAL_START_STAGE === "function"){
+  window.startStage = function(stageIdx){
+    if(sbOverlayEl && sbOverlayEl.classList.contains("show")) closeSbOverlay();
+    return SB_ORIGINAL_START_STAGE(stageIdx);
+  };
+}
+
 function hideSbChrome(){
   SB_HIDE_SELECTORS.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
@@ -98,11 +112,17 @@ function showSbChrome(){
 function openSbMapPreview(){
   if(!window.MAP_STATE || typeof openMap !== "function") return;
   window.MAP_STATE.currentStage = -1;
-  window.MAP_STATE.proceedMode  = false;  // 은혜 선택 전: 노드 이동 불가(읽기 전용)
+  /* 은혜 선택 전: 노드 이동 불가(읽기 전용). 은혜를 이미 골랐다면(sbResolved)
+     신령의 은혜 화면 위로 다시 연 여정도 정상적으로 다음 노드를 고를 수 있어야 한다. */
+  window.MAP_STATE.proceedMode  = sbResolved;
   window.MAP_STATE.startMapMode = false;
   openMap();
   const footer = document.getElementById("mapFooter");
-  if(footer) footer.textContent = "은혜를 선택하면 다음 노드를 고를 수 있습니다.";
+  if(footer){
+    footer.textContent = sbResolved
+      ? "⬆️ 다음 스테이지를 클릭하여 진행하세요"
+      : "은혜를 선택하면 다음 노드를 고를 수 있습니다.";
+  }
 }
 
 function openSbDeck(){
@@ -130,7 +150,9 @@ function selectSbBlessing(blessing){
 
   applySbBlessing(blessing);
   saveSbSpiritToRunState();
-  closeSbOverlay();
+  /* 신령의 은혜 화면은 여기서 닫지 않는다. 여정(맵) 오버레이가 그 위에
+     반투명하게 떠야 하므로(플레이어가 맵만 닫고 은혜 화면으로 돌아올 수도
+     있음), 실제 전투 진입 시점(startStage 후킹)에서만 배경을 정리한다. */
   if(typeof toast === "function") toast(blessing.name + "의 은혜를 받았습니다.");
 
   if(window.MAP_STATE){
@@ -248,13 +270,14 @@ function sbOverlayHtml(){
       '<button type="button" class="sb-menu-btn" id="sbBagBtn"><span class="sb-menu-ico">🎒</span><span>가방</span></button>' +
       '<button type="button" class="sb-menu-btn" id="sbSettingsBtn"><span class="sb-menu-ico">⚙️</span><span>설정</span></button>' +
     '</div>' +
-    '<div class="sb-header">' +
+    '<div class="sb-title-row">' +
       '<div class="sb-title">신령의 은혜</div>' +
-      '<div class="sb-subtitle">병동에 들기 전, 신령이 은혜를 내립니다.</div>' +
+    '</div>' +
+    '<div class="sb-header">' +
+      '<div class="sb-subtitle">여정을 떠나기 전, 신령이 은혜를 내립니다.</div>' +
       '<div class="sb-dialogue" id="sbDialogue"></div>' +
     '</div>' +
     '<div class="sb-scene">' +
-      '<div class="sb-player" id="sbPlayerEmoji"></div>' +
       '<div class="sb-spirit" id="sbSpiritEmoji"></div>' +
     '</div>' +
     '<div class="sb-choices" id="sbChoices"></div>'
@@ -286,9 +309,6 @@ function renderSbOverlay(){
   sbOverlayEl.querySelector("#sbSpiritEmoji").innerHTML = sbSpiritVisualHtml(sbSpirit);
   sbOverlayEl.querySelector("#sbDialogue").textContent    = '"' + sbSpirit.dialogue + '"';
 
-  const playerEmoji = (typeof PLAYER_DEF !== "undefined" && PLAYER_DEF && PLAYER_DEF.emoji) || "👼";
-  sbOverlayEl.querySelector("#sbPlayerEmoji").textContent = playerEmoji;
-
   const choices = sbOverlayEl.querySelector("#sbChoices");
   choices.innerHTML = START_BLESSINGS.map(sbChoiceHtml).join("");
   choices.querySelectorAll(".sb-card[data-id]").forEach(card => {
@@ -307,7 +327,7 @@ function ensureSbStyles(){
   style.id = "startBlessingStyles";
   style.textContent =
     ".sb-overlay{position:absolute;inset:0;z-index:45;display:none;flex-direction:column;" +
-      "padding:1.6cqh 2cqw 3cqh;color:#eee6cf;font-family:inherit;" +
+      "padding:1.6cqh 2cqw 2cqh;color:#eee6cf;font-family:inherit;" +
       "background-image:radial-gradient(120% 70% at 50% 0%,rgba(30,55,65,.38) 0%,rgba(14,28,38,.62) 45%,rgba(6,12,20,.76) 100%),url('assets/background/shrine_01_main.jpg');" +
       "background-size:cover;background-position:center;background-repeat:no-repeat;}" +
     ".sb-overlay.show{display:flex;}" +
@@ -318,27 +338,27 @@ function ensureSbStyles(){
     ".sb-menu-btn .sb-menu-ico{font-size:3.1cqh;line-height:1;}" +
     ".sb-menu-btn span:last-child{display:none;}" +
     ".sb-menu-btn:active{transform:scale(.94);}" +
-    ".sb-header{flex:none;text-align:center;padding-top:2.6cqh;}" +
-    ".sb-title{font-size:4.2cqh;font-weight:900;letter-spacing:.3cqh;color:#f1d98c;text-shadow:0 0 1.2cqh rgba(230,190,110,.55);}" +
-    ".sb-subtitle{margin-top:.8cqh;font-size:1.5cqh;color:#cfe3df;font-weight:700;}" +
-    ".sb-dialogue{margin-top:.6cqh;font-size:1.6cqh;color:#9fd8c9;font-weight:800;}" +
-    ".sb-scene{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:6cqw;}" +
-    ".sb-player,.sb-spirit{width:16cqh;height:16cqh;border-radius:50%;display:grid;place-items:center;font-size:8cqh;" +
-      "background:radial-gradient(circle,rgba(80,150,170,.28),rgba(10,20,30,.12));border:.2cqh solid rgba(150,200,190,.35);}" +
-    ".sb-spirit{width:34cqh;height:54cqh;font-size:10cqh;border:none;background:transparent;box-shadow:none;overflow:visible;}" +
+    ".sb-title-row{flex:none;text-align:center;padding-top:1.4cqh;}" +
+    ".sb-title{font-size:4.4cqh;font-weight:900;letter-spacing:.3cqh;color:#f1d98c;text-shadow:0 0 1.2cqh rgba(230,190,110,.55);}" +
+    ".sb-header{flex:none;text-align:center;padding-top:1cqh;display:flex;flex-direction:column;align-items:center;gap:.7cqh;}" +
+    ".sb-subtitle,.sb-dialogue{display:inline-block;}" +
+    ".sb-subtitle{font-size:2cqh;color:#cfe3df;font-weight:700;}" +
+    ".sb-dialogue{font-size:2.15cqh;color:#9fd8c9;font-weight:800;}" +
+    ".sb-scene{flex:1;min-height:0;display:flex;align-items:flex-end;justify-content:center;}" +
+    ".sb-spirit{width:51cqh;height:82cqh;font-size:14cqh;display:grid;place-items:center;" +
+      "transform:translateY(7cqh);border:none;background:transparent;box-shadow:none;overflow:visible;}" +
     ".sb-spirit img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 1.2cqh 1.6cqh rgba(0,0,0,.45)) drop-shadow(0 0 1.8cqh rgba(180,220,255,.2));}" +
-    ".sb-choices{flex:none;display:flex;justify-content:center;gap:1.8cqw;padding:0 2cqw;}" +
-    ".sb-card{position:relative;flex:1;max-width:22cqw;min-height:34cqh;display:flex;flex-direction:column;align-items:center;" +
-      "gap:.9cqh;padding:2.6cqh 1.2cqw 1.6cqh;background:linear-gradient(180deg,rgba(20,45,55,.85),rgba(10,22,30,.9));" +
+    ".sb-choices{flex:none;position:relative;z-index:2;display:flex;justify-content:center;gap:10cqw;padding:0 2cqw;margin-top:-20cqh;}" +
+    ".sb-card{position:relative;flex:1;max-width:17cqw;min-height:34cqh;display:flex;flex-direction:column;align-items:center;" +
+      "gap:.9cqh;padding:2.8cqh 1.4cqw 1.8cqh;background:linear-gradient(180deg,rgba(20,45,55,.85),rgba(10,22,30,.9));" +
       "border:.22cqh solid rgba(210,175,90,.45);border-radius:1.6cqh;cursor:pointer;font:inherit;color:#eee6cf;" +
       "box-shadow:0 .8cqh 1.6cqh rgba(0,0,0,.35);transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease;}" +
     ".sb-card:hover{transform:translateY(-.6cqh);border-color:#f1d98c;box-shadow:0 1.1cqh 2.2cqh rgba(0,0,0,.45);}" +
     ".sb-card-num{position:absolute;top:-1.6cqh;width:3.4cqh;height:3.4cqh;border-radius:50%;display:grid;place-items:center;" +
       "background:linear-gradient(180deg,#f1d98c,#c99a3f);color:#2a1d08;font-weight:900;font-size:1.7cqh;border:.18cqh solid #fff3d0;}" +
-    ".sb-card-icon{font-size:4.4cqh;}" +
-    ".sb-card-name{font-size:2cqh;font-weight:900;}" +
-    ".sb-card-desc{flex:1;font-size:1.3cqh;color:#cfe3df;text-align:center;line-height:1.4;font-weight:700;}" +
-    "@media (max-width:900px){.sb-choices{flex-direction:column;align-items:stretch;}.sb-card{max-width:none;min-height:auto;}" +
-      ".sb-scene{gap:3cqw;}}";
+    ".sb-card-icon{font-size:4cqh;}" +
+    ".sb-card-name{font-size:1.8cqh;font-weight:900;}" +
+    ".sb-card-desc{flex:1;font-size:1.2cqh;color:#cfe3df;text-align:center;line-height:1.4;font-weight:700;}" +
+    "@media (max-width:900px){.sb-choices{flex-direction:column;align-items:stretch;}.sb-card{max-width:none;min-height:auto;}}";
   document.head.appendChild(style);
 }
