@@ -154,6 +154,13 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .top-menu-button{width:8.2cqh; height:100%; justify-content:center; padding:0; font-size:3.1cqh;}
 .top-menu-button.stat{gap:.25cqw; font-size:2.6cqh;}
 .top-menu-button #hudDeck{display:none;}
+.ui-asset-button{position:relative;background-color:transparent;background-position:center;background-repeat:no-repeat;background-size:contain;border:0;box-shadow:none;font-size:0;color:transparent;}
+.ui-asset-button::before{content:"";position:absolute;inset:0;background-position:center;background-repeat:no-repeat;background-size:contain;pointer-events:none;}
+.ui-map-button::before{background-image:url("assets/ui_buttons/map.png");}
+.ui-bag-button::before{background-image:url("assets/ui_buttons/bag.png");}
+.ui-settings-button::before{background-image:url("assets/ui_buttons/settings.png");}
+.start-codex-button{position:relative;background-image:url("assets/ui_buttons/codex.png");background-position:1.2cqh center;background-repeat:no-repeat;background-size:5.8cqh 5.8cqh;padding-left:6.8cqh;}
+.start-settings-button{position:relative;background-image:url("assets/ui_buttons/settings.png");background-position:1.2cqh center;background-repeat:no-repeat;background-size:5.8cqh 5.8cqh;padding-left:6.8cqh;}
 .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
   clip:rect(0,0,0,0); white-space:nowrap; border:0;}
 .progress-center-hud{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
