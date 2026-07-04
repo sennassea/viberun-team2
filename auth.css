@@ -79,6 +79,30 @@
   color:#fff;
   border-color:rgba(31,95,165,.36);
 }
+.auth-login-message{
+  display:none;
+  margin-top:1.2cqh;
+  padding:1cqh 1cqw;
+  border-radius:1cqh;
+  font-size:1.45cqh;
+  font-weight:900;
+  line-height:1.42;
+  text-align:center;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+.auth-login-message.is-visible{display:block;}
+.auth-login-message--error{
+  color:var(--c-red-deep);
+  background:rgba(255,241,239,.94);
+  border:.16cqh solid rgba(168,46,46,.28);
+}
+.auth-login-message--info{
+  color:var(--c-blue-deep);
+  background:rgba(232,242,255,.94);
+  border:.16cqh solid rgba(31,95,165,.26);
+}
 .auth-login-note{
   margin-top:1.3cqh;
   color:var(--c-red-deep);
@@ -127,6 +151,35 @@
   font-weight:900;
   letter-spacing:0;
   cursor:pointer;
+}
+.settings-account-message{
+  display:none;
+  margin-top:1.2cqh;
+  padding:1cqh 1cqw;
+  border-radius:1cqh;
+  font-size:1.45cqh;
+  font-weight:900;
+  line-height:1.42;
+  text-align:center;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+.settings-account-message.is-visible{display:block;}
+.settings-account-message--error{
+  color:var(--c-red-deep);
+  background:rgba(255,241,239,.94);
+  border:.16cqh solid rgba(168,46,46,.28);
+}
+.settings-account-message--info{
+  color:var(--c-blue-deep);
+  background:rgba(232,242,255,.94);
+  border:.16cqh solid rgba(31,95,165,.26);
+}
+.settings-account-message--success{
+  color:#1f6b3a;
+  background:rgba(232,255,239,.94);
+  border:.16cqh solid rgba(31,107,58,.28);
 }
 .settings-account-login{
   background:var(--c-blue)!important;

@@ -126,6 +126,7 @@
               '<button type="button" class="settings-account-facebook">Facebook 연동</button>' +
               '<button type="button" class="settings-account-logout">로그아웃</button>' +
             '</div>' +
+            '<div class="settings-account-message" role="alert" aria-live="polite"></div>' +
           '</section>' +
           '<div class="settings-viewer-actions">' +
             '<button type="button" class="settings-viewer-danger">전투 포기</button>' +
@@ -273,6 +274,7 @@
       accountGoogle: overlay.querySelector(".settings-account-google"),
       accountFacebook: overlay.querySelector(".settings-account-facebook"),
       accountLogout: overlay.querySelector(".settings-account-logout"),
+      accountMessage: overlay.querySelector(".settings-account-message"),
       volumeInputs: Array.from(overlay.querySelectorAll(".settings-viewer-volume input")),
     };
   }
@@ -460,6 +462,7 @@
     if(danger) danger.style.display = "";
     applyVolumeSettings();
     refreshAccountInfo();
+    clearSettingsAccountMessage();
     pauseCombat();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -490,6 +493,7 @@
     closeLogoutConfirm();
     applyVolumeSettings();
     refreshAccountInfo();
+    clearSettingsAccountMessage();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
     els.close.focus();
@@ -531,17 +535,90 @@
   }
 
   function showGoogleLinkReady(){
-    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInGooglePlay === "function"){
-      window.VIBERUN_AUTH.signInGooglePlay();
-    }
-    if(typeof toast === "function") toast("아직 준비 중입니다.");
+    linkProviderAccount("signInGooglePlay", "Google Play");
   }
 
   function showFacebookLinkReady(){
-    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInFacebook === "function"){
-      window.VIBERUN_AUTH.signInFacebook();
+    linkProviderAccount("signInFacebook", "Facebook");
+  }
+
+  /* 설정 > 계정 정보에서 Guest 계정을 외부 provider 세션으로 승격하고, 성공 시 표시 정보를 즉시 갱신합니다. */
+  function linkProviderAccount(methodName, label){
+    clearSettingsAccountMessage();
+    if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH[methodName] !== "function"){
+      showSettingsAccountMessage(label + " 계정 연동에 실패했습니다. 다시 시도해 주세요.", "error");
+      return;
     }
-    if(typeof toast === "function") toast("아직 준비 중입니다.");
+
+    Promise.resolve(window.VIBERUN_AUTH[methodName]()).then(result => {
+      if(!result || !result.ok){
+        const message = normalizeSettingsAccountMessage(result, label);
+        showSettingsAccountMessage(message.text, message.type);
+        return;
+      }
+
+      refreshAccountInfo();
+      showSettingsAccountMessage("계정 연동이 완료되었습니다.", "success");
+    }).catch(error => {
+      console.warn("[Auth] " + label + " 계정 연동 중 오류가 발생했습니다.", error);
+      const message = normalizeSettingsAccountMessage({ message: error && error.message }, label);
+      showSettingsAccountMessage(message.text, message.type);
+    });
+  }
+
+  /* provider별 원문 오류를 설정 화면 계정 섹션에서 쓰는 짧은 고정 문구로 변환합니다. */
+  function normalizeSettingsAccountMessage(result, label){
+    const rawMessage = result && result.message ? String(result.message) : "";
+    if(rawMessage.includes("Android 모바일 빌드")){
+      return { text: "Google Play 로그인은 Android 모바일 빌드에서 사용할 수 있습니다.", type: "info" };
+    }
+    if(rawMessage.includes("취소")){
+      return { text: "계정 연동이 취소되었습니다.", type: "info" };
+    }
+    if(rawMessage.includes("이미") && rawMessage.includes("연동")){
+      return { text: "이미 연동된 계정입니다.", type: "info" };
+    }
+    if(rawMessage.includes("이미") && rawMessage.includes("연결")){
+      return { text: "이미 다른 계정에 연결된 로그인입니다.", type: "error" };
+    }
+    if(rawMessage.includes("서버") || rawMessage.includes("네트워크")){
+      return { text: "서버와 연결할 수 없습니다. 네트워크 상태를 확인해 주세요.", type: "error" };
+    }
+    if(label === "Facebook"){
+      return { text: "Facebook 계정 연동에 실패했습니다. 다시 시도해 주세요.", type: "error" };
+    }
+    if(label === "Google Play"){
+      return { text: "Google Play 계정 연동에 실패했습니다. 다시 시도해 주세요.", type: "error" };
+    }
+    return { text: rawMessage || "계정 연동에 실패했습니다. 다시 시도해 주세요.", type: "error" };
+  }
+
+  /* 계정 연동 메시지는 전역 toast 대신 설정 모달 내부에 표시해 흐린 오버레이 뒤로 밀리지 않게 합니다. */
+  function showSettingsAccountMessage(message, type){
+    const messageEl = els && els.accountMessage;
+    if(!messageEl){
+      console.warn("[SettingsViewer] account message element not found:", message);
+      return;
+    }
+
+    messageEl.textContent = message;
+    messageEl.classList.add("is-visible");
+    messageEl.classList.toggle("settings-account-message--error", type === "error");
+    messageEl.classList.toggle("settings-account-message--info", type === "info");
+    messageEl.classList.toggle("settings-account-message--success", type === "success");
+  }
+
+  function clearSettingsAccountMessage(){
+    const messageEl = els && els.accountMessage;
+    if(!messageEl) return;
+
+    messageEl.textContent = "";
+    messageEl.classList.remove(
+      "is-visible",
+      "settings-account-message--error",
+      "settings-account-message--info",
+      "settings-account-message--success"
+    );
   }
 
   function openLogoutConfirm(){
