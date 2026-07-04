@@ -1,5 +1,5 @@
 "use strict";
-/* ACT1 법구 데이터 12종 */
+/* ACT1 일반 법구 12종 + 시작 전용 은혜 법구 15종 */
 const RELIC_MASTER_DB = [
   {
     "id": "bronze_incense_burner",
@@ -425,60 +425,21 @@ const RELIC_MASTER_DB = [
       }
     ]
   },
-  {
-    "id": "sealed_talisman",
-    "dataId": "RE016",
-    "name": "봉인 부적",
-    "emoji": "📿",
-    "deck": "은혜",
-    "rarity": "blessing",
-    "obtainFrom": [],
-    "trigger": "none",
-    "target": "self",
-    "desc": "희귀 부적 주문 1장을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.",
-    "effectText": "희귀 부적 주문 1장을 얻습니다.",
-    "valueText": "신령의 은혜: 희귀 주문 획득",
-    "dropWeight": 0,
-    "price": 0,
-    "shopPrice": 0,
-    "fx": []
-  },
-  {
-    "id": "red_thread",
-    "dataId": "RE017",
-    "name": "붉은 실 매듭",
-    "emoji": "🪢",
-    "deck": "은혜",
-    "rarity": "blessing",
-    "obtainFrom": [],
-    "trigger": "none",
-    "target": "self",
-    "desc": "기본 주문 1장을 제거합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.",
-    "effectText": "기본 주문 1장을 제거합니다.",
-    "valueText": "신령의 은혜: 기본 주문 제거",
-    "dropWeight": 0,
-    "price": 0,
-    "shopPrice": 0,
-    "fx": []
-  },
-  {
-    "id": "clear_bell",
-    "dataId": "RE018",
-    "name": "맑은 방울",
-    "emoji": "🔔",
-    "deck": "은혜",
-    "rarity": "blessing",
-    "obtainFrom": [],
-    "trigger": "none",
-    "target": "self",
-    "desc": "첫 전투 시작 시 결계 8을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.",
-    "effectText": "첫 전투 시작 시 결계 8을 얻습니다.",
-    "valueText": "신령의 은혜: 첫 전투 결계 +8",
-    "dropWeight": 0,
-    "price": 0,
-    "shopPrice": 0,
-    "fx": []
-  }
+  { "id":"blessing_relic_01", "dataId":"BR001", "name":"은혜1", "emoji":"🌒", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.", "valueText":"신령의 은혜: 법구 획득, 정신력 -12", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_02", "dataId":"BR002", "name":"은혜2", "emoji":"🃏", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", "valueText":"신령의 은혜: Rare 카드 획득, 상태 카드 추가", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_03", "dataId":"BR003", "name":"은혜3", "emoji":"🪙", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.", "valueText":"신령의 은혜: 복채 +120, 최대 정신력 -8", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_04", "dataId":"BR004", "name":"은혜4", "emoji":"⚗️", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.", "valueText":"신령의 은혜: 약병 +2, 첫 전투 불안 1", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_05", "dataId":"BR005", "name":"은혜5", "emoji":"🏺", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.", "valueText":"신령의 은혜: 법구 획득, 복채 0", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_06", "dataId":"BR006", "name":"은혜6", "emoji":"✂️", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"기본 카드 1장을 선택하여 제거합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"기본 카드 1장을 선택하여 제거합니다.", "valueText":"신령의 은혜: 기본 카드 선택 제거", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_07", "dataId":"BR007", "name":"은혜7", "emoji":"🔀", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.", "valueText":"신령의 은혜: 기본 카드 제거, Common 카드 획득", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_08", "dataId":"BR008", "name":"은혜8", "emoji":"🧹", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.", "valueText":"신령의 은혜: 카드 2장 제거, 복채 0", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_09", "dataId":"BR009", "name":"은혜9", "emoji":"📜", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"Common 카드 3장 중 1장을 선택해 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"Common 카드 3장 중 1장을 선택해 얻습니다.", "valueText":"신령의 은혜: Common 카드 획득", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_10", "dataId":"BR010", "name":"은혜10", "emoji":"🍃", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", "valueText":"신령의 은혜: Common 카드 비용 -1", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_11", "dataId":"BR011", "name":"은혜11", "emoji":"🕯️", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.", "valueText":"신령의 은혜: 일반 전투 3회 첫 적 정신력 1", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_12", "dataId":"BR012", "name":"은혜12", "emoji":"🛡️", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"첫 전투 시작 시 결계 10을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"첫 전투 시작 시 결계 10을 얻습니다.", "valueText":"신령의 은혜: 첫 전투 결계 +10", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_13", "dataId":"BR013", "name":"은혜13", "emoji":"💗", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.", "valueText":"신령의 은혜: 최대 정신력 +8, 회복 +8", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_14", "dataId":"BR014", "name":"은혜14", "emoji":"💰", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"복채 80을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"복채 80을 얻습니다.", "valueText":"신령의 은혜: 복채 +80", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_15", "dataId":"BR015", "name":"은혜15", "emoji":"🧪", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 약병 1개를 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 약병 1개를 얻습니다.", "valueText":"신령의 은혜: 약병 +1", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] }
 ];
 
 /* =========================================================================
@@ -522,6 +483,7 @@ function getRandomRelic(rng = Math.random, source = null, ownedIds = []) {
   const list = Array.isArray(RELIC_DB)
     ? RELIC_DB.filter(item => {
         if (!item || ownedSet.has(item.id)) return false;
+        if (item.category === "blessingRelic" || item.source === "startBlessing") return false;
         if (!source) return true;
         return Array.isArray(item.obtainFrom) && item.obtainFrom.includes(source);
       })
