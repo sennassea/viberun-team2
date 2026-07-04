@@ -1,0 +1,139 @@
+/* =========================================================================
+   Auth UI
+   - 로그인 모달과 설정 > 계정 정보 섹션 전용 스타일입니다.
+   ========================================================================= */
+.auth-login-modal{
+  position:absolute;
+  inset:0;
+  z-index:340;
+  display:none;
+  place-items:center;
+  background:rgba(20,35,60,.46);
+  backdrop-filter:blur(.45cqh);
+}
+.auth-login-modal.show{display:grid;}
+.auth-login-panel{
+  width:min(42cqw,62cqh);
+  padding:2.2cqh 2cqw;
+  border:.28cqh solid var(--c-gold);
+  border-radius:var(--r);
+  background:var(--c-panel);
+  box-shadow:0 1.6cqh 3.8cqh rgba(8,35,68,.28);
+}
+.auth-login-head{
+  display:flex;
+  align-items:center;
+  gap:1cqw;
+  padding-bottom:1.2cqh;
+  border-bottom:.15cqh solid var(--c-panel-line);
+}
+.auth-login-head h2{
+  flex:1;
+  font-size:2.9cqh;
+  line-height:1;
+  color:var(--c-ink);
+}
+.auth-login-close{
+  width:4.2cqh;
+  height:4.2cqh;
+  border:.2cqh solid var(--c-panel-line);
+  border-radius:50%;
+  background:#fff;
+  color:var(--c-ink);
+  font-size:3cqh;
+  font-weight:900;
+  line-height:1;
+  cursor:pointer;
+}
+.auth-login-desc{
+  margin:1.6cqh 0;
+  color:var(--c-ink-soft);
+  font-size:1.75cqh;
+  font-weight:800;
+  line-height:1.45;
+}
+.auth-login-actions{
+  display:grid;
+  gap:1cqh;
+}
+.auth-login-button{
+  width:100%;
+  height:5.2cqh;
+  border:.2cqh solid var(--c-panel-line);
+  border-radius:1cqh;
+  background:#fff;
+  color:var(--c-ink);
+  font:inherit;
+  font-size:1.9cqh;
+  font-weight:900;
+  letter-spacing:0;
+  cursor:pointer;
+  box-shadow:0 .45cqh 1.1cqh rgba(60,90,140,.14);
+}
+.auth-login-button:hover{
+  border-color:var(--c-gold);
+  transform:translateY(-.12cqh);
+}
+.auth-login-guest{
+  background:var(--c-blue);
+  color:#fff;
+  border-color:rgba(31,95,165,.36);
+}
+.auth-login-note{
+  margin-top:1.3cqh;
+  color:var(--c-red-deep);
+  font-size:1.35cqh;
+  font-weight:800;
+  line-height:1.4;
+}
+.settings-account-status{
+  display:grid;
+  gap:.8cqh;
+  color:var(--c-ink-soft);
+  font-size:1.6cqh;
+  font-weight:800;
+}
+.settings-account-row{
+  display:grid;
+  grid-template-columns:8cqw minmax(0,1fr);
+  gap:1cqw;
+  align-items:start;
+}
+.settings-account-label{
+  color:var(--c-ink);
+  font-weight:900;
+}
+.settings-account-value{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.settings-account-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.8cqw;
+  margin-top:1.2cqh;
+}
+.settings-account-actions button{
+  height:3.9cqh;
+  border:.18cqh solid var(--c-panel-line);
+  border-radius:.9cqh;
+  padding:0 1.2cqw;
+  background:#fff;
+  color:var(--c-ink);
+  font:inherit;
+  font-size:1.55cqh;
+  font-weight:900;
+  letter-spacing:0;
+  cursor:pointer;
+}
+.settings-account-login{
+  background:var(--c-blue)!important;
+  color:#fff!important;
+}
+.settings-account-logout{
+  border-color:rgba(168,46,46,.28)!important;
+  background:#fff1ef!important;
+  color:var(--c-red-deep)!important;
+}

@@ -28,6 +28,9 @@
   }
 
   function showTutorialGuidePopup(){
+    /* 완전 첫 시작의 튜토리얼 진입도 계정 기반 흐름에 포함해, 로그인 성공 후 기존 안내 팝업을 그대로 엽니다. */
+    if(window.VIBERUN_AUTH && !window.VIBERUN_AUTH.requireLogin(showTutorialGuidePopup)) return;
+
     ensureTutorialGuidePopup();
     const popup = document.getElementById("tutorialGuidePopup");
     if(popup) popup.classList.add("show");

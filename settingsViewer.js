@@ -3,6 +3,23 @@
 (function(){
   const SAVE_KEY = "viberunSaveState";
   const VOLUME_KEY = "viberunVolumeSettings";
+  const LOGOUT_FIRST_VISIT_KEYS = [
+    SAVE_KEY,
+    "viberunTutorialComplete",
+    "viberunTutorialCompleted",
+    "viberunTutorialWasSkipped",
+    "viberunTutorialInProgress",
+    "viberunHasPlayedBefore",
+    "hasPlayedBefore",
+    "tutorialCompleted",
+    "hasSeenTutorial",
+    "firstTutorialDone",
+    "onboardingCompleted",
+    "viberunFirstVisitCompleted",
+    "viberunStartMenuState",
+    "viberunLastProgress",
+    "viberunCurrentRun"
+  ];
   const RESET_KEYS = [
     SAVE_KEY,
     VOLUME_KEY,
@@ -95,6 +112,21 @@
             volumeControlHtml("music", "배경 음악", 70) +
             volumeControlHtml("effect", "효과음", 80) +
           '</section>' +
+          '<section class="settings-viewer-section settings-account-section" aria-label="계정 정보">' +
+            '<h3>계정 정보</h3>' +
+            '<div class="settings-account-status">' +
+              accountInfoRowHtml("현재 로그인 상태", "settings-account-login-state") +
+              accountInfoRowHtml("계정 타입", "settings-account-type") +
+              accountInfoRowHtml("UID", "settings-account-uid") +
+              accountInfoRowHtml("연동 상태", "settings-account-linked") +
+            '</div>' +
+            '<div class="settings-account-actions">' +
+              '<button type="button" class="settings-account-login">로그인하기</button>' +
+              '<button type="button" class="settings-account-google">Google Play 연동</button>' +
+              '<button type="button" class="settings-account-facebook">Facebook 연동</button>' +
+              '<button type="button" class="settings-account-logout">로그아웃</button>' +
+            '</div>' +
+          '</section>' +
           '<div class="settings-viewer-actions">' +
             '<button type="button" class="settings-viewer-danger">전투 포기</button>' +
             '<button type="button" class="settings-viewer-primary">저장하기</button>' +
@@ -129,6 +161,16 @@
             '<div class="settings-viewer-confirm-actions">' +
               '<button type="button" class="settings-viewer-reset-yes">예</button>' +
               '<button type="button" class="settings-viewer-reset-no">아니오</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="settings-viewer-logout-confirm" aria-hidden="true">' +
+          '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsLogoutTitle">' +
+            '<h3 id="settingsLogoutTitle">로그아웃</h3>' +
+            '<p>로그아웃하면 현재 계정의 진행 상태를 이어서 불러올 수 없으며,<br>처음 접속한 상태의 메인 화면으로 돌아갑니다.<br>계속하시겠습니까?</p>' +
+            '<div class="settings-viewer-confirm-actions">' +
+              '<button type="button" class="settings-viewer-logout-no">취소</button>' +
+              '<button type="button" class="settings-viewer-logout-yes">로그아웃</button>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -172,6 +214,12 @@
     overlay.querySelector(".settings-viewer-reset-yes").addEventListener("click", resetAllGameRecords);
     overlay.querySelector(".settings-viewer-confirm-no").addEventListener("click", closeGiveUpConfirm);
     overlay.querySelector(".settings-viewer-confirm-yes").addEventListener("click", confirmGiveUp);
+    overlay.querySelector(".settings-account-login").addEventListener("click", openAccountLogin);
+    overlay.querySelector(".settings-account-google").addEventListener("click", showGoogleLinkReady);
+    overlay.querySelector(".settings-account-facebook").addEventListener("click", showFacebookLinkReady);
+    overlay.querySelector(".settings-account-logout").addEventListener("click", openLogoutConfirm);
+    overlay.querySelector(".settings-viewer-logout-no").addEventListener("click", closeLogoutConfirm);
+    overlay.querySelector(".settings-viewer-logout-yes").addEventListener("click", confirmLogout);
     document.addEventListener("keydown", event => {
       if(event.key !== "Escape" || !overlay.classList.contains("show")) return;
       if(overlay.querySelector(".settings-viewer-confirm.show")){
@@ -184,6 +232,10 @@
       }
       if(overlay.querySelector(".settings-viewer-reset-confirm.show")){
         closeResetConfirm();
+        return;
+      }
+      if(overlay.querySelector(".settings-viewer-logout-confirm.show")){
+        closeLogoutConfirm();
         return;
       }
       if(overlay.querySelector(".settings-viewer-help-layer.show")){
@@ -207,12 +259,29 @@
       reset: overlay.querySelector(".settings-viewer-reset"),
       resetConfirm: overlay.querySelector(".settings-viewer-reset-confirm"),
       resetNo: overlay.querySelector(".settings-viewer-reset-no"),
+      logoutConfirm: overlay.querySelector(".settings-viewer-logout-confirm"),
+      logoutNo: overlay.querySelector(".settings-viewer-logout-no"),
       close: overlay.querySelector(".settings-viewer-close"),
       confirm: overlay.querySelector(".settings-viewer-confirm"),
       confirmNo: overlay.querySelector(".settings-viewer-confirm-no"),
       actions: overlay.querySelector(".settings-viewer-actions"),
+      accountLoginState: overlay.querySelector(".settings-account-login-state"),
+      accountType: overlay.querySelector(".settings-account-type"),
+      accountUid: overlay.querySelector(".settings-account-uid"),
+      accountLinked: overlay.querySelector(".settings-account-linked"),
+      accountLogin: overlay.querySelector(".settings-account-login"),
+      accountGoogle: overlay.querySelector(".settings-account-google"),
+      accountFacebook: overlay.querySelector(".settings-account-facebook"),
+      accountLogout: overlay.querySelector(".settings-account-logout"),
       volumeInputs: Array.from(overlay.querySelectorAll(".settings-viewer-volume input")),
     };
+  }
+
+  function accountInfoRowHtml(label, valueClass){
+    return '<div class="settings-account-row">' +
+      '<span class="settings-account-label">' + label + '</span>' +
+      '<span class="settings-account-value ' + valueClass + '">-</span>' +
+    '</div>';
   }
 
   function volumeControlHtml(id, label, value){
@@ -251,11 +320,13 @@
 
   function restoreSavedProgress(){
     if(typeof localStorage === "undefined") return;
+    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.isLoggedIn === "function" && !window.VIBERUN_AUTH.isLoggedIn()) return;
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if(!raw) return;
       const saved = JSON.parse(raw);
       if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
+      if(!isSavedProgressForCurrentAccount(saved)) return;
       if(typeof S !== "undefined") S = saved.state;
       if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
       if(window.MAP_STATE && saved.mapState){
@@ -270,6 +341,13 @@
     }
   }
 
+  function isSavedProgressForCurrentAccount(saved){
+    if(!saved || !saved.accountUid) return true;
+    if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.getAccountInfo !== "function") return true;
+    const account = window.VIBERUN_AUTH.getAccountInfo();
+    return !!(account && account.isLoggedIn && account.uid === saved.accountUid);
+  }
+
   function saveProgressAndExit(){
     if(typeof localStorage === "undefined" || typeof S === "undefined" || !S || S.over) return;
 
@@ -281,10 +359,14 @@
       proceedMode: !!window.MAP_STATE.proceedMode,
       floorLabel: (document.querySelector("#hudFloor") || {}).textContent || "",
     } : null;
+    const account = window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.getAccountInfo === "function"
+      ? window.VIBERUN_AUTH.getAccountInfo()
+      : null;
 
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         savedAt: Date.now(),
+        accountUid: account && account.isLoggedIn ? account.uid : null,
         state,
         starterDeck,
         mapState,
@@ -326,8 +408,8 @@
       ".settings-viewer-tutorial{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-reset{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-primary{background:var(--c-blue);color:#fff;}" +
-      ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
-      ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show,.settings-viewer-reset-confirm.show{display:grid;}" +
+      ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm,.settings-viewer-logout-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
+      ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show,.settings-viewer-reset-confirm.show,.settings-viewer-logout-confirm.show{display:grid;}" +
       ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:2.2cqh 2cqw;text-align:center;}" +
       ".settings-viewer-confirm-panel h3{font-size:2.4cqh;color:var(--c-ink);margin-bottom:1cqh;}" +
       ".settings-viewer-confirm-panel p{font-size:1.7cqh;line-height:1.45;color:var(--c-ink-soft);font-weight:800;margin-bottom:1.8cqh;}" +
@@ -337,6 +419,8 @@
       ".settings-viewer-confirm-yes{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-reset-no{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-reset-yes{background:#fff1ef;color:var(--c-red-deep);}" +
+      ".settings-viewer-logout-no{background:#fff;color:var(--c-ink-soft);}" +
+      ".settings-viewer-logout-yes{background:#fff1ef;color:var(--c-red-deep);}" +
       ".settings-viewer-save-no{background:#fff;color:var(--c-ink-soft);}" +
       ".settings-viewer-save-yes{background:var(--c-blue);color:#fff;}" +
       ".settings-viewer-help-layer{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
@@ -375,6 +459,7 @@
     const danger = els.overlay.querySelector(".settings-viewer-danger");
     if(danger) danger.style.display = "";
     applyVolumeSettings();
+    refreshAccountInfo();
     pauseCombat();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -402,10 +487,127 @@
     closeSaveConfirm();
     closeGiveUpConfirm();
     closeResetConfirm();
+    closeLogoutConfirm();
     applyVolumeSettings();
+    refreshAccountInfo();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
     els.close.focus();
+  }
+
+  /* 설정 팝업이 열릴 때마다 최신 계정 세션을 읽어 미로그인/Guest/연동 상태 표시를 갱신합니다. */
+  function refreshAccountInfo(){
+    if(!els || !els.accountLoginState) return;
+
+    const auth = window.VIBERUN_AUTH;
+    const info = auth && typeof auth.getAccountInfo === "function"
+      ? auth.getAccountInfo()
+      : { isLoggedIn: false, uid: "", accountType: "미로그인", isGuest: false, linkedProvider: "" };
+
+    els.accountLoginState.textContent = info.isLoggedIn ? "로그인됨" : "미로그인";
+    els.accountType.textContent = info.isLoggedIn ? info.accountType : "-";
+    els.accountUid.textContent = info.uid || "-";
+    els.accountUid.title = info.uid || "";
+    els.accountLinked.textContent = info.isGuest ? "미연동" : (info.linkedProvider || "-");
+
+    if(els.accountLogin) els.accountLogin.style.display = info.isLoggedIn ? "none" : "";
+    if(els.accountGoogle) els.accountGoogle.style.display = info.isGuest ? "" : "none";
+    if(els.accountFacebook) els.accountFacebook.style.display = info.isGuest ? "" : "none";
+    if(els.accountLogout) els.accountLogout.style.display = info.isLoggedIn ? "" : "none";
+  }
+
+  /* 설정 팝업을 닫지 않고 로그인 모달만 겹쳐 띄운 뒤, 성공 시 계정 정보 영역만 다시 렌더링합니다. */
+  function openAccountLogin(){
+    if(window.VIBERUN_LOGIN_MODAL && typeof window.VIBERUN_LOGIN_MODAL.open === "function"){
+      window.VIBERUN_LOGIN_MODAL.open({
+        onSuccess(){
+          refreshAccountInfo();
+        }
+      });
+      return;
+    }
+
+    if(typeof toast === "function") toast("로그인 창을 불러올 수 없습니다.");
+  }
+
+  function showGoogleLinkReady(){
+    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInGooglePlay === "function"){
+      window.VIBERUN_AUTH.signInGooglePlay();
+    }
+    if(typeof toast === "function") toast("아직 준비 중입니다.");
+  }
+
+  function showFacebookLinkReady(){
+    if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.signInFacebook === "function"){
+      window.VIBERUN_AUTH.signInFacebook();
+    }
+    if(typeof toast === "function") toast("아직 준비 중입니다.");
+  }
+
+  function openLogoutConfirm(){
+    if(!els || !els.logoutConfirm) return;
+    els.logoutConfirm.classList.add("show");
+    els.logoutConfirm.setAttribute("aria-hidden", "false");
+    if(els.logoutNo) els.logoutNo.focus();
+  }
+
+  function closeLogoutConfirm(){
+    if(!els || !els.logoutConfirm) return;
+    els.logoutConfirm.classList.remove("show");
+    els.logoutConfirm.setAttribute("aria-hidden", "true");
+    if(els.overlay.classList.contains("show") && els.accountLogout) els.accountLogout.focus();
+  }
+
+  /* 로그아웃 후 계정 진행 저장과 튜토리얼 완료 상태를 지워 첫 방문 메인 메뉴로 되돌립니다. */
+  function confirmLogout(){
+    if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.logout !== "function"){
+      if(typeof toast === "function") toast("로그아웃 처리 중 오류가 발생했습니다.");
+      return;
+    }
+
+    const result = window.VIBERUN_AUTH.logout();
+    if(!result || !result.ok){
+      if(typeof toast === "function") toast((result && result.message) || "로그아웃 처리 중 오류가 발생했습니다.");
+      return;
+    }
+
+    resetLogoutFirstVisitData();
+    closeLogoutConfirm();
+    closeSettingsViewer();
+    returnToFirstVisitStartMenu();
+    if(typeof toast === "function") toast("로그아웃되었습니다.");
+  }
+
+  function resetLogoutFirstVisitData(){
+    if(typeof localStorage === "undefined") return;
+    LOGOUT_FIRST_VISIT_KEYS.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+      } catch(error) {
+        console.warn("[Auth] 로그아웃 후 첫 방문 데이터 정리 실패:", key, error);
+      }
+    });
+  }
+
+  function returnToFirstVisitStartMenu(){
+    const options = {
+      forceFirstVisit: true,
+      forceTutorialVisible: true,
+      ignoreSavedProgress: true
+    };
+
+    if(typeof window.showStartMenu === "function"){
+      window.showStartMenu(options);
+      return;
+    }
+
+    if(typeof window.returnToMainMenu === "function"){
+      window.returnToMainMenu(options);
+      return;
+    }
+
+    // 시작 메뉴 강제 렌더 API가 없는 구버전 구조에서는 위에서 localStorage 키를 지운 뒤 새로고침해야 첫 방문 메뉴가 보장됩니다.
+    location.reload();
   }
 
   function isTutorialMapSettings(){
@@ -444,6 +646,7 @@
     closeSaveConfirm();
     closeGiveUpConfirm();
     closeResetConfirm();
+    closeLogoutConfirm();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
     els.overlay.classList.remove("start-mode");
