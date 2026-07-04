@@ -112,11 +112,17 @@ function showSbChrome(){
 function openSbMapPreview(){
   if(!window.MAP_STATE || typeof openMap !== "function") return;
   window.MAP_STATE.currentStage = -1;
-  window.MAP_STATE.proceedMode  = false;  // 은혜 선택 전: 노드 이동 불가(읽기 전용)
+  /* 은혜 선택 전: 노드 이동 불가(읽기 전용). 은혜를 이미 골랐다면(sbResolved)
+     신령의 은혜 화면 위로 다시 연 여정도 정상적으로 다음 노드를 고를 수 있어야 한다. */
+  window.MAP_STATE.proceedMode  = sbResolved;
   window.MAP_STATE.startMapMode = false;
   openMap();
   const footer = document.getElementById("mapFooter");
-  if(footer) footer.textContent = "은혜를 선택하면 다음 노드를 고를 수 있습니다.";
+  if(footer){
+    footer.textContent = sbResolved
+      ? "⬆️ 다음 스테이지를 클릭하여 진행하세요"
+      : "은혜를 선택하면 다음 노드를 고를 수 있습니다.";
+  }
 }
 
 function openSbDeck(){
