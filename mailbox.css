@@ -24,9 +24,10 @@
 }
 .mailbox-ui-title{ flex:1; font-size:2.6cqh; font-weight:900; color:var(--c-ink); }
 .mailbox-ui-wallet{
-  display:flex; align-items:center; gap:.4cqw; font-size:1.9cqh; font-weight:900;
+  display:flex; align-items:center; gap:.4cqw; font:inherit; font-size:1.9cqh; font-weight:900;
   color:var(--c-gold-deep); background:rgba(231,181,74,.14);
   border:0.16cqh solid rgba(231,181,74,.4); border-radius:1cqh; padding:.5cqh 1cqw;
+  cursor:pointer;
 }
 .mailbox-wallet-icon{ font-size:2cqh; }
 .mailbox-ui-close{

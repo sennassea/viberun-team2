@@ -35,7 +35,7 @@
       '<div class="mailbox-ui-panel" role="dialog" aria-modal="true" aria-labelledby="mailboxUITitle">' +
         '<div class="mailbox-ui-head">' +
           '<div class="mailbox-ui-title" id="mailboxUITitle">🎁 선물함</div>' +
-          '<div class="mailbox-ui-wallet"><span class="mailbox-wallet-icon">🌙</span><span id="mailboxWalletValue">0</span></div>' +
+          '<button type="button" class="mailbox-ui-wallet" aria-label="월영당 열기"><span class="mailbox-wallet-icon">🌙</span><span id="mailboxWalletValue">0</span></button>' +
           '<button type="button" class="mailbox-ui-close" aria-label="닫기">✕</button>' +
         '</div>' +
         '<div class="mailbox-ui-tabs">' +
@@ -54,6 +54,7 @@
       if(event.target === overlay) closeMailboxUI();
     });
     overlay.querySelector(".mailbox-ui-close").addEventListener("click", closeMailboxUI);
+    overlay.querySelector(".mailbox-ui-wallet").addEventListener("click", openBMStoreFromMailbox);
     overlay.querySelector("#mailboxCloseBtn").addEventListener("click", closeMailboxUI);
     overlay.querySelector("#mailboxClaimAllBtn").addEventListener("click", handleClaimAll);
     overlay.querySelectorAll(".mailbox-tab").forEach(tab => {
@@ -103,6 +104,17 @@
     els.overlay.classList.remove("map-mode");
     els.overlay.classList.remove("start-mode");
     els.overlay.setAttribute("aria-hidden", "true");
+  }
+
+  function openBMStoreFromMailbox(event){
+    if(event) event.preventDefault();
+    if(window.VIBERUN_BM_STORE_UI && typeof window.VIBERUN_BM_STORE_UI.open === "function"){
+      window.VIBERUN_BM_STORE_UI.open();
+      return;
+    }
+
+    if(typeof toast === "function") toast("월영당을 불러오지 못했습니다.", "error");
+    else if(typeof window.showToast === "function") window.showToast("월영당을 불러오지 못했습니다.", "error");
   }
 
   function updateActiveTab(){
@@ -316,6 +328,12 @@
     close: closeMailboxUI,
     refreshBadge
   };
+
+  window.addEventListener("viberun:wallet-changed", event => {
+    const wallet = event && event.detail ? event.detail.wallet : null;
+    if(wallet) state.wallet = wallet;
+    if(els) render();
+  });
 
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", refreshBadge);

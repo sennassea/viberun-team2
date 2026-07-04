@@ -20,9 +20,12 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-const PORT = 5173;
+const PORT = Number(process.env.PORT) || 5173;
 const ROOT_DIR = __dirname;
 const GUEST_ACCOUNT_ID = "acc_local_guest_001";
+const INITIAL_MOCK_MOON_SHARDS = Math.max(0, Math.floor(Number(
+  process.env.INITIAL_MOCK_MOON_SHARDS || process.env.INITIAL_MOON_SHARDS
+) || 0));
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -40,11 +43,20 @@ const MIME_TYPES = {
 
 /* ------------------------------------------------------------------------
    In-memory mock 데이터 (서버 재시작 시 초기화됩니다)
-   - mailbox/wallet은 accountId별로 분리해서 저장합니다.
+   - mailbox/wallet/dummyInventory는 accountId별로 분리해서 저장합니다.
    - accessToken → accountId 매핑은 /auth/* 응답 발급 시점에 등록합니다.
    ------------------------------------------------------------------------ */
-const accounts = new Map();      // accountId -> { mailbox: [...], wallet: {...} }
+const accounts = new Map();      // accountId -> { mailbox: [...], wallet: {...}, dummyInventory: [...] }
 const tokenToAccount = new Map(); // accessToken -> accountId
+
+/* 월영당 로컬 Mock 검증용 상품 테이블입니다.
+   UI 표시 데이터는 bmStoreData.js가 관리하며, 이 테이블은 서버 차감/지급 검증만 담당합니다. */
+const BM_PACKAGE_PRODUCTS = [
+  { id: "starter_pack", name: "초심자 스타터 팩", price: 7500, rewardId: "dummy_starter_pack" },
+  { id: "growth_package", name: "성장 패키지", price: 2980, rewardId: "dummy_growth_package" },
+  { id: "rare_package", name: "희귀 장신 패키지", price: 6500, rewardId: "dummy_rare_package" },
+  { id: "spring_blessing_box", name: "봄날의 축복 상자", price: 2400, rewardId: "dummy_spring_blessing_box" }
+];
 
 function buildDefaultMailbox() {
   return [
@@ -61,7 +73,11 @@ function buildDefaultMailbox() {
 
 function ensureAccount(accountId) {
   if (!accounts.has(accountId)) {
-    accounts.set(accountId, { mailbox: buildDefaultMailbox(), wallet: { moonShards: 0 } });
+    accounts.set(accountId, {
+      mailbox: buildDefaultMailbox(),
+      wallet: { moonShards: INITIAL_MOCK_MOON_SHARDS },
+      dummyInventory: []
+    });
   }
   return accounts.get(accountId);
 }
@@ -234,6 +250,68 @@ function handleMailboxClaimAll(req, res) {
 }
 
 /* ------------------------------------------------------------------------
+   /bm-store Mock 핸들러
+   - 패키지 구매 결과는 accountId별 dummyInventory에만 저장합니다.
+   - 카드/법구/골드/포션/전투 보상 데이터와 절대 연결하지 않습니다.
+   ------------------------------------------------------------------------ */
+function handleDummyInventory(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  sendJson(res, 200, {
+    ok: true,
+    dummyInventory: account.dummyInventory,
+    wallet: account.wallet
+  });
+}
+
+function handleBMPackagePurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_PACKAGE_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, message: "존재하지 않는 상품입니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const currentMoonShards = Number(account.wallet.moonShards) || 0;
+  if (currentMoonShards < product.price) {
+    sendJson(res, 400, {
+      ok: false,
+      code: "INSUFFICIENT_MOON_SHARDS",
+      message: "달빛조각이 부족합니다.",
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  account.wallet.moonShards = currentMoonShards - product.price;
+  const dummyItem = {
+    id: product.rewardId,
+    name: product.name,
+    obtainedAt: Date.now()
+  };
+  account.dummyInventory.push(dummyItem);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    item: dummyItem,
+    dummyInventory: account.dummyInventory,
+    wallet: account.wallet
+  });
+}
+
+/* ------------------------------------------------------------------------
    정적 파일 서빙 (index.html 및 프로젝트 루트 리소스)
    ------------------------------------------------------------------------ */
 function serveStaticFile(res, pathname) {
@@ -293,6 +371,17 @@ const server = http.createServer((req, res) => {
 
   if (method === "POST" && pathname === "/mailbox/claim-all") {
     handleMailboxClaimAll(req, res);
+    return;
+  }
+
+  if (method === "GET" && pathname === "/bm-store/dummy-inventory") {
+    handleDummyInventory(req, res);
+    return;
+  }
+
+  const bmPackagePurchaseMatch = pathname.match(/^\/bm-store\/package\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmPackagePurchaseMatch) {
+    readRequestBody(req).then(() => handleBMPackagePurchase(req, res, decodeURIComponent(bmPackagePurchaseMatch[1])));
     return;
   }
 
