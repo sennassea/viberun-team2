@@ -263,6 +263,10 @@
   font-size:3cqh;
   text-shadow:0 .2cqh .5cqh rgba(84,47,21,.45);
 }
+.bm-store-art-icon{
+  font-size:6.2cqh;
+  filter:drop-shadow(0 .3cqh .25cqh rgba(76,55,110,.25));
+}
 .bm-store-product-copy{
   min-width:0;
   display:flex;
@@ -286,6 +290,47 @@
   line-height:1.35;
   font-weight:800;
   word-break:keep-all;
+}
+.bm-store-product .bm-store-limit-text{
+  color:#a3402b;
+  font-size:1.5cqh;
+  font-weight:900;
+}
+.bm-store-product-grid--order_pack{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:1.1cqh .9cqw;
+}
+.bm-store-product-grid--order_pack .bm-store-product{
+  min-height:44cqh;
+  grid-template-columns:1fr;
+  grid-template-rows:auto 1fr auto;
+  gap:1cqh;
+  padding:1.35cqh .9cqw;
+  text-align:center;
+}
+.bm-store-product-grid--order_pack .bm-store-product-art{
+  grid-row:auto;
+  width:100%;
+  min-height:22cqh;
+}
+.bm-store-product-grid--order_pack .bm-store-art-icon{
+  font-size:7.5cqh;
+}
+.bm-store-product-grid--order_pack .bm-store-product-copy{
+  align-items:center;
+  gap:.55cqh;
+  padding-right:0;
+}
+.bm-store-product-grid--order_pack .bm-store-product h3{
+  font-size:2.25cqh;
+}
+.bm-store-product-grid--order_pack .bm-store-product p{
+  font-size:1.45cqh;
+}
+.bm-store-product-grid--order_pack .bm-store-buy-btn{
+  width:100%;
+  min-width:0;
+  justify-self:center;
 }
 .bm-store-buy-btn{
   justify-self:start;
@@ -409,12 +454,34 @@
   .bm-store-package-grid{
     grid-template-columns:1fr;
   }
+  .bm-store-product-grid--order_pack{
+    grid-template-columns:1fr;
+  }
+  .bm-store-product-grid--order_pack .bm-store-product{
+    min-height:0;
+    grid-template-columns:10.5cqh minmax(0,1fr);
+    grid-template-rows:1fr auto;
+    text-align:left;
+  }
   .bm-store-product{
     grid-template-columns:10.5cqh minmax(0,1fr);
   }
   .bm-store-product-art{
     width:10.5cqh;
     min-height:15cqh;
+  }
+  .bm-store-product-grid--order_pack .bm-store-product-art{
+    grid-row:1 / span 2;
+    width:10.5cqh;
+    min-height:15cqh;
+  }
+  .bm-store-product-grid--order_pack .bm-store-product-copy{
+    align-items:flex-start;
+  }
+  .bm-store-product-grid--order_pack .bm-store-buy-btn{
+    width:auto;
+    min-width:13cqw;
+    justify-self:start;
   }
   .bm-store-footer{
     align-items:stretch;

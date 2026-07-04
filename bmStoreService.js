@@ -124,13 +124,38 @@
     return data && typeof data.getPackageProducts === "function" ? data.getPackageProducts() : [];
   }
 
+  function getProductsByTab(tab){
+    const data = getData();
+    if(data && typeof data.getProductsByTab === "function") return data.getProductsByTab(tab);
+    if(tab === "package") return getPackageProducts();
+    if(tab === "order_pack") return getOrderPackProducts();
+    return [];
+  }
+
   function findPackageProduct(productId){
     const data = getData();
     return data && typeof data.findPackageProduct === "function" ? data.findPackageProduct(productId) : null;
   }
 
-  /* 구매 전 클라이언트 캐시 wallet을 먼저 확인해 부족한 경우 서버 요청 없이 즉시 실패시킵니다. */
-  function purchasePackage(productId){
+  function findProduct(productId){
+    const data = getData();
+    if(data && typeof data.findProduct === "function") return data.findProduct(productId);
+    return findPackageProduct(productId) || findOrderPackProduct(productId);
+  }
+
+  function getOrderPackProducts(){
+    const data = getData();
+    return data && typeof data.getOrderPackProducts === "function" ? data.getOrderPackProducts() : [];
+  }
+
+  function findOrderPackProduct(productId){
+    const data = getData();
+    return data && typeof data.findOrderPackProduct === "function" ? data.findOrderPackProduct(productId) : null;
+  }
+
+  /* 패키지/주문 팩 공통 구매 처리입니다.
+     wallet 확인 → 서버 요청 → dummyInventory/wallet 동기화 흐름은 동일하게 재사용합니다. */
+  function purchaseFromCatalog(productId, product, endpointBase){
     const account = getAuthAccount();
     if(!account){
       return Promise.resolve({
@@ -140,12 +165,19 @@
       });
     }
 
-    const product = findPackageProduct(productId);
     if(!product){
       return Promise.resolve({
         ok: false,
         code: "UNKNOWN_PRODUCT",
         message: "존재하지 않는 상품입니다."
+      });
+    }
+
+    if(product.priceType !== "moon_shard" || product.rewardType !== "dummy_item"){
+      return Promise.resolve({
+        ok: false,
+        code: "UNSUPPORTED_PRODUCT",
+        message: "현재 구매할 수 없는 상품입니다."
       });
     }
 
@@ -159,7 +191,7 @@
         };
       }
 
-      return requestJson("/bm-store/package/" + encodeURIComponent(product.id) + "/purchase", {
+      return requestJson(endpointBase + "/" + encodeURIComponent(product.id) + "/purchase", {
         method: "POST"
       }).then(result => {
         if(!result || !result.ok){
@@ -174,6 +206,20 @@
     });
   }
 
+  function purchasePackage(productId){
+    return purchaseFromCatalog(productId, findPackageProduct(productId), "/bm-store/package");
+  }
+
+  function purchaseOrderPack(productId){
+    return purchaseFromCatalog(productId, findOrderPackProduct(productId), "/bm-store/package");
+  }
+
+  /* 활성 탭과 무관하게 UI가 상품 ID만으로 구매를 요청할 수 있도록 두 카탈로그를 모두 조회합니다. */
+  function purchaseProduct(productId){
+    const product = findProduct(productId);
+    return purchaseFromCatalog(productId, product, "/bm-store/package");
+  }
+
   function fetchDummyInventory(){
     return requestJson("/bm-store/dummy-inventory", { method: "GET" }).then(result => {
       if(result && result.ok && Array.isArray(result.dummyInventory)){
@@ -184,8 +230,12 @@
   }
 
   window.VIBERUN_BM_STORE_SERVICE = {
+    getProductsByTab,
     getPackageProducts,
     purchasePackage,
+    getOrderPackProducts,
+    purchaseOrderPack,
+    purchaseProduct,
     fetchDummyInventory,
     getCachedDummyInventory(){
       return cachedDummyInventory.slice();

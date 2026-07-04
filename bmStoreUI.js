@@ -42,6 +42,19 @@
     return data && typeof data.getTabs === "function" ? data.getTabs() : [];
   }
 
+  function getProductsForTab(tabId){
+    const service = window.VIBERUN_BM_STORE_SERVICE;
+    if(!service) return [];
+    if(typeof service.getProductsByTab === "function") return service.getProductsByTab(tabId);
+    if(tabId === "package" && typeof service.getPackageProducts === "function"){
+      return service.getPackageProducts();
+    }
+    if(tabId === "order_pack" && typeof service.getOrderPackProducts === "function"){
+      return service.getOrderPackProducts();
+    }
+    return [];
+  }
+
   function ensureUI(){
     if(els) return els;
 
@@ -102,10 +115,7 @@
 
     ensureUI();
     state.activeTab = "package";
-    state.products = window.VIBERUN_BM_STORE_SERVICE &&
-      typeof window.VIBERUN_BM_STORE_SERVICE.getPackageProducts === "function"
-      ? window.VIBERUN_BM_STORE_SERVICE.getPackageProducts()
-      : [];
+    state.products = getProductsForTab(state.activeTab);
 
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -151,6 +161,7 @@
     }
 
     state.activeTab = tab.dataset.tab;
+    state.products = getProductsForTab(state.activeTab);
     render();
   }
 
@@ -162,7 +173,7 @@
 
   function purchase(productId){
     if(!window.VIBERUN_BM_STORE_SERVICE ||
-       typeof window.VIBERUN_BM_STORE_SERVICE.purchasePackage !== "function"){
+       typeof window.VIBERUN_BM_STORE_SERVICE.purchaseProduct !== "function"){
       showToastMessage("월영당을 불러오지 못했습니다.", "error");
       return;
     }
@@ -170,7 +181,7 @@
     purchasingProductId = productId;
     renderProducts();
 
-    Promise.resolve(window.VIBERUN_BM_STORE_SERVICE.purchasePackage(productId)).then(result => {
+    Promise.resolve(window.VIBERUN_BM_STORE_SERVICE.purchaseProduct(productId)).then(result => {
       purchasingProductId = "";
       if(!result || !result.ok){
         const message = result && result.code === "INSUFFICIENT_MOON_SHARDS"
@@ -232,18 +243,19 @@
 
   function renderProducts(){
     if(!els) return;
-    if(state.activeTab !== "package"){
+    if(state.activeTab !== "package" && state.activeTab !== "order_pack"){
       els.body.innerHTML = '<div class="bm-store-empty">해당 탭은 준비 중입니다.</div>';
       return;
     }
 
     if(!state.products.length){
-      els.body.innerHTML = '<div class="bm-store-empty">판매 중인 패키지가 없습니다.</div>';
+      const emptyText = state.activeTab === "order_pack" ? "판매 중인 주문 팩이 없습니다." : "판매 중인 패키지가 없습니다.";
+      els.body.innerHTML = '<div class="bm-store-empty">' + emptyText + '</div>';
       return;
     }
 
     els.body.innerHTML =
-      '<div class="bm-store-package-grid">' +
+      '<div class="bm-store-package-grid bm-store-product-grid--' + escapeHtml(state.activeTab) + '">' +
         state.products.map(renderProductCard).join("") +
       '</div>';
   }
@@ -254,11 +266,13 @@
       '<article class="bm-store-product">' +
         (product.badge ? '<div class="bm-store-badge">' + escapeHtml(product.badge) + '</div>' : "") +
         '<div class="bm-store-product-art" aria-hidden="true">' +
-          '<span class="bm-store-art-moon">🌙</span>' +
-          '<span class="bm-store-art-box">✦</span>' +
+          (product.icon
+            ? '<span class="bm-store-art-icon">' + escapeHtml(product.icon) + '</span>'
+            : '<span class="bm-store-art-moon">🌙</span><span class="bm-store-art-box">✦</span>') +
         '</div>' +
         '<div class="bm-store-product-copy">' +
           '<h3>' + escapeHtml(product.name) + '</h3>' +
+          (product.limitText ? '<p class="bm-store-limit-text">' + escapeHtml(product.limitText) + '</p>' : "") +
           '<p>' + escapeHtml(product.description) + '</p>' +
         '</div>' +
         '<button type="button" class="bm-store-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +

@@ -52,10 +52,14 @@ const tokenToAccount = new Map(); // accessToken -> accountId
 /* 월영당 로컬 Mock 검증용 상품 테이블입니다.
    UI 표시 데이터는 bmStoreData.js가 관리하며, 이 테이블은 서버 차감/지급 검증만 담당합니다. */
 const BM_PACKAGE_PRODUCTS = [
-  { id: "starter_pack", name: "초심자 스타터 팩", price: 7500, rewardId: "dummy_starter_pack" },
-  { id: "growth_package", name: "성장 패키지", price: 2980, rewardId: "dummy_growth_package" },
-  { id: "rare_package", name: "희귀 장신 패키지", price: 6500, rewardId: "dummy_rare_package" },
-  { id: "spring_blessing_box", name: "봄날의 축복 상자", price: 2400, rewardId: "dummy_spring_blessing_box" }
+  { id: "starter_pack", name: "초심자 스타터 팩", price: 7500, rewardId: "dummy_starter_pack", category: "package" },
+  { id: "growth_package", name: "성장 패키지", price: 2980, rewardId: "dummy_growth_package", category: "package" },
+  { id: "rare_package", name: "희귀 장신 패키지", price: 6500, rewardId: "dummy_rare_package", category: "package" },
+  { id: "spring_blessing_box", name: "봄날의 축복 상자", price: 2400, rewardId: "dummy_spring_blessing_box", category: "package" },
+  { id: "order_pack_summon_charm", name: "소환 부적 팩", price: 1000, rewardId: "dummy_summon_charm_pack", category: "order_pack" },
+  { id: "order_pack_soul_charm", name: "영혼 부적 팩", price: 2000, rewardId: "dummy_soul_charm_pack", category: "order_pack" },
+  { id: "order_pack_divine_charm", name: "신력 부적 팩", price: 3000, rewardId: "dummy_divine_charm_pack", category: "order_pack" },
+  { id: "order_pack_legend_support", name: "전설 보조 팩", price: 10000, rewardId: "dummy_legend_support_pack", category: "order_pack" }
 ];
 
 function buildDefaultMailbox() {
@@ -298,6 +302,7 @@ function handleBMPackagePurchase(req, res, productId) {
   const dummyItem = {
     id: product.rewardId,
     name: product.name,
+    category: product.category || "package",
     obtainedAt: Date.now()
   };
   account.dummyInventory.push(dummyItem);
