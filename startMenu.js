@@ -171,6 +171,7 @@ function updateStartScreenMode(options={}){
   const continueGame = document.querySelector(".start-continue-game");
   const codex = document.querySelector(".start-codex-button");
   const record = document.querySelector(".start-record-button");
+  const mailbox = document.querySelector(".start-mailbox-button");
   const settings = document.querySelector(".start-settings-button");
   const codexRecordRow = codex && record ? codex.closest(".start-menu-row") : null;
   const isNewbie = options.forceFirstVisit || options.forceTutorialVisible || shouldShowNewbieStartMenu();
@@ -181,7 +182,16 @@ function updateStartScreenMode(options={}){
   setStartMenuVisible(codex, !isNewbie);
   setStartMenuVisible(record, !isNewbie);
   setStartMenuVisible(codexRecordRow, !isNewbie);
+  updateStartMailboxVisibility(mailbox);
   setStartMenuVisible(settings, true);
+}
+
+function updateStartMailboxVisibility(button){
+  const target = button || document.querySelector(".start-mailbox-button");
+  if(!target) return;
+  const auth = window.VIBERUN_AUTH;
+  const isLoggedIn = !!(auth && typeof auth.isLoggedIn === "function" && auth.isLoggedIn());
+  setStartMenuVisible(target, isLoggedIn);
 }
 
 function shouldShowNewbieStartMenu(){
@@ -250,9 +260,25 @@ document.querySelectorAll(".start-new-game").forEach(button => {
 document.querySelectorAll(".start-continue-game").forEach(button => {
   button.addEventListener("click", continueGameFromMenu);
 });
+document.querySelectorAll(".start-mailbox-button").forEach(button => {
+  button.addEventListener("click", () => {
+    if(window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.open === "function"){
+      window.VIBERUN_MAILBOX_UI.open({ mode: "start" });
+    } else if(typeof toast === "function") {
+      toast("선물함을 불러올 수 없습니다.");
+    }
+  });
+});
 
 window.showStartMenu = showStartMenu;
 window.returnToMainMenu = showStartMenu;
+window.addEventListener("viberun:auth-changed", () => {
+  updateContinueButtonInfo();
+  updateStartMailboxVisibility();
+  if(window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.refreshBadge === "function"){
+    window.VIBERUN_MAILBOX_UI.refreshBadge();
+  }
+});
 
 updateContinueButtonInfo();
 updateStartScreenMode();

@@ -23,6 +23,15 @@
   };
   const pendingProviderRequests = {};
 
+  function emitAuthChanged(detail){
+    if(typeof window === "undefined" || typeof window.dispatchEvent !== "function") return;
+    try {
+      window.dispatchEvent(new CustomEvent("viberun:auth-changed", { detail: detail || {} }));
+    } catch(error) {
+      console.warn("[Auth] 로그인 상태 변경 이벤트 발행에 실패했습니다.", error);
+    }
+  }
+
   /* localStorage 차단/시크릿 모드/저장 용량 문제를 사전에 감지합니다. */
   function canUseLocalStorage(){
     try {
@@ -81,6 +90,7 @@
       delete storedSession.uid;
 
       localStorage.setItem(AUTH_KEY, JSON.stringify(storedSession));
+      emitAuthChanged({ isLoggedIn: true, accountId: normalizedSession.accountId, provider: normalizedSession.provider });
       return { ok: true, session: normalizedSession };
     } catch(error) {
       console.warn("[Auth] 로그인 세션 저장에 실패했습니다.", error);
@@ -500,6 +510,7 @@
     try {
       const previousAccount = getAccountInfo();
       localStorage.removeItem(AUTH_KEY);
+      emitAuthChanged({ isLoggedIn: false, previousUid: previousAccount && previousAccount.uid ? previousAccount.uid : null });
       return {
         ok: true,
         previousUid: previousAccount && previousAccount.uid ? previousAccount.uid : null,

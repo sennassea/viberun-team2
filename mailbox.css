@@ -1,0 +1,92 @@
+/* =========================================================================
+   Mailbox UI (mailbox.css)
+   - 계정 기반 선물함 팝업 전용 스타일입니다.
+   - 톤은 기존 설정(settingsViewer)/가방(bagUI) 팝업과 동일하게 맞춥니다.
+   ========================================================================= */
+.mailbox-ui-overlay{
+  position:absolute; inset:0; z-index:97; display:none; place-items:center;
+  background:rgba(20,35,60,.45); backdrop-filter:blur(3px);
+}
+.mailbox-ui-overlay.show{ display:grid; }
+.mailbox-ui-overlay.map-mode{ z-index:300!important; }
+.mailbox-ui-overlay.start-mode{ z-index:300!important; }
+
+.mailbox-ui-panel{
+  position:relative; width:min(56cqw,78cqh); max-height:74cqh;
+  display:flex; flex-direction:column; gap:1.3cqh;
+  background:var(--c-panel); border:0.3cqh solid var(--c-gold); border-radius:var(--r);
+  box-shadow:0 2cqh 4cqh rgba(0,0,0,.28); padding:2cqh 2cqw;
+}
+
+.mailbox-ui-head{
+  flex:none; display:flex; align-items:center; gap:1cqw;
+  padding-bottom:1.2cqh; border-bottom:0.15cqh solid var(--c-panel-line);
+}
+.mailbox-ui-title{ flex:1; font-size:2.6cqh; font-weight:900; color:var(--c-ink); }
+.mailbox-ui-wallet{
+  display:flex; align-items:center; gap:.4cqw; font-size:1.9cqh; font-weight:900;
+  color:var(--c-gold-deep); background:rgba(231,181,74,.14);
+  border:0.16cqh solid rgba(231,181,74,.4); border-radius:1cqh; padding:.5cqh 1cqw;
+}
+.mailbox-wallet-icon{ font-size:2cqh; }
+.mailbox-ui-close{
+  width:4.2cqh; height:4.2cqh; border-radius:50%; border:0.2cqh solid var(--c-panel-line);
+  background:#fff; color:var(--c-ink); font-size:2.2cqh; font-weight:900; line-height:1; cursor:pointer;
+}
+
+.mailbox-ui-tabs{ flex:none; display:flex; gap:.8cqw; }
+.mailbox-tab{
+  flex:1; height:4.2cqh; border-radius:1cqh; border:0.18cqh solid var(--c-panel-line);
+  background:#fff; color:var(--c-ink-soft); font:inherit; font-size:1.7cqh; font-weight:900; cursor:pointer;
+}
+.mailbox-tab.active{ background:var(--c-blue); color:#fff; border-color:var(--c-blue-deep); }
+
+.mailbox-ui-body{
+  flex:1; min-height:24cqh; overflow-y:auto; display:flex; flex-direction:column; gap:1cqh;
+  padding-right:.3cqw;
+}
+.mailbox-status-msg{ margin:auto; text-align:center; color:var(--c-ink-soft); font-size:1.8cqh; font-weight:800; }
+.mailbox-status-error{ color:var(--c-red-deep); }
+.mailbox-retry-btn{
+  margin:0 auto; height:4cqh; padding:0 1.4cqw; border-radius:1cqh; border:0.18cqh solid var(--c-panel-line);
+  background:#fff; color:var(--c-ink); font:inherit; font-size:1.6cqh; font-weight:900; cursor:pointer;
+}
+
+.mailbox-item{
+  display:flex; align-items:center; gap:1cqw; background:rgba(255,255,255,.6);
+  border:0.16cqh solid var(--c-panel-line); border-radius:1.2cqh; padding:1.2cqh 1.2cqw;
+}
+.mailbox-item.claimed{ opacity:.55; }
+.mailbox-item-icon{ flex:none; font-size:3.2cqh; line-height:1; }
+.mailbox-item-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.35cqh; }
+.mailbox-item-title{ font-size:1.85cqh; font-weight:900; color:var(--c-ink); }
+.mailbox-item-desc{ font-size:1.4cqh; font-weight:700; color:var(--c-ink-soft); }
+.mailbox-item-meta{ display:flex; flex-wrap:wrap; gap:.8cqw; font-size:1.3cqh; font-weight:800; }
+.mailbox-item-reward{ color:var(--c-gold-deep); }
+.mailbox-item-expiry{ color:var(--c-red-deep); }
+.mailbox-claim-btn{
+  flex:none; height:4.4cqh; min-width:8cqw; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
+  background:var(--c-blue); color:#fff; font:inherit; font-size:1.6cqh; font-weight:900; cursor:pointer;
+}
+.mailbox-claim-btn:disabled{ background:#e6e9ee; color:var(--c-ink-soft); cursor:default; border-color:var(--c-panel-line); }
+
+.mailbox-ui-actions{ flex:none; display:flex; gap:1cqw; }
+.mailbox-claim-all-btn{
+  flex:1; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
+  background:var(--c-red); color:#fff; font:inherit; font-size:1.8cqh; font-weight:900; cursor:pointer;
+}
+.mailbox-claim-all-btn:disabled{ background:#e6e9ee; color:var(--c-ink-soft); cursor:default; }
+.mailbox-close-btn{
+  flex:none; min-width:10cqw; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
+  background:#fff; color:var(--c-ink-soft); font:inherit; font-size:1.8cqh; font-weight:900; cursor:pointer;
+}
+
+/* 선물함 트리거 버튼 공통(메인 메뉴/HUD/맵/상점/이벤트) — 배지 표시를 위한 위치 기준점만 부여합니다. */
+.mailbox-trigger-button{ position:relative; }
+.start-screen .start-mailbox-button{ position:absolute; }
+.mailbox-badge{
+  position:absolute; top:-.5cqh; right:-.5cqh; min-width:2cqh; height:2cqh; padding:0 .4cqh;
+  border-radius:1cqh; background:var(--c-red); color:#fff; font-size:1.2cqh; font-weight:900;
+  line-height:2cqh; text-align:center; box-shadow:0 .2cqh .5cqh rgba(0,0,0,.25); pointer-events:none;
+}
+.mailbox-badge[hidden]{ display:none; }
