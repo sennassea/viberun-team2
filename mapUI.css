@@ -11,6 +11,10 @@
   max-height: none;
   display: flex;
   flex-direction: column;
+  background: url("assets/ui_panels/map_popup_frame.png") center/100% 100% no-repeat;
+  border: 0;
+  border-radius: 1.2cqh;
+  box-shadow: 0 2.4cqh 5.6cqh rgba(0,0,0,.42);
 }
 
 /* ── 헤더 ─────────────────────────────────────────────────────────────────── */
@@ -20,6 +24,8 @@
   gap: 1.5cqw;
   padding: 0.9cqh 1.8cqw;
   flex-shrink: 0;
+  background: transparent;
+  border-bottom: 0;
 }
 
 .dmap-loc-badge {
@@ -85,10 +91,7 @@
   cursor: grab;
   user-select: none;
   touch-action: none;
-  background:
-    radial-gradient(ellipse at 30% 40%, rgba(240, 248, 255, 0.6) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 60%, rgba(240, 255, 240, 0.4) 0%, transparent 60%),
-    linear-gradient(145deg, #edf3f8 0%, #f2ece0 45%, #edf3ee 100%);
+  background: transparent;
 }
 .dmap-canvas-wrap:active { cursor: grabbing; }
 
