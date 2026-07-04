@@ -1080,7 +1080,7 @@ function nodeClear(){
     grantBattleGoldReward();
     return endGame("win");
   }
-  if(nodeType==="elite") grantRelic();             // 엘리트 → 유물 추가 (기획서 §10)
+  if(nodeType==="elite") grantRelic(S.battleVictoryRelicSource || "elite");             // 엘리트 → 유물 추가 (기획서 §10)
   openBattleVictoryReward();
 }
 
@@ -1133,7 +1133,7 @@ function grantBattleGoldReward(){
   S.gold = (typeof S.gold === "number" ? S.gold : STARTING_GOLD) + amount;
   syncRunStateFromCombat();
   renderHud();
-  toast("골드 +" + amount);
+  toast("복채 +" + amount);
   return amount;
 }
 
@@ -1170,10 +1170,14 @@ function getBattleVictoryPotionChance(){
 }
 function createBattleVictoryBaseRewards(){
   const gold = getBattleVictoryGoldAmount();
-  return [
-    { id:"gold", name:"복채", icon:"복", value:"+" + gold, amount:gold, doneText:"수령 완료" },
-    { id:"card", name:"주문 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" },
-  ];
+  const rewards = [];
+  if(!S || !S.battleSuppressGoldReward){
+    rewards.push({ id:"gold", name:"복채", icon:"복", value:"+" + gold, amount:gold, doneText:"수령 완료" });
+  }
+  if(!S || !S.battleSuppressCardReward){
+    rewards.push({ id:"card", name:"의식 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" });
+  }
+  return rewards;
 }
 const BATTLE_VICTORY_POTION_CANDIDATES = (typeof window.POTION_DB !== "undefined") ? window.POTION_DB : [
   { id:"cheongsim_pill", name:"청심환", icon:"藥", emoji:"💊", desc:"정신력을 18 회복합니다.", type:"heal", effect:"healPlayerHp", value:18, target:"player" },
@@ -1214,10 +1218,10 @@ function skipRewardCard(){
   proceedToMap();
 }
 
-function grantRelic(){
+function grantRelic(source = "elite"){
   if(!S.relics) S.relics = [];
-  // obtainFrom에 "elite"가 없는 법구(예: 신령의 은혜 전용 법구)는 드랍 후보에서 제외한다.
-  const pool = RELIC_DB.filter(item => Array.isArray(item.obtainFrom) && item.obtainFrom.includes("elite"));
+  // 이벤트 전투는 source를 "event"로 넘겨 일반 엘리트 법구 풀을 건드리지 않는다.
+  const pool = RELIC_DB.filter(item => Array.isArray(item.obtainFrom) && item.obtainFrom.includes(source));
   const list = pool.length ? pool : RELIC_DB;
   const relic = list[Math.floor(Math.random()*list.length)];
   S.relics.push(relic);
@@ -1289,10 +1293,12 @@ function renderBattleVictoryOverlay(){
 function getBattleVictoryRewards(){
   if(!S.victoryRewards){
     S.victoryRewards = createBattleVictoryBaseRewards();
-    const relicReward = buildBattleVictoryOptionalReward("relic", BATTLE_VICTORY_RELIC_CHANCE);
-    const potionReward = buildBattleVictoryOptionalReward("potion", getBattleVictoryPotionChance());
-    if(relicReward) S.victoryRewards.push(relicReward);
-    if(potionReward) S.victoryRewards.push(potionReward);
+    if(!S.battleSuppressOptionalRewards){
+      const relicReward = buildBattleVictoryOptionalReward("relic", BATTLE_VICTORY_RELIC_CHANCE);
+      const potionReward = buildBattleVictoryOptionalReward("potion", getBattleVictoryPotionChance());
+      if(relicReward) S.victoryRewards.push(relicReward);
+      if(potionReward) S.victoryRewards.push(potionReward);
+    }
   }
   return S.victoryRewards;
 }

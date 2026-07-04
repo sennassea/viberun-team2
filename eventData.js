@@ -4,31 +4,30 @@
   /**
    * ACT1 이벤트 DB
    *
-   * - 이벤트 16종 전체 입력 완료.
-   * - UI는 이 데이터를 읽어서 제목, 스토리, 선택지, 결과 칩을 자동 렌더링한다.
-   * - 확률/수치는 ACT1_이벤트_세부기획서_밸런스조정안 기준으로 반영되었다.
-   * - 스토리 문구는 임시 문구이며, 기획 확정 문구로 추후 교체 가능하다.
-   * - effects에 쓰이는 모든 type은 eventNode.js에 핸들러가 연결되어 있다.
+   * - 데이터 출처: ACT1_이벤트_컨셉_데이터테이블_복채용어최종수정 (1).xlsx
+   * - 카드/주문 표시 용어는 지시서 기준에 맞춰 "의식"으로 표기한다.
+   * - 플레이어 자원 gold는 기존 effect_type 호환을 위해 유지하되, UI 텍스트는 "복채"로 표기한다.
+   * - effect.type 구현명은 기존 eventNode.js 핸들러와의 연결을 보호하기 위해 변경하지 않는다.
    */
   const EVENT_DB = [
     {
       id: "event_01_card_low_risk",
-      title: "이벤트 1",
+      title: "놀이터의 작은 목소리",
       type: "random",
       category: "reward",
       phaseTags: ["early", "mid"],
       weight: 10,
       story: [
-        "조용한 복도 끝에서 희미한 기척이 느껴진다.",
-        "작은 영혼이 당신을 바라보며 도움을 청한다."
+        "빈 놀이터 한쪽에서 아이의 목소리가 들린다.",
+        "보이지 않는 아이가 \"내 이야기 들어줄래?\" 하고 묻는다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "아이의 이야기를 듣고 치료를 돕는다.",
+          label: "이야기를 들어준다",
+          desc: "새 의식 보상 65% / 정신력 -10 35%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "주문 보상", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "새 의식 보상", chance: 65,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] },
             { kind: "negative", icon: "minus", text: "정신력 -10", chance: 35,
               effects: [{ type: "spirit", value: -10 }] }
@@ -36,10 +35,10 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "기척을 살피고 주변을 조사한다.",
+          label: "주변을 살핀다",
+          desc: "복채 +35 55% / 일반 전투 45%",
           outcomes: [
-            { kind: "positive", icon: "coin", text: "골드 +35", chance: 55,
+            { kind: "positive", icon: "coin", text: "복채 +35", chance: 55,
               effects: [{ type: "gold", value: 35 }] },
             { kind: "negative", icon: "sword", text: "일반 전투", chance: 45,
               effects: [{ type: "combat", combatType: "normal" }] }
@@ -47,28 +46,28 @@
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "아무 일도 하지 않고 지나간다.",
+          label: "지나간다",
+          desc: "결과 없음",
           outcomes: []
         }
       ]
     },
     {
       id: "event_02_recovery_potion",
-      title: "이벤트 2",
+      title: "간호 스테이션의 남은 처방",
       type: "random",
       category: "reward",
       phaseTags: ["early"],
       weight: 10,
       story: [
-        "작은 병실 앞에 놓인 약장이 은은한 빛을 낸다.",
-        "몸을 추스르거나, 위험을 감수하고 약병을 챙길 수 있을 것 같다."
+        "아무도 없는 간호 스테이션에 이름이 지워진 처방 기록과 작은 약병이 남아 있다.",
+        "처방 기록은 아직 체온이 남은 듯 희미하게 빛난다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "안전하게 몸과 마음을 추스른다.",
+          label: "처방대로 쉰다",
+          desc: "정신력 +10",
           outcomes: [
             { kind: "positive", icon: "sparkle", text: "정신력 +10", chance: 100,
               effects: [{ type: "spirit", value: 10 }] }
@@ -76,44 +75,44 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "약장 속 약병에 손을 뻗어본다.",
+          label: "약병을 챙긴다",
+          desc: "이벤트 Common 약병 1개 70% / 정신력 -8 30%",
           outcomes: [
-            { kind: "positive", icon: "potion", text: "이벤트 약병 1개", chance: 70,
-              effects: [{ type: "potionRandom", source: "event" }] },
+            { kind: "positive", icon: "potion", text: "이벤트 Common 약병 1개", chance: 70,
+              effects: [{ type: "potionRandom", source: "event", rarity: "common" }] },
             { kind: "negative", icon: "minus", text: "정신력 -8", chance: 30,
               effects: [{ type: "spirit", value: -8 }] }
           ]
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "약장 주변을 살펴 소액을 챙긴다.",
+          label: "접수대 잔돈을 챙긴다",
+          desc: "복채 +18",
           outcomes: [
-            { kind: "positive", icon: "coin", text: "골드 +30", chance: 100,
-              effects: [{ type: "gold", value: 30 }] }
+            { kind: "positive", icon: "coin", text: "복채 +18", chance: 100,
+              effects: [{ type: "gold", value: 18 }] }
           ]
         }
       ]
     },
     {
       id: "event_03_reward_or_combat",
-      title: "이벤트 3",
+      title: "이름 없는 공책",
       type: "random",
       category: "reward",
       phaseTags: ["early", "mid"],
       weight: 8,
       story: [
-        "복도 저편에서 인기척과 함께 낯선 그림자가 어른거린다.",
-        "다가가면 무언가를 얻을 수 있지만, 위험이 함께할지도 모른다."
+        "빈 교실 책상 위에 이름 없는 공책이 펼쳐져 있다.",
+        "글씨는 아직도 천천히 적히고 있다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "적극적으로 다가가 본다.",
+          label: "공책을 읽는다",
+          desc: "새 의식 보상 55% / 일반 전투 45%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "주문 보상", chance: 55,
+            { kind: "positive", icon: "sparkle", text: "새 의식 보상", chance: 55,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] },
             { kind: "negative", icon: "sword", text: "일반 전투", chance: 45,
               effects: [{ type: "combat", combatType: "normal" }] }
@@ -121,19 +120,19 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "주문 후보를 확인한 뒤 신중하게 고른다.",
+          label: "필요한 구절만 베낀다",
+          desc: "의식 후보 확인 후 1장 선택 또는 포기",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "주문 후보 확인 후 선택 또는 포기", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "의식 후보 확인 후 선택/포기", chance: 100,
               effects: [{ type: "cardRewardOptional", count: 3 }] }
           ]
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "위험 없이 주변을 탐색한다.",
+          label: "책상 서랍을 뒤진다",
+          desc: "복채 +30 65% / 정신력 -6 35%",
           outcomes: [
-            { kind: "positive", icon: "coin", text: "골드 +30", chance: 65,
+            { kind: "positive", icon: "coin", text: "복채 +30", chance: 65,
               effects: [{ type: "gold", value: 30 }] },
             { kind: "negative", icon: "minus", text: "정신력 -6", chance: 35,
               effects: [{ type: "spirit", value: -6 }] }
@@ -143,22 +142,22 @@
     },
     {
       id: "event_04_gold_for_potion",
-      title: "이벤트 4",
+      title: "잠긴 약품 보관함",
       type: "random",
       category: "trade",
       phaseTags: ["early", "mid", "late"],
       weight: 8,
       story: [
-        "약사 옷을 입은 영혼이 좌판을 펼쳐 놓고 있다.",
-        "골드를 내고 원하는 약을 고르거나, 운에 맡겨볼 수 있다."
+        "병원 복도 한쪽, 잠긴 약품 보관함 안에서 약병들이 서로 부딪히는 소리가 난다.",
+        "복채를 내고 원하는 약병을 고르거나, 대가를 모른 채 손을 넣어볼 수 있다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "골드를 내고 원하는 약병을 고른다.",
+          label: "복채를 내고 약병을 고른다",
+          desc: "복채 -45 / 이벤트 약병 2개 중 1개 선택",
           outcomes: [
-            { kind: "neutral", icon: "potion", text: "골드 -45 / 이벤트 약병 2개 중 1개 선택", chance: 100,
+            { kind: "neutral", icon: "potion", text: "복채 -45 / 이벤트 약병 2개 중 1개 선택", chance: 100,
               effects: [
                 { type: "gold", value: -45 },
                 { type: "potionChoice", count: 2, source: "event" }
@@ -167,8 +166,8 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "위험을 감수하고 약병에 손을 뻗는다.",
+          label: "아무 약병이나 꺼낸다",
+          desc: "이벤트 약병 1개 50% / 정신력 -10 50%",
           outcomes: [
             { kind: "positive", icon: "potion", text: "이벤트 약병 1개", chance: 50,
               effects: [{ type: "potionRandom", source: "event" }] },
@@ -178,41 +177,41 @@
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "위험 없이 주변을 탐색한다.",
+          label: "주변을 살핀다",
+          desc: "복채 +22 65% / 정신력 -5 35%",
           outcomes: [
-            { kind: "positive", icon: "coin", text: "골드 +30", chance: 65,
-              effects: [{ type: "gold", value: 30 }] },
+            { kind: "positive", icon: "coin", text: "복채 +22", chance: 65,
+              effects: [{ type: "gold", value: 22 }] },
             { kind: "negative", icon: "minus", text: "정신력 -5", chance: 35,
               effects: [{ type: "spirit", value: -5 }] }
           ]
         },
         {
           id: "D",
-          label: "선택지 D",
-          desc: "아무 일도 하지 않고 지나간다.",
+          label: "지나간다",
+          desc: "결과 없음",
           outcomes: []
         }
       ]
     },
     {
       id: "event_05_gold_spirit_remove",
-      title: "이벤트 5",
+      title: "벤치 아래 분실물 상자",
       type: "random",
       category: "trade",
       phaseTags: ["mid", "late"],
       weight: 8,
       story: [
-        "지친 기색의 영혼이 거래를 제안한다.",
-        "무엇을 내주고 무엇을 얻을지는 당신의 선택에 달렸다."
+        "공원 벤치 아래에 오래된 분실물 상자가 놓여 있다.",
+        "누군가 두고 간 물건들이 조용히 흔들린다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "골드를 내어주고 몸과 마음을 다독인다.",
+          label: "값을 치르고 마음을 달랜다",
+          desc: "복채 -50 / 정신력 +18",
           outcomes: [
-            { kind: "neutral", icon: "coin", text: "골드 -50 / 정신력 +18", chance: 100,
+            { kind: "neutral", icon: "coin", text: "복채 -50 / 정신력 +18", chance: 100,
               effects: [
                 { type: "gold", value: -50 },
                 { type: "spirit", value: 18 }
@@ -221,10 +220,10 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "정신력을 소모해 덱을 정리한다.",
+          label: "의식 하나를 덜어낸다",
+          desc: "의식 삭제 1장 / 정신력 -10",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -10", chance: 100,
+            { kind: "neutral", icon: "minus", text: "의식 삭제 1장 / 정신력 -10", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -10 }
@@ -233,12 +232,12 @@
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "위험을 감수하고 큰 골드를 노린다.",
+          label: "상자 속 복채를 가져간다",
+          desc: "복채 +60 60% / 상태 의식 1장 추가 40%",
           outcomes: [
-            { kind: "positive", icon: "coin", text: "골드 +60", chance: 60,
+            { kind: "positive", icon: "coin", text: "복채 +60", chance: 60,
               effects: [{ type: "gold", value: 60 }] },
-            { kind: "negative", icon: "status", text: "상태 주문 1장 추가", chance: 40,
+            { kind: "negative", icon: "status", text: "상태 의식 1장 추가", chance: 40,
               effects: [{ type: "addStatusCard", candidates: ["intrusive_thought", "regret"], count: 1 }] }
           ]
         }
@@ -246,20 +245,20 @@
     },
     {
       id: "event_06_potion_choice",
-      title: "이벤트 6",
+      title: "보건실의 약봉투",
       type: "random",
       category: "trade",
       phaseTags: ["mid", "late"],
       weight: 8,
       story: [
-        "약병이 가득한 진열장 앞에 낯선 기운이 감돈다.",
-        "안전한 약을 고르거나, 강력한 약병에 손을 뻗어볼 수 있다."
+        "학교 보건실 책상 위에 약봉투 여러 개가 놓여 있다.",
+        "그중 하나에는 붉은 실로 봉인이 묶여 있다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "안전하게 약병을 고른다.",
+          label: "안전한 약봉투를 고른다",
+          desc: "이벤트 Common 약병 2개 중 1개 선택",
           outcomes: [
             { kind: "positive", icon: "potion", text: "이벤트 Common 약병 2개 중 1개 선택", chance: 100,
               effects: [{ type: "potionChoice", count: 2, source: "event", rarity: "common" }] }
@@ -267,10 +266,10 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "귀문부에 손을 뻗어본다.",
+          label: "봉인된 약봉투를 연다",
+          desc: "귀문부 55% / 정신력 -15 45%",
           outcomes: [
-            { kind: "positive", icon: "potion", text: "귀문부 획득", chance: 55,
+            { kind: "positive", icon: "potion", text: "귀문부", chance: 55,
               effects: [{ type: "potionSpecific", potionId: "ghost_gate_talisman" }] },
             { kind: "negative", icon: "minus", text: "정신력 -15", chance: 45,
               effects: [{ type: "spirit", value: -15 }] }
@@ -278,8 +277,8 @@
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "안전하게 정신을 가다듬는다.",
+          label: "잠깐 숨을 고른다",
+          desc: "정신력 +12",
           outcomes: [
             { kind: "positive", icon: "sparkle", text: "정신력 +12", chance: 100,
               effects: [{ type: "spirit", value: 12 }] }
@@ -287,39 +286,39 @@
         },
         {
           id: "D",
-          label: "선택지 D",
-          desc: "아무 일도 하지 않고 지나간다.",
+          label: "지나간다",
+          desc: "결과 없음",
           outcomes: []
         }
       ]
     },
     {
       id: "event_07_deck_edit_basic",
-      title: "이벤트 7",
+      title: "찢어진 노트 정리",
       type: "random",
       category: "deck",
       phaseTags: ["early", "mid"],
       weight: 8,
       story: [
-        "빛바랜 방명록이 펼쳐진 채 놓여 있다.",
-        "새로운 인연을 맞이하거나, 묵은 인연을 정리할 수 있다."
+        "찢어진 노트에 지금까지의 의식들이 어지럽게 적혀 있다.",
+        "다시 적거나, 지우거나, 바꿀 수 있을 것 같다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "새로운 인연을 덱에 맞이한다.",
+          label: "새 의식을 적는다",
+          desc: "새 의식 보상 3장 중 1장",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "주문 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "새 의식 보상", chance: 100,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "정신력을 소모해 묵은 주문을 정리한다.",
+          label: "의식 하나를 지운다",
+          desc: "의식 삭제 1장 / 정신력 -8",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -8", chance: 100,
+            { kind: "neutral", icon: "minus", text: "의식 삭제 1장 / 정신력 -8", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -8 }
@@ -328,10 +327,10 @@
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "주문 한 장을 정리하고 새 인연을 맞이한다.",
+          label: "하나를 지우고 새로 적는다",
+          desc: "의식 1장 삭제 후 새 의식 보상 3장 중 1장",
           outcomes: [
-            { kind: "neutral", icon: "sparkle", text: "주문 1장 삭제 후 주문 보상", chance: 100,
+            { kind: "neutral", icon: "sparkle", text: "의식 1장 삭제 후 새 의식 보상", chance: 100,
               effects: [{ type: "cardTransform", removeCount: 1, rewardCount: 3, pick: 1 }] }
           ]
         }
@@ -339,31 +338,31 @@
     },
     {
       id: "event_08_duplicate_or_attr",
-      title: "이벤트 8",
+      title: "칠판 위 반복문",
       type: "random",
       category: "deck",
       phaseTags: ["mid", "late"],
       weight: 7,
       story: [
-        "당신의 마음을 들여다보는 듯한 시선이 느껴진다.",
-        "지금의 나와 어울리는 힘을 받거나, 가진 힘을 복제할 수 있다."
+        "칠판에 같은 문장이 계속 반복되어 있다.",
+        "가장 익숙한 의식의 방향이 선명하게 드러난다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "지금 나에게 가장 어울리는 힘을 받는다.",
+          label: "가장 많이 쓴 계열을 따른다",
+          desc: "현재 덱에서 가장 많은 계열 의식 보상",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "주력 계열 주문 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "주력 계열 의식 보상", chance: 100,
               effects: [{ type: "cardRewardDominantAttr", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "가진 힘을 복제하는 도박을 한다.",
+          label: "익숙한 의식을 다시 베낀다",
+          desc: "현재 덱 의식 1장 복제 65% / 정신력 -15 35%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "덱 주문 1장 복제", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "의식 1장 복제", chance: 65,
               effects: [{ type: "cardDuplicate", excludeRarity: ["rare"] }] },
             { kind: "negative", icon: "minus", text: "정신력 -15", chance: 35,
               effects: [{ type: "spirit", value: -15 }] }
@@ -371,8 +370,8 @@
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "안전하게 마음을 다독인다.",
+          label: "잠깐 물러난다",
+          desc: "정신력 +8",
           outcomes: [
             { kind: "positive", icon: "sparkle", text: "정신력 +8", chance: 100,
               effects: [{ type: "spirit", value: 8 }] }
@@ -382,40 +381,40 @@
     },
     {
       id: "event_09_archetype_choice",
-      title: "이벤트 9",
+      title: "세 갈래 낙서",
       type: "random",
       category: "archetype",
       phaseTags: ["early", "mid", "late"],
       weight: 8,
       story: [
-        "세 갈래 길 앞에서 서로 다른 기운이 당신을 부른다.",
-        "동요, 결계, 성불 중 나아갈 방향을 골라야 한다."
+        "칠판에는 세 갈래 낙서가 있다.",
+        "하나는 흔들리고, 하나는 둘러싸고, 하나는 떠나보낸다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "동요의 힘을 받아들인다.",
+          label: "동요 의식을 고른다",
+          desc: "동요 의식 3장 중 1장",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "동요 주문 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "동요 의식 보상", chance: 100,
               effects: [{ type: "cardRewardTagged", attr: "동요", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "결계의 힘을 받아들인다.",
+          label: "결계 의식을 고른다",
+          desc: "결계 의식 3장 중 1장",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "결계 주문 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "결계 의식 보상", chance: 100,
               effects: [{ type: "cardRewardTagged", attr: "결계", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "성불의 힘을 받아들인다.",
+          label: "성불 의식을 고른다",
+          desc: "성불 의식 3장 중 1장 / 정신력 -8",
           outcomes: [
-            { kind: "neutral", icon: "sparkle", text: "성불 주문 보상 / 정신력 -8", chance: 100,
+            { kind: "neutral", icon: "sparkle", text: "성불 의식 보상 / 정신력 -8", chance: 100,
               effects: [
                 { type: "cardRewardTagged", attr: "성불", count: 3, pick: 1 },
                 { type: "spirit", value: -8 }
@@ -426,20 +425,20 @@
     },
     {
       id: "event_10_risky_relic",
-      title: "이벤트 10",
+      title: "열면 안 되는 병실 서랍",
       type: "random",
       category: "high_risk_high_reward",
       phaseTags: ["mid", "late"],
       weight: 6,
       story: [
-        "낡은 진열장 안에서 강한 기운을 품은 법구가 빛난다.",
-        "손을 뻗으면 얻을 수 있을 것 같지만, 주변의 공기가 불길하게 흔들린다."
+        "병실 침대 옆 서랍에 금줄이 감겨 있다.",
+        "안쪽에서 희미한 법구의 기운이 새어 나온다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "위험을 감수하고 법구에 손을 뻗는다.",
+          label: "조심히 열어본다",
+          desc: "이벤트 법구 1개 55% / 엘리트급 전투 45%",
           outcomes: [
             { kind: "positive", icon: "relic", text: "이벤트 법구 1개", chance: 55,
               effects: [{ type: "relicRandom", source: "event" }] },
@@ -449,41 +448,42 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "정신력을 소모해 법구의 기운을 안정시킨다.",
+          label: "대가를 치르고 연다",
+          desc: "이벤트 법구 1개 / 정신력 -22",
           outcomes: [
-            { kind: "positive", icon: "relic", text: "이벤트 법구 1개", chance: 100,
-              effects: [{ type: "relicRandom", source: "event" }] },
-            { kind: "negative", icon: "minus", text: "정신력 -22", chance: 100,
-              effects: [{ type: "spirit", value: -22 }] }
+            { kind: "neutral", icon: "relic", text: "이벤트 법구 1개 / 정신력 -22", chance: 100,
+              effects: [
+                { type: "relicRandom", source: "event" },
+                { type: "spirit", value: -22 }
+              ] }
           ]
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "불길한 기운을 무시하지 않고 물러난다.",
+          label: "지나간다",
+          desc: "결과 없음",
           outcomes: []
         }
       ]
     },
     {
       id: "event_11_late_high_risk",
-      title: "이벤트 11",
+      title: "폐쇄 수술실의 봉인 물품",
       type: "random",
       category: "high_risk_high_reward",
       phaseTags: ["late"],
       weight: 5,
       story: [
-        "깊은 곳에서 강한 기운이 요동친다.",
-        "큰 보상을 노릴 수 있지만, 그만큼 위험도 크다."
+        "폐쇄된 수술실 안, 수술대 위에 천으로 덮인 물건이 놓여 있다.",
+        "가까이 갈수록 수술등이 켜진다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "희귀한 주문을 노리고 위험을 감수한다.",
+          label: "기록을 확인한다",
+          desc: "Rare 의식 보상 65% / 일반 전투 35%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "Rare 주문 보상", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "Rare 의식 보상", chance: 65,
               effects: [{ type: "cardRewardRare", count: 3, pick: 1 }] },
             { kind: "negative", icon: "sword", text: "일반 전투", chance: 35,
               effects: [{ type: "combat", combatType: "normal" }] }
@@ -491,8 +491,8 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "희귀한 법구에 손을 뻗는다.",
+          label: "봉인 물품을 가져간다",
+          desc: "Rare 이벤트 법구 1개 45% / 정신력 -25 55%",
           outcomes: [
             { kind: "positive", icon: "relic", text: "Rare 이벤트 법구 1개", chance: 45,
               effects: [{ type: "relicRare", source: "event" }] },
@@ -502,64 +502,64 @@
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "안전하게 회복을 시도하지만 대가가 따른다.",
+          label: "숨을 고른다",
+          desc: "정신력 +18 55% / 복채 -40 45%",
           outcomes: [
             { kind: "positive", icon: "sparkle", text: "정신력 +18", chance: 55,
               effects: [{ type: "spirit", value: 18 }] },
-            { kind: "negative", icon: "coin", text: "골드 -40", chance: 45,
+            { kind: "negative", icon: "coin", text: "복채 -40", chance: 45,
               effects: [{ type: "gold", value: -40 }] }
           ]
         },
         {
           id: "D",
-          label: "선택지 D",
-          desc: "아무 일도 하지 않고 지나간다.",
+          label: "지나간다",
+          desc: "결과 없음",
           outcomes: []
         }
       ]
     },
     {
       id: "event_12_ambush_weak",
-      title: "이벤트 12",
+      title: "혼자 흔들리는 그네",
       type: "combat",
       category: "combat",
       phaseTags: ["early", "mid"],
       weight: 7,
       story: [
-        "그림자 하나가 갑자기 앞을 가로막는다.",
-        "미처 대비할 새도 없이 전투가 시작된다."
+        "아무도 없는 그네가 혼자 흔들린다.",
+        "가까이 다가가는 순간, 그네 아래 그림자가 일어난다."
       ],
       choices: [
         {
           id: "AUTO",
-          label: "기습 전투",
-          desc: "이벤트를 확인하자마자 전투가 시작된다.",
+          label: "다가간다",
+          desc: "일반 전투 / 승리 시 복채 +10",
           outcomes: [
-            { kind: "negative", icon: "sword", text: "일반 전투 / 승리 시 골드 +20", chance: 100,
-              effects: [{ type: "combatEvent", combatType: "normal", victoryGold: 20 }] }
+            { kind: "negative", icon: "sword", text: "일반 전투 / 승리 시 복채 +10", chance: 100,
+              effects: [{ type: "combatEvent", combatType: "normal", victoryGold: 10 }] }
           ]
         }
       ]
     },
     {
       id: "event_13_multi_gold_combat",
-      title: "이벤트 13",
+      title: "종례 후 복도",
       type: "combat",
       category: "combat",
       phaseTags: ["mid", "late"],
       weight: 6,
       story: [
-        "여러 개의 기척이 동시에 다가온다.",
-        "한꺼번에 몰려드는 무리를 상대해야 한다."
+        "종례가 끝난 듯한 학교 복도에 발소리가 겹쳐 들린다.",
+        "뒤돌아보면 원혼들이 줄지어 다가온다."
       ],
       choices: [
         {
           id: "AUTO",
-          label: "다수전",
-          desc: "여러 상대가 한꺼번에 나타난다.",
+          label: "뒤돌아본다",
+          desc: "다수전 / 승리 시 복채 +60",
           outcomes: [
-            { kind: "negative", icon: "sword", text: "다수전 / 승리 시 골드 +60", chance: 100,
+            { kind: "negative", icon: "sword", text: "다수전 / 승리 시 복채 +60", chance: 100,
               effects: [{ type: "combatEvent", combatType: "normal", victoryGold: 60 }] }
           ]
         }
@@ -567,43 +567,51 @@
     },
     {
       id: "event_14_elite_relic_combat",
-      title: "이벤트 14",
+      title: "봉인 병동의 호출벨",
       type: "combat",
       category: "combat",
       phaseTags: ["late"],
       weight: 4,
       story: [
-        "짙은 기운을 두른 존재가 길을 막아선다.",
-        "만만치 않은 상대이지만, 이긴다면 값진 것을 얻을 수 있을 것이다."
+        "출입 금지된 병동 앞에서 호출벨이 울린다.",
+        "문 너머의 존재는 법구를 지키고 있다."
       ],
       choices: [
         {
           id: "AUTO",
-          label: "엘리트 전투",
-          desc: "강한 기운을 두른 상대가 나타난다.",
+          label: "문을 연다",
+          desc: "엘리트급 전투 / 승리 시 이벤트 법구 1개 / 의식 보상 없음",
           outcomes: [
-            { kind: "negative", icon: "sword", text: "엘리트급 전투 / 승리 시 이벤트 법구 1개, 주문 보상 없음", chance: 100,
-              effects: [{ type: "combatEvent", combatType: "elite", victoryRelic: true, suppressCardReward: true }] }
+            { kind: "negative", icon: "sword", text: "엘리트급 전투 / 승리 시 이벤트 법구 1개 / 의식 보상 없음", chance: 100,
+              effects: [{
+                type: "combatEvent",
+                combatType: "elite",
+                victoryRelic: true,
+                victoryRelicSource: "event",
+                suppressCardReward: true,
+                suppressGoldReward: true,
+                suppressOptionalRewards: true
+              }] }
           ]
         }
       ]
     },
     {
       id: "event_15_risky_bad_luck",
-      title: "이벤트 15",
+      title: "모래밭의 반짝임",
       type: "random",
       category: "bad_luck",
       phaseTags: ["mid", "late"],
       weight: 5,
       story: [
-        "불길한 예감이 스치지만 돌아서기엔 늦었다.",
-        "무언가를 얻으려면 위험을 감수해야 한다."
+        "모래밭 속에 무언가 반짝인다.",
+        "꺼내면 도움이 될 수도 있지만, 손끝에 찝찝한 기운이 감긴다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "위험을 감수하고 법구에 손을 뻗는다.",
+          label: "파내본다",
+          desc: "이벤트 법구 1개 30% / 정신력 -15 70%",
           outcomes: [
             { kind: "positive", icon: "relic", text: "이벤트 법구 1개", chance: 30,
               effects: [{ type: "relicRandom", source: "event" }] },
@@ -613,10 +621,10 @@
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "정신력을 소모해 덱을 정리한다.",
+          label: "미련 하나를 묻는다",
+          desc: "의식 삭제 1장 / 정신력 -10",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -10", chance: 100,
+            { kind: "neutral", icon: "minus", text: "의식 삭제 1장 / 정신력 -10", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -10 }
@@ -625,48 +633,48 @@
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "안전하게 지나간다.",
+          label: "그냥 둔다",
+          desc: "결과 없음",
           outcomes: []
         }
       ]
     },
     {
       id: "event_16_true_bad_luck",
-      title: "이벤트 16",
+      title: "멈추지 않는 회전놀이",
       type: "random",
       category: "bad_luck",
       phaseTags: ["mid", "late"],
       weight: 3,
       story: [
-        "병원 복도 전체가 갑자기 어둡게 가라앉는다.",
-        "이미 늦었다. 이곳을 빠져나가려면 무언가를 잃어야 한다."
+        "낡은 회전놀이가 혼자 천천히 돈다.",
+        "발을 들인 순간 멈추지 않고, 무언가를 잃어야만 내려올 수 있다."
       ],
       choices: [
         {
           id: "A",
-          label: "선택지 A",
-          desc: "정신을 다잡고 억지로 길을 연다.",
+          label: "정신력을 잃고 버틴다",
+          desc: "정신력 -10, 단 최소 1은 남김",
           outcomes: [
-            { kind: "negative", icon: "minus", text: "정신력 -10", chance: 100,
+            { kind: "negative", icon: "minus", text: "정신력 -10, 단 최소 1은 남김", chance: 100,
               effects: [{ type: "spiritMin1", value: -10 }] }
           ]
         },
         {
           id: "B",
-          label: "선택지 B",
-          desc: "가지고 있던 것을 내어주고 지나간다.",
+          label: "복채를 잃고 빠져나온다",
+          desc: "복채 -35, 부족 시 보유 복채 전부 제거 + 정신력 -5",
           outcomes: [
-            { kind: "negative", icon: "coin", text: "골드 -35 / 부족 시 정신력 -5", chance: 100,
+            { kind: "negative", icon: "coin", text: "복채 -35 / 부족 시 정신력 -5", chance: 100,
               effects: [{ type: "goldOrSpiritPenalty", goldValue: -35, fallbackSpirit: -5 }] }
           ]
         },
         {
           id: "C",
-          label: "선택지 C",
-          desc: "불길한 생각을 애써 외면한다.",
+          label: "나쁜 기억을 떠안는다",
+          desc: "상태 의식 1장 추가",
           outcomes: [
-            { kind: "negative", icon: "status", text: "상태 주문 1장 추가", chance: 100,
+            { kind: "negative", icon: "status", text: "상태 의식 1장 추가", chance: 100,
               effects: [{ type: "addStatusCard", candidates: ["intrusive_thought", "regret"], count: 1 }] }
           ]
         }
@@ -674,15 +682,6 @@
     }
   ];
 
-  /**
-   * 전역 런타임 DB로 등록한다.
-   * 다른 파일에서는 window.EVENT_DB로 접근한다.
-   */
   window.EVENT_DB = EVENT_DB;
-
-  /**
-   * 개발 확인용 로그.
-   * 운영 빌드에서 로그가 거슬리면 추후 제거 가능하다.
-   */
   console.info(`[eventData] EVENT_DB loaded: ${EVENT_DB.length} events`);
 })();
