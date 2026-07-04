@@ -328,10 +328,6 @@ function ensureShopOverlay() {
     if (typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
     else if (typeof toast === "function") toast("가방 확인 기능은 준비 중입니다.");
   });
-  overlay.querySelector("#shopMailboxBtn").addEventListener("click", () => {
-    if (window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.open === "function") window.VIBERUN_MAILBOX_UI.open();
-    else if (typeof toast === "function") toast("선물함을 불러올 수 없습니다.");
-  });
   overlay.querySelector("#shopSettingsBtn").addEventListener("click", () => {
     const settingsBtn = Array.from(document.querySelectorAll(".hud-btn"))
       .find((b) => b.textContent.includes("⚙️") || b.textContent.includes("⚙"));
@@ -369,7 +365,6 @@ function shopOverlayHtml() {
         '<button type="button" class="shop-header-btn" id="shopMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
         '<button type="button" class="shop-header-btn" id="shopDeckBtn"><span class="ico">📖</span><span>보유주문</span></button>' +
         '<button type="button" class="shop-header-btn" id="shopBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
-        '<button type="button" class="shop-header-btn mailbox-trigger-button" id="shopMailboxBtn"><span class="ico">🎁</span><span class="mailbox-badge" hidden>0</span><span>선물함</span></button>' +
         '<button type="button" class="shop-header-btn" id="shopSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
     '</div>' +

@@ -2788,13 +2788,6 @@ function bindCombatButtonsOnce(){
       else toast("가방을 불러올 수 없습니다.");
     });
   }
-  const mailboxViewerButton = document.querySelector("#mailboxViewerButton");
-  if(mailboxViewerButton){
-    mailboxViewerButton.addEventListener("click", () => {
-      if(window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.open === "function") window.VIBERUN_MAILBOX_UI.open();
-      else toast("선물함을 불러올 수 없습니다.");
-    });
-  }
 }
 
 injectRewardStyles();

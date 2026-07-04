@@ -139,7 +139,6 @@ function eventShellHtml(){
         '<button type="button" class="event-menu-btn" id="eventMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
         '<button type="button" class="event-menu-btn" id="eventDeckBtn"><span class="ico">📖</span><span>보유 의식</span></button>' +
         '<button type="button" class="event-menu-btn" id="eventBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
-        '<button type="button" class="event-menu-btn mailbox-trigger-button" id="eventMailboxBtn"><span class="ico">🎁</span><span class="mailbox-badge" hidden>0</span><span>선물함</span></button>' +
         '<button type="button" class="event-menu-btn" id="eventSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
     '</div>' +
@@ -175,7 +174,6 @@ function onEventOverlayClick(e){
   if(e.target.closest("#eventMapBtn")){ openEventMapPreview(); return; }
   if(e.target.closest("#eventDeckBtn")){ openEventDeckPreview(); return; }
   if(e.target.closest("#eventBagBtn")){ openEventBagPreview(); return; }
-  if(e.target.closest("#eventMailboxBtn")){ openEventMailboxPreview(); return; }
   if(e.target.closest("#eventSettingsBtn")){ openEventSettingsPreview(); return; }
 }
 
@@ -217,11 +215,6 @@ function openEventDeckPreview(){
 function openEventBagPreview(){
   if(typeof window.BAG_UI_OPEN === "function"){ window.BAG_UI_OPEN(); return; }
   if(typeof toast === "function") toast("가방 확인 기능을 불러올 수 없습니다.");
-}
-
-function openEventMailboxPreview(){
-  if(window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.open === "function"){ window.VIBERUN_MAILBOX_UI.open(); return; }
-  if(typeof toast === "function") toast("선물함을 불러올 수 없습니다.");
 }
 
 function openEventSettingsPreview(){
