@@ -74,7 +74,7 @@ function buildRecordPage(){
     '<div class="record-page-panel" role="dialog" aria-modal="true" aria-labelledby="recordPageTitle">' +
       '<div class="record-page-head">' +
         '<h2 id="recordPageTitle">기록</h2>' +
-        '<button type="button" class="record-page-close" aria-label="닫기">×</button>' +
+        '<button type="button" class="record-page-close" aria-label="닫기">닫기</button>' +
       '</div>' +
       '<div class="record-page-body"></div>' +
     '</div>';
@@ -114,16 +114,16 @@ function injectRecordPageStyles(){
   style.textContent =
     '.record-page-overlay{position:absolute;inset:0;z-index:230;display:none;place-items:center;background:rgba(10,20,40,.58);backdrop-filter:blur(.5cqh);}' +
     '.record-page-overlay.show{display:grid;}' +
-    '.record-page-panel{width:min(54cqw,78cqh);max-height:78cqh;display:flex;flex-direction:column;background:rgba(255,255,255,.96);border:.28cqh solid var(--c-panel-line);border-radius:1.4cqh;box-shadow:0 2cqh 6cqh rgba(0,0,0,.34);overflow:hidden;color:var(--c-ink);}' +
-    '.record-page-head{display:flex;align-items:center;justify-content:space-between;padding:1.6cqh 1.8cqw;border-bottom:.18cqh solid var(--c-panel-line);}' +
-    '.record-page-head h2{font-size:2.8cqh;margin:0;font-weight:900;}' +
-    '.record-page-close{width:4cqh;height:4cqh;border-radius:50%;border:.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);font-size:2.2cqh;font-weight:900;cursor:pointer;line-height:1;}' +
-    '.record-page-body{padding:1.4cqh 1.5cqw;overflow:auto;display:grid;gap:1cqh;}' +
-    '.record-page-empty{padding:6cqh 1cqw;text-align:center;font-size:2cqh;font-weight:900;color:var(--c-ink-soft);}' +
-    '.record-page-item{display:flex;align-items:center;gap:1cqw;padding:1.1cqh 1cqw;border:.18cqh solid var(--c-panel-line);border-radius:1cqh;background:linear-gradient(180deg,#fff,#eef6ff);}' +
-    '.record-page-rank{width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;background:var(--c-blue);color:#fff;font-size:1.8cqh;font-weight:900;}' +
+    '.record-page-panel{width:min(62cqw,90cqh);max-height:80cqh;display:flex;flex-direction:column;box-sizing:border-box;padding:3.8cqh 3.1cqw 3.2cqh;background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 2cqh 6cqh rgba(0,0,0,.28);overflow:hidden;color:var(--c-ink);}' +
+    '.record-page-head{display:flex;align-items:center;justify-content:center;position:relative;padding:.4cqh 4.8cqh 1.6cqh;border-bottom:.16cqh solid rgba(201,164,91,.52);}' +
+    '.record-page-head h2{font-size:3.2cqh;margin:0;font-weight:900;letter-spacing:.08em;color:#6b4628;text-shadow:0 .12cqh 0 rgba(255,255,255,.9);}' +
+    '.record-page-close{position:absolute;right:0;top:-.7cqh;width:4.7cqh;height:4.7cqh;border:0;background:transparent url("assets/ui_buttons/close.png") center/contain no-repeat;color:transparent;font-size:0;cursor:pointer;line-height:1;}' +
+    '.record-page-body{min-height:28cqh;padding:1.6cqh .6cqw .2cqh;overflow:auto;display:grid;gap:1cqh;}' +
+    '.record-page-empty{align-self:center;padding:6cqh 1cqw;text-align:center;font-size:2cqh;font-weight:900;color:var(--c-ink-soft);}' +
+    '.record-page-item{display:flex;align-items:center;gap:1cqw;min-height:7cqh;padding:1cqh 1.15cqw;border:.14cqh solid rgba(201,164,91,.58);border-radius:1cqh;background:rgba(255,250,238,.74);box-shadow:inset 0 0 0 .08cqh rgba(255,255,255,.72);}' +
+    '.record-page-rank{width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;background:#d6a95b;color:#fff;font-size:1.8cqh;font-weight:900;box-shadow:inset 0 -.2cqh .45cqh rgba(83,49,12,.24);}' +
     '.record-page-main{min-width:0;display:grid;gap:.25cqh;}' +
-    '.record-page-main strong{font-size:2.2cqh;line-height:1.1;}' +
+    '.record-page-main strong{font-size:2.2cqh;line-height:1.1;color:#52371f;}' +
     '.record-page-main span{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);}';
   document.head.appendChild(style);
 }
