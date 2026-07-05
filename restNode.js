@@ -410,8 +410,8 @@ function ensurePrayerStyles(){
     ".prayer-player-name span{display:none;}" +
     ".prayer-hp-row{display:flex;align-items:center;gap:.8cqw;font-size:1.55cqh;font-weight:800;color:var(--c-ink);}" +
     ".prayer-hp-row span:first-child{color:var(--c-red-deep);}" +
-    ".prayer-hp-bar{position:relative;width:calc(100% - 2cqw);height:1.45cqh;border-radius:.8cqh;overflow:hidden;background:rgba(95,95,95,.58);border:0;}" +
-    ".prayer-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#ff8079,var(--c-hp));transition:width .35s ease;border-radius:.8cqh;}" +
+    ".prayer-hp-bar{position:relative;width:min(13.6cqw,25cqh);height:1.65cqh;border-radius:.8cqh;overflow:hidden;background:rgba(80,38,38,.42);border:0;box-shadow:inset 0 0 0 .12cqh rgba(75,40,28,.35);}" +
+    ".prayer-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#ff6f67 0%,#e33434 58%,#a6171f 100%);transition:width .35s ease;border-radius:.8cqh;}" +
     "#prayerHpText{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.15cqh;font-weight:900;line-height:1;text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}" +
     ".prayer-resource-row{display:flex;align-items:center;gap:.65cqw;font-size:1.45cqh;font-weight:900;color:var(--c-ink);transform:translateX(2cqw);width:calc(100% - 2cqw);}" +
     ".prayer-resource{display:inline-flex;align-items:center;gap:.22cqw;color:var(--c-ink);font-size:1.45cqh;}" +
@@ -437,11 +437,11 @@ function ensurePrayerStyles(){
     ".prayer-body{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;}" +
     ".prayer-cards{display:flex;gap:1.6cqw;justify-content:center;width:100%;max-width:88cqw;}" +
     ".prayer-card{flex:1;max-width:26cqw;min-height:44cqh;display:flex;flex-direction:column;align-items:center;" +
-      "gap:.9cqh;padding:2cqh 1.4cqw;background:linear-gradient(180deg,rgba(255,252,242,.96),rgba(247,235,208,.92));" +
-      "border:.28cqh solid rgba(178,140,80,.5);border-radius:1.6cqh;box-shadow:0 .8cqh 1.6cqh rgba(90,65,25,.18);" +
+      "gap:.9cqh;padding:4.2cqh 2.2cqw 3.2cqh;background:transparent url(\"assets/ui_panels/start_blessing_choice_panel.png\") center/100% 100% no-repeat;" +
+      "border:0;border-radius:0;box-shadow:0 .8cqh 1.6cqh rgba(90,65,25,.18);" +
       "cursor:pointer;font:inherit;color:#4a3a24;transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease;}" +
     ".prayer-card:hover{transform:translateY(-.6cqh);box-shadow:0 1.1cqh 2cqh rgba(90,65,25,.26);}" +
-    ".prayer-card.selected{border-color:#c94a3d;box-shadow:0 0 0 .3cqh rgba(201,74,61,.28),0 1.1cqh 2cqh rgba(90,65,25,.26);}" +
+    ".prayer-card.selected{filter:brightness(1.04) drop-shadow(0 0 .75cqh rgba(201,74,61,.38));box-shadow:0 1.1cqh 2cqh rgba(90,65,25,.26);}" +
     ".prayer-card.disabled{opacity:.55;cursor:not-allowed;}" +
     ".prayer-card.disabled:hover{transform:none;box-shadow:0 .8cqh 1.6cqh rgba(90,65,25,.18);}" +
     ".prayer-card-icon{flex:none;width:9cqh;height:9cqh;border-radius:1.2cqh;display:grid;place-items:center;" +

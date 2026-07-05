@@ -114,10 +114,10 @@ function injectRecordPageStyles(){
   style.textContent =
     '.record-page-overlay{position:absolute;inset:0;z-index:230;display:none;place-items:center;background:rgba(10,20,40,.58);backdrop-filter:blur(.5cqh);}' +
     '.record-page-overlay.show{display:grid;}' +
-    '.record-page-panel{width:min(62cqw,90cqh);max-height:80cqh;display:flex;flex-direction:column;box-sizing:border-box;padding:3.8cqh 3.1cqw 3.2cqh;background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 2cqh 6cqh rgba(0,0,0,.28);overflow:hidden;color:var(--c-ink);}' +
-    '.record-page-head{display:flex;align-items:center;justify-content:center;position:relative;padding:.4cqh 4.8cqh 1.6cqh;border-bottom:.16cqh solid rgba(201,164,91,.52);}' +
+    '.record-page-panel{width:min(66cqw,96cqh);max-height:80cqh;display:flex;flex-direction:column;box-sizing:border-box;padding:3.3cqh 3.4cqw 3cqh;background:transparent url("assets/ui/dialog_panel.png") center/115% 122% no-repeat;border:0;border-radius:0;box-shadow:0 2cqh 6cqh rgba(0,0,0,.28);overflow:hidden;color:var(--c-ink);}' +
+    '.record-page-head{display:flex;align-items:center;justify-content:center;position:relative;padding:.15cqh 4.8cqh 1.35cqh;border-bottom:.16cqh solid rgba(201,164,91,.52);}' +
     '.record-page-head h2{font-size:3.2cqh;margin:0;font-weight:900;letter-spacing:.08em;color:#6b4628;text-shadow:0 .12cqh 0 rgba(255,255,255,.9);}' +
-    '.record-page-close{position:absolute;right:0;top:-.7cqh;width:4.7cqh;height:4.7cqh;border:0;background:transparent url("assets/ui_buttons/close.png") center/contain no-repeat;color:transparent;font-size:0;cursor:pointer;line-height:1;}' +
+    '.record-page-close{position:absolute;right:-.55cqh;top:-1.05cqh;width:4.7cqh;height:4.7cqh;border:0;background:transparent url("assets/ui_buttons/close.png") center/contain no-repeat;color:transparent;font-size:0;cursor:pointer;line-height:1;}' +
     '.record-page-body{min-height:28cqh;padding:1.6cqh .6cqw .2cqh;overflow:auto;display:grid;gap:1cqh;}' +
     '.record-page-empty{align-self:center;padding:6cqh 1cqw;text-align:center;font-size:2cqh;font-weight:900;color:var(--c-ink-soft);}' +
     '.record-page-item{display:flex;align-items:center;gap:1cqw;min-height:7cqh;padding:1cqh 1.15cqw;border:.14cqh solid rgba(201,164,91,.58);border-radius:1cqh;background:rgba(255,250,238,.74);box-shadow:inset 0 0 0 .08cqh rgba(255,255,255,.72);}' +

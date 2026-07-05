@@ -353,7 +353,7 @@ function shopOverlayHtml() {
           '<div class="shop-resource-row">' +
             '<span class="shop-resource"><span class="hud-resource-icon hud-resource-icon-relic">🏺</span><b id="shopRelicCount">0</b></span>' +
             '<span class="shop-resource"><span class="hud-resource-icon hud-resource-icon-potion">🧪</span><b id="shopPotionCount">0</b></span>' +
-            '<span class="shop-resource"><span class="hud-resource-icon hud-resource-icon-gold">🪙</span><b id="shopGold">0</b></span>' +
+            '<span class="shop-resource"><span class="hud-resource-icon hud-resource-icon-gold" aria-hidden="true"></span><b id="shopGold">0</b></span>' +
             '<span class="shop-resource" style="display:none"><span class="hud-resource-icon hud-resource-icon-moon">🌙</span><b id="shopMoonShard">0</b></span>' +
           '</div>' +
         '</div>' +
@@ -393,7 +393,7 @@ function shopOverlayHtml() {
       '<div class="shop-detail" id="shopDetail"></div>' +
     '</div>' +
     '<div class="shop-footer">' +
-      '<button type="button" class="shop-footer-btn" id="shopRefreshBtn">새로고침 <span class="shop-cost" id="shopRefreshCost">🪙 20</span></button>' +
+      '<button type="button" class="shop-footer-btn" id="shopRefreshBtn">새로고침 <span class="shop-cost" id="shopRefreshCost"></span></button>' +
       '<button type="button" class="shop-footer-btn shop-exit-btn" id="shopExitBtn">나가기</button>' +
     '</div>'
   );
@@ -472,7 +472,7 @@ function shopProductCardHtml(item) {
         '<button type="button" class="shop-product shop-product-card-frame card-frame-card cost-' + escapeShopHtml(card.type) +
           (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + escapeShopHtml(item.id) + '">' +
           cardFaceHtml(card) +
-          '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : "🪙 " + item.price) + '</div>' +
+          '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : shopGoldCostHtml(item.price)) + '</div>' +
         '</button>'
       );
     }
@@ -483,7 +483,7 @@ function shopProductCardHtml(item) {
       '<div class="shop-product-art">' + escapeShopHtml(item.emoji || "") + '</div>' +
       '<div class="shop-product-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
       '<div class="shop-product-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
-      '<div class="shop-product-price">' + (item.soldOut ? "품절" : "🪙 " + item.price) + '</div>' +
+      '<div class="shop-product-price">' + (item.soldOut ? "품절" : shopGoldCostHtml(item.price)) + '</div>' +
     '</button>'
   );
 }
@@ -518,7 +518,7 @@ function renderShopDetail() {
       '<div class="shop-detail-card-preview card-frame-card cost-' + escapeShopHtml(card.type) + '">' +
         cardFaceHtml(card) +
       '</div>' +
-      '<div class="shop-detail-price">' + (item.soldOut ? "" : "🪙 " + item.price) + '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(item.price)) + '</div>' +
       '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
     )
     : (
@@ -526,7 +526,7 @@ function renderShopDetail() {
       '<div class="shop-detail-art">' + escapeShopHtml(item.emoji || "") + '</div>' +
       '<div class="shop-detail-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
       '<div class="shop-detail-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
-      '<div class="shop-detail-price">' + (item.soldOut ? "" : "🪙 " + item.price) + '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(item.price)) + '</div>' +
       '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
     );
 
@@ -537,7 +537,11 @@ function renderShopDetail() {
 function renderShopFooter() {
   const canRefresh = canAfford(SHOP_STATE.refreshCost);
   shopOverlayEl.querySelector("#shopRefreshBtn").disabled = !canRefresh;
-  shopOverlayEl.querySelector("#shopRefreshCost").textContent = "🪙 " + SHOP_STATE.refreshCost;
+  shopOverlayEl.querySelector("#shopRefreshCost").innerHTML = shopGoldCostHtml(SHOP_STATE.refreshCost);
+}
+
+function shopGoldCostHtml(value) {
+  return '<span class="shop-price-icon hud-resource-icon hud-resource-icon-gold" aria-hidden="true"></span><span>' + escapeShopHtml(value) + '</span>';
 }
 
 function escapeShopHtml(str) {
@@ -603,30 +607,31 @@ function ensureShopStyles() {
 
     ".shop-merchant{flex:none;width:21cqw;min-width:25cqh;position:relative;min-height:0;}" +
     ".shop-merchant-bubble{position:absolute;left:0;right:.8cqw;top:0;z-index:2;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;" +
-      "padding:2.1cqh 1.8cqw;font-size:1.2cqh;font-weight:800;color:#6b4a20;text-align:center;}" +
+      "padding:2.3cqh 2cqw;font-size:1.2cqh;font-weight:800;color:#5b3710;text-align:center;text-shadow:0 .1cqh 0 rgba(255,255,255,.65);filter:drop-shadow(0 .35cqh .7cqh rgba(80,55,24,.12));}" +
     ".shop-merchant-npc{position:absolute;left:-8cqw;top:18cqh;z-index:1;width:48cqw;height:116cqh;display:flex;align-items:flex-start;justify-content:flex-start;" +
       "filter:drop-shadow(0 .7cqh 1.1cqh rgba(90,65,25,.28));pointer-events:none;}" +
     ".shop-merchant-npc img{display:block;width:auto;height:100%;max-width:none;object-fit:contain;object-position:left bottom;}" +
-    ".shop-merchant-box{position:absolute;left:0;right:.8cqw;z-index:2;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;padding:2.1cqh 1.8cqw;}" +
+    ".shop-merchant-box{position:absolute;left:0;right:.8cqw;z-index:2;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;padding:2.25cqh 2cqw;filter:drop-shadow(0 .35cqh .7cqh rgba(80,55,24,.12));}" +
     ".shop-merchant-box:nth-of-type(3){bottom:12.2cqh;}" +
     ".shop-merchant-box:nth-of-type(4){bottom:1.2cqh;}" +
-    ".shop-box-title{font-size:1.2cqh;font-weight:900;color:#8a6b3d;margin-bottom:.3cqh;}" +
-    ".shop-box-desc{font-size:1.15cqh;font-weight:700;color:#6b4a20;line-height:1.4;white-space:pre-line;}" +
+    ".shop-box-title{font-size:1.2cqh;font-weight:900;color:#7a5521;margin-bottom:.3cqh;text-shadow:0 .1cqh 0 rgba(255,255,255,.65);}" +
+    ".shop-box-desc{font-size:1.15cqh;font-weight:800;color:#5b3710;line-height:1.4;white-space:pre-line;}" +
 
-    ".shop-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:0;}" +
-    ".shop-tabs{flex:none;display:flex;gap:.6cqw;}" +
-    ".shop-tab{flex:1;height:5cqh;border-radius:1.1cqh 1.1cqh 0 0;border:.2cqh solid rgba(178,140,80,.5);border-bottom:none;" +
-      "background:rgba(230,214,180,.6);color:#8a6b3d;font-size:1.7cqh;font-weight:900;cursor:pointer;font:inherit;}" +
-    ".shop-tab.active{background:rgba(255,251,240,.96);color:#4a3a24;}" +
-    ".shop-products{flex:0 1 auto;max-height:100%;display:grid;align-content:start;gap:1cqw;padding:1.4cqh 1.2cqw;" +
-      "background:rgba(255,251,240,.9);border:.2cqh solid rgba(178,140,80,.5);border-radius:0 1.1cqh 1.1cqh 1.1cqh;overflow:auto;}" +
+    ".shop-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:.7cqh;padding:2.2cqh 1.5cqw 1.8cqh;" +
+      "background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;}" +
+    ".shop-tabs{flex:none;display:flex;gap:.6cqw;padding:0 .6cqw;}" +
+    ".shop-tab{flex:1;height:4.7cqh;border-radius:0;border:0;" +
+      "background:transparent url(\"assets/ui/settings/settings_panel.png\") center/100% 100% no-repeat;color:#7a5521;text-shadow:0 .1cqh 0 rgba(255,255,255,.65);font-size:1.7cqh;font-weight:900;cursor:pointer;font:inherit;}" +
+    ".shop-tab.active{color:#2f4f36;filter:saturate(1.08) brightness(1.03);}" +
+    ".shop-products{flex:1;min-height:0;display:grid;align-content:start;gap:.9cqw;padding:.9cqh .8cqw 1cqh;" +
+      "background:rgba(255,251,240,.28);border:0;border-radius:.8cqh;overflow:auto;}" +
 
-    ".shop-product{display:flex;flex-direction:column;align-items:center;gap:.5cqh;padding:1.2cqh .8cqw;" +
-      "background:linear-gradient(180deg,rgba(255,252,242,.96),rgba(247,235,208,.92));" +
-      "border:.2cqh solid rgba(178,140,80,.5);border-radius:1.2cqh;cursor:pointer;font:inherit;color:#4a3a24;" +
-      "box-shadow:0 .5cqh 1cqh rgba(90,65,25,.14);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease;}" +
+    ".shop-product{display:flex;flex-direction:column;align-items:center;gap:.5cqh;padding:1.25cqh .9cqw;" +
+      "background:transparent url(\"assets/ui/settings/settings_panel.png\") center/100% 100% no-repeat;" +
+      "border:0;border-radius:0;cursor:pointer;font:inherit;color:#4a3a24;" +
+      "box-shadow:none;transition:transform .12s ease,filter .12s ease;}" +
     ".shop-product:hover{transform:translateY(-.4cqh);}" +
-    ".shop-product.selected{border-color:#3f8fe0;box-shadow:0 0 0 .22cqh rgba(63,143,224,.35);}" +
+    ".shop-product.selected{filter:drop-shadow(0 0 .45cqh rgba(55,128,191,.72)) brightness(1.04);}" +
     ".shop-product.sold-out{opacity:.5;cursor:not-allowed;}" +
     ".shop-product.sold-out:hover{transform:none;}" +
     ".shop-product-name{font-size:1.35cqh;font-weight:900;text-align:center;}" +
@@ -635,6 +640,8 @@ function ensureShopStyles() {
     ".shop-product-type{font-size:1.05cqh;font-weight:800;color:#fff;padding:.15cqh .8cqw;border-radius:.7cqh;background:#8a6b3d;}" +
     ".shop-product-desc{font-size:1.05cqh;font-weight:700;color:#6b4a20;text-align:center;line-height:1.3;min-height:3.2cqh;}" +
     ".shop-product-price{font-size:1.3cqh;font-weight:900;color:#a97a1f;}" +
+    ".shop-product-price,.shop-detail-price,.shop-card-price-badge,.shop-cost{display:inline-flex;align-items:center;justify-content:center;gap:.25cqw;}" +
+    ".shop-price-icon{width:1.8cqh;height:1.8cqh;flex:none;display:inline-block;font-size:0;line-height:1;background-position:center;background-size:contain;background-repeat:no-repeat;}" +
     ".shop-product.shop-product-card-frame{position:relative;display:block;justify-self:center;width:min(13.5cqw,22cqh);height:auto;aspect-ratio:2/3;" +
       "min-height:0;padding:0;gap:0;border:0;border-radius:0;overflow:hidden;background:#f5efe4;}" +
     ".shop-product.shop-product-card-frame.selected{box-shadow:0 0 0 .28cqh rgba(63,143,224,.55),0 .5cqh 1cqh rgba(90,65,25,.14);}" +
@@ -642,7 +649,7 @@ function ensureShopStyles() {
       "background:rgba(255,251,240,.94);border:.14cqh solid rgba(178,140,80,.58);color:#a97a1f;font-size:1.15cqh;font-weight:900;box-shadow:0 .25cqh .6cqh rgba(90,65,25,.18);}" +
 
     ".shop-detail{flex:none;width:17cqw;min-width:22cqh;display:flex;flex-direction:column;align-items:center;gap:.8cqh;" +
-      "padding:1.4cqh 1.1cqw;background:rgba(255,251,240,.92);border:.2cqh solid rgba(178,140,80,.5);border-radius:1.3cqh;}" +
+      "padding:2.5cqh 1.35cqw 2.1cqh;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;}" +
     ".shop-detail-placeholder{margin:auto;font-size:1.3cqh;font-weight:700;color:#8a6b3d;text-align:center;}" +
     ".shop-detail-name{font-size:1.7cqh;font-weight:900;text-align:center;}" +
     ".shop-detail-art{width:100%;min-height:14cqh;display:grid;place-items:center;font-size:7cqh;" +

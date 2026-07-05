@@ -267,14 +267,18 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .hud-hpbar{position:relative; width:100%; height:1.45cqh; border-radius:.8cqh; overflow:hidden;
   background:rgba(122,42,42,.62); border:.12cqh solid rgba(0,0,0,.14);}
 .player-info-card .hud-hpbar{
-  width:calc(100% - 2cqw);
-  background:rgba(95,95,95,.58);
+  width:min(13.6cqw, 25cqh);
+  height:1.65cqh;
+  background:rgba(80,38,38,.42);
   border:0;
-  box-shadow:none;
+  box-shadow:inset 0 0 0 .12cqh rgba(75,40,28,.35);
 }
 #hudHpFill{position:absolute; left:0; top:0; bottom:0; width:100%;
   background:linear-gradient(180deg,#ff8079,var(--c-hp)); transition:width .35s ease;}
-.player-info-card #hudHpFill{border-radius:.8cqh;}
+.player-info-card #hudHpFill{
+  border-radius:.8cqh;
+  background:linear-gradient(180deg,#ff6f67 0%,#e33434 58%,#a6171f 100%);
+}
 #hudHp{position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center;
   color:#fff; font-size:1.15cqh; font-weight:900; line-height:1; text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}
 .hud-resource-row{display:flex; align-items:center; gap:.65cqw; min-width:0; padding-top:.1cqh;}
