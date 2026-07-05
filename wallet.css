@@ -12,9 +12,9 @@
   align-items:center;
   justify-content:center;
   gap:0;
-  width:24cqh;
+  width:24.7cqh;
   height:5.9cqh;
-  padding:0 5.2cqh 0 5.4cqh;
+  padding:0 5.45cqh 0 4.65cqh;
   border:0;
   border-radius:0;
   background:transparent url("assets/ui/start_menu/moon_wallet.png") center/100% 100% no-repeat;
@@ -40,7 +40,17 @@
 }
 
 .start-moon-icon{
-  display:none;
+  position:absolute;
+  left:2.25cqh;
+  top:50%;
+  transform:translateY(-50%);
+  width:3.25cqh;
+  height:3.25cqh;
+  display:block;
+  background:url("assets/ui/resource_icons/moon_shard.png") center/contain no-repeat;
+  font-size:0;
+  line-height:1;
+  pointer-events:none;
 }
 
 .start-moon-count{
@@ -48,7 +58,7 @@
   min-width:0;
   color:#5b341d;
   text-align:center;
-  font-size:2.45cqh;
+  font-size:2.35cqh;
   font-weight:900;
   letter-spacing:0;
   white-space:nowrap;

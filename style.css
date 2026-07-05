@@ -144,8 +144,8 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .start-mailbox-button:active{transform:scale(.96);}
 .start-mailbox-button[hidden]{display:none;}
 .start-mailbox-button{
-  width:11.5cqh;
-  height:12.2cqh;
+  width:10.8cqh;
+  height:12.05cqh;
   min-height:0;
   background:transparent url("assets/ui/start_menu/mailbox.png") center/contain no-repeat;
 }

@@ -77,9 +77,9 @@
   ];
 
   const CODEX_SECTIONS = [
-    { id: "cards", tabId: "codexCards", label: "주문", title: "주문 도감", icon: "🃏" },
-    { id: "relics", tabId: "codexRelics", label: "법구", title: "법구 도감", icon: "🏺" },
-    { id: "potions", tabId: "codexPotions", label: "약병", title: "약병 도감", icon: "🧪" },
+    { id: "cards", tabId: "codexCards", label: "주문", title: "주문 도감", icon: "🃏", image: "assets/ui_buttons/codex_cards.png" },
+    { id: "relics", tabId: "codexRelics", label: "법구", title: "법구 도감", icon: "🏺", image: "assets/ui_buttons/codex_relics.png" },
+    { id: "potions", tabId: "codexPotions", label: "약병", title: "약병 도감", icon: "🧪", image: "assets/ui_buttons/codex_potions.png" },
   ];
 
   function initDeckViewer(){
@@ -344,19 +344,25 @@
       ".deck-viewer.pick-mode .deck-viewer-card.pick-disabled{filter:grayscale(.8) opacity(.45);cursor:not-allowed;}" +
       ".deck-viewer.pick-mode .deck-viewer-card.pick-disabled:hover,.deck-viewer.pick-mode .deck-viewer-card.pick-disabled:focus-visible{transform:none;box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18);}" +
       ".deck-viewer.pick-mode .deck-viewer-card.pick-selected{box-shadow:0 0 0 .32cqh var(--c-gold),0 .9cqh 1.8cqh rgba(40,70,120,.28);}" +
+      ".deck-viewer-pick-footer[hidden]{display:none!important;}" +
       ".deck-viewer-pick-footer{flex:none;display:flex;align-items:center;justify-content:flex-end;gap:1cqw;padding-top:1cqh;}" +
       ".deck-viewer-pick-help{flex:1;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
       ".deck-viewer-pick-confirm{min-width:11cqw;height:4.6cqh;border-radius:1cqh;border:.22cqh solid var(--c-gold);background:linear-gradient(180deg,#fff8d9,#ffe59a);color:#7a5510;font:inherit;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".deck-viewer-pick-confirm:disabled{filter:grayscale(.6);opacity:.55;cursor:not-allowed;}" +
+      ".deck-viewer-close,.card-detail-close{background:transparent url(\"assets/ui_buttons/close.png\") center/100% 100% no-repeat;border:0;border-radius:0;color:transparent;font-size:0;box-shadow:none;}" +
       ".deck-viewer.codex-mode{z-index:240;}" +
+      ".deck-viewer.codex-home-mode .deck-viewer-panel{width:min(64cqw,92cqh);aspect-ratio:2.12;max-height:49cqh;background:transparent url(\"assets/ui_panels/codex_popup_frame.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.4cqh 2.8cqh rgba(0,0,0,.22);padding:3.6cqh 3.6cqw 3.2cqh;}" +
+      ".deck-viewer.codex-home-mode .deck-viewer-head{border-bottom:0;padding-bottom:.2cqh;}" +
       ".codex-section-tabs{display:none;gap:.8cqw;margin:0 0 1.1cqh;}" +
       ".codex-section-tab{height:4.2cqh;min-width:8.5cqw;border-radius:1cqh;border:.2cqh solid var(--c-panel-line);background:rgba(255,255,255,.78);color:var(--c-ink);font-size:1.75cqh;font-weight:900;cursor:pointer;}" +
       ".codex-section-tab.active{background:linear-gradient(180deg,#fff8db,#ffe8a6);border-color:var(--c-gold);color:#79530c;}" +
-      ".codex-home-grid{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.4cqw;min-height:37cqh;align-items:center;}" +
-      ".codex-home-card{height:29cqh;border-radius:1.2cqh;border:.28cqh solid var(--c-panel-line);background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(233,244,255,.86));box-shadow:0 .7cqh 1.5cqh rgba(40,70,120,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6cqh;color:var(--c-ink);font:inherit;font-weight:900;cursor:pointer;}" +
-      ".codex-home-card:hover,.codex-home-card:focus-visible{transform:translateY(-.5cqh);box-shadow:0 1cqh 2cqh rgba(40,70,120,.24);outline:none;border-color:var(--c-gold);}" +
-      ".codex-home-icon{width:13cqh;height:13cqh;border-radius:2cqh;display:grid;place-items:center;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.22cqh solid #d6e6f5;font-size:7.5cqh;}" +
-      ".codex-home-label{font-size:2.4cqh;}" +
+      ".codex-home-grid{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:1cqw;min-height:28cqh;align-items:center;transform:translateY(1.4cqh);}" +
+      ".codex-home-card{height:23.5cqh;border:0;background:transparent;box-shadow:none;display:block;padding:0;color:var(--c-ink);font:inherit;cursor:pointer;}" +
+      ".codex-home-card:hover,.codex-home-card:focus-visible{transform:translateY(-.5cqh);filter:brightness(1.04) drop-shadow(0 1cqh 1.4cqh rgba(80,55,15,.22));outline:none;}" +
+      ".codex-home-image{width:100%;height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none;}" +
+      ".codex-home-card[data-codex-section='cards'] .codex-home-image{transform:scale(1.02);}" +
+      ".codex-home-card[data-codex-section='relics'] .codex-home-image{transform:scale(1.11);}" +
+      ".codex-home-card[data-codex-section='potions'] .codex-home-image{transform:scale(1.12);}" +
       ".deck-viewer-filter.disabled{opacity:.45;pointer-events:none;}" +
       ".codex-item-card .cost,.codex-item-card .type{display:none;}" +
       ".codex-item-card .art{height:16cqh;font-size:8cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);}" +
@@ -369,7 +375,7 @@
       ".card-detail-backdrop{position:absolute;inset:0;z-index:2;display:none;place-items:center;background:rgba(35,55,85,.34);border-radius:var(--r);backdrop-filter:blur(2px);}" +
       ".card-detail-backdrop.show{display:grid;}" +
       ".card-detail-panel{position:relative;width:min(72cqw,104cqh);max-height:70cqh;overflow:visible;background:linear-gradient(180deg,#fffdf6,#eef8ff);border:.35cqh solid var(--c-gold);border-radius:1.4cqh;box-shadow:0 1.6cqh 3.2cqh rgba(20,35,60,.3);padding:2.4cqh 2.2cqw;}" +
-      ".card-detail-close{position:absolute;top:1cqh;right:1cqh;width:4cqh;height:4cqh;border-radius:50%;border:.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);font-size:2.8cqh;font-weight:900;line-height:1;cursor:pointer;}" +
+      ".card-detail-close{position:absolute;top:1cqh;right:1cqh;width:4cqh;height:4cqh;background:transparent url(\"assets/ui_buttons/close.png\") center/100% 100% no-repeat;border:0;border-radius:0;color:transparent;font-size:0;font-weight:900;line-height:1;cursor:pointer;box-shadow:none;}" +
       ".card-detail-spread{display:grid;grid-template-columns:minmax(18cqh,24cqw) minmax(0,1fr);gap:2cqw;align-items:stretch;}" +
       ".card-detail-front{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2cqh;min-height:46cqh;}" +
       ".card-detail-back{min-height:46cqh;border-radius:1.2cqh;background:linear-gradient(150deg,rgba(255,255,255,.78),rgba(235,248,255,.74));border:.22cqh solid var(--c-panel-line);box-shadow:inset 0 0 0 .35cqh rgba(255,255,255,.36);padding:2cqh 1.6cqw 1.6cqh;display:flex;flex-direction:column;}" +
@@ -429,6 +435,7 @@
     viewerMode = "deck";
     if(tabId) activeTab = tabId;
     els.overlay.classList.remove("codex-mode");
+    els.overlay.classList.remove("codex-home-mode");
     els.title.textContent = "보유 주문";
     els.tabsWrap.style.display = "";
     if(els.codexTabsWrap) els.codexTabsWrap.style.display = "none";
@@ -462,6 +469,7 @@
       };
 
       els.overlay.classList.remove("codex-mode");
+      els.overlay.classList.remove("codex-home-mode");
       els.overlay.classList.add("pick-mode");
       els.title.textContent = pickMode.title;
       els.tabsWrap.style.display = "none";
@@ -490,12 +498,15 @@
     if(!els) return;
     viewerMode = "codexHome";
     els.overlay.classList.add("codex-mode");
+    els.overlay.classList.add("codex-home-mode");
     els.title.textContent = "도감";
     els.tabsWrap.style.display = "none";
     if(els.codexTabsWrap) els.codexTabsWrap.style.display = "none";
     if(els.codexHome) els.codexHome.style.display = "grid";
     if(els.controls) els.controls.style.display = "none";
     if(els.grid) els.grid.style.display = "none";
+    if(els.pickFooter) els.pickFooter.hidden = true;
+    if(els.pickConfirm) els.pickConfirm.disabled = true;
     detailEntries = [];
     closeCardDetail();
     els.overlay.classList.add("show");
@@ -510,12 +521,15 @@
     codexSection = section.id;
     activeTab = section.tabId;
     els.overlay.classList.add("codex-mode");
+    els.overlay.classList.remove("codex-home-mode");
     els.title.textContent = section.title;
     els.tabsWrap.style.display = "none";
     if(els.codexTabsWrap) els.codexTabsWrap.style.display = "flex";
     if(els.codexHome) els.codexHome.style.display = "none";
     if(els.controls) els.controls.style.display = "";
     if(els.grid) els.grid.style.display = "";
+    if(els.pickFooter) els.pickFooter.hidden = true;
+    if(els.pickConfirm) els.pickConfirm.disabled = true;
     renderDeckViewer();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -532,6 +546,7 @@
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
     els.overlay.classList.remove("codex-mode");
+    els.overlay.classList.remove("codex-home-mode");
     viewerMode = "deck";
   }
 
@@ -708,9 +723,8 @@
   }
 
   function codexHomeButtonHtml(section){
-    return '<button type="button" class="codex-home-card" data-codex-section="' + escapeAttr(section.id) + '">' +
-      '<span class="codex-home-icon" aria-hidden="true">' + escapeHtml(section.icon) + '</span>' +
-      '<span class="codex-home-label">' + escapeHtml(section.title) + '</span>' +
+    return '<button type="button" class="codex-home-card" data-codex-section="' + escapeAttr(section.id) + '" aria-label="' + escapeAttr(section.title) + '">' +
+      '<img class="codex-home-image" src="' + escapeAttr(section.image) + '" alt="" aria-hidden="true">' +
     '</button>';
   }
 
