@@ -130,17 +130,17 @@ const CARD_DB = {
   sevenstar_bell:{name:"칠성 방울", cost:1, type:"skill", emoji:"🌟", target:"self", attr:"굿판 덱", rarity:"common",
           desc:"주문을 1장 뽑고 방울치기 1장을 손패에 생성합니다.", fx:[], migrationTodo:"방울치기 생성 신규 기믹 미구현"},
   warding_dance:{name:"액막이 춤", cost:1, type:"defense", emoji:"💃", target:"self", attr:"굿판 덱", rarity:"common",
-          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 굿판 신규 기믹 미구현"},
+          desc:"마음의 결계를 6 얻고 방울치기 1장을 손패에 생성합니다.", fx:[], migrationTodo:"방울치기 생성 신규 기믹 미구현"},
   whirlwind_gut:{name:"휘몰이굿", cost:1, type:"skill", emoji:"🌀", target:"self", attr:"굿판 덱", rarity:"uncommon",
-          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 굿판 신규 기믹 미구현"},
+          desc:"방울치기 3장을 손패에 생성합니다. 사용 후 소멸.", fx:[], exhaust:true, migrationTodo:"방울치기 생성 신규 기믹 미구현"},
   raise_divine_spirit:{name:"신명 돋우기", cost:1, type:"skill", emoji:"🔥", target:"self", attr:"굿판 덱", rarity:"uncommon",
-          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 신명 신규 기믹 미구현"},
+          desc:"신명 복을 얻습니다. 이 위령 동안 방울치기의 정화량이 1 증가합니다. 사용 후 소멸.", fx:[], exhaust:true, migrationTodo:"신명 복 신규 기믹 미구현"},
   heating_ritual:{name:"판이 달아오른다", cost:1, type:"skill", emoji:"🥁", target:"self", attr:"굿판 덱", rarity:"rare",
-          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 굿판 신규 기믹 미구현"},
+          desc:"열기 복을 얻습니다. 이 위령 동안 매 턴 4번째 주문을 사용하면 모든 유령의 미련을 2만큼 정화합니다. 사용 후 소멸.", fx:[], exhaust:true, migrationTodo:"열기 복 신규 기믹 미구현"},
   step_together:{name:"발맞춤", cost:1, type:"skill", emoji:"👣", target:"self", attr:"굿판 덱", rarity:"common",
-          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 굿판 신규 기믹 미구현"},
+          desc:"주문을 2장 뽑고 손패 1장을 버립니다. 이번 턴 방울치기를 사용했다면 버리지 않습니다.", fx:[], migrationTodo:"조건부 버림/드로우 신규 기믹 미구현"},
   bell_strike:{name:"방울치기", cost:0, type:"attack", emoji:"🔔", target:"enemy", attr:"굿판 덱", rarity:"common",
-          desc:"", fx:[], generatedOnly:true, excludeFromRewards:true, migrationTodo:"생성 전용 카드, 일반 보상 제외"}
+          desc:"유령의 미련을 4만큼 정화합니다. 사용 후 소멸. 이 주문은 일반 주문 보상에 등장하지 않습니다.", fx:[], exhaust:true, generatedOnly:true, excludeFromRewards:true, migrationTodo:"생성 전용 카드, 일반 보상 제외"}
 };
 
 if(window.BOHYUN_LIFE_SYSTEM && typeof window.BOHYUN_LIFE_SYSTEM.getStatusCardDb === "function"){
