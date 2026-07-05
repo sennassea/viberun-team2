@@ -371,8 +371,9 @@
   /* ── HTML 빌더 헬퍼 ───────────────────────────────────────────────────── */
   function makeRow(icon, name, desc, nameColor) {
     var cs = nameColor ? ' style="color:' + nameColor + '"' : "";
+    var ico = icon ? '<div class="btt-ico">' + icon + '</div>' : "";
     return '<div class="btt-row">'
-      + '<div class="btt-ico">' + icon + '</div>'
+      + ico
       + '<div class="btt-body">'
       + '<span class="btt-name"' + cs + '>' + name + '</span>'
       + '<span class="btt-desc">' + desc + '</span>'
@@ -696,7 +697,7 @@
     var tx;
     var ty;
     if (info && info.type === "potion") {
-      tx = (sRect.right - gRect.left) + pad;
+      tx = (sRect.right - gRect.left) + 16;
       ty = (sRect.top - gRect.top) + (sRect.height - tipRect.height) * 0.5;
     } else {
       tx = (sRect.left - gRect.left) + (sRect.width - tipRect.width) * 0.5;
