@@ -508,6 +508,7 @@
 
     cardActiveEl = null;          /* 주문 툴팁 상태 초기화 */
     activeItemSlotEl = null;
+    activeEnergyEl = null;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
     positionCombatantTooltip(cbEl, isPlayer);
@@ -551,6 +552,7 @@
   var cardActiveEl = null;
   var activeStatusEl = null;
   var activeItemSlotEl = null;
+  var activeEnergyEl = null;
 
   function buildStatusIconHtml(statusEl) {
     var type = statusEl.dataset.status;
@@ -582,6 +584,7 @@
     activeId = null;
     cardActiveEl = null;
     activeItemSlotEl = null;
+    activeEnergyEl = null;
     activeStatusEl = statusEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -636,6 +639,61 @@
   }, true);
 
   /* ── 주문 설명에서 용어 추출 후 HTML 빌드 ────────────────────────────── */
+  function buildEnergyHtml() {
+    var desc = "카드를 사용할 때 소모되는 행동 자원입니다.";
+    if (typeof S !== "undefined" && S && typeof S.energy === "number") {
+      desc += "\n현재 신통력: " + S.energy;
+    }
+    return makeRow("", "신통력", desc);
+  }
+
+  function positionEnergyTooltip(energyEl) {
+    var gRect   = game.getBoundingClientRect();
+    var eRect   = energyEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+
+    var tx = (eRect.right - gRect.left) + pad;
+    var ty = (eRect.top - gRect.top) + (eRect.height - tipRect.height) * 0.5;
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showEnergyTooltip(energyEl) {
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = energyEl;
+    tooltip.innerHTML = buildEnergyHtml();
+    tooltip.classList.add("tt-show");
+    positionEnergyTooltip(energyEl);
+  }
+
+  function hideEnergyTooltip() {
+    activeEnergyEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var energyEl = e.target.closest("#energy");
+    if (!energyEl || energyEl === activeEnergyEl) return;
+    showEnergyTooltip(energyEl);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeEnergyEl) return;
+    var energyEl = e.target.closest("#energy");
+    if (!energyEl) return;
+    var to = e.relatedTarget;
+    if (to && energyEl.contains(to)) return;
+    hideEnergyTooltip();
+  });
+
   function getItemSlotInfo(slotEl) {
     var host = slotEl && slotEl.closest("#sideRelicSlots,#sidePotionSlots");
     if (!host) return null;
@@ -718,6 +776,7 @@
     activeId = null;
     cardActiveEl = null;
     activeStatusEl = null;
+    activeEnergyEl = null;
     activeItemSlotEl = slotEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -792,6 +851,7 @@
 
     activeId = null;            /* 전투원 툴팁 상태 초기화 */
     activeItemSlotEl = null;
+    activeEnergyEl = null;
     cardActiveEl = cardEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
