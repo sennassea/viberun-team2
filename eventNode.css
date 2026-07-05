@@ -192,7 +192,8 @@
 @media (max-width:900px){
   .event-panel-wrap{ width:100%; min-width:0; max-width:none; margin-left:0; }
   .event-menu-btn{ width:6.4cqh; }
-  .event-choice{ flex-wrap:wrap; padding-left:6.8cqw; padding-right:2cqw; }
+  .event-choice{ flex-wrap:wrap; min-height:8.4cqh; padding-left:10.8cqh; padding-right:2cqw; }
+  .event-choice-icon{ left:5.6cqh; }
   .event-outcomes{ max-width:100%; align-items:flex-start; }
   .event-cards{ grid-template-columns:1fr; }
 }

@@ -396,13 +396,15 @@
       ".settings-viewer{position:absolute;inset:0;z-index:96;display:none;place-items:center;background:rgba(20,35,60,.45);backdrop-filter:blur(3px);}" +
       ".settings-viewer.show{display:grid;}" +
       ".settings-viewer.start-mode{z-index:300!important;}" +
-      ".settings-viewer-panel{position:relative;width:min(54cqw,72cqh);max-height:72cqh;display:flex;flex-direction:column;background:var(--c-panel);border:0.3cqh solid var(--c-gold);border-radius:var(--r);box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:2cqh 2cqw;}" +
+      ".settings-viewer-panel{position:relative;width:min(72cqw,96cqh);max-height:76cqh;display:flex;flex-direction:column;background:rgba(255,249,235,.96);border:0.28cqh solid var(--c-gold);border-radius:1.6cqh;box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:3.2cqh 3cqw 2.8cqh;}" +
       ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding-bottom:1.2cqh;border-bottom:0.15cqh solid var(--c-panel-line);}" +
       ".settings-viewer-head h2{font-size:3cqh;line-height:1;flex:1;}" +
-      ".settings-viewer-help{width:3.8cqh;height:3.8cqh;border-radius:50%;border:0.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-blue-deep);font-size:2.2cqh;font-weight:900;line-height:1;cursor:pointer;}" +
-      ".settings-viewer-close{width:4.2cqh;height:4.2cqh;border-radius:50%;border:0.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);font-size:3cqh;font-weight:800;line-height:1;cursor:pointer;}" +
+      ".settings-viewer-help{width:4.4cqh;height:4.4cqh;border:0;background:transparent url('assets/ui/settings/help.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
+      ".settings-viewer-close{width:4.8cqh;height:4.8cqh;border:0;background:transparent url('assets/ui/settings/close.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
       ".settings-viewer-body{padding:2cqh 0 0;min-height:18cqh;display:flex;flex-direction:column;gap:2cqh;}" +
       ".settings-viewer-section{border:0.18cqh solid var(--c-panel-line);border-radius:1.2cqh;background:rgba(255,255,255,.58);padding:1.6cqh 1.4cqw;}" +
+      ".settings-viewer-section:not(.settings-account-section){background:transparent url('assets/ui/settings/settings_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
+      ".settings-account-section{background:transparent url('assets/ui/settings/account_info_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
       ".settings-viewer-section h3{font-size:2.1cqh;margin-bottom:1.4cqh;color:var(--c-ink);}" +
       ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 4cqw;align-items:center;gap:1cqw;margin-top:1cqh;color:var(--c-ink-soft);font-size:1.7cqh;font-weight:800;}" +
       ".settings-viewer-volume input{width:100%;accent-color:var(--c-blue);}" +
@@ -410,9 +412,13 @@
       ".settings-viewer-actions{display:flex;justify-content:flex-end;gap:1cqw;}" +
       ".settings-viewer-actions button{height:4.4cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-danger{background:#fff1ef;color:var(--c-red-deep);}" +
-      ".settings-viewer-tutorial{background:#fff;color:var(--c-ink-soft);}" +
-      ".settings-viewer-reset{background:#fff1ef;color:var(--c-red-deep);}" +
+      ".settings-viewer-tutorial{width:18cqw;max-width:52cqh;height:5.4cqh;border:0;background:transparent url('assets/ui/settings/replay_tutorial.png') center/contain no-repeat;color:transparent;font-size:0;padding:0;}" +
+      ".settings-viewer-reset{width:18cqw;max-width:52cqh;height:5.4cqh;border:0;background:transparent url('assets/ui/settings/reset_record.png') center/contain no-repeat;color:transparent;font-size:0;padding:0;}" +
       ".settings-viewer-primary{background:var(--c-blue);color:#fff;}" +
+      ".settings-account-google,.settings-account-facebook,.settings-account-logout{width:14cqw;max-width:42cqh;height:4.8cqh;border:0!important;background-color:transparent!important;background-position:center!important;background-repeat:no-repeat!important;background-size:contain!important;color:transparent!important;font-size:0!important;padding:0!important;}" +
+      ".settings-account-google{background-image:url('assets/ui/settings/google_play.png')!important;}" +
+      ".settings-account-facebook{background-image:url('assets/ui/settings/facebook.png')!important;}" +
+      ".settings-account-logout{background-image:url('assets/ui/settings/logout.png')!important;}" +
       ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm,.settings-viewer-logout-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
       ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show,.settings-viewer-reset-confirm.show,.settings-viewer-logout-confirm.show{display:grid;}" +
       ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:2.2cqh 2cqw;text-align:center;}" +
@@ -433,7 +439,7 @@
       ".settings-viewer-help-panel{width:min(46cqw,68cqh);max-height:58cqh;display:flex;flex-direction:column;background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:1.8cqh 1.6cqw;}" +
       ".settings-viewer-help-head{display:flex;align-items:center;gap:1cqw;padding-bottom:1cqh;border-bottom:0.14cqh solid var(--c-panel-line);}" +
       ".settings-viewer-help-head h3{flex:1;font-size:2.4cqh;color:var(--c-ink);}" +
-      ".settings-viewer-help-close{width:3.8cqh;height:3.8cqh;border-radius:50%;border:0.2cqh solid var(--c-panel-line);background:#fff;color:var(--c-ink);font-size:2.6cqh;font-weight:900;line-height:1;cursor:pointer;}" +
+      ".settings-viewer-help-close{width:4.4cqh;height:4.4cqh;border:0;background:transparent url('assets/ui/settings/close.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
       ".settings-viewer-help-content{min-height:0;overflow-y:auto;padding:1.2cqh .4cqw 0 0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}" +
       ".settings-viewer-help-content section{padding:1cqh 0;border-bottom:0.12cqh solid rgba(150,170,200,.35);}" +
       ".settings-viewer-help-content section:last-child{border-bottom:0;}" +
