@@ -1,106 +1,146 @@
 "use strict";
 /* =========================================================================
-   Card Data - ACT1 balance pass
-   - 범용 10 / 결계 10 / 동요 10 / 성불 10
-   - 카드 ID는 기존 저장/보상/튜토리얼 호환을 위해 유지합니다.
+   Card Data - 56-card first migration
+   - This file only owns card data.
+   - New mechanics from the migration sheet are intentionally not implemented here.
    ========================================================================= */
 
 const CARD_DB = {
   // -----------------------------------------------------------------------
-  // 범용 주문 10장
+  // 범용 보조 덱
   // -----------------------------------------------------------------------
-  rosary_throw:{name:"염주 던지기", cost:1, type:"attack", emoji:"📿", target:"enemy", attr:"범용", rarity:"starter",
-          desc:"적의 미련을 6만큼 정화합니다.", fx:[{t:"damage",v:6}]},
-  bell_shake:{name:"방울 흔들기", cost:1, type:"attack", emoji:"🔔", target:"enemy", attr:"범용", rarity:"starter",
-          desc:"적의 미련을 4만큼 정화합니다.\n주문을 1장 뽑습니다.", fx:[{t:"damage",v:4},{t:"draw",v:1}]},
-  calm_breath:{name:"심호흡", cost:1, type:"skill", emoji:"🌬️", target:"self", attr:"범용", rarity:"starter",
+  rosary_throw:{name:"염주 던지기", cost:1, type:"attack", emoji:"📿", target:"enemy", attr:"범용 보조 덱", rarity:"starter",
+          desc:"유령의 미련을 6만큼 정화합니다.", fx:[{t:"damage",v:6}]},
+  bell_shake:{name:"방울 흔들기", cost:1, type:"attack", emoji:"🔔", target:"enemy", attr:"범용 보조 덱", rarity:"starter",
+          desc:"유령의 미련을 4만큼 정화합니다.\n주문을 1장 뽑습니다.", fx:[{t:"damage",v:4},{t:"draw",v:1}]},
+  calm_breath:{name:"심호흡", cost:1, type:"skill", emoji:"🌬️", target:"self", attr:"범용 보조 덱", rarity:"starter",
           desc:"정신력을 6 회복합니다.", fx:[{t:"heal",v:6}]},
-  breath_order:{name:"호흡 정리", cost:0, type:"skill", emoji:"🍃", target:"self", attr:"범용", rarity:"common",
+  breath_order:{name:"호흡 정리", cost:0, type:"skill", emoji:"🫁", target:"self", attr:"범용 보조 덱", rarity:"common",
           desc:"주문을 1장 뽑습니다.", fx:[{t:"draw",v:1}]},
-  short_meditation:{name:"짧은 명상", cost:1, type:"skill", emoji:"🧘", target:"self", attr:"범용", rarity:"common",
-          desc:"정신력을 7 회복합니다.", fx:[{t:"heal",v:7}]},
-  purifying_talisman:{name:"정화부", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"범용", rarity:"common",
-          desc:"적의 미련을 8만큼 정화합니다.", fx:[{t:"damage",v:8}]},
-  mind_training:{name:"정신 수련", cost:0, type:"skill", emoji:"🫧", target:"self", attr:"범용", rarity:"uncommon",
-          desc:"이번 턴 정신력을 1 회복합니다.\n소멸.", fx:[{t:"energy",v:1}], exhaust:true},
-  fast_chanting:{name:"속전염송", cost:1, type:"skill", emoji:"📜", target:"self", attr:"범용", rarity:"common",
+  short_meditation:{name:"향 피우기", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"범용 보조 덱", rarity:"common",
+          desc:"치유의 향기 1을 얻습니다. 치유의 향기가 유지되는 동안 턴 종료 시 정신력을 1 회복합니다.\n사용 후 소멸.", fx:[{t:"heal",v:7}], migrationTodo:"치유의 향기 신규 복 효과 미구현"},
+  purifying_talisman:{name:"정화부", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"범용 보조 덱", rarity:"common",
+          desc:"유령의 미련을 8만큼 정화합니다.", fx:[{t:"damage",v:8}]},
+  mind_training:{name:"정신 수련", cost:0, type:"skill", emoji:"🧘", target:"self", attr:"범용 보조 덱", rarity:"uncommon",
+          desc:"이번 턴 신통력을 1 회복합니다.\n소멸.", fx:[{t:"energy",v:1}], exhaust:true},
+  fast_chanting:{name:"속전염송", cost:1, type:"skill", emoji:"📜", target:"self", attr:"범용 보조 덱", rarity:"common",
           desc:"주문을 2장 뽑습니다.", fx:[{t:"draw",v:2}]},
-  altar_preparation:{name:"제단 준비", cost:0, type:"skill", emoji:"🪔", target:"self", attr:"범용", rarity:"uncommon",
-          desc:"이번 턴 정신력을 1 회복합니다.\n소멸.", fx:[{t:"energy",v:1}], exhaust:true},
-  last_struggle:{name:"마지막 발버둥", cost:2, type:"attack", emoji:"🔥", target:"enemy", attr:"범용", rarity:"rare",
-          desc:"모든 적의 미련을 14만큼 정화합니다.\n사용 후 소멸.", fx:[{t:"damageAll",v:14}], exhaust:true},
+  altar_preparation:{name:"제단 준비", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"범용 보조 덱", rarity:"uncommon",
+          desc:"제단의 기운 1을 얻습니다. 이 위령 동안 매 턴 처음으로 의식 주문을 사용하면 결계를 2 얻습니다.\n사용 후 소멸.", fx:[{t:"energy",v:1}], exhaust:true, migrationTodo:"제단의 기운 신규 복 효과 미구현"},
+  last_struggle:{name:"마지막 발버둥", cost:2, type:"attack", emoji:"💥", target:"enemy", attr:"범용 보조 덱", rarity:"rare",
+          desc:"모든 유령의 미련을 10만큼 정화합니다.\n사용 후 소멸.", fx:[{t:"damageAll",v:14}], exhaust:true, migrationTodo:"최신 DB 수치 10과 기존 fx 14 불일치"},
 
   // -----------------------------------------------------------------------
-  // 결계 주문 10장
+  // 결계 덱
   // -----------------------------------------------------------------------
-  guardian_talisman:{name:"수호부", cost:1, type:"defense", emoji:"🧿", target:"self", attr:"결계", rarity:"common",
+  guardian_talisman:{name:"수호부", cost:1, type:"defense", emoji:"🧿", target:"self", attr:"결계 덱", rarity:"common",
           desc:"마음의 결계를 8 얻습니다.", fx:[{t:"block",v:8}]},
-  quiet_steps:{name:"조용한 발걸음", cost:1, type:"defense", emoji:"👣", target:"self", attr:"결계", rarity:"common",
+  quiet_steps:{name:"조용한 발걸음", cost:1, type:"defense", emoji:"👣", target:"self", attr:"결계 덱", rarity:"common",
           desc:"마음의 결계를 6 얻습니다.\n주문을 1장 뽑습니다.", fx:[{t:"block",v:6},{t:"draw",v:1}]},
-  folded_ward:{name:"접어둔 방위부", cost:0, type:"defense", emoji:"📄", target:"self", attr:"결계", rarity:"common",
+  folded_ward:{name:"접어둔 방위부", cost:0, type:"defense", emoji:"📄", target:"self", attr:"결계 덱", rarity:"common",
           desc:"마음의 결계를 4 얻습니다.", fx:[{t:"block",v:4}]},
-  clear_mind_art:{name:"맑은 마음법", cost:1, type:"skill", emoji:"💧", target:"self", attr:"결계", rarity:"common",
-          desc:"마음의 결계를 5 얻습니다.\n정신력을 1 회복합니다.", fx:[{t:"block",v:5},{t:"energy",v:1}]},
-  guardian_script:{name:"수호경", cost:1, type:"defense", emoji:"📖", target:"self", attr:"결계", rarity:"starter",
+  clear_mind_art:{name:"맑은 마음법", cost:1, type:"skill", emoji:"💧", target:"self", attr:"결계 덱", rarity:"common",
+          desc:"마음의 결계를 5 얻습니다.\n신통력을 1 회복합니다.", fx:[{t:"block",v:5},{t:"energy",v:1}]},
+  guardian_script:{name:"수호경", cost:1, type:"defense", emoji:"📖", target:"self", attr:"결계 덱", rarity:"starter",
           desc:"마음의 결계를 8 얻습니다.", fx:[{t:"block",v:8}]},
-  five_direction_barrier:{name:"오방결계", cost:1, type:"defense", emoji:"🎐", target:"self", attr:"결계", rarity:"starter",
+  five_direction_barrier:{name:"오방결계", cost:1, type:"defense", emoji:"🧭", target:"self", attr:"결계 덱", rarity:"starter",
           desc:"마음의 결계를 6 얻습니다.\n동요를 1 제거합니다.", fx:[{t:"block",v:6},{t:"removeWeak",v:1}]},
-  reverse_barrier:{name:"역결계", cost:2, type:"defense", emoji:"🪞", target:"enemy", attr:"결계", rarity:"uncommon",
-          desc:"마음의 결계를 8 얻습니다.\n현재 결계의 70%만큼 적의 미련을 정화합니다.", fx:[{t:"block",v:8},{t:"damageByBlockRatio",v:0.7}]},
-  silent_ward:{name:"정적의 방", cost:1, type:"skill", emoji:"🏥", target:"self", attr:"결계", rarity:"uncommon",
-          desc:"마음의 결계를 8 얻습니다.", fx:[{t:"block",v:8}]},
-  barrier_charge:{name:"결계 충전", cost:1, type:"skill", emoji:"🔷", target:"self", attr:"결계", rarity:"uncommon",
+  reverse_barrier:{name:"역결계", cost:2, type:"defense", emoji:"↩️", target:"enemy", attr:"결계 덱", rarity:"uncommon",
+          desc:"마음의 결계를 6 얻습니다. 그 후 현재 결계의 135%만큼 유령 하나를 정화합니다.", fx:[{t:"block",v:8},{t:"damageByBlockRatio",v:0.7}], migrationTodo:"최신 DB 수치와 기존 fx 불일치"},
+  silent_ward:{name:"정적의 방", cost:1, type:"skill", emoji:"🚪", target:"self", attr:"결계 덱", rarity:"uncommon",
+          desc:"고요한 결계 1을 얻습니다. 이 위령 동안 턴 종료 시 결계가 1 이상 남아 있으면 다음 턴 시작 시 결계를 3 얻습니다.\n사용 후 소멸.", fx:[{t:"block",v:8}], migrationTodo:"고요한 결계 신규 복 효과 미구현"},
+  barrier_charge:{name:"결계 충전", cost:1, type:"skill", emoji:"🔋", target:"self", attr:"결계 덱", rarity:"uncommon",
           desc:"마음의 결계를 9 얻습니다.", fx:[{t:"block",v:9}]},
-  returning_wall:{name:"되돌리는 벽", cost:3, type:"attack", emoji:"↩️", target:"enemy", attr:"결계", rarity:"rare",
-          desc:"현재 결계 수치의 150%만큼 피해를 줍니다. 사용 후 결계의 절반을 소모합니다.", fx:[{t:"damageByBlockRatioConsume",v:1.5,consumeRatio:0.5}]},
+  returning_wall:{name:"되돌리는 벽", cost:2, type:"attack", emoji:"🧱", target:"enemy", attr:"결계 덱", rarity:"rare",
+          desc:"현재 결계의 185%만큼 유령 하나를 정화합니다. 그 후 결계를 전부 소모합니다.", fx:[{t:"damageByBlockRatioConsume",v:1.5,consumeRatio:0.5}], migrationTodo:"최신 DB 수치와 기존 fx 불일치"},
 
   // -----------------------------------------------------------------------
-  // 동요 주문 10장
+  // 회상 덱
   // -----------------------------------------------------------------------
-  memory_doll:{name:"기억 인형", cost:1, type:"attack", emoji:"🧸", target:"enemy", attr:"동요", rarity:"starter",
-          desc:"적의 미련을 5만큼 정화합니다.\n동요를 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyWeak",v:1}]},
-  lullaby_chant:{name:"자장 염송", cost:1, type:"skill", emoji:"🎵", target:"enemy", attr:"동요", rarity:"common",
-          desc:"동요를 1 부여합니다.\n주문을 1장 뽑습니다.", fx:[{t:"applyWeak",v:1},{t:"draw",v:1}]},
-  shaking_heart:{name:"흔들리는 마음", cost:1, type:"skill", emoji:"💗", target:"enemy", attr:"동요", rarity:"common",
-          desc:"동요와 균열을 1씩 부여합니다. 대상의 동요가 3 이상이면 주문을 1장 뽑습니다.", fx:[{t:"applyWeak",v:1},{t:"applyFracture",v:1},{t:"ifAgitationAtLeastDraw",threshold:3,v:1}]},
-  unread_letter:{name:"읽지 못한 편지", cost:1, type:"attack", emoji:"✉️", target:"enemy", attr:"동요", rarity:"common",
-          desc:"적의 미련을 5만큼 정화합니다.\n동요를 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyWeak",v:1}]},
-  uneasy_silence:{name:"불편한 침묵", cost:1, type:"skill", emoji:"🤫", target:"enemy", attr:"동요", rarity:"common",
-          desc:"동요를 1 부여합니다.\n마음의 결계를 5 얻습니다.", fx:[{t:"applyWeak",v:1},{t:"block",v:5}]},
-  deep_sigh:{name:"깊은 한숨", cost:0, type:"skill", emoji:"💨", target:"enemy", attr:"동요", rarity:"common",
-          desc:"동요를 1 부여합니다.\n소멸.", fx:[{t:"applyWeak",v:1}], exhaust:true},
-  tearful_memory:{name:"눈물 젖은 기억", cost:1, type:"attack", emoji:"💧", target:"enemy", attr:"동요", rarity:"uncommon",
-          desc:"적의 미련을 6만큼 정화합니다. 동요가 있는 적을 처치하면 다른 적에게 동요를 2 전이합니다.\n대상이 살아 있으면 동요를 1 부여합니다.", fx:[{t:"damage",v:6},{t:"transferAgitationOnKill",v:2},{t:"applyWeak",v:1}]},
-  collapsed_ward:{name:"무너진 병실", cost:2, type:"skill", emoji:"🏚️", target:"enemy", attr:"동요", rarity:"uncommon",
-          desc:"모든 적에게 동요와 균열을 1씩 부여합니다.", fx:[{t:"applyWeakAll",v:1},{t:"applyFractureAll",v:1}]},
-  unsent_words:{name:"전하지 못한 말", cost:2, type:"attack", emoji:"💌", target:"enemy", attr:"동요", rarity:"rare",
-          desc:"균열을 2 부여합니다. 대상의 모든 동요를 소모하고, 소모한 동요 1마다 4 정화합니다.", fx:[{t:"applyFracture",v:2},{t:"consumeAllAgitationDamage",per:4}]},
-  mind_collapse:{name:"마음 붕괴", cost:3, type:"attack", emoji:"💔", target:"enemy", attr:"동요", rarity:"rare",
-          desc:"균열을 2 부여합니다. 적의 미련을 10만큼 정화하고 동요 1마다 3 추가 정화합니다. 대상의 동요가 5 이상이면 모든 적의 미련을 6 정화합니다.", fx:[{t:"applyFracture",v:2},{t:"damageByWeak",base:10,per:3},{t:"ifAgitationAtLeastDamageAll",threshold:5,v:6}]},
+  memory_doll:{name:"기억 인형", cost:1, type:"attack", emoji:"🧸", target:"enemy", attr:"회상 덱", rarity:"starter",
+          desc:"유령의 미련을 4만큼 정화합니다. 회상을 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyWeak",v:1}], migrationTodo:"최신 DB 수치 4와 기존 fx 5 불일치"},
+  lullaby_chant:{name:"자장 염송", cost:1, type:"skill", emoji:"🎵", target:"enemy", attr:"회상 덱", rarity:"common",
+          desc:"회상을 1 부여합니다. 주문을 1장 뽑습니다.", fx:[{t:"applyWeak",v:1},{t:"draw",v:1}]},
+  shaking_heart:{name:"흔들리는 마음", cost:1, type:"skill", emoji:"💓", target:"enemy", attr:"회상 덱", rarity:"common",
+          desc:"회상과 균열을 1씩 부여합니다. 대상의 회상이 3 이상이면 주문을 1장 뽑습니다.", fx:[{t:"applyWeak",v:1},{t:"applyFracture",v:1},{t:"ifAgitationAtLeastDraw",threshold:3,v:1}]},
+  unread_letter:{name:"읽지 못한 편지", cost:1, type:"attack", emoji:"✉️", target:"enemy", attr:"회상 덱", rarity:"common",
+          desc:"유령의 미련을 4만큼 정화합니다. 회상을 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyWeak",v:1}], migrationTodo:"최신 DB 수치 4와 기존 fx 5 불일치"},
+  uneasy_silence:{name:"불편한 침묵", cost:1, type:"skill", emoji:"🤫", target:"enemy", attr:"회상 덱", rarity:"common",
+          desc:"회상의 메아리 1을 얻습니다. 이 위령 동안 매 턴 처음 회상이 있는 유령을 정화하면 그 유령에게 회상 1을 추가 부여합니다. 사용 후 소멸.", fx:[{t:"applyWeak",v:1},{t:"block",v:5}], migrationTodo:"회상의 메아리 신규 복 효과 미구현"},
+  deep_sigh:{name:"깊은 한숨", cost:0, type:"skill", emoji:"💨", target:"enemy", attr:"회상 덱", rarity:"common",
+          desc:"회상을 1 부여합니다. 사용 후 소멸.", fx:[{t:"applyWeak",v:1}], exhaust:true},
+  tearful_memory:{name:"눈물 젖은 기억", cost:1, type:"attack", emoji:"💧", target:"enemy", attr:"회상 덱", rarity:"uncommon",
+          desc:"유령의 미련을 5만큼 정화합니다. 대상이 살아 있으면 회상 1을 부여합니다. 이 정화로 성불시키면 다른 유령에게 회상 2를 전이합니다.", fx:[{t:"damage",v:6},{t:"transferAgitationOnKill",v:2},{t:"applyWeak",v:1}], migrationTodo:"최신 DB 수치 5와 기존 fx 6 불일치"},
+  collapsed_ward:{name:"무너진 병실", cost:2, type:"skill", emoji:"🏥", target:"enemy", attr:"회상 덱", rarity:"uncommon",
+          desc:"모든 유령에게 회상과 균열을 1씩 부여합니다.", fx:[{t:"applyWeakAll",v:1},{t:"applyFractureAll",v:1}]},
+  unsent_words:{name:"전하지 못한 말", cost:2, type:"attack", emoji:"💬", target:"enemy", attr:"회상 덱", rarity:"rare",
+          desc:"대상의 현재 회상 수치의 50%만큼 회상을 추가 부여합니다. 추가 수치는 최소 1, 최대 2입니다. 사용 후 소멸.", fx:[], exhaust:true, migrationTodo:"회상 증폭 신규 효과 미구현"},
+  mind_collapse:{name:"마음 붕괴", cost:3, type:"attack", emoji:"🧠", target:"enemy", attr:"회상 덱", rarity:"rare",
+          desc:"대상에게 회상 2와 균열 1을 부여합니다. 적용 후 대상의 회상이 6 이상이면 다른 모든 유령에게 회상 2를 부여합니다.", fx:[{t:"applyFracture",v:2},{t:"damageByWeak",base:10,per:3},{t:"ifAgitationAtLeastDamageAll",threshold:5,v:6}], migrationTodo:"최신 DB 회상 조건 구조 미구현"},
 
   // -----------------------------------------------------------------------
-  // 성불 주문 10장
+  // 성불 표식 덱
   // -----------------------------------------------------------------------
-  exorcism_talisman:{name:"퇴마부", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"성불", rarity:"common",
-          desc:"적의 미련을 5만큼 정화합니다. 성불 표식을 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyMark",v:1}]},
-  requiem_script:{name:"진혼경", cost:1, type:"attack", emoji:"📜", target:"enemy", attr:"성불", rarity:"common",
-          desc:"적의 미련을 6만큼 정화합니다. 성불 표식이 있으면 추가로 3 정화합니다.", fx:[{t:"damage",v:6},{t:"ifMarkedDamage",v:3}]},
-  small_passing_rite:{name:"작은 천도", cost:1, type:"skill", emoji:"🪷", target:"enemy", attr:"성불", rarity:"common",
+  exorcism_talisman:{name:"퇴마부", cost:1, type:"attack", emoji:"🧧", target:"enemy", attr:"성불 표식 덱", rarity:"common",
+          desc:"유령의 미련을 5만큼 정화합니다. 성불 표식을 1 부여합니다.", fx:[{t:"damage",v:5},{t:"applyMark",v:1}]},
+  requiem_script:{name:"진혼경", cost:1, type:"attack", emoji:"📜", target:"enemy", attr:"성불 표식 덱", rarity:"common",
+          desc:"유령의 미련을 6만큼 정화합니다. 성불 표식이 있으면 추가로 3 정화합니다.", fx:[{t:"damage",v:6},{t:"ifMarkedDamage",v:3}]},
+  small_passing_rite:{name:"작은 천도", cost:1, type:"skill", emoji:"🪷", target:"enemy", attr:"성불 표식 덱", rarity:"common",
           desc:"성불 표식을 2 부여합니다.\n주문을 1장 뽑습니다.", fx:[{t:"applyMark",v:2},{t:"draw",v:1}]},
-  release_touch:{name:"성불의 손짓", cost:1, type:"attack", emoji:"🤲", target:"enemy", attr:"성불", rarity:"common",
-          desc:"적의 미련을 5만큼 정화합니다.\n주문을 1장 뽑습니다.", fx:[{t:"damage",v:5},{t:"draw",v:1}]},
-  spirit_guidance:{name:"혼백 인도", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"성불", rarity:"common",
-          desc:"정신력을 1 회복합니다.\n주문을 1장 뽑습니다.\n소멸.", fx:[{t:"energy",v:1},{t:"draw",v:1}], exhaust:true},
-  path_of_light:{name:"빛길 열기", cost:2, type:"attack", emoji:"✨", target:"enemy", attr:"성불", rarity:"common",
-          desc:"모든 적의 미련을 6만큼 정화합니다.", fx:[{t:"damageAll",v:6}]},
-  guiding_rite:{name:"천도재", cost:2, type:"attack", emoji:"🪔", target:"enemy", attr:"성불", rarity:"uncommon",
-          desc:"적의 미련을 9만큼 정화합니다. 성불 표식이 있으면 추가로 6 정화합니다.", fx:[{t:"damage",v:9},{t:"ifMarkedDamage",v:6}]},
-  purification_wave:{name:"정화의 파동", cost:2, type:"attack", emoji:"〰️", target:"enemy", attr:"성불", rarity:"uncommon",
-          desc:"모든 적의 미련을 7만큼 정화합니다.", fx:[{t:"damageAll",v:7}]},
-  soul_passing:{name:"혼백천도", cost:3, type:"attack", emoji:"🪷", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"적의 미련을 16만큼 정화합니다. 대상의 모든 성불 표식을 소모하고 표식 1당 3 추가 정화합니다.\n사용 후 소멸.", fx:[{t:"consumeAllMarksDamage",base:16,per:3}], exhaust:true},
-  lotus_crossing:{name:"연화길", cost:3, type:"attack", emoji:"🌸", target:"enemy", attr:"성불", rarity:"rare",
-          desc:"모든 적의 미련을 12만큼 정화합니다.\n사용 후 소멸.", fx:[{t:"damageAll",v:12}], exhaust:true}
+  release_touch:{name:"성불의 손짓", cost:1, type:"skill", emoji:"🤲", target:"enemy", attr:"성불 표식 덱", rarity:"common",
+          desc:"인도의 손길 1을 얻습니다. 이 위령 동안 매 턴 처음으로 성불 표식을 부여하면 주문을 1장 뽑습니다.\n사용 후 소멸.", fx:[{t:"damage",v:5},{t:"draw",v:1}], migrationTodo:"인도의 손길 신규 복 효과 미구현"},
+  spirit_guidance:{name:"혼백 인도", cost:1, type:"skill", emoji:"🕯️", target:"self", attr:"성불 표식 덱", rarity:"common",
+          desc:"신통력을 1 회복합니다.\n주문을 1장 뽑습니다.\n소멸.", fx:[{t:"energy",v:1},{t:"draw",v:1}], exhaust:true},
+  path_of_light:{name:"빛길 열기", cost:2, type:"attack", emoji:"✨", target:"enemy", attr:"성불 표식 덱", rarity:"common",
+          desc:"모든 유령의 미련을 4만큼 정화합니다.", fx:[{t:"damageAll",v:6}], migrationTodo:"최신 DB 수치 4와 기존 fx 6 불일치"},
+  guiding_rite:{name:"천도재", cost:2, type:"attack", emoji:"🕯️", target:"enemy", attr:"성불 표식 덱", rarity:"uncommon",
+          desc:"유령의 미련을 8만큼 정화합니다. 성불 표식이 있으면 추가로 6 정화합니다.", fx:[{t:"damage",v:9},{t:"ifMarkedDamage",v:6}], migrationTodo:"최신 DB 기본 수치 8과 기존 fx 9 불일치"},
+  purification_wave:{name:"정화의 파동", cost:2, type:"attack", emoji:"🌊", target:"enemy", attr:"성불 표식 덱", rarity:"uncommon",
+          desc:"모든 유령의 미련을 5만큼 정화합니다.", fx:[{t:"damageAll",v:7}], migrationTodo:"최신 DB 수치 5와 기존 fx 7 불일치"},
+  soul_passing:{name:"혼백천도", cost:3, type:"attack", emoji:"🪷", target:"enemy", attr:"성불 표식 덱", rarity:"rare",
+          desc:"유령의 미련을 16만큼 정화합니다. 대상의 성불 표식을 전부 소모하고, 소모한 표식 1마다 5 추가 정화합니다. 사용 후 소멸.", fx:[{t:"consumeAllMarksDamage",base:16,per:3}], exhaust:true, migrationTodo:"최신 DB 표식당 수치 5와 기존 fx 3 불일치"},
+  lotus_crossing:{name:"연화길", cost:3, type:"attack", emoji:"🪷", target:"enemy", attr:"성불 표식 덱", rarity:"rare",
+          desc:"모든 유령의 미련을 9만큼 정화합니다.\n사용 후 소멸.", fx:[{t:"damageAll",v:12}], exhaust:true, migrationTodo:"최신 DB 수치 9와 기존 fx 12 불일치"},
+
+  // -----------------------------------------------------------------------
+  // 한풀이 덱
+  // -----------------------------------------------------------------------
+  unsaid_words_han:{name:"못다 한 말", cost:1, type:"attack", emoji:"💬", target:"enemy", attr:"한풀이 덱", rarity:"common",
+          desc:"유령의 미련을 6만큼 정화합니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 이 주문의 정화량이 3 증가합니다. 최대 3회.", fx:[], migrationTodo:"한풀이 미사용 성장 신규 기믹 미구현"},
+  swallowed_cry:{name:"삼킨 울음", cost:1, type:"defense", emoji:"😶", target:"self", attr:"한풀이 덱", rarity:"common",
+          desc:"마음의 결계를 6 얻습니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 이 주문의 결계량이 2 증가합니다. 최대 3회.", fx:[], migrationTodo:"한풀이 미사용 성장 신규 기믹 미구현"},
+  unfinished_confession:{name:"끝내 못한 고백", cost:2, type:"attack", emoji:"💌", target:"enemy", attr:"한풀이 덱", rarity:"uncommon",
+          desc:"유령의 미련을 10만큼 정화합니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 정화량이 5 증가합니다. 최대 2회.", fx:[], migrationTodo:"한풀이 미사용 성장 신규 기믹 미구현"},
+  recollecting_night:{name:"되새기는 밤", cost:1, type:"skill", emoji:"🌙", target:"self", attr:"한풀이 덱", rarity:"common",
+          desc:"버림 더미에서 이번 위령 중 수치가 증가한 주문 1장을 선택해 손패로 가져옵니다. 주문을 1장 뽑습니다.", fx:[], migrationTodo:"성장 상태 기반 버림 더미 회수 신규 기믹 미구현"},
+  cannot_let_go:{name:"놓지 못한 손", cost:0, type:"skill", emoji:"🤝", target:"self", attr:"한풀이 덱", rarity:"uncommon",
+          desc:"손패의 다른 한풀이 주문 1장을 선택해 버립니다. 그 주문의 미사용 성장 효과를 즉시 1회 발동합니다. 주문을 1장 뽑습니다. 사용 후 소멸.", fx:[], exhaust:true, migrationTodo:"한풀이 선택 버림/성장 발동 신규 기믹 미구현"},
+  returned_grudge:{name:"되돌아온 응어리", cost:1, type:"attack", emoji:"↩️", target:"enemy", attr:"한풀이 덱", rarity:"common",
+          desc:"유령의 미련을 6만큼 정화합니다. 이번 턴 버림 더미에서 한풀이 주문을 가져왔다면 추가로 6 정화합니다.", fx:[], migrationTodo:"한풀이 회수 조건부 정화 신규 기믹 미구현"},
+  deepened_grudge:{name:"깊어진 응어리", cost:1, type:"skill", emoji:"🪨", target:"self", attr:"한풀이 덱", rarity:"uncommon",
+          desc:"응어리 복을 얻습니다. 이 위령 동안 한풀이 주문의 수치가 증가할 때마다 마음의 결계를 2 얻습니다. 사용 후 소멸.", fx:[], exhaust:true, migrationTodo:"응어리 복 신규 기믹 미구현"},
+  release_grudge:{name:"한을 풀다", cost:1, type:"skill", emoji:"🧵", target:"self", attr:"한풀이 덱", rarity:"rare",
+          desc:"버림 더미에서 수치가 증가한 한풀이 주문 1장을 선택해 손패로 가져옵니다. 그 주문의 비용은 이번 턴 0이 됩니다. 주문을 1장 뽑습니다. 사용 후 소멸.", fx:[], exhaust:true, migrationTodo:"성장한 한풀이 회수/비용 변경 신규 기믹 미구현"},
+
+  // -----------------------------------------------------------------------
+  // 굿판 덱
+  // -----------------------------------------------------------------------
+  awaken_bell:{name:"방울 깨우기", cost:1, type:"skill", emoji:"🔔", target:"self", attr:"굿판 덱", rarity:"common",
+          desc:"방울치기 2장을 손패에 생성합니다.", fx:[], migrationTodo:"방울치기 생성 신규 기믹 미구현"},
+  sevenstar_bell:{name:"칠성 방울", cost:1, type:"skill", emoji:"🌟", target:"self", attr:"굿판 덱", rarity:"common",
+          desc:"주문을 1장 뽑고 방울치기 1장을 손패에 생성합니다.", fx:[], migrationTodo:"방울치기 생성 신규 기믹 미구현"},
+  warding_dance:{name:"액막이 춤", cost:1, type:"defense", emoji:"💃", target:"self", attr:"굿판 덱", rarity:"common",
+          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 굿판 신규 기믹 미구현"},
+  whirlwind_gut:{name:"휘몰이굿", cost:1, type:"skill", emoji:"🌀", target:"self", attr:"굿판 덱", rarity:"uncommon",
+          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 굿판 신규 기믹 미구현"},
+  raise_divine_spirit:{name:"신명 돋우기", cost:1, type:"skill", emoji:"🔥", target:"self", attr:"굿판 덱", rarity:"uncommon",
+          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 신명 신규 기믹 미구현"},
+  heating_ritual:{name:"판이 달아오른다", cost:1, type:"skill", emoji:"🥁", target:"self", attr:"굿판 덱", rarity:"rare",
+          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 굿판 신규 기믹 미구현"},
+  step_together:{name:"발맞춤", cost:1, type:"skill", emoji:"👣", target:"self", attr:"굿판 덱", rarity:"common",
+          desc:"", fx:[], migrationTodo:"엑셀 설명/fx 공란, 굿판 신규 기믹 미구현"},
+  bell_strike:{name:"방울치기", cost:0, type:"attack", emoji:"🔔", target:"enemy", attr:"굿판 덱", rarity:"common",
+          desc:"", fx:[], generatedOnly:true, excludeFromRewards:true, migrationTodo:"생성 전용 카드, 일반 보상 제외"}
 };
 
 if(window.BOHYUN_LIFE_SYSTEM && typeof window.BOHYUN_LIFE_SYSTEM.getStatusCardDb === "function"){
@@ -124,8 +164,6 @@ const CARD_ART_FILES = {
   guardian_script: "guardian_script.jpg",
   guardian_talisman: "guardian_talisman.jpg",
   guiding_rite: "guiding_rite.jpg",
-  intrusive_thought: "distraction.jpg",
-  hesitation: "hesitation.jpg",
   last_struggle: "last_struggle.jpg",
   lotus_crossing: "lotus_crossing.jpg",
   lullaby_chant: "lullaby_chant.jpg",
@@ -136,7 +174,6 @@ const CARD_ART_FILES = {
   purification_wave: "purification_wave.jpg",
   purifying_talisman: "purifying_talisman.jpg",
   quiet_steps: "quiet_steps.jpg",
-  regret: "regret.jpg",
   release_touch: "release_touch.jpg",
   requiem_script: "requiem_script.jpg",
   returning_wall: "returning_wall.jpg",
@@ -163,16 +200,19 @@ Object.entries(CARD_ART_FILES).forEach(([key, file]) => {
 const BASE_STARTER_DECK = [
   "rosary_throw","rosary_throw","rosary_throw","rosary_throw",
   "bell_shake","bell_shake",
-  "memory_doll","memory_doll",
+  "calm_breath",
   "guardian_script","guardian_script","guardian_script",
   "five_direction_barrier","five_direction_barrier",
-  "calm_breath"
+  "memory_doll","memory_doll"
 ];
 let STARTER_DECK = [...BASE_STARTER_DECK];
 
-const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => !["starter", "status"].includes(CARD_DB[key].rarity));
+const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => {
+  const card = CARD_DB[key];
+  return card && !card.excludeFromRewards && !card.generatedOnly && !["starter", "status"].includes(card.rarity);
+});
 
-// 법구/약병 데이터는 equipment.js / potion.js에서 관리합니다.
+// 법구/영맥 데이터는 equipment.js / potion.js에서 관리합니다.
 // cardData.js는 주문 데이터만 담당합니다.
 
-const typeLabel = t => t==="attack" ? "정화" : t==="defense" ? "결계" : t==="status" ? "상태" : "스킬";
+const typeLabel = t => t==="attack" ? "정화" : t==="defense" ? "결계" : t==="status" ? "상태" : "의식";
