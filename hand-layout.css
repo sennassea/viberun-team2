@@ -53,8 +53,14 @@
   right: auto;
   left: auto;
   bottom: auto;
-  padding: 1cqh 1.2cqw;
-  font-size: 2cqh;
+  height: 4.8cqh;
+  padding: 0;
+  font-size: 0;
+  color: transparent;
+  background: transparent url("assets/ui_buttons/end_turn.png") center/100% 100% no-repeat;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .right-bottom-actions #endTurn {
