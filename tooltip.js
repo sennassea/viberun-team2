@@ -589,7 +589,8 @@
   /* ── 전투원 이벤트 위임 ───────────────────────────────────────────────── */
   function isEnemyTooltipHit(target, cbEl) {
     if (!target || !cbEl || !cbEl.contains(target)) return false;
-    var hitEl = target.closest(".avatar,.intent,.combatant-info,.enemy-status-icons,.enemy-status-icon");
+    if (target.closest(".enemy-status-icons,.enemy-status-icon")) return false;
+    var hitEl = target.closest(".avatar,.intent,.combatant-info");
     return !!(hitEl && cbEl.contains(hitEl));
   }
 
