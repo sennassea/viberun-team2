@@ -80,6 +80,16 @@ function continueGameFromMenu(){
   $("#over").classList.remove("show");
   closeRewardOverlay();
   renderAll();
+  /* 보상 선택 화면이 열려 있던 상태로 저장되었다면, 새로 뽑지 않고
+     저장된 카드 3종(S.victoryCardRewardKeys)을 그대로 다시 표시한다. */
+  if(S && S.rewardOpen){
+    if(S.victoryCardRewardOpen && Array.isArray(S.victoryCardRewardKeys) && typeof renderRewardOverlay === "function"){
+      renderRewardOverlay(S.victoryCardRewardKeys);
+    } else if(typeof renderBattleVictoryOverlay === "function"){
+      renderBattleVictoryOverlay();
+    }
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.add("hidden");
   updateContinueButtonInfo();

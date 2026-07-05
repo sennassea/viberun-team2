@@ -330,7 +330,9 @@
       const saved = JSON.parse(raw);
       if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
       if(!isSavedProgressForCurrentAccount(saved)) return;
-      if(typeof S !== "undefined") S = saved.state;
+      /* S는 배틀 시작 전까지 초기값이 없어(let S;) typeof S가 항상 "undefined"이므로,
+         기존 typeof 가드로는 새로고침 직후 복원이 절대 실행되지 않았다. */
+      S = saved.state;
       if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
       if(window.MAP_STATE && saved.mapState){
         window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
@@ -339,6 +341,16 @@
       if(S) S.busy = false;
       if(typeof updateHudFloor === "function") updateHudFloor();
       if(typeof renderAll === "function") renderAll();
+      /* 보상 선택 화면이 열려 있던 상태로 저장되었다면, 새로 뽑지 않고
+         저장된 카드 3종(S.victoryCardRewardKeys)을 그대로 다시 표시한다. */
+      if(S && S.rewardOpen){
+        if(S.victoryCardRewardOpen && Array.isArray(S.victoryCardRewardKeys) && typeof renderRewardOverlay === "function"){
+          renderRewardOverlay(S.victoryCardRewardKeys);
+        } else if(typeof renderBattleVictoryOverlay === "function"){
+          renderBattleVictoryOverlay();
+        }
+        if(typeof updateEndBtn === "function") updateEndBtn();
+      }
     } catch(error) {
       localStorage.removeItem(SAVE_KEY);
     }
