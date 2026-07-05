@@ -112,14 +112,16 @@
 /* ── 바디 ─────────────────────────────────────────────────────────────────── */
 .dmap-body {
   flex: 1;
-  display: flex;
+  --dmap-legend-width: clamp(118px, 15cqw, 160px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--dmap-legend-width);
   min-height: 0;
   overflow: hidden;
 }
 
 /* ── 맵 캔버스 래퍼 ─────────────────────────────────────────────────────── */
 .dmap-canvas-wrap {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   position: relative;
   overflow: hidden;
@@ -129,7 +131,7 @@
   background: transparent;
 }
 .dmap-canvas-wrap #mapCanvas {
-  clip-path: polygon(22% 5%, 78% 5%, 97% 33%, 97% 70%, 70% 92%, 30% 92%, 3% 66%, 3% 27%);
+  clip-path: polygon(22% 5%, 78% 5%, 94% 33%, 94% 70%, 70% 92%, 30% 92%, 3% 66%, 3% 27%);
 }
 .dmap-canvas-wrap:active { cursor: grabbing; }
 
@@ -156,31 +158,28 @@
 /* ── 범례 패널 ────────────────────────────────────────────────────────────── */
 .dmap-legend {
   box-sizing: border-box;
-  flex: 0 0 clamp(160px, 18cqw, 240px);
-  width: clamp(160px, 18cqw, 240px);
-  min-width: 160px;
-  max-width: 240px;
-  padding: 4.9cqh 0.8cqw 1.2cqh 1.9cqw;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 4.9cqh 0.8cqw 1.2cqh 0.9cqw;
   display: flex;
   flex-direction: column;
   gap: 0.5cqh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   background: transparent;
   border-left: 0;
-  flex-shrink: 0;
-  transform: translate(0.7cqw, 1.2cqh);
+  transform: translate(0, 1.2cqh);
   contain: layout paint;
 }
 
 .dmap-legend-title {
-  font-size: 2.3cqh;
+  font-size: 1.75cqh;
   font-weight: 900;
   color: #3b2a0a;
   text-align: center;
   border-bottom: 0;
-  padding-bottom: 0.6cqh;
-  margin-bottom: 0.3cqh;
+  padding-bottom: 0.45cqh;
+  margin-bottom: 0.25cqh;
   letter-spacing: 0.06em;
 }
 
@@ -188,10 +187,12 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 0.45cqw;
-  padding: 0.42cqh 0.25cqw;
+  gap: 0.28cqw;
+  padding: 0.34cqh 0;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  margin: 0 auto;
   border-radius: 0.8cqh;
   cursor: pointer;
   transition: background 0.12s;
@@ -200,25 +201,25 @@
 .dmap-legend-item.active { background: rgba(255, 245, 215, 0.38); }
 
 .dmap-leg-ico {
-  width: 3.35cqh;
-  height: 3.35cqh;
-  min-width: 3.35cqh;
-  max-width: 3.35cqh;
+  width: 2.35cqh;
+  height: 2.35cqh;
+  min-width: 2.35cqh;
+  max-width: 2.35cqh;
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.9cqh;
+  font-size: 1.35cqh;
   line-height: 1;
   flex-shrink: 0;
   border: 0.18cqh solid rgba(255, 255, 255, 0.4);
   box-shadow: 0 0.15cqh 0.5cqh rgba(0,0,0,0.25);
 }
 .dmap-leg-ico img {
-  width: 122%;
-  height: 122%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   display: block;
 }
@@ -231,7 +232,7 @@
 
 .dmap-leg-label {
   min-width: 0;
-  font-size: 1.9cqh;
+  font-size: 1.45cqh;
   font-weight: 700;
   color: #3b2a0a;
   line-height: 1.15;
