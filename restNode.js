@@ -312,8 +312,9 @@ function ensurePrayerStyles(){
   style.textContent =
     ".prayer-overlay{position:absolute;inset:0;z-index:45;display:none;flex-direction:column;" +
       "padding:1.4cqh 1.6cqw 2.2cqh;gap:1.6cqh;color:#4a3a24;font-family:inherit;" +
-      "background:radial-gradient(120% 70% at 50% 0%,rgba(255,241,214,.92) 0%,rgba(243,224,189,.82) 45%,rgba(196,168,132,.62) 100%)," +
-        "linear-gradient(180deg,#efe0c4 0%,#d8c39a 55%,#c3aa7c 100%);}" +
+      "background-image:radial-gradient(120% 70% at 50% 0%,rgba(255,241,214,.42) 0%,rgba(243,224,189,.28) 45%,rgba(70,45,28,.22) 100%)," +
+        "linear-gradient(90deg,rgba(20,24,32,.12) 0%,rgba(20,24,32,.04) 45%,rgba(20,24,32,.34) 100%)," +
+        "url(\"assets/node_background/prayer_site.jpg\");background-size:cover,cover,cover;background-position:center,center,center;background-repeat:no-repeat,no-repeat,no-repeat;}" +
     ".prayer-overlay.show{display:flex;}" +
     ".prayer-header{flex:none;display:flex;align-items:stretch;gap:.8cqw;height:12cqh;}" +
     ".prayer-player-card{flex:none;display:flex;align-items:center;gap:1.15cqw;width:24cqw;min-width:30cqh;" +
