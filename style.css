@@ -386,6 +386,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .top-relic-panel.relic-scrollable::before{left:-.8cqh; transform:translateY(-50%) scaleX(-1); clip-path:polygon(0 0, 100% 50%, 0 100%);}
 .top-relic-panel.relic-scrollable::after{right:-.8cqh; transform:translateY(-50%); clip-path:polygon(0 0, 100% 50%, 0 100%);}
 .side-item-panel{width:6.4cqh; min-height:15.8cqh; flex:none; display:flex; flex-direction:column; justify-content:flex-start; gap:1.1cqh;
+  margin-top:4.9cqh;
   background:transparent url("assets/ui/potion_panel.png") center/100% 100% no-repeat; border:0; border-radius:0; padding:2.25cqh .65cqh 1.25cqh;
   box-shadow:none; backdrop-filter:none;}
 .side-item-section{display:flex; flex-direction:column; align-items:center; gap:.5cqh;}
