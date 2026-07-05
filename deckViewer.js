@@ -343,6 +343,7 @@
       ".deck-viewer-sort select,.deck-viewer-filter select,.deck-viewer-search input{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
       ".deck-viewer-search input{width:15cqw;}" +
       ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}" +
+      ".deck-viewer.detail-open .deck-viewer-grid{visibility:hidden;}" +
       ".deck-viewer-card{font:inherit;color:var(--c-ink);cursor:pointer;text-align:inherit;transition:transform .14s ease,box-shadow .14s ease;}" +
       ".deck-viewer-card:hover,.deck-viewer-card:focus-visible{transform:translateY(-.6cqh);box-shadow:0 .9cqh 1.8cqh rgba(40,70,120,.28);outline:none;}" +
       ".deck-viewer.pick-mode .deck-viewer-card.pick-disabled{filter:grayscale(.8) opacity(.45);cursor:not-allowed;}" +
@@ -623,6 +624,7 @@
     activeDetailIndex = index;
     showUpgradePreview = false;
     renderCardDetail();
+    els.overlay.classList.add("detail-open");
     els.detailBackdrop.classList.add("show");
     els.detailBackdrop.setAttribute("aria-hidden", "false");
     els.detailClose.focus();
@@ -632,6 +634,7 @@
     if(!els || !els.detailBackdrop) return;
     activeDetailIndex = -1;
     showUpgradePreview = false;
+    els.overlay.classList.remove("detail-open");
     els.detailBackdrop.classList.remove("show");
     els.detailBackdrop.setAttribute("aria-hidden", "true");
   }
