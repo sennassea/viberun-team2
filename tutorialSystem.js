@@ -333,6 +333,24 @@
         font-size:30px;
         font-weight:900;
       }
+      .tutorial-guide-button[data-tutorial-skip-confirm-button],
+      .tutorial-guide-button[data-tutorial-skip-back]{
+        min-height:76px;
+        border:0;
+        border-radius:0;
+        background-color:transparent;
+        background-position:center;
+        background-repeat:no-repeat;
+        background-size:100% 100%;
+        color:transparent;
+        font-size:0;
+      }
+      .tutorial-guide-button[data-tutorial-skip-confirm-button]{
+        background-image:url("assets/ui_buttons/tutorial_yes.png");
+      }
+      .tutorial-guide-button[data-tutorial-skip-back]{
+        background-image:url("assets/ui_buttons/tutorial_no.png");
+      }
       .tutorial-guide-confirm[hidden],
       .tutorial-guide-main[hidden]{
         display:none;
