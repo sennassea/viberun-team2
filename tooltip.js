@@ -592,6 +592,8 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
+    activeDockEl = null;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
     positionCombatantTooltip(cbEl, isPlayer);
@@ -645,6 +647,8 @@
   var activeEnergyEl = null;
   var activeHudEl = null;
   var activeProgressEl = null;
+  var activeMenuEl = null;
+  var activeDockEl = null;
 
   function buildStatusIconHtml(statusEl) {
     var type = statusEl.dataset.status;
@@ -679,6 +683,8 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
+    activeDockEl = null;
     activeStatusEl = statusEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -764,6 +770,8 @@
     activeItemSlotEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
+    activeDockEl = null;
     activeEnergyEl = energyEl;
     tooltip.innerHTML = buildEnergyHtml();
     tooltip.classList.add("tt-show");
@@ -875,6 +883,8 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
+    activeDockEl = null;
     activeItemSlotEl = slotEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -955,6 +965,8 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
+    activeDockEl = null;
     cardActiveEl = cardEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -1000,38 +1012,43 @@
      VI. 프로필카드 재화/상태 숫자 툴팁
      ══════════════════════════════════════════════════════════════════════ */
 
-  var HUD_RESOURCE_INFO = {
-    hudGold:        { icon: "assets/ui/resource_icons/gold.png", name: "복채",     desc: "상점과 보상에서 사용하는 기본 재화입니다." },
-    hudMoonShard:   { icon: "🌙", name: "달빛 조각", desc: "희귀 보상 획득에 사용하는 특별 재화입니다." },
-    hudRelicCount:  { icon: "🏺", name: "법구",     desc: "전투와 탐험에 도움을 주는 보유 유물입니다." },
-    hudPotionCount: { icon: "🧪", name: "약병",     desc: "전투 중 사용할 수 있는 소모품입니다." }
+  /* 전투/상점/신령의 은혜/휴식/이벤트 등 화면마다 접두사만 다른(hud-, shop-, prayer-, event-)
+     프로필 카드 구조를 공통 선택자로 매칭한다. */
+  var HP_BAR_SELECTOR = ".hud-hpbar,.shop-hp-bar,.prayer-hp-bar,.event-hp-bar";
+  var RESOURCE_CONTAINER_SELECTOR = ".hud-resource,.shop-resource,.prayer-resource,.event-resource";
+
+  var HUD_RESOURCE_TYPE_BY_ICON_CLASS = {
+    "hud-resource-icon-relic":  { icon: "🏺", name: "법구",     desc: "전투와 탐험에 도움을 주는 보유 유물입니다." },
+    "hud-resource-icon-potion": { icon: "🧪", name: "약병",     desc: "전투 중 사용할 수 있는 소모품입니다." },
+    "hud-resource-icon-gold":   { icon: "🪙", name: "복채",     desc: "상점과 보상에서 사용하는 기본 재화입니다." },
+    "hud-resource-icon-moon":   { icon: "🌙", name: "달빛 조각", desc: "희귀 보상 획득에 사용하는 특별 재화입니다." }
   };
 
-  function findHudResourceCountEl(target) {
-    var resourceEl = target && target.closest && target.closest(".hud-resource");
-    if (!resourceEl) return null;
-    var countEl = null;
-    for (var id in HUD_RESOURCE_INFO) {
-      if (!HUD_RESOURCE_INFO.hasOwnProperty(id)) continue;
-      var candidate = resourceEl.querySelector("#" + id);
-      if (candidate) { countEl = candidate; break; }
+  function findHudResourceMatch(target) {
+    var containerEl = target && target.closest && target.closest(RESOURCE_CONTAINER_SELECTOR);
+    if (!containerEl || !containerEl.querySelector) return null;
+    var info = null;
+    for (var cls in HUD_RESOURCE_TYPE_BY_ICON_CLASS) {
+      if (!HUD_RESOURCE_TYPE_BY_ICON_CLASS.hasOwnProperty(cls)) continue;
+      if (containerEl.querySelector("." + cls)) { info = HUD_RESOURCE_TYPE_BY_ICON_CLASS[cls]; break; }
     }
-    return countEl;
+    if (!info) return null;
+    var countEl = containerEl.querySelector("[id]");
+    return { el: containerEl, info: info, countEl: countEl };
   }
 
-  function buildHudResourceHtml(countEl) {
-    var info = HUD_RESOURCE_INFO[countEl.id];
-    if (!info) return "";
-    var desc = info.desc;
-    var value = countEl.textContent;
+  function buildHudResourceHtml(match) {
+    if (!match || !match.info) return "";
+    var desc = match.info.desc;
+    var value = match.countEl ? match.countEl.textContent : "";
     if (value !== "" && value != null) desc += "\n현재: " + value;
-    return makeRow(info.icon, info.name, desc);
+    return makeRow(match.info.icon, match.info.name, desc);
   }
 
-  function buildHudHpHtml() {
+  function buildHudHpHtml(hpEl) {
     var desc = "0이 되면 전투에서 패배합니다.";
-    var hpEl = document.getElementById("hudHp");
-    if (hpEl && hpEl.textContent) desc += "\n현재: " + hpEl.textContent;
+    var textEl = hpEl && hpEl.querySelector ? hpEl.querySelector("span") : null;
+    if (textEl && textEl.textContent) desc += "\n현재: " + textEl.textContent;
     return makeRow("", "정신력", desc);
   }
 
@@ -1059,6 +1076,8 @@
     activeItemSlotEl = null;
     activeEnergyEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
+    activeDockEl = null;
     activeHudEl = anchorEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -1074,26 +1093,25 @@
     var target = e.target;
     if (!target || !target.closest) return;
 
-    var hpEl = target.closest(".hud-hpbar");
+    var hpEl = target.closest(HP_BAR_SELECTOR);
     if (hpEl) {
       if (hpEl === activeHudEl) return;
-      showHudTooltip(hpEl, buildHudHpHtml());
+      showHudTooltip(hpEl, buildHudHpHtml(hpEl));
       return;
     }
 
-    var countEl = findHudResourceCountEl(target);
-    if (countEl) {
-      var resourceEl = target.closest(".hud-resource");
-      if (resourceEl === activeHudEl) return;
-      var html = buildHudResourceHtml(countEl);
-      if (html) showHudTooltip(resourceEl, html);
+    var match = findHudResourceMatch(target);
+    if (match) {
+      if (match.el === activeHudEl) return;
+      var html = buildHudResourceHtml(match);
+      if (html) showHudTooltip(match.el, html);
     }
   });
 
   game.addEventListener("mouseout", function (e) {
     if (!activeHudEl) return;
     var stillInside = e.target && e.target.closest
-      && (e.target.closest(".hud-hpbar") === activeHudEl || e.target.closest(".hud-resource") === activeHudEl);
+      && (e.target.closest(HP_BAR_SELECTOR) === activeHudEl || e.target.closest(RESOURCE_CONTAINER_SELECTOR) === activeHudEl);
     if (!stillInside) return;
     var to = e.relatedTarget;
     if (to && activeHudEl.contains && activeHudEl.contains(to)) return;
@@ -1113,28 +1131,59 @@
     return true;
   }
 
+  /* 전투 화면은 위치/스테이지/턴 구조(.progress-region 등)를 쓰고,
+     상점/신령의 은혜/휴식/이벤트 등 다른 화면은 제목+부제(-stage-title-main/-sub) 구조를 쓴다. */
+  var PROGRESS_CONTAINER_SELECTOR = ".progress-center-hud,.shop-stage-info,.prayer-stage-info,.event-stage-info";
+
+  function getProgressTurnText(progressEl) {
+    if (!progressEl || !progressEl.querySelector) return "";
+    var turnEl = progressEl.querySelector(".progress-turn");
+    return turnEl ? (turnEl.textContent || "").trim() : "";
+  }
+
+  /* 전투 화면(위치+스테이지+턴)에서만 쓰는 상세 표시 텍스트 */
   function getProgressDisplayText(progressEl) {
     if (!progressEl || !progressEl.querySelector) return "";
     var regionEl = progressEl.querySelector(".progress-region");
+    if (!regionEl) return "";
     var floorEl = progressEl.querySelector(".progress-floor");
-    var turnEl = progressEl.querySelector(".progress-turn");
-    var locationText = "";
-    if (regionEl) {
-      var spans = regionEl.querySelectorAll ? regionEl.querySelectorAll("span") : null;
-      var lastSpan = spans && spans.length ? spans[spans.length - 1] : null;
-      locationText = ((lastSpan || regionEl).textContent || "").trim();
-    }
+    var spans = regionEl.querySelectorAll ? regionEl.querySelectorAll("span") : null;
+    var lastSpan = spans && spans.length ? spans[spans.length - 1] : null;
+    var locationText = ((lastSpan || regionEl).textContent || "").trim();
     var floorText = (floorEl && isProgressPartVisible(floorEl)) ? (floorEl.textContent || "").trim() : "";
-    var turnText = turnEl ? (turnEl.textContent || "").trim() : "";
+    var turnText = getProgressTurnText(progressEl);
     var parts = [locationText, floorText, turnText].filter(function (t) { return t; });
     return parts.join(" | ");
   }
 
+  /* 턴이 없는 화면(상점/신령의 은혜/휴식/이벤트 등)에서 쓰는 장소 이름만의 텍스트 */
+  function getProgressPlaceText(progressEl) {
+    if (!progressEl || !progressEl.querySelector) return "";
+    var regionEl = progressEl.querySelector(".progress-region");
+    if (regionEl) {
+      var spans = regionEl.querySelectorAll ? regionEl.querySelectorAll("span") : null;
+      var lastSpan = spans && spans.length ? spans[spans.length - 1] : null;
+      return ((lastSpan || regionEl).textContent || "").trim();
+    }
+    var titleEl = progressEl.querySelector("[class$='-stage-title-main']");
+    return titleEl ? (titleEl.textContent || "").trim() : "";
+  }
+
   function buildProgressHtml(progressEl) {
-    var desc = "현재 위치와 전투 턴 수를 표시합니다.";
-    var displayText = getProgressDisplayText(progressEl);
-    if (displayText) desc += "\n현재 표시: " + displayText;
-    return makeRow("", "현재 진행 정보", desc);
+    /* 전투 턴 정보가 실제로 존재할 때만 "현재 진행 정보"(위치+턴) 문구를 사용하고,
+       그 외에는 항상 "현재 위치"(장소 안내) 기본 문구를 사용한다. */
+    var turnText = getProgressTurnText(progressEl);
+    if (turnText) {
+      var desc = "현재 위치와 전투 턴 수를 표시합니다.";
+      var displayText = getProgressDisplayText(progressEl);
+      if (displayText) desc += "\n현재 표시: " + displayText;
+      return makeRow("", "현재 진행 정보", desc);
+    }
+
+    var placeDesc = "현재 머무르고 있는 장소를 표시합니다.";
+    var placeText = getProgressPlaceText(progressEl);
+    if (placeText) placeDesc += "\n현재 장소: " + placeText;
+    return makeRow("", "현재 위치", placeDesc);
   }
 
   function positionProgressTooltip(anchorEl) {
@@ -1161,6 +1210,8 @@
     activeItemSlotEl = null;
     activeEnergyEl = null;
     activeHudEl = null;
+    activeMenuEl = null;
+    activeDockEl = null;
     activeProgressEl = progressEl;
     tooltip.innerHTML = buildProgressHtml(progressEl);
     tooltip.classList.add("tt-show");
@@ -1173,18 +1224,173 @@
   }
 
   game.addEventListener("mouseover", function (e) {
-    var progressEl = e.target && e.target.closest && e.target.closest(".progress-center-hud");
+    var progressEl = e.target && e.target.closest && e.target.closest(PROGRESS_CONTAINER_SELECTOR);
     if (!progressEl || progressEl === activeProgressEl) return;
     showProgressTooltip(progressEl);
   });
 
   game.addEventListener("mouseout", function (e) {
     if (!activeProgressEl) return;
-    var progressEl = e.target && e.target.closest && e.target.closest(".progress-center-hud");
+    var progressEl = e.target && e.target.closest && e.target.closest(PROGRESS_CONTAINER_SELECTOR);
     if (!progressEl) return;
     var to = e.relatedTarget;
     if (to && progressEl.contains(to)) return;
     hideProgressTooltip();
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     VIII. 우측 상단 메뉴 아이콘 툴팁
+     ══════════════════════════════════════════════════════════════════════ */
+
+  var TOP_MENU_INFO = [
+    { cls: "ui-map-button",      name: "지도", desc: "현재 진행 경로를 확인합니다." },
+    { cls: "ui-codex-button",    name: "도감", desc: "카드와 정보를 확인합니다." },
+    { cls: "ui-bag-button",      name: "가방", desc: "보유 중인 법구와 약병을 확인합니다." },
+    { cls: "ui-settings-button", name: "설정", desc: "게임 설정을 변경합니다." },
+    { cls: "ui-menu-button",     name: "메뉴", desc: "게임 메뉴를 엽니다." }
+  ];
+
+  /* 전투 화면의 .top-menu-button 뿐 아니라 상점/신령의 은혜/휴식/이벤트/지도 화면의
+     자체 버튼(.shop-header-btn, .sb-menu-btn, .prayer-header-btn, .dmap-action-btn 등)도
+     모두 공통으로 ui-map-button/ui-codex-button/ui-bag-button/ui-settings-button 클래스를
+     그대로 갖고 있으므로, 래퍼 클래스에 의존하지 않고 이 클래스들로 직접 매칭한다. */
+  var TOP_MENU_SELECTOR = TOP_MENU_INFO.map(function (item) { return "." + item.cls; }).join(",");
+
+  function findTopMenuButton(target) {
+    var btnEl = target && target.closest && target.closest(TOP_MENU_SELECTOR);
+    if (!btnEl || !btnEl.classList) return null;
+    for (var i = 0; i < TOP_MENU_INFO.length; i++) {
+      if (btnEl.classList.contains(TOP_MENU_INFO[i].cls)) return { el: btnEl, info: TOP_MENU_INFO[i] };
+    }
+    return null;
+  }
+
+  function positionTopMenuTooltip(anchorEl) {
+    var gRect   = game.getBoundingClientRect();
+    var aRect   = anchorEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+    var gap = 10;
+
+    /* 아이콘 중앙과 툴팁 중앙을 맞추고, 아이콘 바로 아래(간격 약 10px)에 배치 */
+    var tx = (aRect.left - gRect.left) + (aRect.width - tipRect.width) * 0.5;
+    var ty = (aRect.bottom - gRect.top) + gap;
+
+    /* 화면(게임 영역) 밖으로 나가면 안쪽으로만 보정 (설정 등 우측 끝 아이콘 대응) */
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showTopMenuTooltip(anchorEl, info) {
+    if (!anchorEl || !info) return;
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
+    activeHudEl = null;
+    activeProgressEl = null;
+    activeDockEl = null;
+    activeMenuEl = anchorEl;
+    tooltip.innerHTML = makeRow("", info.name, info.desc);
+    tooltip.classList.add("tt-show");
+    positionTopMenuTooltip(anchorEl);
+  }
+
+  function hideTopMenuTooltip() {
+    activeMenuEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var found = findTopMenuButton(e.target);
+    if (!found || found.el === activeMenuEl) return;
+    showTopMenuTooltip(found.el, found.info);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeMenuEl) return;
+    var found = findTopMenuButton(e.target);
+    if (!found || found.el !== activeMenuEl) return;
+    var to = e.relatedTarget;
+    if (to && activeMenuEl.contains && activeMenuEl.contains(to)) return;
+    hideTopMenuTooltip();
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     IX. 우측 하단 전투 아이콘(턴 종료/손패/버린 카드) 툴팁
+     ══════════════════════════════════════════════════════════════════════ */
+
+  var DOCK_ICON_INFO = [
+    { sel: "#endTurn",     name: "턴 종료",   desc: "현재 턴을 종료하고 적의 행동을 진행합니다." },
+    { sel: "#deckPile",    name: "손패",     desc: "현재 손에 들고 있는 카드를 확인합니다." },
+    { sel: "#discardPile", name: "버린 카드", desc: "이번 전투에서 사용했거나 버려진 카드를 확인합니다." }
+  ];
+
+  function findDockIcon(target) {
+    if (!target || !target.closest) return null;
+    for (var i = 0; i < DOCK_ICON_INFO.length; i++) {
+      var item = DOCK_ICON_INFO[i];
+      var el = target.closest(item.sel);
+      if (el) return { el: el, info: item };
+    }
+    return null;
+  }
+
+  function positionDockTooltip(anchorEl) {
+    var gRect   = game.getBoundingClientRect();
+    var aRect   = anchorEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+    var gap = 10;
+
+    var tx = (aRect.left - gRect.left) + (aRect.width - tipRect.width) * 0.5;
+    var ty = (aRect.top - gRect.top) - tipRect.height - gap;
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showDockTooltip(anchorEl, info) {
+    if (!anchorEl || !info) return;
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
+    activeHudEl = null;
+    activeProgressEl = null;
+    activeMenuEl = null;
+    activeDockEl = anchorEl;
+    tooltip.innerHTML = makeRow("", info.name, info.desc);
+    tooltip.classList.add("tt-show");
+    positionDockTooltip(anchorEl);
+  }
+
+  function hideDockTooltip() {
+    activeDockEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var found = findDockIcon(e.target);
+    if (!found || found.el === activeDockEl) return;
+    showDockTooltip(found.el, found.info);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeDockEl) return;
+    var found = findDockIcon(e.target);
+    if (!found || found.el !== activeDockEl) return;
+    var to = e.relatedTarget;
+    if (to && activeDockEl.contains && activeDockEl.contains(to)) return;
+    hideDockTooltip();
   });
 
 })();
