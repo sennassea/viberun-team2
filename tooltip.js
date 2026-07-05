@@ -586,6 +586,7 @@
     cardActiveEl = null;          /* 주문 툴팁 상태 초기화 */
     activeItemSlotEl = null;
     activeEnergyEl = null;
+    activeHudEl = null;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
     positionCombatantTooltip(cbEl, isPlayer);
@@ -637,6 +638,7 @@
   var activeStatusEl = null;
   var activeItemSlotEl = null;
   var activeEnergyEl = null;
+  var activeHudEl = null;
 
   function buildStatusIconHtml(statusEl) {
     var type = statusEl.dataset.status;
@@ -669,6 +671,7 @@
     cardActiveEl = null;
     activeItemSlotEl = null;
     activeEnergyEl = null;
+    activeHudEl = null;
     activeStatusEl = statusEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -752,6 +755,7 @@
     cardActiveEl = null;
     activeStatusEl = null;
     activeItemSlotEl = null;
+    activeHudEl = null;
     activeEnergyEl = energyEl;
     tooltip.innerHTML = buildEnergyHtml();
     tooltip.classList.add("tt-show");
@@ -861,6 +865,7 @@
     cardActiveEl = null;
     activeStatusEl = null;
     activeEnergyEl = null;
+    activeHudEl = null;
     activeItemSlotEl = slotEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -939,6 +944,7 @@
     activeId = null;            /* 전투원 툴팁 상태 초기화 */
     activeItemSlotEl = null;
     activeEnergyEl = null;
+    activeHudEl = null;
     cardActiveEl = cardEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -978,6 +984,109 @@
     var to = e.relatedTarget;
     if (to && dvCard.contains(to)) return; /* 주문 내부 이동 시 무시 */
     hideCardTooltip();
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     VI. 프로필카드 재화/상태 숫자 툴팁
+     ══════════════════════════════════════════════════════════════════════ */
+
+  var HUD_RESOURCE_INFO = {
+    hudGold:        { icon: "🪙", name: "복채",     desc: "상점과 보상에서 사용하는 기본 재화입니다." },
+    hudMoonShard:   { icon: "🌙", name: "달빛 조각", desc: "희귀 보상 획득에 사용하는 특별 재화입니다." },
+    hudRelicCount:  { icon: "🏺", name: "법구",     desc: "전투와 탐험에 도움을 주는 보유 유물입니다." },
+    hudPotionCount: { icon: "🧪", name: "약병",     desc: "전투 중 사용할 수 있는 소모품입니다." }
+  };
+
+  function findHudResourceCountEl(target) {
+    var resourceEl = target && target.closest && target.closest(".hud-resource");
+    if (!resourceEl) return null;
+    var countEl = null;
+    for (var id in HUD_RESOURCE_INFO) {
+      if (!HUD_RESOURCE_INFO.hasOwnProperty(id)) continue;
+      var candidate = resourceEl.querySelector("#" + id);
+      if (candidate) { countEl = candidate; break; }
+    }
+    return countEl;
+  }
+
+  function buildHudResourceHtml(countEl) {
+    var info = HUD_RESOURCE_INFO[countEl.id];
+    if (!info) return "";
+    var desc = info.desc;
+    var value = countEl.textContent;
+    if (value !== "" && value != null) desc += "\n현재: " + value;
+    return makeRow(info.icon, info.name, desc);
+  }
+
+  function buildHudHpHtml() {
+    var desc = "0이 되면 전투에서 패배합니다.";
+    var hpEl = document.getElementById("hudHp");
+    if (hpEl && hpEl.textContent) desc += "\n현재: " + hpEl.textContent;
+    return makeRow("", "정신력", desc);
+  }
+
+  function positionHudTooltip(anchorEl) {
+    var gRect   = game.getBoundingClientRect();
+    var aRect   = anchorEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+
+    var tx = (aRect.left - gRect.left);
+    var ty = (aRect.bottom - gRect.top) + pad;
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showHudTooltip(anchorEl, html) {
+    if (!anchorEl || !html) return;
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
+    activeHudEl = anchorEl;
+    tooltip.innerHTML = html;
+    tooltip.classList.add("tt-show");
+    positionHudTooltip(anchorEl);
+  }
+
+  function hideHudTooltip() {
+    activeHudEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var target = e.target;
+    if (!target || !target.closest) return;
+
+    var hpEl = target.closest(".hud-hpbar");
+    if (hpEl) {
+      if (hpEl === activeHudEl) return;
+      showHudTooltip(hpEl, buildHudHpHtml());
+      return;
+    }
+
+    var countEl = findHudResourceCountEl(target);
+    if (countEl) {
+      var resourceEl = target.closest(".hud-resource");
+      if (resourceEl === activeHudEl) return;
+      var html = buildHudResourceHtml(countEl);
+      if (html) showHudTooltip(resourceEl, html);
+    }
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeHudEl) return;
+    var stillInside = e.target && e.target.closest
+      && (e.target.closest(".hud-hpbar") === activeHudEl || e.target.closest(".hud-resource") === activeHudEl);
+    if (!stillInside) return;
+    var to = e.relatedTarget;
+    if (to && activeHudEl.contains && activeHudEl.contains(to)) return;
+    hideHudTooltip();
   });
 
 })();
