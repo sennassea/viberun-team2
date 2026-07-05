@@ -1660,12 +1660,18 @@ function openBattleVictoryCardReward(host){
   S.victoryCardRewardOpen = true;
   const ov = host.closest("#battleVictoryOverlay");
   if(ov) ov.classList.remove("show");
-  renderRewardOverlay(getRandomRewardKeys(3));
+  /* 저장/재접속으로 이 화면에 다시 들어와도 카드 후보가 재추첨되지 않도록,
+     최초 생성된 3종을 S에 고정해 재사용한다 (무한 리롤 방지). */
+  if(!Array.isArray(S.victoryCardRewardKeys) || S.victoryCardRewardKeys.length === 0){
+    S.victoryCardRewardKeys = getRandomRewardKeys(3);
+  }
+  renderRewardOverlay(S.victoryCardRewardKeys);
   updateEndBtn();
 }
 
 function finishBattleVictoryCardReward(){
   S.victoryCardRewardOpen = false;
+  S.victoryCardRewardKeys = null;
   S.rewardOpen = true; S.busy = true;
   markVictoryRewardDone("card", "선택 완료");
   closeRewardOverlay();
