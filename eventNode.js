@@ -851,8 +851,11 @@ function triggerEventCombat(combatEffect){
   const stageTheme = typeof window.ACT1_PICK_STAGE_THEME === "function"
     ? window.ACT1_PICK_STAGE_THEME(nodeType, floor, {})
     : null;
+  const recentHistory = typeof window.ACT1_GET_COMBAT_HISTORY === "function"
+    ? window.ACT1_GET_COMBAT_HISTORY()
+    : [];
   const pkg = typeof window.ACT1_PICK_PACKAGE === "function"
-    ? window.ACT1_PICK_PACKAGE(nodeType, floor, new Set(), stageTheme)
+    ? window.ACT1_PICK_PACKAGE(nodeType, floor, new Set(), stageTheme, recentHistory)
     : null;
 
   let mons = (pkg && typeof d.getMonstersByIds === "function") ? d.getMonstersByIds(pkg.monsterIds) : null;
@@ -868,6 +871,9 @@ function triggerEventCombat(combatEffect){
   }
 
   d.monsters.splice(0, d.monsters.length, ...mons);
+  if(pkg && typeof window.ACT1_RECORD_PACKAGE_HISTORY === "function"){
+    window.ACT1_RECORD_PACKAGE_HISTORY(pkg, nodeType);
+  }
   if(typeof newGame === "function") newGame();
   if(typeof S !== "undefined" && S){
     S.battleNodeType = nodeType;

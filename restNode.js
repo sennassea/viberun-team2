@@ -59,7 +59,7 @@ function startStage(stageIdx){
   window.MAP_STATE.currentStage = stageIdx;
   window.MAP_STATE.proceedMode  = false;
   window.MAP_STATE.startMapMode = false;
-  loadStageMonsters(stageIdx);
+  loadStageMonsters(stageIdx, { recordHistory:true });
   updateHudFloor();
   closeMap();
   if(typeof newGame === "function") newGame();
