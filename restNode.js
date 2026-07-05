@@ -16,6 +16,17 @@ const PRAYER_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#
    기획서 5-3 예시(정신력 78 -> 108, +30)에 맞춰 최대 정신력의 25%를 회복한다. */
 const PRAYER_REST_HEAL_RATIO = 0.25;
 
+/* ── 정리하기(주문 제거) 복채 비용 ────────────────────────────────────────
+   해당 런에서 사용한 횟수(0-based)에 따라 1회차 60, 2회차 100, 3회차 이상 150 복채. */
+const PRAYER_CARD_REMOVE_COST_TABLE = [60, 100, 150];
+
+function getCardRemoveCost(){
+  const count = (typeof S !== "undefined" && S && typeof S.cleanseCount === "number") ? S.cleanseCount : 0;
+  const idx = Math.min(count, PRAYER_CARD_REMOVE_COST_TABLE.length - 1);
+  return PRAYER_CARD_REMOVE_COST_TABLE[idx];
+}
+window.getCardRemoveCost = getCardRemoveCost;
+
 let prayerOverlayEl   = null;
 let prayerSelected    = null;
 
@@ -126,16 +137,81 @@ function confirmPrayerChoice(){
   }
 
   if(prayerSelected === "accept"){
-    if(typeof window.PRAYER_CARD_ADD_OPEN === "function") window.PRAYER_CARD_ADD_OPEN();
-    else if(typeof toast === "function") toast("주문 추가 기능을 불러올 수 없습니다.");
+    openRestCardAdd();
     return;
   }
 
   if(prayerSelected === "cleanse"){
-    if(typeof window.PRAYER_CARD_REMOVE_OPEN === "function") window.PRAYER_CARD_REMOVE_OPEN();
-    else if(typeof toast === "function") toast("주문 제거 기능을 불러올 수 없습니다.");
+    openRestCardRemove();
     return;
   }
+}
+
+/* ── 받아들이기: 기존 정화 보상 UI(전투 보상과 동일 렌더링)를 "휴식 카드 추가 모드"로 호출 ── */
+function openRestCardAdd(){
+  if(typeof window.OPEN_CARD_REWARD_PICK !== "function"){
+    if(typeof toast === "function") toast("주문 추가 기능을 불러올 수 없습니다.");
+    return;
+  }
+  const keys = typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(3) : [];
+  if(keys.length === 0){
+    if(typeof toast === "function") toast("추가할 수 있는 주문이 없습니다.");
+    return;
+  }
+  window.OPEN_CARD_REWARD_PICK({
+    keys,
+    title: "받아들이기",
+    desc: "추가할 주문 1장을 선택하세요.",
+    onChoose: key => {
+      if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
+      if(typeof S !== "undefined" && S && Array.isArray(S.discard)) S.discard.push(key);
+      if(typeof renderHud === "function") renderHud();
+    }
+  }).then(() => {
+    resolvePrayerNode();
+  });
+}
+
+/* ── 정리하기: 기존 보유 카드 UI(deckViewer.js)를 "휴식 카드 제거 모드"로 호출 ────── */
+function openRestCardRemove(){
+  if(typeof window.OPEN_DECK_VIEWER_CARD_PICK !== "function"){
+    if(typeof toast === "function") toast("주문 제거 기능을 불러올 수 없습니다.");
+    return;
+  }
+  const deck = typeof STARTER_DECK !== "undefined" ? STARTER_DECK : [];
+  if(deck.length === 0){
+    if(typeof toast === "function") toast("제거할 주문이 없습니다.");
+    return;
+  }
+  const cost = getCardRemoveCost();
+  window.OPEN_DECK_VIEWER_CARD_PICK({
+    title: "정리하기",
+    confirmText: "제거 완료",
+    helpText: "제거할 주문 1장을 선택하세요.",
+    costText: "제거 비용: 🪙" + cost + " 복채",
+    getConfirmDisabled: () => {
+      const gold = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
+      return gold < cost;
+    },
+    onConfirm: key => {
+      const gold = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
+      if(gold < cost){
+        if(typeof toast === "function") toast("복채가 부족합니다.");
+        return;
+      }
+      const idx = STARTER_DECK.indexOf(key);
+      if(idx === -1) return;
+      const card = typeof CARD_DB !== "undefined" ? CARD_DB[key] : null;
+      STARTER_DECK.splice(idx, 1);
+      S.gold -= cost;
+      S.cleanseCount = (typeof S.cleanseCount === "number" ? S.cleanseCount : 0) + 1;
+      if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
+      if(typeof renderHud === "function") renderHud();
+      if(typeof toast === "function" && card) toast(card.name + " 주문을 덱에서 제거했습니다. (🪙" + cost + " 복채 사용)");
+    }
+  }).then(() => {
+    resolvePrayerNode();
+  });
 }
 
 function applyPrayerRest(){
@@ -297,9 +373,14 @@ function renderPrayerCardPreviews(){
   }
 
   const cleanseExtra = prayerOverlayEl.querySelector('[data-extra="cleanse"]');
+  const cleanseCard  = prayerOverlayEl.querySelector('.prayer-card[data-choice="cleanse"]');
   if(cleanseExtra){
-    cleanseExtra.className = "prayer-card-extra prayer-card-pill";
-    cleanseExtra.textContent = "덱에서 주문 1장을 제거";
+    const cost         = getCardRemoveCost();
+    const currentGold  = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
+    const notEnough    = currentGold < cost;
+    cleanseExtra.className = "prayer-card-extra prayer-card-pill" + (notEnough ? " insufficient" : "");
+    cleanseExtra.textContent = "덱에서 주문 1장을 제거 (🪙" + cost + " 복채)";
+    if(cleanseCard) cleanseCard.classList.toggle("disabled", notEnough);
   }
 }
 
@@ -362,6 +443,7 @@ function ensurePrayerStyles(){
     ".prayer-card-preview{background:rgba(110,175,110,.2);border:.15cqh solid rgba(80,140,80,.4);color:#2f5f30;}" +
     ".prayer-card-preview.full{background:rgba(140,140,140,.2);border-color:rgba(110,110,110,.4);color:#5a5a5a;}" +
     ".prayer-card-pill{background:rgba(200,150,80,.18);border:.15cqh solid rgba(178,140,80,.42);color:#8a6b3d;}" +
+    ".prayer-card-pill.insufficient{background:rgba(201,74,61,.16);border-color:rgba(168,46,46,.45);color:#a82e2e;}" +
     ".prayer-tip{position:absolute;bottom:0;display:flex;align-items:center;gap:.6cqw;max-width:15cqw;}" +
     ".prayer-tip-left{left:0;}" +
     ".prayer-tip-right{right:0;flex-direction:row-reverse;text-align:right;}" +

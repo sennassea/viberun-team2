@@ -157,6 +157,8 @@ function createFreshRunState(){
     potions: [],
     gold: STARTING_GOLD,
     moonShards: STARTING_MOON_SHARDS,
+    // 기도터 "정리하기"(주문 제거)를 이번 런에서 사용한 횟수 - 새 런 시작 시 0으로 초기화
+    cleanseCount: 0,
     // 전투 요약/상세 화면(runResult.js)에서 사용하는 이번 여정 누적 기록 (기획서 §5-1)
     runStats: {
       startedAt: Date.now(),
@@ -203,6 +205,7 @@ function syncRunStateFromCombat(){
   RUN_STATE.potions    = cloneRunArray(S.potions);
   RUN_STATE.gold       = typeof S.gold === "number" ? S.gold : STARTING_GOLD;
   RUN_STATE.moonShards = typeof S.moonShards === "number" ? S.moonShards : STARTING_MOON_SHARDS;
+  RUN_STATE.cleanseCount = typeof S.cleanseCount === "number" ? S.cleanseCount : 0;
 }
 
 function hasRelic(id){
@@ -519,6 +522,7 @@ function newGame(options={}){
     busy: false, over: null, rewardOpen: false,
     relics: cloneRunArray(RUN_STATE.relics), potions: cloneRunArray(RUN_STATE.potions),
     gold: RUN_STATE.gold, moonShards: RUN_STATE.moonShards,
+    cleanseCount: typeof RUN_STATE.cleanseCount === "number" ? RUN_STATE.cleanseCount : 0,
     turn: 1,
     // 전투 시작 효과 중복 적용 방지 플래그
     battleStartApplied: false,
@@ -2282,6 +2286,7 @@ function normalizeRunResources(){
   if(S.potions === undefined)          S.potions    = [];
   if(typeof S.gold !== "number")       S.gold       = STARTING_GOLD;
   if(typeof S.moonShards !== "number") S.moonShards = STARTING_MOON_SHARDS;
+  if(typeof S.cleanseCount !== "number") S.cleanseCount = 0;
 }
 
 function resourceCount(value){

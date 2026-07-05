@@ -175,6 +175,7 @@
           '<h2 id="deckViewerTitle">보유 주문</h2>' +
           '<button type="button" class="deck-viewer-close" aria-label="닫기">×</button>' +
         '</div>' +
+        '<div class="deck-viewer-pick-cost" hidden></div>' +
         '<div class="codex-section-tabs" role="tablist" aria-label="도감 종류 선택">' +
           CODEX_SECTIONS.map(codexTabButtonHtml).join("") +
         '</div>' +
@@ -298,6 +299,7 @@
     return {
       overlay,
       title: overlay.querySelector("#deckViewerTitle"),
+      pickCost: overlay.querySelector(".deck-viewer-pick-cost"),
       codexTabsWrap: overlay.querySelector(".codex-section-tabs"),
       codexTabs: Array.from(overlay.querySelectorAll(".codex-section-tab")),
       codexHome: overlay.querySelector(".codex-home-grid"),
@@ -329,6 +331,8 @@
     style.id = "deckViewerScrollStyles";
     style.textContent =
       ".deck-viewer-panel{min-height:0;}" +
+      ".deck-viewer-pick-cost{flex:none;font-size:1.55cqh;font-weight:900;color:#a97a1f;padding:.2cqh 0 .6cqh;}" +
+      ".deck-viewer-pick-cost.insufficient{color:#a82e2e;}" +
       ".deck-viewer-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-items:center;column-gap:1cqw;row-gap:.7cqh;padding:0 0 1cqh;}" +
       ".deck-viewer-sort,.deck-viewer-filter{display:flex;gap:.8cqw;min-width:0;}" +
       ".deck-viewer-summary{grid-column:1;grid-row:1;}" +
@@ -457,6 +461,9 @@
         confirmText: options.confirmText || "확인",
         disabledText: options.disabledText || "선택할 수 없는 카드입니다.",
         isSelectable: typeof options.isSelectable === "function" ? options.isSelectable : () => true,
+        getConfirmDisabled: typeof options.getConfirmDisabled === "function" ? options.getConfirmDisabled : null,
+        costText: options.costText || null,
+        helpText: options.helpText || "기본 카드 1장을 선택하세요.",
         onConfirm: typeof options.onConfirm === "function" ? options.onConfirm : null,
         resolve
       };
@@ -470,10 +477,21 @@
       if(els.controls) els.controls.style.display = "";
       if(els.grid) els.grid.style.display = "";
       if(els.pickFooter) els.pickFooter.hidden = false;
-      if(els.pickHelp) els.pickHelp.textContent = "기본 카드 1장을 선택하세요.";
+      if(els.pickHelp) els.pickHelp.textContent = pickMode.helpText;
       if(els.pickConfirm){
         els.pickConfirm.textContent = pickMode.confirmText;
         els.pickConfirm.disabled = true;
+      }
+      if(els.pickCost){
+        if(pickMode.costText){
+          els.pickCost.hidden = false;
+          els.pickCost.textContent = pickMode.costText;
+          els.pickCost.classList.toggle("insufficient", !!(pickMode.getConfirmDisabled && pickMode.getConfirmDisabled(null)));
+        } else {
+          els.pickCost.hidden = true;
+          els.pickCost.textContent = "";
+          els.pickCost.classList.remove("insufficient");
+        }
       }
       els.filterType.disabled = false;
       els.filterAttribute.disabled = false;
@@ -542,6 +560,11 @@
     els.overlay.classList.remove("pick-mode");
     if(els.pickFooter) els.pickFooter.hidden = true;
     if(els.pickConfirm) els.pickConfirm.disabled = true;
+    if(els.pickCost){
+      els.pickCost.hidden = true;
+      els.pickCost.textContent = "";
+      els.pickCost.classList.remove("insufficient");
+    }
   }
 
   function handlePickCard(cardEl){
@@ -556,7 +579,9 @@
       const card = getCard(key);
       els.pickHelp.textContent = (card && card.name ? card.name : key) + " 선택됨";
     }
-    if(els.pickConfirm) els.pickConfirm.disabled = false;
+    const confirmDisabled = !!(pickMode.getConfirmDisabled && pickMode.getConfirmDisabled(key));
+    if(els.pickConfirm) els.pickConfirm.disabled = confirmDisabled;
+    if(els.pickCost) els.pickCost.classList.toggle("insufficient", confirmDisabled);
     renderDeckViewer();
   }
 
