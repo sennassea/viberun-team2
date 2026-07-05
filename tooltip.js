@@ -80,6 +80,101 @@
     }
   };
 
+  var LIFE_TERM_INFO = [
+    {
+      keywords: ["잡념"],
+      icon: "💭",
+      name: "잡념",
+      desc: "덱 순환을 방해하는 상태이상 카드입니다."
+    },
+    {
+      keywords: ["망설임"],
+      icon: "⏳",
+      name: "망설임",
+      desc: "손패 자리를 차지하고 턴 종료 시 사라지는 상태이상 카드입니다."
+    },
+    {
+      keywords: ["후회"],
+      icon: "💧",
+      name: "후회",
+      desc: "버려질 때 불이익을 주는 상태이상 카드입니다."
+    },
+    {
+      keywords: ["침투 사고"],
+      icon: "💭",
+      name: "침투 사고",
+      desc: "병원 테마의 덱 방해 상태입니다."
+    },
+    {
+      keywords: ["불안"],
+      icon: "💭",
+      name: "불안",
+      desc: "다음 턴 주문 뽑기에 영향을 줍니다."
+    },
+    {
+      keywords: ["무기력"],
+      icon: "🌫️",
+      name: "무기력",
+      desc: "다음 턴 정신력에 영향을 줍니다."
+    }
+  ];
+
+  function buildIntentTermRows(intent) {
+    var intentStatusName = getIntentAppliedStatusName(intent);
+    var used = {};
+    return LIFE_TERM_INFO
+      .filter(function (term) {
+        return term.name === intentStatusName;
+      })
+      .filter(function (term) {
+        if (used[term.name]) return false;
+        used[term.name] = true;
+        return true;
+      })
+      .map(function (term) { return makeRow(term.icon, term.name, term.desc); });
+  }
+
+  function getIntentAppliedStatusName(intent) {
+    if (!intent) return "";
+    var statusById = {
+      anxiety: "불안",
+      intrusive_thought: "잡념",
+      hesitation: "망설임",
+      regret: "후회",
+      intrusive_accident: "침투 사고",
+      lethargy: "무기력",
+      counter: "무기력",
+      weak: "동요",
+      agitation: "동요",
+      mark: "성불 표식",
+      fracture: "균열",
+      recollection: "회상"
+    };
+    var knownNames = ["불안", "잡념", "망설임", "후회", "침투 사고", "무기력", "동요", "성불 표식", "균열", "회상"];
+    if (intent.statusCard && typeof CARD_DB !== "undefined" && CARD_DB[intent.statusCard]) {
+      var cardName = CARD_DB[intent.statusCard].name || "";
+      if (knownNames.indexOf(cardName) >= 0) return cardName;
+    }
+    if (statusById[intent.statusCard]) return statusById[intent.statusCard];
+    var roleName = intent.role === "anxiety" ? "불안"
+      : intent.role === "counter" ? "무기력"
+      : intent.role === "fracture" ? "균열"
+      : "";
+    if (roleName) return roleName;
+    var candidates = [intent.status, intent.effect];
+    for (var i = 0; i < candidates.length; i++) {
+      var text = String(candidates[i] || "");
+      if (knownNames.indexOf(text) >= 0) return text;
+      if (statusById[text]) return statusById[text];
+    }
+    return "";
+  }
+
+  function getIntentTitleName(intent) {
+    if (!intent || intent.t === "attack" || intent.t === "defend" || intent.t === "summon") return "";
+    return getIntentAppliedStatusName(intent);
+  }
+
   /* ══════════════════════════════════════════════════════════════════════
      II. 주문 용어 툴팁 데이터
      ══════════════════════════════════════════════════════════════════════ */
@@ -250,11 +345,13 @@
     var rows = [];
     if (enemy.intent) {
       var info = INTENT_INFO[enemy.intent.t] || INTENT_INFO.attack;
+      var intentDesc = info.desc(enemy.intent, enemy.weak || 0);
       rows.push(makeRow(
-        info.icon, info.name,
-        info.desc(enemy.intent, enemy.weak || 0),
+        info.icon, getIntentTitleName(enemy.intent) || info.name,
+        intentDesc,
         info.color
       ));
+      rows = rows.concat(buildIntentTermRows(enemy.intent));
     }
     var statusRows = [];
     if ((enemy.weak || 0) > 0) {
