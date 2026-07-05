@@ -112,18 +112,22 @@
 /* ── 바디 ─────────────────────────────────────────────────────────────────── */
 .dmap-body {
   flex: 1;
-  --dmap-legend-width: clamp(118px, 15cqw, 160px);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--dmap-legend-width);
+  --dmap-legend-width: clamp(118px, 15cqw, 150px);
+  position: relative;
+  display: block;
   min-height: 0;
   overflow: hidden;
 }
 
 /* ── 맵 캔버스 래퍼 ─────────────────────────────────────────────────────── */
 .dmap-canvas-wrap {
-  width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: var(--dmap-legend-width);
+  bottom: 0;
+  width: auto;
   min-width: 0;
-  position: relative;
   overflow: hidden;
   cursor: grab;
   user-select: none;
@@ -157,11 +161,15 @@
 
 /* ── 범례 패널 ────────────────────────────────────────────────────────────── */
 .dmap-legend {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
   box-sizing: border-box;
-  width: 100%;
+  width: var(--dmap-legend-width);
   min-width: 0;
   max-width: 100%;
-  padding: 4.9cqh 0.8cqw 1.2cqh 0.9cqw;
+  padding: 4.9cqh 0.45cqw 1.2cqh 2.25cqw;
   display: flex;
   flex-direction: column;
   gap: 0.5cqh;
@@ -185,14 +193,15 @@
 
 .dmap-legend-item {
   box-sizing: border-box;
-  display: flex;
+  display: flex !important;
   align-items: center;
-  gap: 0.28cqw;
-  padding: 0.34cqh 0;
-  width: 100%;
+  gap: 0.22cqw;
+  padding: 0.32cqh 0 !important;
+  width: 100% !important;
   max-width: 100%;
   min-width: 0;
-  margin: 0 auto;
+  margin: 0 !important;
+  overflow: hidden;
   border-radius: 0.8cqh;
   cursor: pointer;
   transition: background 0.12s;
@@ -201,17 +210,17 @@
 .dmap-legend-item.active { background: rgba(255, 245, 215, 0.38); }
 
 .dmap-leg-ico {
-  width: 2.35cqh;
-  height: 2.35cqh;
-  min-width: 2.35cqh;
-  max-width: 2.35cqh;
+  width: 2.1cqh !important;
+  height: 2.1cqh !important;
+  min-width: 2.1cqh !important;
+  max-width: 2.1cqh !important;
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.35cqh;
+  font-size: 1.2cqh !important;
   line-height: 1;
   flex-shrink: 0;
   border: 0.18cqh solid rgba(255, 255, 255, 0.4);
@@ -243,12 +252,19 @@
 
 /* ── 범례 툴팁 박스 ──────────────────────────────────────────────────────── */
 .dmap-tip-box {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   margin-top: auto;
   padding-top: 0.6cqh;
   display: none;
+  overflow: hidden;
 }
 .dmap-tip-box:not(:empty) { display: block; }
 .dmap-tip-inner {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   padding: 0.7cqh 0.8cqw;
   background: rgba(35, 20, 5, 0.85);
   color: #f5e9c8;
@@ -257,6 +273,8 @@
   font-weight: 600;
   line-height: 1.5;
   border: 0.15cqh solid rgba(200, 160, 60, 0.4);
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 /* ── 하단 바 ──────────────────────────────────────────────────────────────── */
