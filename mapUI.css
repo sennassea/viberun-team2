@@ -120,6 +120,7 @@
 /* ── 맵 캔버스 래퍼 ─────────────────────────────────────────────────────── */
 .dmap-canvas-wrap {
   flex: 1;
+  min-width: 0;
   position: relative;
   overflow: hidden;
   cursor: grab;
@@ -154,18 +155,22 @@
 
 /* ── 범례 패널 ────────────────────────────────────────────────────────────── */
 .dmap-legend {
-  width: 17cqw;
-  min-width: 150px;
+  box-sizing: border-box;
+  flex: 0 0 clamp(160px, 18cqw, 240px);
+  width: clamp(160px, 18cqw, 240px);
+  min-width: 160px;
   max-width: 240px;
-  padding: 4.9cqh 1.1cqw 1.2cqh 0.1cqw;
+  padding: 4.9cqh 0.8cqw 1.2cqh 1.9cqw;
   display: flex;
   flex-direction: column;
   gap: 0.5cqh;
   overflow-y: auto;
+  overflow-x: hidden;
   background: transparent;
   border-left: 0;
   flex-shrink: 0;
-  transform: translate(-1.2cqw, 1.2cqh);
+  transform: translate(0.7cqw, 1.2cqh);
+  contain: layout paint;
 }
 
 .dmap-legend-title {
@@ -180,10 +185,13 @@
 }
 
 .dmap-legend-item {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 0.85cqw;
-  padding: 0.5cqh 0.5cqw;
+  gap: 0.45cqw;
+  padding: 0.42cqh 0.25cqw;
+  width: 100%;
+  min-width: 0;
   border-radius: 0.8cqh;
   cursor: pointer;
   transition: background 0.12s;
@@ -192,17 +200,17 @@
 .dmap-legend-item.active { background: rgba(255, 245, 215, 0.38); }
 
 .dmap-leg-ico {
-  width: 4.2cqh;
-  height: 4.2cqh;
-  min-width: 4.2cqh;
-  max-width: 4.2cqh;
+  width: 3.35cqh;
+  height: 3.35cqh;
+  min-width: 3.35cqh;
+  max-width: 3.35cqh;
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.1cqh;
+  font-size: 1.9cqh;
   line-height: 1;
   flex-shrink: 0;
   border: 0.18cqh solid rgba(255, 255, 255, 0.4);
@@ -222,9 +230,14 @@
 .dmap-leg-ico.boss     { background: #b03838; }
 
 .dmap-leg-label {
-  font-size: 2.03cqh;
+  min-width: 0;
+  font-size: 1.9cqh;
   font-weight: 700;
   color: #3b2a0a;
+  line-height: 1.15;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── 범례 툴팁 박스 ──────────────────────────────────────────────────────── */
