@@ -39,20 +39,13 @@
     { id: "skill", label: "스킬(강화)" },
   ];
 
-  const ATTRIBUTE_FILTERS = [
-    { id: "all", label: "모든 속성" },
-    { id: "spirit", label: "성불" },
-    { id: "hope", label: "희망" },
-    { id: "memory", label: "추억" },
-  ];
-
   const filterState = {
-    all: { type: "all", attribute: "all" },
-    hand: { type: "all", attribute: "all" },
-    discard: { type: "all", attribute: "all" },
-    codexCards: { type: "all", attribute: "all" },
-    codexRelics: { type: "all", attribute: "all" },
-    codexPotions: { type: "all", attribute: "all" },
+    all: { type: "all" },
+    hand: { type: "all" },
+    discard: { type: "all" },
+    codexCards: { type: "all" },
+    codexRelics: { type: "all" },
+    codexPotions: { type: "all" },
   };
 
   const searchState = {
@@ -194,7 +187,6 @@
         '</div>' +
         '<div class="deck-viewer-filter" aria-label="주문 필터">' +
           '<label>타입 <select class="deck-viewer-filter-type">' + TYPE_FILTERS.map(optionHtml).join("") + '</select></label>' +
-          '<label>속성 <select class="deck-viewer-filter-attribute">' + ATTRIBUTE_FILTERS.map(optionHtml).join("") + '</select></label>' +
         '</div>' +
         '</div>' +
         '<div class="deck-viewer-grid"></div>' +
@@ -237,10 +229,6 @@
     });
     overlay.querySelector(".deck-viewer-filter-type").addEventListener("change", event => {
       filterState[activeTab].type = event.target.value;
-      renderDeckViewer();
-    });
-    overlay.querySelector(".deck-viewer-filter-attribute").addEventListener("change", event => {
-      filterState[activeTab].attribute = event.target.value;
       renderDeckViewer();
     });
     overlay.querySelector(".deck-viewer-search-input").addEventListener("input", event => {
@@ -311,7 +299,6 @@
       sortType: overlay.querySelector(".deck-viewer-sort-type"),
       sortDirection: overlay.querySelector(".deck-viewer-sort-direction"),
       filterType: overlay.querySelector(".deck-viewer-filter-type"),
-      filterAttribute: overlay.querySelector(".deck-viewer-filter-attribute"),
       search: overlay.querySelector(".deck-viewer-search-input"),
       grid: overlay.querySelector(".deck-viewer-grid"),
       pickFooter: overlay.querySelector(".deck-viewer-pick-footer"),
@@ -454,7 +441,6 @@
     if(els.controls) els.controls.style.display = "";
     if(els.grid) els.grid.style.display = "";
     els.filterType.disabled = false;
-    els.filterAttribute.disabled = false;
     if(els.filterWrap) els.filterWrap.classList.remove("disabled");
     renderDeckViewer();
     els.overlay.classList.add("show");
@@ -510,7 +496,6 @@
         }
       }
       els.filterType.disabled = false;
-      els.filterAttribute.disabled = false;
       if(els.filterWrap) els.filterWrap.classList.remove("disabled");
       closeCardDetail();
       renderDeckViewer();
@@ -689,7 +674,6 @@
     els.sortType.value = sortState[tab.id].type;
     els.sortDirection.value = sortState[tab.id].direction;
     els.filterType.value = filterState[tab.id].type;
-    els.filterAttribute.value = filterState[tab.id].attribute;
     els.search.value = searchState[tab.id];
     els.summary.textContent = tab.label + " " + visibleCount + "장 / " + entries.length + "종류";
     els.grid.innerHTML = entries.length
@@ -732,13 +716,10 @@
     els.sortType.value = sortState[tabId].type;
     els.sortDirection.value = sortState[tabId].direction;
     els.filterType.value = "all";
-    els.filterAttribute.value = "all";
     els.filterType.disabled = filterDisabled;
-    els.filterAttribute.disabled = filterDisabled;
     if(els.filterWrap) els.filterWrap.classList.toggle("disabled", filterDisabled);
     if(!filterDisabled){
       els.filterType.value = filterState[tabId].type;
-      els.filterAttribute.value = filterState[tabId].attribute;
     }
     els.search.value = searchState[tabId];
     els.summary.textContent = getCodexSummaryText(codexSection, entries, sourceItems.length);
@@ -810,11 +791,10 @@
 
   function buildCardEntries(cards, tabId){
     if(tabId === "codexCards"){
-      const encountered = getEncounteredCardSet();
       return cards.map((key, index) => {
         const card = getCard(key);
         if(!card) return null;
-        return { key, count: 1, card, order: index, kind: "card", locked: !encountered.has(key) };
+        return { key, count: 1, card, order: index, kind: "card", locked: false };
       }).filter(Boolean);
     }
 
@@ -840,12 +820,11 @@
         return !query || itemText.includes(query);
       }
       if(entry.locked){
-        return !query && state.type === "all" && state.attribute === "all";
+        return !query && state.type === "all";
       }
       const typeMatches = state.type === "all" || getCardFilterType(entry.card) === state.type;
-      const attributeMatches = state.attribute === "all" || getCardFilterAttribute(entry.card) === state.attribute;
       const nameMatches = !query || String(entry.card.name).toLowerCase().includes(query);
-      return typeMatches && attributeMatches && nameMatches;
+      return typeMatches && nameMatches;
     });
   }
 
