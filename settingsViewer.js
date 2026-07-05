@@ -61,6 +61,7 @@
   let els = null;
   let pauseState = null;
   let settingsMode = "combat";
+  let accountMessageTimer = null;
 
   function initSettingsViewer(){
     const trigger = findSettingsTrigger();
@@ -404,7 +405,7 @@
       ".settings-viewer-body{padding:2cqh 0 0;min-height:18cqh;display:flex;flex-direction:column;gap:2cqh;}" +
       ".settings-viewer-section{border:0.18cqh solid var(--c-panel-line);border-radius:1.2cqh;background:rgba(255,255,255,.58);padding:1.6cqh 1.4cqw;}" +
       ".settings-viewer-section:not(.settings-account-section){background:transparent url('assets/ui/settings/settings_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
-      ".settings-account-section{background:transparent url('assets/ui/settings/account_info_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
+      ".settings-account-section{position:relative;background:transparent url('assets/ui/settings/account_info_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
       ".settings-viewer-section h3{font-size:2.1cqh;margin-bottom:1.4cqh;color:var(--c-ink);}" +
       ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 4cqw;align-items:center;gap:1cqw;margin-top:1cqh;color:var(--c-ink-soft);font-size:1.7cqh;font-weight:800;}" +
       ".settings-viewer-volume input{width:100%;accent-color:var(--c-blue);}" +
@@ -419,6 +420,11 @@
       ".settings-account-google{background-image:url('assets/ui/settings/google_play.png')!important;}" +
       ".settings-account-facebook{background-image:url('assets/ui/settings/facebook.png')!important;}" +
       ".settings-account-logout{background-image:url('assets/ui/settings/logout.png')!important;}" +
+      ".settings-account-message{position:absolute;left:50%;bottom:.8cqh;z-index:3;display:block;width:min(58cqh,80%);min-height:0;box-sizing:border-box;padding:.85cqh 1.2cqw;border:.16cqh solid rgba(184,132,64,.58);border-radius:.9cqh;background:rgba(255,250,238,.94);box-shadow:0 .8cqh 1.6cqh rgba(63,40,14,.16);color:#4a2b07;font-size:1.35cqh;font-weight:900;line-height:1.35;text-align:center;pointer-events:none;opacity:0;transform:translate(-50%,.5cqh);transition:opacity .18s ease,transform .18s ease;}" +
+      ".settings-account-message.is-visible{opacity:1;transform:translate(-50%,0);}" +
+      ".settings-account-message--error{border-color:rgba(211,88,88,.58);background:rgba(255,241,238,.96);color:#7d1f19;}" +
+      ".settings-account-message--info{border-color:rgba(102,148,205,.58);background:rgba(240,247,255,.96);color:#1f4a7d;}" +
+      ".settings-account-message--success{border-color:rgba(83,152,92,.58);background:rgba(240,252,242,.96);color:#245d2b;}" +
       ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm,.settings-viewer-logout-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
       ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show,.settings-viewer-reset-confirm.show,.settings-viewer-logout-confirm.show{display:grid;}" +
       ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:2.2cqh 2cqw;text-align:center;}" +
@@ -616,15 +622,24 @@
       return;
     }
 
+    if(accountMessageTimer){
+      clearTimeout(accountMessageTimer);
+      accountMessageTimer = null;
+    }
     messageEl.textContent = message;
     messageEl.classList.add("is-visible");
     messageEl.classList.toggle("settings-account-message--error", type === "error");
     messageEl.classList.toggle("settings-account-message--info", type === "info");
     messageEl.classList.toggle("settings-account-message--success", type === "success");
+    accountMessageTimer = setTimeout(clearSettingsAccountMessage, 3600);
   }
 
   function clearSettingsAccountMessage(){
     const messageEl = els && els.accountMessage;
+    if(accountMessageTimer){
+      clearTimeout(accountMessageTimer);
+      accountMessageTimer = null;
+    }
     if(!messageEl) return;
 
     messageEl.textContent = "";

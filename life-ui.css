@@ -31,9 +31,10 @@
 .enemy .combatant-info .badges:empty{display:none;}
 .name{font-size:2cqh; font-weight:800; color:var(--c-ink); text-align:center; line-height:1.1;}
 .hpbar{position:relative; width:12.5cqw; height:2.35cqh; border-radius:1.3cqh; overflow:hidden;
-  background:var(--c-hp-bg); border:0.2cqh solid rgba(0,0,0,.15);}
+  background:rgba(74,24,24,.82); border:0.2cqh solid rgba(255,235,210,.72);
+  box-shadow:0 .25cqh .75cqh rgba(0,0,0,.32), inset 0 .16cqh .22cqh rgba(255,255,255,.18);}
 .player .hpbar{width:13.5cqw;}
-.hpfill{position:absolute; inset:0; background:linear-gradient(180deg,#ff6a63,var(--c-hp));
+.hpfill{position:absolute; inset:0; background:linear-gradient(180deg,#ff7c73 0%,#e83a3a 58%,#a91820 100%);
   transition:width .35s ease;}
 .hptxt{position:absolute; inset:0; display:grid; place-items:center; color:#fff;
   font-size:1.6cqh; font-weight:700; text-shadow:0 .1cqh .2cqh rgba(0,0,0,.5);}

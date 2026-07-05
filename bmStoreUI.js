@@ -83,7 +83,7 @@
           '</div>' +
           '<div class="bm-store-head-actions">' +
             '<div class="bm-store-wallet" aria-label="현재 달빛조각 보유량">' +
-              '<span class="bm-store-wallet-icon" aria-hidden="true">🌙</span>' +
+              '<span class="bm-store-wallet-icon" aria-hidden="true"></span>' +
               '<span id="bmStoreWalletValue">0</span>' +
             '</div>' +
             '<button type="button" class="bm-store-close" aria-label="닫기">✕</button>' +
@@ -311,7 +311,7 @@
         '<div class="bm-store-product-art" aria-hidden="true">' +
           (product.icon
             ? '<span class="bm-store-art-icon">' + escapeHtml(product.icon) + '</span>'
-            : '<span class="bm-store-art-moon">🌙</span><span class="bm-store-art-box">✦</span>') +
+            : '<span class="bm-store-art-moon"></span><span class="bm-store-art-box">✦</span>') +
         '</div>' +
         '<div class="bm-store-product-copy">' +
           '<h3>' + escapeHtml(product.name) + '</h3>' +
@@ -323,7 +323,7 @@
           (isBusy ? " disabled" : "") + '>' +
           (isTestCash
             ? '<span>' + (isBusy ? "구매 중..." : "테스트 구매") + '</span>'
-            : '<span class="bm-store-price-icon" aria-hidden="true">🌙</span><span>' + (isBusy ? "구매 중..." : formatCount(product.price)) + '</span>') +
+            : '<span class="bm-store-price-icon" aria-hidden="true"></span><span>' + (isBusy ? "구매 중..." : formatCount(product.price)) + '</span>') +
         '</button>' +
       '</article>'
     );
