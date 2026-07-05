@@ -1029,6 +1029,11 @@ function playCard(handIndex, targetEnemy){
           livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak));
         }
         break;
+      case "ifRecollectionAtLeastApplyRecollectionAll":
+        if(targetEnemy && getStatus(targetEnemy, "recollection") >= (e.threshold || 0)){
+          livingEnemies().forEach(en => { if(en !== targetEnemy) addStatus(en, "recollection", e.v || 1); });
+        }
+        break;
       case "transferAgitationOnKill": {
         if(targetEnemy && targetEnemy.hp <= 0){
           const currentAgitation = getStatus(targetEnemy, "agitation");

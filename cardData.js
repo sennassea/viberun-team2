@@ -76,7 +76,7 @@ const CARD_DB = {
   unsent_words:{name:"전하지 못한 말", cost:2, type:"attack", emoji:"💬", target:"enemy", attr:"회상 덱", rarity:"rare",
           desc:"대상의 현재 회상 수치의 50%만큼 회상을 추가 부여합니다. 추가 수치는 최소 1, 최대 2입니다. 사용 후 소멸.", fx:[], exhaust:true, migrationTodo:"회상 증폭 신규 효과 미구현"},
   mind_collapse:{name:"마음 붕괴", cost:3, type:"attack", emoji:"🧠", target:"enemy", attr:"회상 덱", rarity:"rare",
-          desc:"대상에게 회상 2와 균열 1을 부여합니다. 적용 후 대상의 회상이 6 이상이면 다른 모든 유령에게 회상 2를 부여합니다.", fx:[{t:"applyFracture",v:2},{t:"damageByRecollection",base:10,per:3},{t:"ifRecollectionAtLeastDamageAll",threshold:5,v:6}], migrationTodo:"최신 DB 회상 조건 구조 미구현"},
+          desc:"대상에게 회상 2와 균열 1을 부여합니다. 적용 후 대상의 회상이 6 이상이면 다른 모든 유령에게 회상 2를 부여합니다.", fx:[{t:"applyFracture",v:1},{t:"applyRecollection",v:2},{t:"damageByRecollection",base:10,per:3},{t:"ifRecollectionAtLeastApplyRecollectionAll",threshold:6,v:2}], migrationTodo:"최신 DB 회상 조건 구조 미구현"},
 
   // -----------------------------------------------------------------------
   // 성불 표식 덱
