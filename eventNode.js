@@ -251,7 +251,10 @@ function renderEventOverlay(){
 
 function renderEventHeader(){
   const overlay = eventOverlayEl;
-  const player = (typeof S !== "undefined" && S && S.player) ? S.player : null;
+  const run = (typeof S !== "undefined" && S)
+    ? S
+    : ((typeof RUN_STATE !== "undefined" && RUN_STATE) ? RUN_STATE : null);
+  const player = run && run.player ? run.player : null;
   if(!player){
     overlay.querySelector("#eventName").textContent = "";
     overlay.querySelector("#eventHpText").textContent = "";
@@ -264,10 +267,9 @@ function renderEventHeader(){
   overlay.querySelector("#eventHpFill").style.width = pct + "%";
 
   const count = typeof resourceCount === "function" ? resourceCount : (v => Array.isArray(v) ? v.length : (v || 0));
-  const s = (typeof S !== "undefined" && S) ? S : { relics: [], potions: [], gold: 0 };
-  overlay.querySelector("#eventRelicCount").textContent = count(s.relics);
-  overlay.querySelector("#eventPotionCount").textContent = count(s.potions);
-  overlay.querySelector("#eventGold").textContent = s.gold || 0;
+  overlay.querySelector("#eventRelicCount").textContent = count(run.relics);
+  overlay.querySelector("#eventPotionCount").textContent = count(run.potions);
+  overlay.querySelector("#eventGold").textContent = run.gold || 0;
   renderEventStageInfo();
 }
 

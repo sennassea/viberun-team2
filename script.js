@@ -135,6 +135,12 @@ const BATTLE_BACKGROUND_BY_THEME = {
     "assets/background/school_03_music_room_night.jpg"
   ]
 };
+const BATTLE_THEME_LABELS = {
+  hospital: "병원",
+  park: "공원",
+  school: "학교",
+  tutorial: "튜토리얼"
+};
 const TUTORIAL_BATTLE_BACKGROUND = {
   theme: "tutorial",
   url: "assets/background/shrine_01_main.jpg"
@@ -1929,10 +1935,22 @@ function renderBattleProgressHud(){
     }
     return;
   }
-  if(region) region.innerHTML = '<span class="progress-icon">🏥</span><span>병원</span>';
+  const game = document.querySelector("#game");
+  const battleTheme = (game && game.dataset && game.dataset.battleTheme) ||
+    (S && S.battleBackground && S.battleBackground.theme) ||
+    (S && S.battleStage && S.battleStage.packageTheme) ||
+    "hospital";
+  const themeLabel = BATTLE_THEME_LABELS[battleTheme] ||
+    (S && S.battleStage && S.battleStage.packageThemeLabel) ||
+    BATTLE_THEME_LABELS.hospital;
+  const currentFloor = (typeof nodeFloorIdx === "function" && typeof getCurrentNodeId === "function")
+    ? nodeFloorIdx(getCurrentNodeId())
+    : 1;
+  const stageLabel = currentFloor > 0 ? currentFloor + "스테이지" : "1스테이지";
+  if(region) region.innerHTML = '<span class="progress-icon">🏥</span><span>' + themeLabel + '</span>';
   if(floor){
     floor.style.display = "";
-    floor.textContent = "1F";
+    floor.textContent = stageLabel;
   }
   if(turn && turn.previousElementSibling && turn.previousElementSibling.classList.contains("progress-separator")){
     turn.previousElementSibling.style.display = "";
@@ -2004,7 +2022,11 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
     const filled = i < count;
     const slot   = document.createElement("span");
     slot.className   = "side-item-slot "+(filled ? "filled" : "empty");
-    slot.textContent = filled && item && item.emoji ? item.emoji : fallbackIcon;
+    if(isPotionSlots && !filled){
+      slot.innerHTML = '<span class="side-empty-potion-icon" aria-hidden="true"></span>';
+    } else {
+      slot.textContent = filled && item && item.emoji ? item.emoji : fallbackIcon;
+    }
     if(filled && item && item.name) slot.title = item.name;
     if(isPotionSlots && filled && item){
       slot.dataset.potionIndex = String(i);

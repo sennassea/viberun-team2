@@ -52,7 +52,7 @@
   transform:translateX(2cqw); width:calc(100% - 2cqw); }
 .event-resource{ display:inline-flex; align-items:center; gap:.22cqw; color:var(--c-ink); font-size:1.45cqh; }
 .event-resource b{display:inline; color:var(--c-ink); font-size:1.45cqh;}
-.event-resource .hud-resource-icon{width:2.15cqh; height:2.15cqh; flex:none; display:inline-block; font-size:0; line-height:1; background:center/contain no-repeat;}
+.event-resource .hud-resource-icon{width:2.15cqh; height:2.15cqh; flex:none; display:inline-block; font-size:0; line-height:1; background-position:center; background-size:contain; background-repeat:no-repeat;}
 
 .event-stage-info{
   position:absolute; left:50%; top:0; transform:translateX(-50%); width:32cqw; height:100%;
@@ -103,8 +103,8 @@
 .event-choices{ display:flex; flex-direction:column; gap:.85cqh; margin-top:.2cqh; }
 .event-choice{
   position:relative;
-  min-height:7.8cqh;
-  display:flex; align-items:center; gap:1.1cqw; padding:1.25cqh 2.6cqw 1.25cqh 12.4cqh;
+  width:100%; aspect-ratio:1200/284; min-height:0; box-sizing:border-box;
+  display:flex; align-items:center; gap:1.1cqw; padding:3.2% 5.4% 3.2% 14.8%;
   background:transparent url("assets/ui/event_choice_panel.png") center/100% 100% no-repeat;
   border:0; border-radius:0;
   cursor:pointer; font:inherit; color:var(--ev-ink); text-align:left;
@@ -121,7 +121,7 @@
   transform:none; filter:drop-shadow(0 .35cqh .55cqh rgba(90,65,25,.12));
 }
 .event-choice-icon{
-  position:absolute; left:6.4cqh; top:50%; transform:translate(-50%, -50%);
+  position:absolute; left:7.4%; top:50%; transform:translate(-50%, -50%);
   width:4.3cqh; height:4.3cqh; border-radius:50%; display:grid; place-items:center;
   font-size:2.15cqh; background:transparent; border:0;
   pointer-events:none;
