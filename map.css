@@ -45,6 +45,7 @@
   border-bottom: 0.2cqh solid #a07830;
 }
 .map-title {
+  font-family: var(--font-title);
   font-size: 2.6cqh;
   font-weight: 800;
   color: #3b2a0a;
@@ -110,12 +111,12 @@
 .mnode-lbl {
   fill: #3b2a0a;
   font-weight: 700;
-  font-family: "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  font-family: var(--font-title);
 }
 .mnode-sublbl {
   fill: rgba(255,255,255,0.65);
   font-weight: 700;
-  font-family: "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  font-family: var(--font-title);
 }
 .mnode-enemy .mnode-sublbl { fill: #f0c0c0; }
 
@@ -183,7 +184,7 @@
 .mfloor-lbl {
   fill: #7a5c20;
   font-weight: 700;
-  font-family: "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  font-family: var(--font-title);
   font-size: 10px;
 }
 
@@ -199,6 +200,7 @@
   gap: 0.9cqh;
 }
 .legend-title {
+  font-family: var(--font-title);
   font-size: 1.8cqh;
   font-weight: 800;
   color: #3b2a0a;
@@ -260,6 +262,7 @@
   max-width: 20cqw;
 }
 .map-node-popup .popup-title {
+  font-family: var(--font-title);
   font-size: 1.9cqh;
   font-weight: 800;
   color: #e7b54a;
@@ -305,7 +308,7 @@
 .mnode-dimmed-badge {
   fill: rgba(255, 230, 80, 0.88);
   font-weight: 800;
-  font-family: "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  font-family: var(--font-title);
 }
 
 /* 로비 노드 (항상 딤드) */
