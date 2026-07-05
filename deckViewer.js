@@ -412,9 +412,11 @@
       ".card-detail-upgrade-toggle:hover,.card-detail-upgrade-toggle:focus-visible{outline:none;transform:translateY(-.2cqh);box-shadow:0 .7cqh 1.3cqh rgba(80,60,20,.22);}" +
       ".card-detail-upgrade-toggle.active{background:linear-gradient(180deg,#eaf7ff,#cfe9ff);border-color:var(--c-blue);color:var(--c-blue-deep);}" +
       ".card-detail-kicker{font-size:1.5cqh;font-weight:900;color:var(--c-ink-soft);margin-bottom:.4cqh;}" +
-      ".card-detail-nav{position:absolute;top:50%;transform:translateY(-50%);width:5cqh;height:7cqh;border-radius:2.5cqh;border:.22cqh solid var(--c-panel-line);background:rgba(255,255,255,.9);color:var(--c-blue-deep);font-size:5cqh;font-weight:900;line-height:1;display:grid;place-items:center;cursor:pointer;box-shadow:0 .6cqh 1.2cqh rgba(40,70,120,.2);}" +
-      ".card-detail-nav:hover,.card-detail-nav:focus-visible{background:#fff;outline:none;box-shadow:0 .8cqh 1.6cqh rgba(40,70,120,.3);}" +
-      ".card-detail-prev{left:-6cqh;}.card-detail-next{right:-6cqh;}" +
+      ".card-detail-nav{position:absolute;top:50%;transform:translateY(-50%);width:6.2cqh;height:6.2cqh;border:0;border-radius:0;background:transparent url(\"assets/ui_panels/card_detail_nav_panel.png\") center/100% 100% no-repeat;color:transparent;font-size:0;font-weight:900;line-height:1;display:grid;place-items:center;cursor:pointer;box-shadow:none;}" +
+      ".card-detail-nav::before{display:block;color:#8a641a;font-size:4.6cqh;font-weight:900;line-height:1;text-shadow:0 .08cqh 0 rgba(255,255,255,.9),0 .18cqh .28cqh rgba(90,60,20,.24);transform:translateY(-.12cqh);}" +
+      ".card-detail-prev::before{content:'‹';}.card-detail-next::before{content:'›';}" +
+      ".card-detail-nav:hover,.card-detail-nav:focus-visible{filter:brightness(1.04) drop-shadow(0 .55cqh .8cqh rgba(90,65,25,.24));outline:none;}" +
+      ".card-detail-prev{left:-6.6cqh;}.card-detail-next{right:-6.6cqh;}" +
       ".card-detail-top{display:grid;grid-template-columns:13cqh minmax(0,1fr);gap:1.6cqw;align-items:center;padding-right:3.4cqh;}" +
       ".card-detail-art{height:13cqh;border-radius:1.2cqh;display:grid;place-items:center;font-size:7.5cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.2cqh solid #d6e6f5;}" +
       ".card-detail-title h3{font-size:3.2cqh;line-height:1.1;margin-bottom:.8cqh;}" +
@@ -429,7 +431,7 @@
       ".card-detail-info section{border-radius:1cqh;background:rgba(255,255,255,.62);border:.15cqh solid var(--c-panel-line);padding:1.1cqh 1cqw;}" +
       ".card-detail-info h4{font-size:1.65cqh;margin-bottom:.5cqh;color:var(--c-ink-soft);}" +
       ".card-detail-info p{font-size:1.65cqh;line-height:1.45;color:var(--c-ink);font-weight:700;}" +
-      "@media (max-width:700px){.card-detail-panel{width:78cqw;max-height:72cqh;overflow:auto;}.card-detail-spread{grid-template-columns:1fr;}.card-detail-front{min-height:auto;}.card-detail-back{min-height:auto;}.card-detail-card{width:min(42cqw,28cqh);height:40cqh;}.card-detail-card .art{height:12cqh;font-size:7cqh;}.card-detail-upgrade-toggle{min-width:28cqw;}.card-detail-prev{left:.8cqh;}.card-detail-next{right:.8cqh;}.card-detail-nav{top:auto;bottom:1cqh;transform:none;width:4.4cqh;height:4.4cqh;font-size:3.6cqh;}.card-detail-info{grid-template-columns:1fr;}.card-detail-top{grid-template-columns:10cqh minmax(0,1fr);}.card-detail-art{height:10cqh;font-size:6cqh;}}";
+      "@media (max-width:700px){.card-detail-panel{width:78cqw;max-height:72cqh;overflow:auto;}.card-detail-spread{grid-template-columns:1fr;}.card-detail-front{min-height:auto;}.card-detail-back{min-height:auto;}.card-detail-card{width:min(42cqw,28cqh);height:40cqh;}.card-detail-card .art{height:12cqh;font-size:7cqh;}.card-detail-upgrade-toggle{min-width:28cqw;}.card-detail-prev{left:.8cqh;}.card-detail-next{right:.8cqh;}.card-detail-nav{top:auto;bottom:1cqh;transform:none;width:4.4cqh;height:4.4cqh;}.card-detail-nav::before{font-size:3.3cqh;}.card-detail-info{grid-template-columns:1fr;}.card-detail-top{grid-template-columns:10cqh minmax(0,1fr);}.card-detail-art{height:10cqh;font-size:6cqh;}}";
     document.head.appendChild(style);
   }
 
