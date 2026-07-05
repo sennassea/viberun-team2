@@ -118,12 +118,12 @@
         z-index:12;
         pointer-events:none;
         width:min(54cqw, 72cqh);
-        padding:1.6cqh 1.8cqw;
-        border:0.22cqh solid rgba(255,255,255,.88);
-        border-radius:1cqh;
-        background:rgba(244,248,252,.96);
+        padding:3cqh 3.2cqw;
+        border:0;
+        border-radius:0;
+        background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
         color:#243247;
-        box-shadow:0 1.2cqh 2.8cqh rgba(20,35,60,.22);
+        box-shadow:none;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-content{
         display:block;

@@ -5,22 +5,21 @@
    ========================================================================= */
 .start-moon-wallet{
   position:absolute;
-  right:7.2cqw;
-  top:8.2cqh;
+  right:calc(4.2cqw + 11.5cqh);
+  top:4.8cqh;
   z-index:4;
   display:flex;
   align-items:center;
-  gap:.75cqw;
-  min-width:17cqw;
-  height:5.7cqh;
-  padding:.55cqh .75cqw .55cqh 1cqw;
-  border:.26cqh solid rgba(176,125,29,.68);
-  border-radius:3cqh;
-  background:linear-gradient(180deg,rgba(255,250,238,.96),rgba(244,224,188,.94));
+  justify-content:center;
+  gap:0;
+  width:24cqh;
+  height:5.9cqh;
+  padding:0 5.2cqh 0 5.4cqh;
+  border:0;
+  border-radius:0;
+  background:transparent url("assets/ui/start_menu/moon_wallet.png") center/100% 100% no-repeat;
   color:#5e3920;
-  box-shadow:
-    inset 0 .16cqh .45cqh rgba(255,255,255,.86),
-    0 .55cqh 1.1cqh rgba(70,42,18,.22);
+  box-shadow:none;
   cursor:pointer;
   font:inherit;
   font-weight:900;
@@ -29,9 +28,7 @@
 
 .start-moon-wallet:hover{
   transform:translateY(-.18cqh);
-  box-shadow:
-    inset 0 .16cqh .45cqh rgba(255,255,255,.9),
-    0 .8cqh 1.35cqh rgba(70,42,18,.26);
+  filter:drop-shadow(0 .55cqh .75cqh rgba(70,42,18,.22));
 }
 
 .start-moon-wallet:active{
@@ -43,16 +40,7 @@
 }
 
 .start-moon-icon{
-  flex:none;
-  width:3.7cqh;
-  height:3.7cqh;
-  display:grid;
-  place-items:center;
-  border-radius:50%;
-  background:linear-gradient(145deg,#f9fbff,#c7defb 55%,#8a78cc);
-  border:.16cqh solid rgba(176,125,29,.45);
-  box-shadow:inset 0 .18cqh .35cqh rgba(255,255,255,.9);
-  font-size:2.25cqh;
+  display:none;
 }
 
 .start-moon-count{
@@ -60,7 +48,7 @@
   min-width:0;
   color:#5b341d;
   text-align:center;
-  font-size:2.65cqh;
+  font-size:2.45cqh;
   font-weight:900;
   letter-spacing:0;
   white-space:nowrap;
@@ -68,19 +56,5 @@
 }
 
 .start-moon-plus{
-  flex:none;
-  width:3.7cqh;
-  height:3.7cqh;
-  display:grid;
-  place-items:center;
-  border:.2cqh solid rgba(176,125,29,.72);
-  border-radius:50%;
-  background:linear-gradient(180deg,#fff4de,#e6b36e);
-  color:#7b431f;
-  box-shadow:
-    inset 0 .2cqh .4cqh rgba(255,255,255,.72),
-    0 .18cqh .35cqh rgba(70,42,18,.2);
-  font-size:2.65cqh;
-  font-weight:900;
-  line-height:1;
+  display:none;
 }
