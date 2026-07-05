@@ -36,6 +36,11 @@
       icon: "💚",
       name: "치유의 향기",
       desc: function () { return "회복 주문을 보유하고 있습니다."; }
+    },
+    recollection: {
+      icon: "🕯️",
+      name: "회상",
+      desc: function (v) { return "상태 수치에 따라 추가 효과를 발생시키는 기억 상태입니다. (현재 수치: " + v + ")"; }
     }
   };
 
@@ -515,6 +520,11 @@
     if ((enemy.lethargy || 0) > 0 && intentStatusNames.indexOf("무기력") < 0) {
       var el = EFFECT_INFO.lethargy;
       statusRows.push(makeRow(el.icon, el.name, el.desc(enemy.lethargy)));
+    }
+    var recollectionValue = (enemy.status && enemy.status.recollection) || enemy.recollection || 0;
+    if (recollectionValue > 0 && intentStatusNames.indexOf("회상") < 0) {
+      var rc = EFFECT_INFO.recollection;
+      statusRows.push(makeRow(rc.icon, rc.name, rc.desc(recollectionValue)));
     }
     /* 새 적 상태이상 추가 시 위와 같은 패턴으로 statusRows.push */
     if (statusRows.length > 0) {

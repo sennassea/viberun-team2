@@ -993,6 +993,12 @@ function playCard(handIndex, targetEnemy){
         if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
         break;
       }
+      case "damageByRecollection": {
+        const recollection = targetEnemy ? Math.max(0, getStatus(targetEnemy, "recollection")) : 0;
+        const amount = Math.floor((e.base || 0) + recollection * (e.per || 0));
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
+        break;
+      }
       case "consumeAllAgitationDamage": {
         if(targetEnemy){
           const agitation = Math.max(0, getStatus(targetEnemy, "agitation"));
@@ -1005,8 +1011,16 @@ function playCard(handIndex, targetEnemy){
       case "ifAgitationAtLeastDraw":
         if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)) drawCards(e.v || 1);
         break;
+      case "ifRecollectionAtLeastDraw":
+        if(targetEnemy && getStatus(targetEnemy, "recollection") >= (e.threshold || 0)) drawCards(e.v || 1);
+        break;
       case "ifAgitationAtLeastDamageAll":
         if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)){
+          livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak));
+        }
+        break;
+      case "ifRecollectionAtLeastDamageAll":
+        if(targetEnemy && getStatus(targetEnemy, "recollection") >= (e.threshold || 0)){
           livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak));
         }
         break;
@@ -1020,6 +1034,20 @@ function playCard(handIndex, targetEnemy){
             const target = targets[Math.floor(Math.random() * targets.length)];
             addStatus(target, "agitation", amount);
             spawnFloat('[data-id="'+target.id+'"]', '동요 '+amount, 'dmg');
+          }
+        }
+        break;
+      }
+      case "transferRecollectionOnKill": {
+        if(targetEnemy && targetEnemy.hp <= 0){
+          const currentRecollection = getStatus(targetEnemy, "recollection");
+          if(currentRecollection <= 0) break;
+          const targets = livingEnemies().filter(en => en !== targetEnemy);
+          const amount = Math.max(0, e.v || currentRecollection);
+          if(targets.length && amount > 0){
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            addStatus(target, "recollection", amount);
+            spawnFloat('[data-id="'+target.id+'"]', '회상 '+amount, 'dmg');
           }
         }
         break;
