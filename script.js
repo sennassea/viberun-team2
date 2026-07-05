@@ -3298,7 +3298,11 @@ function canUsePotionNow(){
 }
 
 function isSelfUsePotion(item){
-  return !!(item && (item.target === "player" || ["heal","energy","block","blockCleanse","draw","nextAttackDouble"].includes(item.type)));
+  if(!item) return false;
+  if(item.target === "player") return true;
+  if(item.target === "enemy") return false;
+  if(Array.isArray(item.fx) && item.fx.some(fx => fx && ["heal","energy","block","draw","removeWeak","nextAttackDouble"].includes(fx.t))) return true;
+  return ["heal","energy","block","blockCleanse","draw","nextAttackDouble"].includes(item.type);
 }
 
 function isHealPotion(item){
@@ -3306,7 +3310,11 @@ function isHealPotion(item){
 }
 
 function isAttackPotion(item){
-  return !!(item && ["attackSingle","attackAll","applyMark","applyWeak"].includes(item.type));
+  if(!item) return false;
+  if(item.target === "enemy") return true;
+  if(item.target === "player") return false;
+  if(Array.isArray(item.fx) && item.fx.some(fx => fx && (potionFxTargetsEnemy(fx) || potionFxTargetsAnyEnemy(fx)))) return true;
+  return ["attackSingle","attackAll","applyMark","applyWeak"].includes(item.type);
 }
 
 function onPotionSlotClick(item, index, slot){
@@ -3361,12 +3369,141 @@ function hidePotionUseButton(){
   btn.disabled = false;
 }
 
+function getPotionFxList(potion){
+  if(potion && Array.isArray(potion.fx) && potion.fx.length) return potion.fx;
+  if(!potion) return [];
+  switch(potion.type){
+    case "heal": return [{ t:"heal", v:potion.value || 0 }];
+    case "energy": return [{ t:"energy", v:potion.value || 0 }];
+    case "block": return [{ t:"block", v:potion.value || 0 }];
+    case "blockCleanse": return [{ t:"block", v:potion.value || 0 }, { t:"removeWeak", v:potion.removeWeak || 1 }];
+    case "draw": return [{ t:"draw", v:potion.value || 0 }];
+    case "nextAttackDouble": return [{ t:"nextAttackDouble", v:potion.value || 2 }];
+    case "attackSingle": return [{ t:"attackSingle", v:potion.value || 0 }];
+    case "attackAll": return [{ t:"attackAll", v:potion.value || 0 }];
+    case "applyMark": return [{ t:"applyMark", v:potion.value || 0 }];
+    case "applyWeak": return [{ t:"applyWeak", v:potion.value || 0 }];
+    default: return [];
+  }
+}
+
+function potionFxTargetsEnemy(fx){
+  return !!(fx && ["attackSingle","applyMark","applyWeak","applyRecollection","applyFracture"].includes(fx.t));
+}
+
+function potionFxTargetsAnyEnemy(fx){
+  return !!(fx && ["attackAll","applyMarkAll"].includes(fx.t));
+}
+
+function isSupportedPotionFx(fx){
+  return !!(fx && [
+    "heal",
+    "energy",
+    "block",
+    "draw",
+    "removeWeak",
+    "applyMark",
+    "applyWeak",
+    "applyRecollection",
+    "applyFracture",
+    "applyMarkAll",
+    "attackSingle",
+    "attackAll",
+    "nextAttackDouble"
+  ].includes(fx.t));
+}
+
+function canExecutePotionFx(potion, context={}){
+  const fxList = getPotionFxList(potion);
+  if(!fxList.length) return false;
+  return fxList.every(fx => {
+    if(!isSupportedPotionFx(fx)) return false;
+    if(potionFxTargetsEnemy(fx)) return !!(context.targetEnemy && context.targetEnemy.hp > 0);
+    if(potionFxTargetsAnyEnemy(fx)) return livingEnemies().length > 0;
+    return true;
+  });
+}
+
+function executePotionFx(potion, context={}){
+  const fxList = getPotionFxList(potion);
+  if(!canExecutePotionFx(potion, context)) return false;
+  for(const fx of fxList){
+    if(!isSupportedPotionFx(fx)) return false;
+    if(executeSinglePotionFx(fx, context) === false) return false;
+  }
+  return true;
+}
+
+function executeSinglePotionFx(fx, context={}){
+  const amount = Number.isFinite(fx.v) ? fx.v : 0;
+  const targetEnemy = context.targetEnemy;
+  switch(fx.t){
+    case "heal": {
+      const healed = LIFE.heal(S.player, amount);
+      if(healed > 0) spawnFloat(".player", "+"+healed, "heal");
+      return true;
+    }
+    case "energy":
+      S.energy += amount;
+      if(amount) toast((context.potion?.name || "약병")+" 사용: 신통력 +"+amount);
+      return true;
+    case "block":
+      gainPlayerBlock(amount);
+      return true;
+    case "draw":
+      drawCards(amount, { source:"potion" });
+      return true;
+    case "removeWeak":
+      LIFE.reduceWeak(S.player, amount || 1);
+      return true;
+    case "applyMark": {
+      const added = addStatus(targetEnemy, "mark", amount);
+      if(added > 0) spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+added, 'heal');
+      return true;
+    }
+    case "applyWeak": {
+      const added = addStatus(targetEnemy, "agitation", amount);
+      if(added > 0) applyRelicTrigger("onAgitationApply", { target: targetEnemy, amount: added });
+      return true;
+    }
+    case "applyRecollection": {
+      const added = addStatus(targetEnemy, "recollection", amount);
+      if(added > 0) spawnFloat('[data-id="'+targetEnemy.id+'"]', '회상 '+added, 'heal');
+      return true;
+    }
+    case "applyFracture": {
+      const added = addStatus(targetEnemy, "fracture", amount);
+      if(added > 0) spawnFloat('[data-id="'+targetEnemy.id+'"]', '균열 '+added, 'dmg');
+      return true;
+    }
+    case "applyMarkAll":
+      livingEnemies().forEach(enemy => {
+        const added = addStatus(enemy, "mark", amount);
+        if(added > 0) spawnFloat('[data-id="'+enemy.id+'"]', '표식 '+added, 'heal');
+      });
+      return true;
+    case "attackSingle":
+      applyDamageWithFeedback(targetEnemy, amount, S.player.weak);
+      return true;
+    case "attackAll":
+      livingEnemies().forEach(enemy => applyDamageWithFeedback(enemy, amount, S.player.weak));
+      return true;
+    case "nextAttackDouble":
+      S.nextAttackMultiplier = amount || 2;
+      toast("다음 공격 정화량 증가");
+      return true;
+    default:
+      console.warn("[Potion FX] Unsupported FX:", fx);
+      return false;
+  }
+}
+
 function useSelfPotion(index){
   if(!canUsePotionNow()) return;
   if(!Array.isArray(S.potions)) return;
   const potion = S.potions[index];
   if(!potion || !isSelfUsePotion(potion)) return;
-  applySelfPotionEffect(potion);
+  if(!applySelfPotionEffect(potion, { potion, potionIndex:index })) return;
   S.potions.splice(index, 1);
   recordPotionUsed(potion);
   syncRunStateFromCombat();
@@ -3374,33 +3511,8 @@ function useSelfPotion(index){
   renderAll();
 }
 
-function applySelfPotionEffect(potion){
-  const amount = typeof potion.value === "number" ? potion.value : 0;
-  switch(potion.type){
-    case "heal": {
-      const healed = LIFE.heal(S.player, amount);
-      if(healed>0) spawnFloat(".player", "+"+healed, "heal");
-      break;
-    }
-    case "energy":
-      S.energy += amount;
-      toast(potion.name+" 사용: 정신력 +"+amount);
-      break;
-    case "block":
-      gainPlayerBlock(amount);
-      break;
-    case "blockCleanse":
-      gainPlayerBlock(amount);
-      LIFE.reduceWeak(S.player, potion.removeWeak || 1);
-      break;
-    case "draw":
-      drawCards(amount, { source:"potion" });
-      break;
-    case "nextAttackDouble":
-      S.nextAttackMultiplier = potion.value || 2;
-      toast("다음 공격 정화량 2배");
-      break;
-  }
+function applySelfPotionEffect(potion, context={}){
+  return executePotionFx(potion, context);
 }
 
 function ensurePotionDiscardButton(){
@@ -3508,23 +3620,18 @@ function dropPotionDrag(x, y){
   if(state && isAttackPotion(state.item)){
     const en = enemyUnder(x, y);
     if(en){
-      if(state.type === "attackSingle") useSingleAttackPotion(state.index, en.enemy);
-      if(state.type === "attackAll") useAllAttackPotion(state.index, en.enemy);
-      if(state.type === "applyMark") useMarkPotion(state.index, en.enemy);
-      if(state.type === "applyWeak") useWeakPotion(state.index, en.enemy);
+      useTargetPotion(state.index, en.enemy);
     }
   }
   endPotionDrag();
 }
 
-function useSingleAttackPotion(index, targetEnemy){
+function useTargetPotion(index, targetEnemy){
   if(!canUsePotionNow()) return false;
   if(!Array.isArray(S.potions)) return false;
   const potion = S.potions[index];
-  if(!potion || potion.type !== "attackSingle") return false;
-  if(!targetEnemy || targetEnemy.hp <= 0) return false;
-  const damage = typeof potion.value === "number" ? potion.value : 5;
-  applyDamageWithFeedback(targetEnemy, damage, S.player.weak);
+  if(!potion || !isAttackPotion(potion)) return false;
+  if(!executePotionFx(potion, { potion, potionIndex:index, targetEnemy })) return false;
   S.potions.splice(index, 1);
   recordPotionUsed(potion);
   syncRunStateFromCombat();
@@ -3536,59 +3643,22 @@ function useSingleAttackPotion(index, targetEnemy){
   }
   renderAll();
   return true;
+}
+
+function useSingleAttackPotion(index, targetEnemy){
+  return useTargetPotion(index, targetEnemy);
 }
 
 function useMarkPotion(index, targetEnemy){
-  if(!canUsePotionNow()) return false;
-  if(!Array.isArray(S.potions)) return false;
-  const potion = S.potions[index];
-  if(!potion || potion.type !== "applyMark") return false;
-  if(!targetEnemy || targetEnemy.hp <= 0) return false;
-  const amount = typeof potion.value === "number" ? potion.value : 3;
-  addStatus(targetEnemy, "mark", amount);
-  spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
-  S.potions.splice(index, 1);
-  recordPotionUsed(potion);
-  syncRunStateFromCombat();
-  renderAll();
-  return true;
+  return useTargetPotion(index, targetEnemy);
 }
 
 function useWeakPotion(index, targetEnemy){
-  if(!canUsePotionNow()) return false;
-  if(!Array.isArray(S.potions)) return false;
-  const potion = S.potions[index];
-  if(!potion || potion.type !== "applyWeak") return false;
-  if(!targetEnemy || targetEnemy.hp <= 0) return false;
-  const amount = typeof potion.value === "number" ? potion.value : 3;
-  addStatus(targetEnemy, "agitation", amount);
-  applyRelicTrigger("onAgitationApply", { target: targetEnemy, amount });
-  S.potions.splice(index, 1);
-  recordPotionUsed(potion);
-  syncRunStateFromCombat();
-  renderAll();
-  return true;
+  return useTargetPotion(index, targetEnemy);
 }
 
 function useAllAttackPotion(index, targetEnemy){
-  if(!canUsePotionNow()) return false;
-  if(!Array.isArray(S.potions)) return false;
-  const potion = S.potions[index];
-  if(!potion || potion.type !== "attackAll") return false;
-  if(!targetEnemy || targetEnemy.hp <= 0) return false;
-  const damage = typeof potion.value === "number" ? potion.value : 3;
-  livingEnemies().forEach(enemy => applyDamageWithFeedback(enemy, damage, S.player.weak));
-  S.potions.splice(index, 1);
-  recordPotionUsed(potion);
-  syncRunStateFromCombat();
-  autoSelectTarget();
-  if(livingEnemies().length === 0){
-    nodeClear();
-    renderAll();
-    return true;
-  }
-  renderAll();
-  return true;
+  return useTargetPotion(index, targetEnemy);
 }
 
 function endPotionDrag(){
