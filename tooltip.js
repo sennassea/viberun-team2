@@ -587,6 +587,7 @@
     activeItemSlotEl = null;
     activeEnergyEl = null;
     activeHudEl = null;
+    activeProgressEl = null;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
     positionCombatantTooltip(cbEl, isPlayer);
@@ -639,6 +640,7 @@
   var activeItemSlotEl = null;
   var activeEnergyEl = null;
   var activeHudEl = null;
+  var activeProgressEl = null;
 
   function buildStatusIconHtml(statusEl) {
     var type = statusEl.dataset.status;
@@ -672,6 +674,7 @@
     activeItemSlotEl = null;
     activeEnergyEl = null;
     activeHudEl = null;
+    activeProgressEl = null;
     activeStatusEl = statusEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -756,6 +759,7 @@
     activeStatusEl = null;
     activeItemSlotEl = null;
     activeHudEl = null;
+    activeProgressEl = null;
     activeEnergyEl = energyEl;
     tooltip.innerHTML = buildEnergyHtml();
     tooltip.classList.add("tt-show");
@@ -866,6 +870,7 @@
     activeStatusEl = null;
     activeEnergyEl = null;
     activeHudEl = null;
+    activeProgressEl = null;
     activeItemSlotEl = slotEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -945,6 +950,7 @@
     activeItemSlotEl = null;
     activeEnergyEl = null;
     activeHudEl = null;
+    activeProgressEl = null;
     cardActiveEl = cardEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -1048,6 +1054,7 @@
     activeStatusEl = null;
     activeItemSlotEl = null;
     activeEnergyEl = null;
+    activeProgressEl = null;
     activeHudEl = anchorEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -1087,6 +1094,93 @@
     var to = e.relatedTarget;
     if (to && activeHudEl.contains && activeHudEl.contains(to)) return;
     hideHudTooltip();
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     VII. 중앙 상단 진행(위치/턴) 정보 툴팁
+     ══════════════════════════════════════════════════════════════════════ */
+
+  function isProgressPartVisible(el) {
+    if (!el) return false;
+    if (el.hidden) return false;
+    try {
+      if (window.getComputedStyle && window.getComputedStyle(el).display === "none") return false;
+    } catch (err) { /* 스타일 조회 실패 시 텍스트 존재 여부로만 판단 */ }
+    return true;
+  }
+
+  function getProgressDisplayText(progressEl) {
+    if (!progressEl || !progressEl.querySelector) return "";
+    var regionEl = progressEl.querySelector(".progress-region");
+    var floorEl = progressEl.querySelector(".progress-floor");
+    var turnEl = progressEl.querySelector(".progress-turn");
+    var locationText = "";
+    if (regionEl) {
+      var spans = regionEl.querySelectorAll ? regionEl.querySelectorAll("span") : null;
+      var lastSpan = spans && spans.length ? spans[spans.length - 1] : null;
+      locationText = ((lastSpan || regionEl).textContent || "").trim();
+    }
+    var floorText = (floorEl && isProgressPartVisible(floorEl)) ? (floorEl.textContent || "").trim() : "";
+    var turnText = turnEl ? (turnEl.textContent || "").trim() : "";
+    var parts = [locationText, floorText, turnText].filter(function (t) { return t; });
+    return parts.join(" | ");
+  }
+
+  function buildProgressHtml(progressEl) {
+    var desc = "현재 위치와 전투 턴 수를 표시합니다.";
+    var displayText = getProgressDisplayText(progressEl);
+    if (displayText) desc += "\n현재 표시: " + displayText;
+    return makeRow("", "현재 진행 정보", desc);
+  }
+
+  function positionProgressTooltip(anchorEl) {
+    var gRect   = game.getBoundingClientRect();
+    var aRect   = anchorEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+
+    var tx = (aRect.left - gRect.left) + (aRect.width - tipRect.width) * 0.5;
+    var ty = (aRect.bottom - gRect.top) + pad;
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showProgressTooltip(progressEl) {
+    if (!progressEl) return;
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
+    activeHudEl = null;
+    activeProgressEl = progressEl;
+    tooltip.innerHTML = buildProgressHtml(progressEl);
+    tooltip.classList.add("tt-show");
+    positionProgressTooltip(progressEl);
+  }
+
+  function hideProgressTooltip() {
+    activeProgressEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var progressEl = e.target && e.target.closest && e.target.closest(".progress-center-hud");
+    if (!progressEl || progressEl === activeProgressEl) return;
+    showProgressTooltip(progressEl);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeProgressEl) return;
+    var progressEl = e.target && e.target.closest && e.target.closest(".progress-center-hud");
+    if (!progressEl) return;
+    var to = e.relatedTarget;
+    if (to && progressEl.contains(to)) return;
+    hideProgressTooltip();
   });
 
 })();
