@@ -76,11 +76,11 @@
 .event-menu-btn:active{ transform:scale(.94); }
 
 /* ── 무대: 배경은 event-overlay 전체가 담당(전체화면 비주얼 영역),
-   이벤트 패널만 우측에 띄운다. 패널은 세로로 화면을 꽉 채우지 않고
-   내용물 높이에 맞춰 중앙에 위치한다 (선택지 4개까지도 과하게 길어지지 않도록). */
-.event-stage{ flex:1; min-height:0; display:flex; align-items:center; transform:translateY(-4cqh); }
+   이벤트 패널은 화면 중앙 쪽에 띄운다. 패널은 세로로 화면을 꽉 채우지 않고
+   내용물 높이에 맞춰 위치한다 (선택지 4개까지도 과하게 길어지지 않도록). */
+.event-stage{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; transform:translateY(2cqh); }
 .event-panel-wrap{
-  flex:none; margin-left:auto; width:44%; min-width:600px; max-width:820px; max-height:100%; display:flex;
+  flex:none; margin-left:0; width:44%; min-width:600px; max-width:820px; max-height:100%; display:flex;
 }
 
 /* ── 본문 패널 ─────────────────────────────────────────────────────────── */

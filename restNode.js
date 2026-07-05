@@ -188,7 +188,8 @@ function openRestCardRemove(){
     title: "정리하기",
     confirmText: "제거 완료",
     helpText: "제거할 주문 1장을 선택하세요.",
-    costText: "제거 비용: 🪙" + cost + " 복채",
+    costText: "제거 비용: " + cost + " 복채",
+    costHtml: '제거 비용: <span class="inline-resource-icon inline-resource-icon-gold" aria-hidden="true"></span>' + cost + " 복채",
     getConfirmDisabled: () => {
       const gold = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
       return gold < cost;
@@ -207,7 +208,7 @@ function openRestCardRemove(){
       S.cleanseCount = (typeof S.cleanseCount === "number" ? S.cleanseCount : 0) + 1;
       if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
       if(typeof renderHud === "function") renderHud();
-      if(typeof toast === "function" && card) toast(card.name + " 주문을 덱에서 제거했습니다. (🪙" + cost + " 복채 사용)");
+      if(typeof toast === "function" && card) toast(card.name + " 주문을 덱에서 제거했습니다. (" + cost + " 복채 사용)");
     }
   }).then(() => {
     resolvePrayerNode();
@@ -278,7 +279,7 @@ function prayerOverlayHtml(){
           '<div class="prayer-resource-row">' +
             '<span class="prayer-resource"><span class="hud-resource-icon hud-resource-icon-relic">🏺</span><b id="prayerRelicCount">0</b></span>' +
             '<span class="prayer-resource"><span class="hud-resource-icon hud-resource-icon-potion">🧪</span><b id="prayerPotionCount">0</b></span>' +
-            '<span class="prayer-resource"><span class="hud-resource-icon hud-resource-icon-gold">🪙</span><b id="prayerGold">0</b></span>' +
+            '<span class="prayer-resource"><span class="hud-resource-icon hud-resource-icon-gold" aria-hidden="true"></span><b id="prayerGold">0</b></span>' +
             '<span class="prayer-resource" style="display:none"><span class="hud-resource-icon hud-resource-icon-moon">🌙</span><b id="prayerMoonShard">0</b></span>' +
           '</div>' +
         '</div>' +
@@ -380,7 +381,7 @@ function renderPrayerCardPreviews(){
     const currentGold  = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
     const notEnough    = currentGold < cost;
     cleanseExtra.className = "prayer-card-extra prayer-card-pill" + (notEnough ? " insufficient" : "");
-    cleanseExtra.textContent = "덱에서 주문 1장을 제거 (🪙" + cost + " 복채)";
+    cleanseExtra.innerHTML = '덱에서 주문 1장을 제거 (<span class="inline-resource-icon inline-resource-icon-gold" aria-hidden="true"></span>' + cost + " 복채)";
     if(cleanseCard) cleanseCard.classList.toggle("disabled", notEnough);
   }
 }
@@ -450,6 +451,8 @@ function ensurePrayerStyles(){
     ".prayer-card-sub{font-size:1.3cqh;font-weight:800;color:#8a6b3d;}" +
     ".prayer-card-desc{flex:1;font-size:1.32cqh;color:#6b4a20;text-align:center;line-height:1.4;font-weight:700;}" +
     ".prayer-card-extra{width:100%;border-radius:1cqh;padding:.8cqh 1cqw;text-align:center;font-size:1.3cqh;font-weight:900;}" +
+    ".inline-resource-icon{display:inline-block;width:1.45cqh;height:1.45cqh;vertical-align:-.25cqh;margin-right:.18cqw;background:center/contain no-repeat;}" +
+    ".inline-resource-icon-gold{background-image:url('assets/ui/resource_icons/gold.png');}" +
     ".prayer-card-preview{background:rgba(110,175,110,.2);border:.15cqh solid rgba(80,140,80,.4);color:#2f5f30;}" +
     ".prayer-card-preview.full{background:rgba(140,140,140,.2);border-color:rgba(110,110,110,.4);color:#5a5a5a;}" +
     ".prayer-card-pill{background:rgba(200,150,80,.18);border:.15cqh solid rgba(178,140,80,.42);color:#8a6b3d;}" +

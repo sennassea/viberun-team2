@@ -151,13 +151,13 @@
       .tutorial-guide-popup.show{display:flex;}
       .tutorial-guide-dialog{
         position:relative;
-        width:min(520px, 100%);
+        width:min(580px, 100%);
         border:0;
         border-radius:0;
         background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
         color:#243247;
         box-shadow:none;
-        padding:46px 48px;
+        padding:54px 56px;
       }
       .tutorial-guide-dongjasin{
         display:block;
@@ -253,9 +253,9 @@
         background-image:url("assets/ui_buttons/tutorial_skip.png");
       }
       .tutorial-guide-dialog-skip{
-        width:min(900px, calc(100% - 32px));
-        min-height:430px;
-        padding:44px 58px 46px;
+        width:min(780px, calc(100% - 44px));
+        min-height:360px;
+        padding:34px 46px 36px;
       }
       .tutorial-guide-dialog-skip .tutorial-guide-close{
         top:-16px;
@@ -267,8 +267,8 @@
       }
       .tutorial-guide-confirm{
         position:relative;
-        min-height:340px;
-        padding-left:260px;
+        min-height:280px;
+        padding-left:220px;
         display:flex;
         flex-direction:column;
         justify-content:center;
@@ -278,7 +278,7 @@
         left:8px;
         top:8px;
         bottom:4px;
-        width:250px;
+        width:210px;
         display:flex;
         align-items:flex-end;
         justify-content:center;
@@ -305,33 +305,33 @@
       }
       .tutorial-guide-dialog-skip .tutorial-guide-confirm h2{
         margin:0;
-        padding:34px 34px;
+        padding:26px 30px;
         border:2px solid rgba(218,178,101,.62);
         border-radius:18px;
         background:rgba(255,252,240,.88);
         color:#5a3a22;
-        font-size:34px;
+        font-size:30px;
         line-height:1.35;
         box-shadow:inset 0 2px 8px rgba(255,255,255,.5), 0 4px 10px rgba(98,68,25,.13);
       }
       .tutorial-guide-dialog-skip .tutorial-guide-confirm p{
-        margin:28px 0 26px;
+        margin:22px 0 22px;
         color:#405066;
-        font-size:24px;
+        font-size:22px;
         font-weight:700;
       }
       .tutorial-guide-dialog-skip .tutorial-guide-actions{
         gap:28px;
       }
       .tutorial-guide-dialog-skip .tutorial-guide-button{
-        min-height:76px;
+        min-height:66px;
         border-radius:12px;
-        font-size:30px;
+        font-size:26px;
         font-weight:900;
       }
       .tutorial-guide-button[data-tutorial-skip-confirm-button],
       .tutorial-guide-button[data-tutorial-skip-back]{
-        min-height:76px;
+        min-height:66px;
         border:0;
         border-radius:0;
         background-color:transparent;
@@ -666,13 +666,13 @@
       }
       .tutorial-complete-popup.show{display:flex;}
       .tutorial-complete-dialog{
-        width:min(480px, 100%);
+        width:min(540px, 100%);
         border:0;
         border-radius:0;
         background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
         color:#243247;
         box-shadow:none;
-        padding:46px 48px;
+        padding:54px 56px;
         text-align:center;
       }
       .tutorial-complete-dialog h2{

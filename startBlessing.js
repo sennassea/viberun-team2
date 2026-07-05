@@ -33,22 +33,45 @@ const START_BLESSING_SPIRITS = (START_BLESSING_ENDING_DATA && Array.isArray(STAR
 
 /* ── 시작 전용 은혜 법구 15종 (엑셀 지시서 기준) ───────────────────────── */
 const START_BLESSINGS = [
-  { id:"blessing_relic_01", icon:"🌒", name:"은혜1",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.", effect:"gainRandomRelicLoseHp" },
-  { id:"blessing_relic_02", icon:"🃏", name:"은혜2",  spirit:"길잡이 신령", desc:"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", effect:"chooseRareCardAddStatus" },
-  { id:"blessing_relic_03", icon:"🪙", name:"은혜3",  spirit:"길잡이 신령", desc:"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.", effect:"gainGoldLoseMaxHp" },
-  { id:"blessing_relic_04", icon:"⚗️", name:"은혜4",  spirit:"길잡이 신령", desc:"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.", effect:"gainPotionsFirstBattleAnxiety" },
-  { id:"blessing_relic_05", icon:"🏺", name:"은혜5",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.", effect:"gainRandomRelicLoseAllGold" },
-  { id:"blessing_relic_06", icon:"✂️", name:"은혜6",  spirit:"인연 신령", desc:"기본 카드 1장을 선택하여 제거합니다.", effect:"chooseRemoveStarterCard" },
-  { id:"blessing_relic_07", icon:"🔀", name:"은혜7",  spirit:"인연 신령", desc:"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.", effect:"randomRemoveStarterGainCommon" },
-  { id:"blessing_relic_08", icon:"🧹", name:"은혜8",  spirit:"인연 신령", desc:"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.", effect:"removeTwoCardsLoseAllGold" },
-  { id:"blessing_relic_09", icon:"📜", name:"은혜9",  spirit:"인연 신령", desc:"Common 카드 3장 중 1장을 선택해 얻습니다.", effect:"chooseCommonCard" },
-  { id:"blessing_relic_10", icon:"🍃", name:"은혜10", spirit:"인연 신령", desc:"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", effect:"gainRandomCommonCostDownRun" },
-  { id:"blessing_relic_11", icon:"🕯️", name:"은혜11", spirit:"수호 신령", desc:"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.", effect:"nextThreeNormalFirstEnemyHpOne" },
-  { id:"blessing_relic_12", icon:"🛡️", name:"은혜12", spirit:"수호 신령", desc:"첫 전투 시작 시 결계 10을 얻습니다.", effect:"firstBattleBlock", value:10 },
-  { id:"blessing_relic_13", icon:"💗", name:"은혜13", spirit:"수호 신령", desc:"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.", effect:"gainMaxHpAndHeal", value:8 },
-  { id:"blessing_relic_14", icon:"💰", name:"은혜14", spirit:"수호 신령", desc:"복채 80을 얻습니다.", effect:"gainGold", value:80 },
-  { id:"blessing_relic_15", icon:"🧪", name:"은혜15", spirit:"수호 신령", desc:"무작위 약병 1개를 얻습니다.", effect:"gainRandomPotion" },
+  { id:"blessing_relic_01", icon:"🌒", name:"길잃은 방울",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.", effect:"gainRandomRelicLoseHp" },
+  { id:"blessing_relic_02", icon:"🃏", name:"금단의 서낭부",  spirit:"길잡이 신령", desc:"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", effect:"chooseRareCardAddStatus" },
+  { id:"blessing_relic_03", icon:"assets/ui/resource_icons/gold.png", name:"깨진 복주머니",  spirit:"길잡이 신령", desc:"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.", effect:"gainGoldLoseMaxHp" },
+  { id:"blessing_relic_04", icon:"⚗️", name:"흔들리는 약향로",  spirit:"길잡이 신령", desc:"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.", effect:"gainPotionsFirstBattleAnxiety" },
+  { id:"blessing_relic_05", icon:"🏺", name:"빈 복채함",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.", effect:"gainRandomRelicLoseAllGold" },
+  { id:"blessing_relic_06", icon:"✂️", name:"인연 끊는 가위",  spirit:"인연 신령", desc:"기본 카드 1장을 선택하여 제거합니다.", effect:"chooseRemoveStarterCard" },
+  { id:"blessing_relic_07", icon:"🔀", name:"뒤섞인 인연패",  spirit:"인연 신령", desc:"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.", effect:"randomRemoveStarterGainCommon" },
+  { id:"blessing_relic_08", icon:"🧹", name:"망각의 매듭",  spirit:"인연 신령", desc:"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.", effect:"removeTwoCardsLoseAllGold" },
+  { id:"blessing_relic_09", icon:"📜", name:"새 인연의 부적",  spirit:"인연 신령", desc:"Common 카드 3장 중 1장을 선택해 얻습니다.", effect:"chooseCommonCard" },
+  { id:"blessing_relic_10", icon:"🍃", name:"가벼운 첫 매듭", spirit:"인연 신령", desc:"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", effect:"gainRandomCommonCostDownRun" },
+  { id:"blessing_relic_11", icon:"🕯️", name:"수호의 첫 종소리", spirit:"수호 신령", desc:"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.", effect:"nextThreeNormalFirstEnemyHpOne" },
+  { id:"blessing_relic_12", icon:"🛡️", name:"첫 결계의 연꽃", spirit:"수호 신령", desc:"첫 전투 시작 시 결계 10을 얻습니다.", effect:"firstBattleBlock", value:10 },
+  { id:"blessing_relic_13", icon:"💗", name:"맑은 혼의 옥패", spirit:"수호 신령", desc:"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.", effect:"gainMaxHpAndHeal", value:8 },
+  { id:"blessing_relic_14", icon:"assets/ui/resource_icons/gold.png", name:"수호 복주머니", spirit:"수호 신령", desc:"복채 80을 얻습니다.", effect:"gainGold", value:80 },
+  { id:"blessing_relic_15", icon:"🧪", name:"은혜의 약병", spirit:"수호 신령", desc:"무작위 약병 1개를 얻습니다.", effect:"gainRandomPotion" },
 ];
+
+const START_BLESSING_ICON_PATHS = {
+  blessing_relic_01: "assets/relic_icons/blessing_relic_01.png",
+  blessing_relic_02: "assets/relic_icons/blessing_relic_02.png",
+  blessing_relic_03: "assets/relic_icons/blessing_relic_03.png",
+  blessing_relic_04: "assets/relic_icons/blessing_relic_04.png",
+  blessing_relic_05: "assets/relic_icons/blessing_relic_05.png",
+  blessing_relic_06: "assets/relic_icons/blessing_relic_06.png",
+  blessing_relic_07: "assets/relic_icons/blessing_relic_07.png",
+  blessing_relic_08: "assets/relic_icons/blessing_relic_08.png",
+  blessing_relic_09: "assets/relic_icons/blessing_relic_09.png",
+  blessing_relic_10: "assets/relic_icons/blessing_relic_10.png",
+  blessing_relic_11: "assets/relic_icons/blessing_relic_11.png",
+  blessing_relic_12: "assets/relic_icons/blessing_relic_12.png",
+  blessing_relic_13: "assets/relic_icons/blessing_relic_13.png",
+  blessing_relic_14: "assets/relic_icons/blessing_relic_14.png",
+  blessing_relic_15: "assets/relic_icons/blessing_relic_15.png"
+};
+
+START_BLESSINGS.forEach(blessing => {
+  if (!blessing || !START_BLESSING_ICON_PATHS[blessing.id]) return;
+  blessing.icon = START_BLESSING_ICON_PATHS[blessing.id];
+});
 
 /* ── 신령의 은혜 화면이 열려있는 동안 감춰둘 전투 화면 요소 (restNode.js와 동일 패턴) */
 const SB_HIDE_SELECTORS = [".top-hud", ".left-side-hud", ".battle-field", "#dock", "#hint"];
@@ -537,11 +560,18 @@ function sbOverlayHtml(){
 function sbChoiceHtml(blessing, index){
   return (
     '<button type="button" class="sb-card" data-id="' + blessing.id + '">' +
-      '<div class="sb-card-icon">' + blessing.icon + '</div>' +
+      '<div class="sb-card-icon">' + sbIconHtml(blessing.icon) + '</div>' +
       '<div class="sb-card-name">' + blessing.name + '</div>' +
       '<div class="sb-card-desc">' + blessing.desc + '</div>' +
     '</button>'
   );
+}
+
+function sbIconHtml(icon){
+  if(typeof icon === "string" && icon.indexOf("assets/") === 0){
+    return '<img src="' + icon + '" alt="" aria-hidden="true">';
+  }
+  return icon || "";
 }
 
 /* ── 화면 값 렌더링 (열 때마다 최신 상태 반영) ────────────────────────────── */
@@ -624,14 +654,15 @@ function ensureSbStyles(){
       "transform:translateY(7cqh);border:none;background:transparent;box-shadow:none;overflow:visible;}" +
     ".sb-spirit img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 1.2cqh 1.6cqh rgba(0,0,0,.45)) drop-shadow(0 0 1.8cqh rgba(180,220,255,.2));}" +
     ".sb-choices{flex:none;position:relative;z-index:2;display:flex;justify-content:center;gap:10cqw;padding:0 2cqw;margin-top:-20cqh;}" +
-    ".sb-card{position:relative;flex:1;max-width:17cqw;min-height:34cqh;display:flex;flex-direction:column;align-items:center;" +
-      "gap:.9cqh;padding:2.8cqh 1.4cqw 1.8cqh;background:transparent url(\"assets/ui_panels/start_blessing_choice_panel.png\") center/100% 100% no-repeat;" +
+    ".sb-card{position:relative;flex:1;max-width:17cqw;min-height:39cqh;display:flex;flex-direction:column;align-items:center;" +
+      "box-sizing:border-box;gap:.55cqh;padding:3.1cqh 2.15cqw 3cqh;background:transparent url(\"assets/ui_panels/start_blessing_choice_panel.png\") center/100% 100% no-repeat;" +
       "border:0;border-radius:0;cursor:pointer;font:inherit;color:#4a2b07;" +
-      "box-shadow:none;transition:transform .14s ease,filter .14s ease;}" +
+      "box-shadow:none;overflow:hidden;transition:transform .14s ease,filter .14s ease;}" +
     ".sb-card:hover{transform:translateY(-.6cqh);filter:brightness(1.05) drop-shadow(0 .9cqh 1.2cqh rgba(90,65,25,.24));}" +
-    ".sb-card-icon{font-size:4cqh;}" +
-    ".sb-card-name{font-size:1.8cqh;font-weight:900;text-shadow:0 .08cqh 0 rgba(255,255,255,.8);}" +
-    ".sb-card-desc{flex:1;font-size:1.2cqh;color:#5c3c10;text-align:center;line-height:1.4;font-weight:800;text-shadow:0 .06cqh 0 rgba(255,255,255,.65);}" +
-    "@media (max-width:900px){.sb-choices{flex-direction:column;align-items:stretch;}.sb-card{max-width:none;min-height:auto;}}";
+    ".sb-card-icon{height:12cqh;font-size:12cqh;display:flex;align-items:flex-start;justify-content:center;}" +
+    ".sb-card-icon img{width:12cqh;height:12cqh;object-fit:contain;display:block;}" +
+    ".sb-card-name{max-width:100%;margin-top:.35cqh;padding:0 .25cqw;font-size:1.75cqh;font-weight:900;text-align:center;line-height:1.14;word-break:keep-all;overflow-wrap:anywhere;text-shadow:0 .08cqh 0 rgba(255,255,255,.8);}" +
+    ".sb-card-desc{flex:1;width:100%;box-sizing:border-box;margin-top:.25cqh;padding:0 .35cqw;font-size:1.08cqh;color:#5c3c10;text-align:center;line-height:1.44;font-weight:800;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty;text-shadow:0 .06cqh 0 rgba(255,255,255,.65);}" +
+    "@media (max-width:900px){.sb-choices{flex-direction:column;align-items:stretch;}.sb-card{max-width:none;min-height:auto;padding:2.4cqh 2.8cqw;}.sb-card-icon{height:8cqh;font-size:8cqh;}.sb-card-icon img{width:8cqh;height:8cqh;}.sb-card-desc{font-size:1.2cqh;}}";
   document.head.appendChild(style);
 }

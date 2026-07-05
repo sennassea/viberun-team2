@@ -425,6 +425,7 @@
 
     /* 아이콘 */
     ".btt-ico{font-size:2.1cqh;line-height:1.2;flex:none;width:2.7cqh;text-align:center}" +
+    ".btt-ico img{width:2.2cqh;height:2.2cqh;object-fit:contain;display:block;margin:0 auto;}" +
 
     /* 텍스트 */
     ".btt-body{flex:1;min-width:0}" +
@@ -443,7 +444,10 @@
   /* ── HTML 빌더 헬퍼 ───────────────────────────────────────────────────── */
   function makeRow(icon, name, desc, nameColor) {
     var cs = nameColor ? ' style="color:' + nameColor + '"' : "";
-    var ico = icon ? '<div class="btt-ico">' + icon + '</div>' : "";
+    var iconHtml = (typeof icon === "string" && icon.indexOf("assets/") === 0)
+      ? '<img src="' + icon + '" alt="" aria-hidden="true">'
+      : icon;
+    var ico = icon ? '<div class="btt-ico">' + iconHtml + '</div>' : "";
     return '<div class="btt-row">'
       + ico
       + '<div class="btt-body">'
@@ -997,7 +1001,7 @@
      ══════════════════════════════════════════════════════════════════════ */
 
   var HUD_RESOURCE_INFO = {
-    hudGold:        { icon: "🪙", name: "복채",     desc: "상점과 보상에서 사용하는 기본 재화입니다." },
+    hudGold:        { icon: "assets/ui/resource_icons/gold.png", name: "복채",     desc: "상점과 보상에서 사용하는 기본 재화입니다." },
     hudMoonShard:   { icon: "🌙", name: "달빛 조각", desc: "희귀 보상 획득에 사용하는 특별 재화입니다." },
     hudRelicCount:  { icon: "🏺", name: "법구",     desc: "전투와 탐험에 도움을 주는 보유 유물입니다." },
     hudPotionCount: { icon: "🧪", name: "약병",     desc: "전투 중 사용할 수 있는 소모품입니다." }
