@@ -273,7 +273,12 @@ function hydrateRelicData(relic){
   const master = getRelicMasterData(relic.id);
   if(!master) return relic;
   // 상점/저장/이전 세이브에서 id·name·desc만 남은 법구도 실제 효과가 발동되도록 원본 DB 데이터를 병합합니다.
-  return { ...master, ...relic, fx: Array.isArray(relic.fx) ? relic.fx : master.fx };
+  return {
+    ...master,
+    ...relic,
+    iconImage: relic.iconImage || master.iconImage || "",
+    fx: Array.isArray(relic.fx) ? relic.fx : master.fx
+  };
 }
 
 function applyRelicTrigger(trigger, context={}){
@@ -1234,12 +1239,19 @@ function createBattleVictoryBaseRewards(){
   const gold = getBattleVictoryGoldAmount();
   const rewards = [];
   if(!S || !S.battleSuppressGoldReward){
-    rewards.push({ id:"gold", name:"복채", icon:"복", value:"+" + gold, amount:gold, doneText:"수령 완료" });
+    rewards.push({ id:"gold", name:"복채", icon:"assets/ui/resource_icons/gold.png", value:"+" + gold, amount:gold, doneText:"수령 완료" });
   }
   if(!S || !S.battleSuppressCardReward){
     rewards.push({ id:"card", name:"의식 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" });
   }
   return rewards;
+}
+
+function resourceIconHtml(icon){
+  if(typeof icon === "string" && icon.indexOf("assets/") === 0){
+    return '<img src="' + icon + '" alt="" aria-hidden="true">';
+  }
+  return icon || "";
 }
 const BATTLE_VICTORY_POTION_CANDIDATES = (typeof window.POTION_DB !== "undefined") ? window.POTION_DB : [
   { id:"cheongsim_pill", name:"청심환", icon:"藥", emoji:"💊", desc:"정신력을 18 회복합니다.", type:"heal", effect:"healPlayerHp", value:18, target:"player" },
@@ -1384,7 +1396,8 @@ function buildBattleVictoryOptionalReward(type, chance){
     const relic = pickBattleVictoryCandidate(relicCandidates);
     if(!relic) return null;
     return {
-      id:"relic", itemId:relic.id, name:relic.name, icon:relic.emoji || "具",
+      id:"relic", itemId:relic.id, name:relic.name, icon:relic.iconImage || relic.emoji || "具",
+      iconImage:relic.iconImage || "",
       value:relic.name, doneText:"선택 완료", desc:relic.desc || "임시 법구 보상입니다."
     };
   }
@@ -1428,7 +1441,7 @@ function renderBattleVictoryRewardSlots(host){
     const done = !!rewardState.done[item.id];
     const doneText = rewardState.doneText[item.id] || item.doneText;
     return '<button type="button" class="victory-reward-slot' + (done ? ' done' : '') + '" data-reward-id="' + item.id + '">' +
-      '<div class="victory-reward-icon">' + item.icon + '</div>' +
+      '<div class="victory-reward-icon">' + resourceIconHtml(item.icon) + '</div>' +
       '<div class="victory-reward-name">' + item.name + '</div>' +
       '<div class="victory-reward-state">' + (done ? doneText : item.value) + '</div>' +
       '<div class="victory-reward-check">✓</div>' +
@@ -1610,7 +1623,7 @@ function finishBattleVictoryOptionalReward(id, host, doneText){
       doneText = "선택 완료";
     } else if(relicId){
       const relic = (typeof RELIC_DB !== "undefined" ? RELIC_DB : []).find(item => item && item.id === relicId) || {
-        id: relicId, name: reward.name, emoji: reward.icon, desc: reward.desc
+        id: relicId, name: reward.name, emoji: reward.icon, iconImage: reward.iconImage, desc: reward.desc
       };
       S.relics.push({ ...relic });
       renderHud();
@@ -1720,6 +1733,7 @@ function openCardRewardPick(options = {}){
     };
 
     const ov = ensureRewardOverlay();
+    ov.classList.add("blessing-card-reward");
     const title = ov.querySelector(".reward-panel h2");
     const desc = ov.querySelector(".reward-panel p");
     const skip = ov.querySelector(".reward-skip");
@@ -1741,6 +1755,7 @@ function resolveCardRewardPick(key){
   }
   cardRewardPickMode = null;
   const ov = ensureRewardOverlay();
+  ov.classList.remove("blessing-card-reward");
   const title = ov.querySelector(".reward-panel h2");
   const desc = ov.querySelector(".reward-panel p");
   const skip = ov.querySelector(".reward-skip");
@@ -1764,7 +1779,7 @@ function rewardCardHtml(key){
 
 function closeRewardOverlay(){
   const ov = document.querySelector("#cardRewardOverlay");
-  if(ov) ov.classList.remove("show");
+  if(ov) ov.classList.remove("show", "blessing-card-reward");
   const victoryOv = document.querySelector("#battleVictoryOverlay");
   if(victoryOv) victoryOv.classList.remove("show");
 }
@@ -2056,6 +2071,8 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
     slot.className   = "side-item-slot "+(filled ? "filled" : "empty");
     if(isPotionSlots && !filled){
       slot.innerHTML = '<span class="side-empty-potion-icon" aria-hidden="true"></span>';
+    } else if(filled && item && item.iconImage){
+      slot.innerHTML = '<img class="side-item-icon" src="' + escapeHtml(item.iconImage) + '" alt="" aria-hidden="true">';
     } else {
       slot.textContent = filled && item && item.emoji ? item.emoji : fallbackIcon;
     }
@@ -2664,6 +2681,10 @@ function injectRewardStyles(){
     #cardRewardOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.58);backdrop-filter:blur(.5cqh);}
     #cardRewardOverlay.show{display:grid;}
     .reward-panel{width:min(70cqw,90cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.94);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;}
+    #cardRewardOverlay.blessing-card-reward .reward-panel{width:min(74cqw,98cqh);box-sizing:border-box;padding:5.6cqh 5.2cqw 5cqh;border:0;border-radius:0;background:transparent url("assets/ui_panels/codex_popup_frame.png") center/100% 100% no-repeat;box-shadow:none;}
+    #cardRewardOverlay.blessing-card-reward .reward-panel h2{color:#3e2912;text-shadow:0 .08cqh 0 rgba(255,255,255,.85);}
+    #cardRewardOverlay.blessing-card-reward .reward-panel p{color:#5c3c10;font-weight:800;text-shadow:0 .06cqh 0 rgba(255,255,255,.75);}
+    #cardRewardOverlay.blessing-card-reward .reward-cards{margin-bottom:0;}
     .reward-panel h2{font-size:3.2cqh;margin-bottom:.8cqh;color:var(--c-ink);}
     .reward-panel p{font-size:1.7cqh;color:var(--c-ink-soft);margin-bottom:2cqh;}
     .reward-cards{display:flex;justify-content:center;align-items:stretch;gap:1.4cqw;margin-bottom:1.6cqh;}
@@ -2698,6 +2719,8 @@ function injectRewardStyles(){
     .victory-reward-check{position:absolute;top:.6cqh;right:.6cqw;width:2.3cqh;height:2.3cqh;border-radius:50%;display:none;place-items:center;background:#5d9f78;color:#fff;font-size:1.5cqh;font-weight:900;}
     .victory-reward-slot.done .victory-reward-check{display:grid;}
     .victory-reward-icon{width:4.8cqh;height:4.8cqh;border-radius:1cqh;display:grid;place-items:center;background:#fff;border:.18cqh solid var(--c-panel-line);font-size:2.3cqh;font-weight:900;color:var(--c-blue-deep);}
+    .victory-reward-icon img{width:100%;height:100%;object-fit:contain;display:block;}
+    .victory-reward-icon img{width:3.6cqh;height:3.6cqh;object-fit:contain;display:block;}
     .victory-reward-name{font-size:1.55cqh;font-weight:900;white-space:nowrap;}
     .victory-reward-state{min-height:1.6cqh;font-size:1.15cqh;font-weight:800;color:var(--c-ink-soft);}
     .victory-enemy-name{min-height:2.4cqh;font-size:1.85cqh;font-weight:900;color:var(--c-ink);margin-bottom:1cqh;}

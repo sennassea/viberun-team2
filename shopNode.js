@@ -200,9 +200,11 @@ function buildPotionStock() {
 }
 
 function buildRelicStock() {
-  const db = typeof window.getRelicCandidatesBySource === "function"
+  let db = typeof window.getRelicCandidatesBySource === "function"
     ? window.getRelicCandidatesBySource("shop")
     : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+
+  if (!db.length) db = getShopRelicMasterCandidates();
 
   return pickShopItems(db, SHOP_RELIC_STOCK_COUNT).map((r) => ({
     ...r,
@@ -210,6 +212,31 @@ function buildRelicStock() {
     price: r.shopPrice || r.price || SHOP_RELIC_PRICE[r.rarity] || 100,
     soldOut: false,
   }));
+}
+
+function getShopRelicMasterCandidates() {
+  const masterDb = Array.isArray(window.RELIC_MASTER_DB)
+    ? window.RELIC_MASTER_DB
+    : (typeof RELIC_MASTER_DB !== "undefined" ? RELIC_MASTER_DB : []);
+
+  return masterDb
+    .filter((item) => {
+      if (!item) return false;
+      if (item.category === "blessingRelic" || item.source === "startBlessing") return false;
+      if (Array.isArray(item.obtainFrom) && item.obtainFrom.includes("shop")) return true;
+      return Array.isArray(item.obtainFromProposal) && item.obtainFromProposal.includes("상점");
+    })
+    .map((item) => {
+      if (typeof normalizeRelicForRuntime === "function") return normalizeRelicForRuntime(item);
+      return {
+        ...item,
+        attr: item.attr || item.deck || "범용",
+        price: item.shopPrice || item.price || 0,
+        desc: item.desc || item.effectText || item.valueText || "",
+        fx: Array.isArray(item.fx) ? item.fx : [],
+        masterData: item
+      };
+    });
 }
 
 /* ── 탭 전환 / 상품 선택 ──────────────────────────────────────────────────── */
@@ -480,7 +507,7 @@ function shopProductCardHtml(item) {
   return (
     '<button type="button" class="shop-product' + (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + item.id + '">' +
       '<div class="shop-product-name">' + escapeShopHtml(item.name) + '</div>' +
-      '<div class="shop-product-art">' + escapeShopHtml(item.emoji || "") + '</div>' +
+      '<div class="shop-product-art">' + shopItemArtHtml(item) + '</div>' +
       '<div class="shop-product-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
       '<div class="shop-product-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
       '<div class="shop-product-price">' + (item.soldOut ? "품절" : shopGoldCostHtml(item.price)) + '</div>' +
@@ -523,7 +550,7 @@ function renderShopDetail() {
     )
     : (
       '<div class="shop-detail-name">' + escapeShopHtml(item.name) + '</div>' +
-      '<div class="shop-detail-art">' + escapeShopHtml(item.emoji || "") + '</div>' +
+      '<div class="shop-detail-art">' + shopItemArtHtml(item) + '</div>' +
       '<div class="shop-detail-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
       '<div class="shop-detail-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
       '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(item.price)) + '</div>' +
@@ -542,6 +569,13 @@ function renderShopFooter() {
 
 function shopGoldCostHtml(value) {
   return '<span class="shop-price-icon hud-resource-icon hud-resource-icon-gold" aria-hidden="true"></span><span>' + escapeShopHtml(value) + '</span>';
+}
+
+function shopItemArtHtml(item) {
+  if (item && item.iconImage) {
+    return '<img src="' + escapeShopHtml(item.iconImage) + '" alt="" aria-hidden="true">';
+  }
+  return escapeShopHtml((item && item.emoji) || "");
 }
 
 function escapeShopHtml(str) {
@@ -637,6 +671,7 @@ function ensureShopStyles() {
     ".shop-product-name{font-size:1.35cqh;font-weight:900;text-align:center;}" +
     ".shop-product-art{width:100%;flex:1;min-height:8cqh;display:grid;place-items:center;font-size:4.4cqh;" +
       "background:linear-gradient(160deg,#fff8e6,#f0dcb0);border-radius:1cqh;border:.14cqh solid #d9bd85;}" +
+    ".shop-product-art img,.shop-detail-art img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.2));}" +
     ".shop-product-type{font-size:1.05cqh;font-weight:800;color:#fff;padding:.15cqh .8cqw;border-radius:.7cqh;background:#8a6b3d;}" +
     ".shop-product-desc{font-size:1.05cqh;font-weight:700;color:#6b4a20;text-align:center;line-height:1.3;min-height:3.2cqh;}" +
     ".shop-product-price{font-size:1.3cqh;font-weight:900;color:#a97a1f;}" +

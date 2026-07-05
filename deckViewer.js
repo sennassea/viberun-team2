@@ -355,6 +355,7 @@
       ".deck-viewer-pick-confirm{min-width:11cqw;height:4.6cqh;border-radius:1cqh;border:.22cqh solid var(--c-gold);background:linear-gradient(180deg,#fff8d9,#ffe59a);color:#7a5510;font:inherit;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".deck-viewer-pick-confirm:disabled{filter:grayscale(.6);opacity:.55;cursor:not-allowed;}" +
       ".deck-viewer-close,.card-detail-close{background:transparent url(\"assets/ui_buttons/close.png\") center/100% 100% no-repeat;border:0;border-radius:0;color:transparent;font-size:0;box-shadow:none;}" +
+      ".deck-viewer:not(.codex-mode):not(.pick-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
       ".deck-viewer.codex-mode{z-index:240;}" +
       ".deck-viewer.codex-mode:not(.codex-home-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
       ".deck-viewer.codex-home-mode .deck-viewer-panel{width:min(64cqw,92cqh);aspect-ratio:2.12;max-height:49cqh;background:transparent url(\"assets/ui_panels/codex_popup_frame.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.4cqh 2.8cqh rgba(0,0,0,.22);padding:3.6cqh 3.6cqw 3.2cqh;}" +
@@ -373,6 +374,8 @@
       ".deck-viewer-filter.disabled{opacity:.45;pointer-events:none;}" +
       ".codex-item-card .cost,.codex-item-card .type{display:none;}" +
       ".codex-item-card .art{height:16cqh;font-size:8cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);}" +
+      ".codex-item-card .art img{width:80%;height:80%;object-fit:contain;display:block;}" +
+      ".codex-item-card .art img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.18));}" +
       ".deck-viewer.codex-mode .deck-viewer-card .deck-viewer-count{display:none;}" +
       ".deck-viewer-card.codex-locked{aspect-ratio:2/3;min-height:25cqh;padding:0;border:0;background:transparent;box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18);overflow:hidden;cursor:default;}" +
       ".deck-viewer-card.codex-locked:hover,.deck-viewer-card.codex-locked:focus-visible{transform:none;box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18);}" +
@@ -392,6 +395,7 @@
       ".card-detail-card .cname{font-size:2.35cqh;font-weight:900;margin-top:.3cqh;padding:0 2cqh;text-align:center;}" +
       ".card-detail-card .art{width:100%;height:16cqh;margin:1cqh 0;border-radius:1.2cqh;display:grid;place-items:center;font-size:9cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.18cqh solid #d6e6f5;overflow:hidden;}" +
       ".card-detail-card .art img{width:100%;height:100%;object-fit:cover;display:block;}" +
+      ".card-detail-card.codex-item-card .art img{object-fit:contain;filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.18));}" +
       ".card-detail-card .type{font-size:1.55cqh;font-weight:800;color:#fff;padding:.15cqh .9cqw;border-radius:.8cqh;margin-bottom:.8cqh;}" +
       ".card-detail-card .desc{font-size:1.7cqh;text-align:center;color:var(--c-ink);line-height:1.35;white-space:pre-line;}" +
       ".deck-viewer-card.card-frame-card,.card-detail-card.card-frame-card{aspect-ratio:2/3;padding:0;border:0;overflow:hidden;background:#f5efe4;}" +
@@ -494,9 +498,10 @@
         els.pickConfirm.disabled = true;
       }
       if(els.pickCost){
-        if(pickMode.costText){
+        if(pickMode.costText || pickMode.costHtml){
           els.pickCost.hidden = false;
-          els.pickCost.textContent = pickMode.costText;
+          if(pickMode.costHtml) els.pickCost.innerHTML = pickMode.costHtml;
+          else els.pickCost.textContent = pickMode.costText;
           els.pickCost.classList.toggle("insufficient", !!(pickMode.getConfirmDisabled && pickMode.getConfirmDisabled(null)));
         } else {
           els.pickCost.hidden = true;
@@ -924,7 +929,7 @@
       return '<button type="button" class="deck-viewer-card codex-item-card" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="1">' +
         '<div class="deck-viewer-count">x1</div>' +
         '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
-        '<div class="art">' + escapeHtml(item.emoji || "?") + '</div>' +
+        '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
         '<div class="desc">' + escapeHtml(item.desc || "") + '</div>' +
       '</button>';
     }
@@ -948,7 +953,7 @@
         '<div class="card-detail-front">' +
           '<div class="card-detail-card codex-item-card">' +
             '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
-            '<div class="art">' + escapeHtml(item.emoji || "?") + '</div>' +
+            '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
             '<div class="desc">' + escapeHtml(item.desc || "") + '</div>' +
           '</div>' +
         '</div>' +
@@ -1123,6 +1128,13 @@
       return '<img src="' + escapeAttr(card.art) + '" alt="' + escapeAttr(card.name || "") + '">';
     }
     return escapeHtml(card && card.emoji ? card.emoji : "?");
+  }
+
+  function itemIconHtml(icon){
+    if(typeof icon === "string" && icon.indexOf("assets/") === 0){
+      return '<img src="' + escapeAttr(icon) + '" alt="" aria-hidden="true">';
+    }
+    return escapeHtml(icon || "?");
   }
 
   function cardFramePath(card){

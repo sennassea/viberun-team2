@@ -36,6 +36,13 @@
     ));
   }
 
+  function bagItemIconHtml(icon) {
+    if (typeof icon === "string" && icon.indexOf("assets/") === 0) {
+      return '<img src="' + escapeHtml(icon) + '" alt="" aria-hidden="true">';
+    }
+    return escapeHtml(icon || "");
+  }
+
   /* ── 스타일 주입 ────────────────────────────────────────────────────── */
   function ensureStyles() {
     if (document.getElementById("bagUIStyles")) return;
@@ -48,16 +55,16 @@
         "background:rgba(30,20,10,.45);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s ease;}" +
       ".bag-ui-overlay.show{display:grid;opacity:1;}" +
       ".bag-ui-overlay.map-mode{top:0;z-index:300!important;}" +
-      ".bag-ui-panel{position:relative;width:min(84cqw,106cqh);max-height:78cqh;display:flex;flex-direction:column;gap:1.3cqh;padding:1.8cqh 2cqw;" +
-        "background:radial-gradient(ellipse at 30% 15%,var(--bg-cream) 0%,var(--bg-beige) 62%,var(--bg-beige-deep) 100%);" +
-        "border:0.3cqh solid var(--bg-gold);border-radius:1.6cqh;box-shadow:0 2cqh 4cqh rgba(30,20,10,.5),inset 0 0 3cqh rgba(255,250,230,.5);color:var(--bg-ink);}" +
+      ".bag-ui-panel{position:relative;width:min(84cqw,106cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;display:flex;flex-direction:column;gap:1.3cqh;padding:2.5cqh 2.4cqw 2.8cqh;" +
+        "background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;" +
+        "border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.22);color:var(--bg-ink);}" +
       ".bag-ui-head{flex:none;display:flex;align-items:center;justify-content:center;position:relative;}" +
       ".bag-ui-title{font-size:2.6cqh;font-weight:900;}" +
-      ".bag-ui-close{position:absolute;right:0;top:50%;transform:translateY(-50%);width:4cqh;height:4cqh;border-radius:50%;" +
-        "border:0.18cqh solid var(--bg-beige-deep);background:#fff;color:var(--bg-ink);font-size:2.2cqh;font-weight:900;cursor:pointer;line-height:1;}" +
+      ".bag-ui-close{position:absolute;right:.3cqw;top:50%;transform:translateY(-50%);width:4cqh;height:4cqh;" +
+        "border:0;border-radius:0;background:transparent url(\"assets/ui_buttons/close.png\") center/100% 100% no-repeat;color:transparent;font-size:0;font-weight:900;cursor:pointer;line-height:1;}" +
       ".bag-ui-body{flex:1;min-height:0;display:grid;grid-template-columns:1.6fr 1fr;gap:1.4cqw;}" +
-      ".bag-ui-col{min-height:0;display:flex;flex-direction:column;gap:.8cqh;background:rgba(255,255,255,.5);" +
-        "border:0.16cqh solid var(--bg-beige-deep);border-radius:1.2cqh;padding:1.2cqh 1cqw;}" +
+      ".bag-ui-col{min-height:0;display:flex;flex-direction:column;gap:.8cqh;background:rgba(255,255,255,.36);" +
+        "border:0.14cqh solid rgba(178,140,80,.36);border-radius:1cqh;padding:1.2cqh 1cqw;}" +
       ".bag-ui-col-title{font-size:1.7cqh;font-weight:900;}" +
       ".bag-relic-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:.8cqh;min-height:0;}" +
       ".bag-relic-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;" +
@@ -67,12 +74,13 @@
       ".bag-relic-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
       ".bag-relic-card.empty:hover{border-color:var(--bg-beige-deep);}" +
       ".bag-relic-icon{font-size:3cqh;line-height:1;}" +
+      ".bag-relic-icon img,.bag-potion-icon img,.bag-detail-name img{width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.22em;}" +
       ".bag-relic-name{font-size:1.15cqh;font-weight:800;text-align:center;}" +
       ".bag-empty-msg{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--bg-ink-soft);font-size:1.4cqh;font-weight:700;}" +
       ".bag-page-nav{flex:none;display:flex;align-items:center;justify-content:center;gap:.8cqw;font-size:1.3cqh;font-weight:800;}" +
-      ".bag-page-nav button{width:3cqh;height:3cqh;border-radius:50%;border:0.16cqh solid var(--bg-beige-deep);background:#fff;cursor:pointer;font-weight:900;}" +
-      ".bag-page-nav button:disabled{opacity:.4;cursor:default;}" +
-      ".bag-detail{flex:none;min-height:6.4cqh;background:rgba(255,255,255,.65);border:0.16cqh solid var(--bg-beige-deep);" +
+      ".bag-page-nav button{width:3.4cqh;height:3.4cqh;border:0;border-radius:0;background:transparent url(\"assets/ui/event_choice_panel.png\") center/100% 100% no-repeat;cursor:pointer;font-weight:900;color:#6b4a20;filter:drop-shadow(0 .18cqh .28cqh rgba(90,65,25,.16));}" +
+      ".bag-page-nav button:disabled{opacity:.4;cursor:default;filter:grayscale(.4);}" +
+      ".bag-detail{flex:none;min-height:6.4cqh;background:rgba(255,255,255,.48);border:0.14cqh solid rgba(178,140,80,.36);" +
         "border-radius:1cqh;padding:.8cqh 1cqw;display:flex;flex-direction:column;gap:.3cqh;}" +
       ".bag-detail-name{font-size:1.5cqh;font-weight:900;}" +
       ".bag-detail-desc{font-size:1.25cqh;color:var(--bg-ink-soft);font-weight:700;white-space:pre-line;line-height:1.4;}" +
@@ -174,7 +182,7 @@
       const idx = start + i;
       html +=
         '<button type="button" class="bag-relic-card' + (idx === selectedRelicIdx ? " selected" : "") + '" data-relic-idx="' + idx + '">' +
-          '<div class="bag-relic-icon">' + escapeHtml(relic.emoji || "🏺") + '</div>' +
+          '<div class="bag-relic-icon">' + bagItemIconHtml(relic.emoji || "🏺") + '</div>' +
           '<div class="bag-relic-name">' + escapeHtml(relic.name || "") + '</div>' +
         '</button>';
     }
@@ -198,7 +206,7 @@
     if (selectedRelicIdx !== null && relics[selectedRelicIdx]) {
       const relic = relics[selectedRelicIdx];
       els.relicDetail.innerHTML =
-        '<div class="bag-detail-name">' + escapeHtml(relic.emoji || "🏺") + ' ' + escapeHtml(relic.name || "") + '</div>' +
+        '<div class="bag-detail-name">' + bagItemIconHtml(relic.emoji || "🏺") + ' ' + escapeHtml(relic.name || "") + '</div>' +
         '<div class="bag-detail-desc">' + escapeHtml(relic.desc || relic.effectText || relic.valueText || "") + '</div>';
     } else {
       els.relicDetail.innerHTML = '<div class="bag-detail-placeholder">법구를 선택하면 효과를 확인할 수 있어요.</div>';
@@ -219,7 +227,7 @@
       html +=
         '<button type="button" class="bag-potion-card' + (i === selectedPotionIdx ? " selected" : "") + '" data-potion-idx="' + i + '">' +
           '<span class="bag-potion-num">' + (i + 1) + '</span>' +
-          '<div class="bag-potion-icon">' + escapeHtml(potion.emoji || "🧪") + '</div>' +
+          '<div class="bag-potion-icon">' + bagItemIconHtml(potion.emoji || "🧪") + '</div>' +
           '<div class="bag-potion-name">' + escapeHtml(potion.name || "") + '</div>' +
         '</button>';
     }
@@ -234,7 +242,7 @@
     if (selectedPotionIdx !== null && potions[selectedPotionIdx]) {
       const potion = potions[selectedPotionIdx];
       els.potionDetail.innerHTML =
-        '<div class="bag-detail-name">' + escapeHtml(potion.emoji || "🧪") + ' ' + escapeHtml(potion.name || "") + '</div>' +
+        '<div class="bag-detail-name">' + bagItemIconHtml(potion.emoji || "🧪") + ' ' + escapeHtml(potion.name || "") + '</div>' +
         '<div class="bag-detail-desc">' + escapeHtml(potion.desc || potion.effectText || potion.valueText || "") + '</div>';
     } else {
       els.potionDetail.innerHTML = '<div class="bag-detail-placeholder">약병을 선택하면 효과를 확인할 수 있어요.</div>';

@@ -18,6 +18,7 @@
 const RR_DATA = window.BOHYUN_RUN_RESULT_DATA || {};
 const RR_ENDING = RR_DATA.ending || {};
 const RR_DEFEAT = RR_DATA.defeat || {};
+const RR_TUTORIAL_SKIP_DONGJASIN_IMAGE = "assets/characters/dongjasin/dgs_tease_smile.png";
 
 /* ── 동자신 NPC 데이터 ────────────────────────────────────────────────────
    엑셀 v3 지시서 기준으로 동자신은 선택지 안내와 패배 대사만 담당한다. */
@@ -157,8 +158,9 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
-  characterWrap.innerHTML = npc.image
-    ? '<img src="' + npc.image + '" alt="' + (npc.name || "") + '">'
+  const defeatImage = npc.defeatImage || RR_DEFEAT.image || RR_TUTORIAL_SKIP_DONGJASIN_IMAGE;
+  characterWrap.innerHTML = defeatImage
+    ? '<img class="rr-defeat-dongjasin" src="' + defeatImage + '" alt="' + (npc.name || "") + '">'
     : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
@@ -618,6 +620,7 @@ function ensureRrStyles(){
       "display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}" +
     ".rr-character-wrap img{width:100%;height:100%;object-fit:contain;object-position:bottom;" +
       "filter:drop-shadow(0 1.4cqh 2cqh rgba(0,0,0,.55));}" +
+    ".rr-character-wrap img.rr-defeat-dongjasin{width:88%;height:88%;}" +
     ".rr-character-emoji{font-size:17cqh;line-height:1;}" +
     ".rr-dialog-panel{position:absolute;left:40%;right:7%;top:24%;bottom:12%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
