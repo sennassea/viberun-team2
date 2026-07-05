@@ -2440,9 +2440,9 @@ function combatantEl(o){
     ? '<div class="avatar sprite-avatar"><img src="'+o.sprite+'" alt=""></div>'
     : '<div class="avatar">'+(o.emoji || "")+'</div>';
   const statusHtml = renderEnemyStatusIcons(o);
-  // LIFE.renderCombatantStats()의 기존 동요/표식 표시와 새 StatusData 표시가 중복되지 않도록
+  // LIFE.renderCombatantStats()의 기존 동요/표식/균열 표시와 새 StatusData 표시가 중복되지 않도록
   // 전투 계산용 원본 값은 유지하고, 렌더링용 객체에서만 상태값을 숨깁니다.
-  const statsRenderObj = o.hideHud ? o : { ...o, weak:0, mark:0, status:{} };
+  const statsRenderObj = o.hideHud ? o : { ...o, weak:0, mark:0, fracture:0, status:{} };
   const infoHtml = o.hideHud
     ? ""
     : '<div class="combatant-info">'+LIFE.renderCombatantStats(statsRenderObj, { reserveBlockSpace:false })+statusHtml+'</div>';
