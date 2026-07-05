@@ -613,6 +613,27 @@
     hideStatusIconTooltip();
   });
 
+  var nativeTitleTargets = "#sideRelicSlots .side-item-slot,#sidePotionSlots .side-item-slot,#startBlessingOverlay .sb-card";
+
+  function moveNativeTitle(el) {
+    if (!el || !el.getAttribute || !el.hasAttribute("title")) return;
+    if (!el.hasAttribute("data-title")) el.setAttribute("data-title", el.getAttribute("title") || "");
+    el.removeAttribute("title");
+  }
+
+  function suppressNativeTitleTooltip(el) {
+    if (!el) return;
+    moveNativeTitle(el);
+    if (el.querySelectorAll) {
+      Array.prototype.forEach.call(el.querySelectorAll("[title]"), moveNativeTitle);
+    }
+  }
+
+  document.addEventListener("mouseover", function (e) {
+    var titleTarget = e.target.closest(nativeTitleTargets);
+    if (titleTarget) suppressNativeTitleTooltip(titleTarget);
+  }, true);
+
   /* ── 주문 설명에서 용어 추출 후 HTML 빌드 ────────────────────────────── */
   function getItemSlotInfo(slotEl) {
     var host = slotEl && slotEl.closest("#sideRelicSlots,#sidePotionSlots");
@@ -666,13 +687,21 @@
   }
 
   function positionItemSlotTooltip(slotEl) {
+    var info = getItemSlotInfo(slotEl);
     var gRect   = game.getBoundingClientRect();
     var sRect   = slotEl.getBoundingClientRect();
     var tipRect = tooltip.getBoundingClientRect();
     var pad = 8;
 
-    var tx = (sRect.left - gRect.left) + (sRect.width - tipRect.width) * 0.5;
-    var ty = (sRect.bottom - gRect.top) + pad;
+    var tx;
+    var ty;
+    if (info && info.type === "potion") {
+      tx = (sRect.right - gRect.left) + pad;
+      ty = (sRect.top - gRect.top) + (sRect.height - tipRect.height) * 0.5;
+    } else {
+      tx = (sRect.left - gRect.left) + (sRect.width - tipRect.width) * 0.5;
+      ty = (sRect.bottom - gRect.top) + pad;
+    }
 
     tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
     ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
@@ -682,6 +711,7 @@
   }
 
   function showItemSlotTooltip(slotEl) {
+    suppressNativeTitleTooltip(slotEl);
     var html = buildItemSlotHtml(slotEl);
     if (!html) return;
     activeId = null;
