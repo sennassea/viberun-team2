@@ -60,7 +60,7 @@
     },
     defend: {
       icon: "🛡️",
-      name: "강화",
+      name: "보호",
       color: "#3f8fe0",
       desc: function (m) {
         var s = "이 적은 ";
@@ -70,72 +70,62 @@
     },
     debuff: {
       icon: "🌀",
-      name: "약화",
+      name: "동요",
       color: "#8a5cc0",
-      desc: function (m) {
+      desc: function (m, weak, displayedStatusName) {
+        var statusName = getIntentTitleName(m, displayedStatusName) || "동요";
         var s = "이 적은 ";
         if (m.name) s += '"' + m.name + '" / ';
-        return s + "동요 " + m.v + " 를 부여하려고 합니다.";
+        s += statusName + " " + m.v + "을 부여하려고 합니다.";
+        return appendIntentStatusEffects(s, [statusName]);
       }
     }
   };
 
-  var LIFE_TERM_INFO = [
-    {
-      keywords: ["잡념"],
+  var INTENT_STATUS_INFO = {
+    "불안": {
       icon: "💭",
-      name: "잡념",
-      desc: "덱 순환을 방해하는 상태이상 카드입니다."
+      desc: "불안 적용 시 다음 턴 드로우가 1 감소합니다."
     },
-    {
-      keywords: ["망설임"],
-      icon: "⏳",
-      name: "망설임",
-      desc: "손패 자리를 차지하고 턴 종료 시 사라지는 상태이상 카드입니다."
+    "동요": {
+      icon: "🌀",
+      desc: "동요 적용 시 대상의 다음 공격 피해가 25% 감소합니다."
     },
-    {
-      keywords: ["후회"],
-      icon: "💧",
-      name: "후회",
-      desc: "버려질 때 불이익을 주는 상태이상 카드입니다."
-    },
-    {
-      keywords: ["침투 사고"],
-      icon: "💭",
-      name: "침투 사고",
-      desc: "병원 테마의 덱 방해 상태입니다."
-    },
-    {
-      keywords: ["불안"],
-      icon: "💭",
-      name: "불안",
-      desc: "다음 턴 주문 뽑기에 영향을 줍니다."
-    },
-    {
-      keywords: ["무기력"],
+    "무기력": {
       icon: "🌫️",
-      name: "무기력",
-      desc: "다음 턴 정신력에 영향을 줍니다."
+      desc: "무기력 적용 시 다음 턴 신통력이 1 감소합니다."
+    },
+    "균열": {
+      icon: "💔",
+      desc: "균열 적용 시 받는 정화 피해가 25% 증가합니다."
+    },
+    "회상": {
+      icon: "🕯️",
+      desc: "회상 적용 시 턴 종료 때 수치만큼 정화 피해를 받습니다."
+    },
+    "성불 표식": {
+      icon: "🔖",
+      desc: "성불 표식은 일부 카드의 추가 효과에 사용됩니다."
+    },
+    "잡념": {
+      icon: "💭",
+      desc: "덱 순환을 방해하는 사용 불가 카드를 얻습니다."
+    },
+    "망설임": {
+      icon: "⏳",
+      desc: "손패 자리를 차지하고 턴 종료 시 사라지는 사용 불가 카드를 얻습니다."
+    },
+    "후회": {
+      icon: "💧",
+      desc: "버려질 때 정신력 피해를 주는 사용 불가 카드를 얻습니다."
+    },
+    "침투 사고": {
+      icon: "💭",
+      desc: "덱과 손패 흐름을 방해하는 사용 불가 카드를 얻습니다."
     }
-  ];
+  };
 
-  function buildIntentTermRows(intent) {
-    var intentStatusName = getIntentAppliedStatusName(intent);
-    var used = {};
-    return LIFE_TERM_INFO
-      .filter(function (term) {
-        return term.name === intentStatusName;
-      })
-      .filter(function (term) {
-        if (used[term.name]) return false;
-        used[term.name] = true;
-        return true;
-      })
-      .map(function (term) { return makeRow(term.icon, term.name, term.desc); });
-  }
-
-  function getIntentAppliedStatusName(intent) {
-    if (!intent) return "";
+  function normalizeIntentStatusName(value) {
     var statusById = {
       anxiety: "불안",
       intrusive_thought: "잡념",
@@ -150,29 +140,111 @@
       fracture: "균열",
       recollection: "회상"
     };
-    var knownNames = ["불안", "잡념", "망설임", "후회", "침투 사고", "무기력", "동요", "성불 표식", "균열", "회상"];
+    var knownNames = {
+      "불안": "불안",
+      "잡념": "잡념",
+      "망설임": "망설임",
+      "후회": "후회",
+      "침투 사고": "침투 사고",
+      "무기력": "무기력",
+      "동요": "동요",
+      "약화": "동요",
+      "성불 표식": "성불 표식",
+      "균열": "균열",
+      "회상": "회상"
+    };
+    if (!value) return "";
+    if (typeof value === "object") {
+      return normalizeIntentStatusName(value.id || value.key || value.status || value.effect || value.debuff || value.applyStatus);
+    }
+    var text = String(value);
+    return knownNames[text] || statusById[text] || "";
+  }
+
+  function addIntentStatusName(names, used, value) {
+    var statusName = normalizeIntentStatusName(value);
+    if (!statusName || used[statusName]) return;
+    used[statusName] = true;
+    names.push(statusName);
+  }
+
+  function getIntentAppliedStatusNames(intent, displayedStatusName) {
+    if (!intent) return [];
+    var names = [];
+    var used = {};
     if (intent.statusCard && typeof CARD_DB !== "undefined" && CARD_DB[intent.statusCard]) {
       var cardName = CARD_DB[intent.statusCard].name || "";
-      if (knownNames.indexOf(cardName) >= 0) return cardName;
+      addIntentStatusName(names, used, cardName);
     }
-    if (statusById[intent.statusCard]) return statusById[intent.statusCard];
-    var roleName = intent.role === "anxiety" ? "불안"
-      : intent.role === "counter" ? "무기력"
-      : intent.role === "fracture" ? "균열"
-      : "";
-    if (roleName) return roleName;
-    var candidates = [intent.status, intent.effect];
-    for (var i = 0; i < candidates.length; i++) {
-      var text = String(candidates[i] || "");
-      if (knownNames.indexOf(text) >= 0) return text;
-      if (statusById[text]) return statusById[text];
+    addIntentStatusName(names, used, intent.statusCard);
+    ["status", "effect", "debuff", "applyStatus"].forEach(function (field) {
+      var value = intent[field];
+      if (Array.isArray(value)) {
+        value.forEach(function (item) { addIntentStatusName(names, used, item); });
+      } else {
+        addIntentStatusName(names, used, value);
+      }
+    });
+    if (names.length === 0 && intent.t === "debuff") addIntentStatusName(names, used, displayedStatusName);
+    if (names.length === 0 && intent.t === "debuff") {
+      addIntentStatusName(names, used, {
+        anxiety: "anxiety",
+        counter: "lethargy",
+        lethargy: "lethargy",
+        fracture: "fracture",
+        weak: "weak",
+        agitation: "agitation"
+      }[intent.role]);
     }
+    return names;
+  }
+
+  function getIntentAppliedStatusName(intent, displayedStatusName) {
+    var names = getIntentAppliedStatusNames(intent, displayedStatusName);
+    if (names.length > 0) return names[0];
     return "";
   }
 
-  function getIntentTitleName(intent) {
-    if (!intent || intent.t === "attack" || intent.t === "defend" || intent.t === "summon") return "";
-    return getIntentAppliedStatusName(intent);
+  function getIntentTitleName(intent, displayedStatusName) {
+    if (!intent || intent.t !== "debuff") return "";
+    return getIntentAppliedStatusName(intent, displayedStatusName);
+  }
+
+  function getIntentIcon(intent, info, displayedStatusName) {
+    var statusName = getIntentTitleName(intent, displayedStatusName);
+    return (statusName && INTENT_STATUS_INFO[statusName] && INTENT_STATUS_INFO[statusName].icon) || info.icon;
+  }
+
+  function appendIntentStatusEffects(text, statusNames) {
+    var used = {};
+    statusNames.forEach(function (statusName) {
+      var info = INTENT_STATUS_INFO[statusName];
+      if (!info || used[statusName]) return;
+      used[statusName] = true;
+      text += "\n" + info.desc;
+    });
+    return text;
+  }
+
+  function buildIntentStatusRows(statusNames) {
+    var used = {};
+    return statusNames
+      .filter(function (statusName) {
+        if (!INTENT_STATUS_INFO[statusName] || used[statusName]) return false;
+        used[statusName] = true;
+        return true;
+      })
+      .map(function (statusName) {
+        var info = INTENT_STATUS_INFO[statusName];
+        return makeRow(info.icon, statusName, info.desc);
+      });
+  }
+
+  function getDisplayedIntentStatusName(cbEl) {
+    var intentEl = cbEl && cbEl.querySelector(".intent.deb");
+    if (!intentEl) return "";
+    var parts = intentEl.textContent.replace(/\s+/g, " ").trim().split(" ");
+    return normalizeIntentStatusName(parts[parts.length - 1]);
   }
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -341,28 +413,38 @@
   }
 
   /* ── 적 툴팁 내용 ─────────────────────────────────────────────────────── */
-  function buildEnemyHtml(enemy) {
+  function buildEnemyHtml(enemy, cbEl) {
     var rows = [];
+    var intentStatusNames = [];
     if (enemy.intent) {
       var info = INTENT_INFO[enemy.intent.t] || INTENT_INFO.attack;
-      var intentDesc = info.desc(enemy.intent, enemy.weak || 0);
+      var displayedStatusName = getDisplayedIntentStatusName(cbEl);
+      var intentDesc = info.desc(enemy.intent, enemy.weak || 0, displayedStatusName);
+      intentStatusNames = getIntentAppliedStatusNames(enemy.intent, displayedStatusName);
+      if (enemy.intent.t !== "debuff" && enemy.intent.t !== "attack") {
+        intentDesc = appendIntentStatusEffects(intentDesc, intentStatusNames);
+      }
       rows.push(makeRow(
-        info.icon, getIntentTitleName(enemy.intent) || info.name,
+        getIntentIcon(enemy.intent, info, displayedStatusName),
+        getIntentTitleName(enemy.intent, displayedStatusName) || info.name,
         intentDesc,
         info.color
       ));
-      rows = rows.concat(buildIntentTermRows(enemy.intent));
+      if (enemy.intent.t === "attack" && enemy.intent.statusCard && intentStatusNames.length > 0) {
+        rows.push('<hr class="btt-sep">');
+        rows = rows.concat(buildIntentStatusRows(intentStatusNames));
+      }
     }
     var statusRows = [];
-    if ((enemy.weak || 0) > 0) {
+    if ((enemy.weak || 0) > 0 && intentStatusNames.indexOf("동요") < 0) {
       var wk = EFFECT_INFO.weak;
       statusRows.push(makeRow(wk.icon, wk.name, wk.desc(enemy.weak)));
     }
-    if ((enemy.anxiety || 0) > 0) {
+    if ((enemy.anxiety || 0) > 0 && intentStatusNames.indexOf("불안") < 0) {
       var ea = EFFECT_INFO.anxiety;
       statusRows.push(makeRow(ea.icon, ea.name, ea.desc(enemy.anxiety)));
     }
-    if ((enemy.lethargy || 0) > 0) {
+    if ((enemy.lethargy || 0) > 0 && intentStatusNames.indexOf("무기력") < 0) {
       var el = EFFECT_INFO.lethargy;
       statusRows.push(makeRow(el.icon, el.name, el.desc(enemy.lethargy)));
     }
@@ -420,7 +502,7 @@
       var eid = cbEl.dataset.id;
       var enemy = S.enemies.find(function (e) { return e.id === eid; });
       if (!enemy) return;
-      html = buildEnemyHtml(enemy);
+      html = buildEnemyHtml(enemy, cbEl);
     }
 
     cardActiveEl = null;          /* 주문 툴팁 상태 초기화 */
