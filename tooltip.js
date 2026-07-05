@@ -593,6 +593,7 @@
     activeHudEl = null;
     activeProgressEl = null;
     activeMenuEl = null;
+    activeDockEl = null;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
     positionCombatantTooltip(cbEl, isPlayer);
@@ -647,6 +648,7 @@
   var activeHudEl = null;
   var activeProgressEl = null;
   var activeMenuEl = null;
+  var activeDockEl = null;
 
   function buildStatusIconHtml(statusEl) {
     var type = statusEl.dataset.status;
@@ -682,6 +684,7 @@
     activeHudEl = null;
     activeProgressEl = null;
     activeMenuEl = null;
+    activeDockEl = null;
     activeStatusEl = statusEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -768,6 +771,7 @@
     activeHudEl = null;
     activeProgressEl = null;
     activeMenuEl = null;
+    activeDockEl = null;
     activeEnergyEl = energyEl;
     tooltip.innerHTML = buildEnergyHtml();
     tooltip.classList.add("tt-show");
@@ -880,6 +884,7 @@
     activeHudEl = null;
     activeProgressEl = null;
     activeMenuEl = null;
+    activeDockEl = null;
     activeItemSlotEl = slotEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -961,6 +966,7 @@
     activeHudEl = null;
     activeProgressEl = null;
     activeMenuEl = null;
+    activeDockEl = null;
     cardActiveEl = cardEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -1071,6 +1077,7 @@
     activeEnergyEl = null;
     activeProgressEl = null;
     activeMenuEl = null;
+    activeDockEl = null;
     activeHudEl = anchorEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -1204,6 +1211,7 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeMenuEl = null;
+    activeDockEl = null;
     activeProgressEl = progressEl;
     tooltip.innerHTML = buildProgressHtml(progressEl);
     tooltip.classList.add("tt-show");
@@ -1285,6 +1293,7 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeDockEl = null;
     activeMenuEl = anchorEl;
     tooltip.innerHTML = makeRow("", info.name, info.desc);
     tooltip.classList.add("tt-show");
@@ -1309,6 +1318,79 @@
     var to = e.relatedTarget;
     if (to && activeMenuEl.contains && activeMenuEl.contains(to)) return;
     hideTopMenuTooltip();
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     IX. 우측 하단 전투 아이콘(턴 종료/손패/버린 카드) 툴팁
+     ══════════════════════════════════════════════════════════════════════ */
+
+  var DOCK_ICON_INFO = [
+    { sel: "#endTurn",     name: "턴 종료",   desc: "현재 턴을 종료하고 적의 행동을 진행합니다." },
+    { sel: "#deckPile",    name: "손패",     desc: "현재 손에 들고 있는 카드를 확인합니다." },
+    { sel: "#discardPile", name: "버린 카드", desc: "이번 전투에서 사용했거나 버려진 카드를 확인합니다." }
+  ];
+
+  function findDockIcon(target) {
+    if (!target || !target.closest) return null;
+    for (var i = 0; i < DOCK_ICON_INFO.length; i++) {
+      var item = DOCK_ICON_INFO[i];
+      var el = target.closest(item.sel);
+      if (el) return { el: el, info: item };
+    }
+    return null;
+  }
+
+  function positionDockTooltip(anchorEl) {
+    var gRect   = game.getBoundingClientRect();
+    var aRect   = anchorEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+    var gap = 10;
+
+    var tx = (aRect.left - gRect.left) + (aRect.width - tipRect.width) * 0.5;
+    var ty = (aRect.top - gRect.top) - tipRect.height - gap;
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showDockTooltip(anchorEl, info) {
+    if (!anchorEl || !info) return;
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
+    activeHudEl = null;
+    activeProgressEl = null;
+    activeMenuEl = null;
+    activeDockEl = anchorEl;
+    tooltip.innerHTML = makeRow("", info.name, info.desc);
+    tooltip.classList.add("tt-show");
+    positionDockTooltip(anchorEl);
+  }
+
+  function hideDockTooltip() {
+    activeDockEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var found = findDockIcon(e.target);
+    if (!found || found.el === activeDockEl) return;
+    showDockTooltip(found.el, found.info);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeDockEl) return;
+    var found = findDockIcon(e.target);
+    if (!found || found.el !== activeDockEl) return;
+    var to = e.relatedTarget;
+    if (to && activeDockEl.contains && activeDockEl.contains(to)) return;
+    hideDockTooltip();
   });
 
 })();
