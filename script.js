@@ -2390,7 +2390,7 @@ function combatantEl(o){
   const statsRenderObj = o.hideHud ? o : { ...o, weak:0, mark:0, status:{} };
   const infoHtml = o.hideHud
     ? ""
-    : '<div class="combatant-info"><div class="name">'+o.name+'</div>'+LIFE.renderCombatantStats(statsRenderObj, { reserveBlockSpace:false })+statusHtml+'</div>';
+    : '<div class="combatant-info">'+LIFE.renderCombatantStats(statsRenderObj, { reserveBlockSpace:false })+statusHtml+'</div>';
   el.innerHTML = intentHtml + avatarHtml + infoHtml + '<div class="hit"></div>';
   return el;
 }
