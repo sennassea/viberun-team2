@@ -49,7 +49,12 @@
         var s = "이 적은 ";
         if (m.name) s += '"' + m.name + '" / ';
         s += "스트레스 " + m.v + " 의 피해로 공격하려고 합니다.";
-        if (weak > 0) s += "\n※ 동요 중 — 피해가 감소합니다.";
+        if (weak > 0 && typeof m.v === "number") {
+          var actualDamage = Math.floor(m.v * 0.75);
+          var reducedDamage = m.v - actualDamage;
+          s += "\n※ 동요 중 — 피해가 " + reducedDamage + " 감소합니다.";
+          s += "\n실제 피해: " + actualDamage;
+        }
         return s;
       }
     },
@@ -463,7 +468,7 @@
     /* 드래그 중에는 주문 용어 툴팁을 표시하지 않음 */
     if (typeof dragState !== "undefined" && dragState !== null) return;
 
-    var descEl = cardEl.querySelector(".desc");
+    var descEl = cardEl.querySelector(".desc, .card-desc-text");
     if (!descEl) return;
 
     var html = buildCardTermHtml(descEl.textContent.trim());
