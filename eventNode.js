@@ -42,6 +42,7 @@ function openEventNode(eventId){
     return;
   }
   ensureEventOverlay();
+  applyEventBackground(ev);
   hideEventChrome();
   eventState = {
     event: ev, step: "choices", locked: false, resultDetails: [],
@@ -62,6 +63,16 @@ function getEventAutoChoice(ev){
   if(!ev || ev.type !== "combat") return null;
   const choices = Array.isArray(ev.choices) ? ev.choices : [];
   return choices.find(choice => choice && choice.id === "AUTO") || null;
+}
+
+function applyEventBackground(ev){
+  if(!eventOverlayEl) return;
+  const image = ev && typeof ev.backgroundImage === "string" ? ev.backgroundImage : "";
+  if(!image){
+    eventOverlayEl.style.removeProperty("--event-bg-image");
+    return;
+  }
+  eventOverlayEl.style.setProperty("--event-bg-image", 'url("' + image.replace(/"/g, '\\"') + '")');
 }
 
 function closeEventOverlayOnly(){
