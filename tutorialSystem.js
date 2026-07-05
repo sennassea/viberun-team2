@@ -87,7 +87,6 @@
     popup.className = "tutorial-guide-popup";
     popup.innerHTML = `
       <div class="tutorial-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialGuideTitle">
-        <button type="button" class="tutorial-guide-close" aria-label="튜토리얼 안내 닫기" data-tutorial-close>&times;</button>
         <div class="tutorial-guide-main" data-tutorial-guide-main>
           <h2 id="tutorialGuideTitle">${titleText}</h2>
           <p>${bodySpeaker}${bodyText}</p>
@@ -129,9 +128,6 @@
       markTutorialSkipped();
       closeTutorialGuidePopup();
       if(typeof updateStartScreenMode === "function") updateStartScreenMode();
-    });
-    popup.querySelector("[data-tutorial-close]").addEventListener("click", () => {
-      closeTutorialGuidePopup();
     });
 
     document.body.appendChild(popup);
