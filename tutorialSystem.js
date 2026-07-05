@@ -162,12 +162,12 @@
       .tutorial-guide-dialog{
         position:relative;
         width:min(520px, 100%);
-        border:2px solid rgba(255, 255, 255, .85);
-        border-radius:8px;
-        background:#f4f8fc;
+        border:0;
+        border-radius:0;
+        background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
         color:#243247;
-        box-shadow:0 18px 38px rgba(0, 0, 0, .22);
-        padding:28px;
+        box-shadow:none;
+        padding:46px 48px;
       }
       .tutorial-guide-dongjasin{
         display:block;
@@ -532,12 +532,12 @@
       .tutorial-complete-popup.show{display:flex;}
       .tutorial-complete-dialog{
         width:min(480px, 100%);
-        border:2px solid rgba(255, 255, 255, .85);
-        border-radius:8px;
-        background:#f4f8fc;
+        border:0;
+        border-radius:0;
+        background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
         color:#243247;
-        box-shadow:0 18px 38px rgba(0, 0, 0, .22);
-        padding:28px;
+        box-shadow:none;
+        padding:46px 48px;
         text-align:center;
       }
       .tutorial-complete-dialog h2{

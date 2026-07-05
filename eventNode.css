@@ -50,7 +50,9 @@
   color:#fff; font-size:1.15cqh; font-weight:900; line-height:1; text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}
 .event-resource-row{ display:flex; align-items:center; gap:.65cqw; font-size:1.45cqh; font-weight:900;
   transform:translateX(2cqw); width:calc(100% - 2cqw); }
-.event-resource{ display:inline-flex; align-items:center; gap:.22cqw; }
+.event-resource{ display:inline-flex; align-items:center; gap:.22cqw; color:var(--c-ink); font-size:1.45cqh; }
+.event-resource b{display:inline; color:var(--c-ink); font-size:1.45cqh;}
+.event-resource .hud-resource-icon{width:2.15cqh; height:2.15cqh; flex:none; display:inline-block; font-size:0; line-height:1; background:center/contain no-repeat;}
 
 .event-stage-info{
   position:absolute; left:50%; top:0; transform:translateX(-50%); width:32cqw; height:100%;
@@ -85,9 +87,9 @@
 .event-body{ flex:1; min-height:0; max-height:100%; display:flex; align-items:stretch; justify-content:center; }
 .event-panel{
   flex:1; min-width:0; min-height:0; max-height:100%; display:flex; flex-direction:column; gap:.9cqh;
-  padding:1.6cqh 2.2cqw; overflow-y:auto;
-  background:linear-gradient(180deg,rgba(255,252,242,.96),rgba(247,235,208,.92));
-  border:.28cqh solid rgba(178,140,80,.5); border-radius:1.6cqh; box-shadow:0 .8cqh 1.6cqh rgba(90,65,25,.18);
+  padding:4.2cqh 4cqw; overflow-y:auto;
+  background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
+  border:0; border-radius:0; box-shadow:none;
 }
 .event-kicker{
   align-self:center; font-size:1.2cqh; font-weight:900; letter-spacing:.2cqh; color:var(--ev-gold-deep);

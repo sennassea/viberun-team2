@@ -140,9 +140,9 @@ function eventShellHtml(){
             '<div class="event-hp-bar"><div class="event-hp-fill" id="eventHpFill"></div><span id="eventHpText"></span></div>' +
           '</div>' +
           '<div class="event-resource-row">' +
-            '<span class="event-resource">🏺<b id="eventRelicCount">0</b></span>' +
-            '<span class="event-resource">🧪<b id="eventPotionCount">0</b></span>' +
-            '<span class="event-resource">🪙<b id="eventGold">0</b></span>' +
+            '<span class="event-resource"><span class="hud-resource-icon hud-resource-icon-relic">🏺</span><b id="eventRelicCount">0</b></span>' +
+            '<span class="event-resource"><span class="hud-resource-icon hud-resource-icon-potion">🧪</span><b id="eventPotionCount">0</b></span>' +
+            '<span class="event-resource"><span class="hud-resource-icon hud-resource-icon-gold">🪙</span><b id="eventGold">0</b></span>' +
           '</div>' +
         '</div>' +
       '</div>' +

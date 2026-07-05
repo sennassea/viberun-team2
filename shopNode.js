@@ -351,10 +351,10 @@ function shopOverlayHtml() {
             '<div class="shop-hp-bar"><div class="shop-hp-fill" id="shopHpFill"></div><span id="shopHpText"></span></div>' +
           '</div>' +
           '<div class="shop-resource-row">' +
-            '<span class="shop-resource">🏺<b id="shopRelicCount">0</b></span>' +
-            '<span class="shop-resource">🧪<b id="shopPotionCount">0</b></span>' +
-            '<span class="shop-resource">🪙<b id="shopGold">0</b></span>' +
-            '<span class="shop-resource">🌙<b id="shopMoonShard">0</b></span>' +
+            '<span class="shop-resource"><span class="hud-resource-icon hud-resource-icon-relic">🏺</span><b id="shopRelicCount">0</b></span>' +
+            '<span class="shop-resource"><span class="hud-resource-icon hud-resource-icon-potion">🧪</span><b id="shopPotionCount">0</b></span>' +
+            '<span class="shop-resource"><span class="hud-resource-icon hud-resource-icon-gold">🪙</span><b id="shopGold">0</b></span>' +
+            '<span class="shop-resource" style="display:none"><span class="hud-resource-icon hud-resource-icon-moon">🌙</span><b id="shopMoonShard">0</b></span>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -372,7 +372,7 @@ function shopOverlayHtml() {
     '<div class="shop-body">' +
       '<div class="shop-merchant">' +
         '<div class="shop-merchant-bubble" id="shopMerchantBubble"></div>' +
-        '<div class="shop-merchant-npc">👻</div>' +
+        '<div class="shop-merchant-npc"><img src="assets/characters/shop_npc.png" alt="상점 NPC"></div>' +
         '<div class="shop-merchant-box">' +
           '<div class="shop-box-title">오늘의 추천</div>' +
           '<div class="shop-box-desc" id="shopRecommendText"></div>' +
@@ -563,12 +563,12 @@ function ensureShopStyles() {
     ".shop-header{flex:none;position:relative;height:12cqh;}" +
     ".shop-player-card{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;gap:1.15cqw;width:24cqw;min-width:30cqh;" +
       "background:transparent url(\"assets/ui/player_info_panel_wide.png\") center/100% 100% no-repeat;border:0;border-radius:0;" +
-      "padding:.8cqh 1cqw;box-shadow:none;backdrop-filter:none;}" +
+      "padding:.8cqh 1cqw;box-shadow:none;backdrop-filter:none;color:var(--c-ink);font-size:2.2cqh;}" +
     ".shop-portrait{flex:none;width:8.4cqh;height:8.4cqh;border-radius:50%;display:grid;place-items:center;" +
       "font-size:4.2cqh;background:transparent;border:0;box-shadow:none;overflow:hidden;}" +
-    ".shop-player-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4cqh;}" +
-    ".shop-player-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}" +
-    ".shop-player-name b{font-size:2.3cqh;}" +
+    ".shop-player-body{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4cqh;color:var(--c-ink);}" +
+    ".shop-player-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--c-ink);}" +
+    ".shop-player-name b{display:inline;font-size:2.3cqh;color:var(--c-ink);}" +
     ".shop-player-name span{display:none;}" +
     ".shop-hp-row{display:flex;align-items:center;gap:.8cqw;font-size:1.55cqh;font-weight:800;color:var(--c-ink);}" +
     ".shop-hp-row span:first-child{color:var(--c-red-deep);}" +
@@ -576,7 +576,9 @@ function ensureShopStyles() {
     ".shop-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#ff8079,var(--c-hp));transition:width .35s ease;border-radius:.8cqh;}" +
     "#shopHpText{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.15cqh;font-weight:900;line-height:1;text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}" +
     ".shop-resource-row{display:flex;align-items:center;gap:.65cqw;font-size:1.45cqh;font-weight:900;color:var(--c-ink);transform:translateX(2cqw);width:calc(100% - 2cqw);}" +
-    ".shop-resource{display:inline-flex;align-items:center;gap:.22cqw;}" +
+    ".shop-resource{display:inline-flex;align-items:center;gap:.22cqw;color:var(--c-ink);font-size:1.45cqh;}" +
+    ".shop-resource b{display:inline;color:var(--c-ink);font-size:1.45cqh;}" +
+    ".shop-resource .hud-resource-icon{width:2.15cqh;height:2.15cqh;flex:none;display:inline-block;font-size:0;line-height:1;background:center/contain no-repeat;}" +
 
     ".shop-stage-info{position:absolute;left:50%;top:0;transform:translateX(-50%);width:32cqw;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
       "padding:.8cqh 4.2cqw;background:transparent url(\"assets/ui/stage_info_panel.png\") center/100% 100% no-repeat;" +
@@ -599,12 +601,15 @@ function ensureShopStyles() {
 
     ".shop-body{flex:1;min-height:0;display:flex;gap:1.4cqw;}" +
 
-    ".shop-merchant{flex:none;width:19cqw;min-width:24cqh;display:flex;flex-direction:column;gap:1cqh;position:relative;}" +
-    ".shop-merchant-bubble{background:rgba(255,251,240,.9);border:.18cqh solid rgba(178,140,80,.4);border-radius:1.2cqh;" +
-      "padding:.9cqh 1cqw;font-size:1.2cqh;font-weight:800;color:#6b4a20;text-align:center;}" +
-    ".shop-merchant-npc{flex:1;display:flex;align-items:center;justify-content:center;font-size:11cqh;" +
-      "filter:drop-shadow(0 .6cqh 1cqh rgba(90,65,25,.25));}" +
-    ".shop-merchant-box{background:rgba(255,251,240,.9);border:.18cqh solid rgba(178,140,80,.4);border-radius:1.2cqh;padding:.8cqh 1cqw;}" +
+    ".shop-merchant{flex:none;width:21cqw;min-width:25cqh;position:relative;min-height:0;}" +
+    ".shop-merchant-bubble{position:absolute;left:0;right:.8cqw;top:0;z-index:2;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;" +
+      "padding:2.1cqh 1.8cqw;font-size:1.2cqh;font-weight:800;color:#6b4a20;text-align:center;}" +
+    ".shop-merchant-npc{position:absolute;left:-8cqw;top:18cqh;z-index:1;width:48cqw;height:116cqh;display:flex;align-items:flex-start;justify-content:flex-start;" +
+      "filter:drop-shadow(0 .7cqh 1.1cqh rgba(90,65,25,.28));pointer-events:none;}" +
+    ".shop-merchant-npc img{display:block;width:auto;height:100%;max-width:none;object-fit:contain;object-position:left bottom;}" +
+    ".shop-merchant-box{position:absolute;left:0;right:.8cqw;z-index:2;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;padding:2.1cqh 1.8cqw;}" +
+    ".shop-merchant-box:nth-of-type(3){bottom:12.2cqh;}" +
+    ".shop-merchant-box:nth-of-type(4){bottom:1.2cqh;}" +
     ".shop-box-title{font-size:1.2cqh;font-weight:900;color:#8a6b3d;margin-bottom:.3cqh;}" +
     ".shop-box-desc{font-size:1.15cqh;font-weight:700;color:#6b4a20;line-height:1.4;white-space:pre-line;}" +
 
