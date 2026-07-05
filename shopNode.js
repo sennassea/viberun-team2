@@ -128,6 +128,7 @@ function ensureShopState() {
     selectedId: null,
     refreshCost: SHOP_REFRESH_COST,
     stock: { card: [], potion: [], relic: [] },
+    firstPurchaseDone: false,
   };
   generateShopStock();
 }
@@ -258,6 +259,15 @@ function canAfford(price) {
   return typeof S !== "undefined" && S && typeof S.gold === "number" && S.gold >= price;
 }
 
+function getEffectiveShopPrice(item) {
+  const base = Math.max(0, item && Number.isFinite(item.price) ? item.price : 0);
+  if (!SHOP_STATE || SHOP_STATE.firstPurchaseDone) return base;
+  if (typeof hasRelic === "function" && hasRelic("peddler_abacus")) {
+    return Math.max(0, Math.floor(base * 0.85));
+  }
+  return base;
+}
+
 function isRelicOwned(id) {
   return typeof S !== "undefined" && S && Array.isArray(S.relics) && S.relics.some((r) => r && r.id === id);
 }
@@ -284,9 +294,12 @@ function buyCurrentItem() {
 }
 
 function buyCard(item) {
-  if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
-  STARTER_DECK.push(item.sourceKey);
-  S.gold -= item.price;
+  const price = getEffectiveShopPrice(item);
+  if (!canAfford(price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
+  if (typeof addPermanentCard === "function") addPermanentCard(item.sourceKey, { source:"shop" });
+  else STARTER_DECK.push(item.sourceKey);
+  S.gold -= price;
+  SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
   finalizeShopChange();
@@ -294,10 +307,12 @@ function buyCard(item) {
 
 function buyPotion(item) {
   if (getPotionCount() >= SHOP_POTION_SLOT_LIMIT) { if (typeof toast === "function") toast("약병 슬롯이 가득 찼습니다."); return; }
-  if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
+  const price = getEffectiveShopPrice(item);
+  if (!canAfford(price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
   if (!Array.isArray(S.potions)) S.potions = [];
   S.potions.push({ ...item, soldOut: undefined, category: undefined });
-  S.gold -= item.price;
+  S.gold -= price;
+  SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
   finalizeShopChange();
@@ -305,11 +320,13 @@ function buyPotion(item) {
 
 function buyRelic(item) {
   if (isRelicOwned(item.id)) { if (typeof toast === "function") toast("이미 보유한 법구입니다."); return; }
-  if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
+  const price = getEffectiveShopPrice(item);
+  if (!canAfford(price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
   if (!Array.isArray(S.relics)) S.relics = [];
   // 효과 배열(fx)까지 보존해야 전투 시작/턴 종료/조건부 법구 효과가 정상 발동됩니다.
   S.relics.push({ ...item });
-  S.gold -= item.price;
+  S.gold -= price;
+  SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
   finalizeShopChange();
@@ -499,7 +516,7 @@ function shopProductCardHtml(item) {
         '<button type="button" class="shop-product shop-product-card-frame card-frame-card cost-' + escapeShopHtml(card.type) +
           (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + escapeShopHtml(item.id) + '">' +
           cardFaceHtml(card) +
-          '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : shopGoldCostHtml(item.price)) + '</div>' +
+          '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>' +
         '</button>'
       );
     }
@@ -510,7 +527,7 @@ function shopProductCardHtml(item) {
       '<div class="shop-product-art">' + shopItemArtHtml(item) + '</div>' +
       '<div class="shop-product-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
       '<div class="shop-product-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
-      '<div class="shop-product-price">' + (item.soldOut ? "품절" : shopGoldCostHtml(item.price)) + '</div>' +
+      '<div class="shop-product-price">' + (item.soldOut ? "품절" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>' +
     '</button>'
   );
 }
@@ -530,7 +547,8 @@ function renderShopDetail() {
 
   const potionFull  = item.category === "potion" && getPotionCount() >= SHOP_POTION_SLOT_LIMIT;
   const relicOwned  = item.category === "relic"  && isRelicOwned(item.id);
-  const goldShort   = !canAfford(item.price);
+  const displayPrice = getEffectiveShopPrice(item);
+  const goldShort   = !canAfford(displayPrice);
   const disabled    = item.soldOut || goldShort || potionFull || relicOwned;
 
   let buyLabel = "구매";
@@ -545,7 +563,7 @@ function renderShopDetail() {
       '<div class="shop-detail-card-preview card-frame-card cost-' + escapeShopHtml(card.type) + '">' +
         cardFaceHtml(card) +
       '</div>' +
-      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(item.price)) + '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(displayPrice)) + '</div>' +
       '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
     )
     : (
@@ -553,7 +571,7 @@ function renderShopDetail() {
       '<div class="shop-detail-art">' + shopItemArtHtml(item) + '</div>' +
       '<div class="shop-detail-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
       '<div class="shop-detail-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
-      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(item.price)) + '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(displayPrice)) + '</div>' +
       '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
     );
 

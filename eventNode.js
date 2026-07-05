@@ -623,7 +623,8 @@ function applyEventAddStatusCard(effect){
   const count = effect.count || 1;
   for(let i = 0; i < count; i++){
     const key = candidates[Math.floor(Math.random() * candidates.length)];
-    if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
+    if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"eventStatus", addToDiscard:false });
+    else if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
     eventState.resultDetails.push({ kind: "negative", text: "상태 의식 추가: " + (card ? card.name : key) });
   }
@@ -655,7 +656,8 @@ function applyEventCardDuplicate(effect){
   });
   if(!pool.length) return;
   const key = pool[Math.floor(Math.random() * pool.length)];
-  STARTER_DECK.push(key);
+  if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"eventDuplicate", addToDiscard:false });
+  else STARTER_DECK.push(key);
   const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
   eventState.resultDetails.push({ kind: "positive", text: "의식 복제: " + (card ? card.name : key) });
 }
@@ -785,8 +787,20 @@ function confirmEventCard(){
   if(!eventState || !eventState.cardSelected) return;
   const card = (typeof CARD_DB !== "undefined") ? CARD_DB[eventState.cardSelected] : null;
   if(card){
-    if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(eventState.cardSelected);
-    if(typeof S !== "undefined" && S && Array.isArray(S.discard)) S.discard.push(eventState.cardSelected);
+    if(typeof addPermanentCard === "function") addPermanentCard(eventState.cardSelected, { source:"eventReward" });
+    else {
+      if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(eventState.cardSelected);
+      if(typeof S !== "undefined" && S && Array.isArray(S.discard)){
+        if(typeof pushDiscardCard === "function") pushDiscardCard(eventState.cardSelected, typeof createCardInstance === "function" ? createCardInstance(eventState.cardSelected) : undefined);
+        else {
+          S.discard.push(eventState.cardSelected);
+          if(!Array.isArray(S.discardInstances)) S.discardInstances = [];
+          S.discardInstances.push(typeof createCardInstance === "function"
+            ? createCardInstance(eventState.cardSelected)
+            : { key:eventState.cardSelected, runtime:{ hanpuriGrowth:0 } });
+        }
+      }
+    }
     if(typeof toast === "function") toast(card.name + " 의식을 덱에 추가했습니다.");
   }
   finishEventNode();

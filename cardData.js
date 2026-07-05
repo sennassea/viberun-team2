@@ -52,7 +52,7 @@ const CARD_DB = {
   barrier_charge:{name:"결계 충전", cost:1, type:"skill", emoji:"🔋", target:"self", attr:"결계 덱", rarity:"uncommon",
           desc:"마음의 결계를 9 얻습니다.", fx:[{t:"block",v:9}]},
   returning_wall:{name:"되돌리는 벽", cost:2, type:"attack", emoji:"🧱", target:"enemy", attr:"결계 덱", rarity:"rare",
-          desc:"현재 결계의 185%만큼 유령 하나를 정화합니다. 그 후 결계를 전부 소모합니다.", fx:[{t:"damageByBlockRatioConsume",v:1.5,consumeRatio:0.5}], migrationTodo:"최신 DB 수치와 기존 fx 불일치"},
+          desc:"현재 결계의 185%만큼 유령 하나를 정화합니다. 그 후 결계를 전부 소모합니다.", fx:[{t:"damageByBlockRatioConsume",v:1.85,consumeRatio:1}], migrationTodo:"최신 DB 수치와 기존 fx 불일치"},
 
   // -----------------------------------------------------------------------
   // 회상 덱
@@ -106,11 +106,11 @@ const CARD_DB = {
   // 한풀이 덱
   // -----------------------------------------------------------------------
   unsaid_words_han:{name:"못다 한 말", cost:1, type:"attack", emoji:"💬", target:"enemy", attr:"한풀이 덱", rarity:"common",
-          desc:"유령의 미련을 6만큼 정화합니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 이 주문의 정화량이 3 증가합니다. 최대 3회.", fx:[], migrationTodo:"한풀이 미사용 성장 신규 기믹 미구현"},
+          desc:"유령의 미련을 6만큼 정화합니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 이 주문의 정화량이 3 증가합니다. 최대 3회.", fx:[{t:"damage",v:6,growthStat:"damage"}], hanpuriGrowth:{stat:"damage",perGrowth:3,maxGrowth:3}},
   swallowed_cry:{name:"삼킨 울음", cost:1, type:"defense", emoji:"😶", target:"self", attr:"한풀이 덱", rarity:"common",
-          desc:"마음의 결계를 6 얻습니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 이 주문의 결계량이 2 증가합니다. 최대 3회.", fx:[], migrationTodo:"한풀이 미사용 성장 신규 기믹 미구현"},
+          desc:"마음의 결계를 6 얻습니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 이 주문의 결계량이 2 증가합니다. 최대 3회.", fx:[{t:"block",v:6,growthStat:"block"}], hanpuriGrowth:{stat:"block",perGrowth:2,maxGrowth:3}},
   unfinished_confession:{name:"끝내 못한 고백", cost:2, type:"attack", emoji:"💌", target:"enemy", attr:"한풀이 덱", rarity:"uncommon",
-          desc:"유령의 미련을 10만큼 정화합니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 정화량이 5 증가합니다. 최대 2회.", fx:[], migrationTodo:"한풀이 미사용 성장 신규 기믹 미구현"},
+          desc:"유령의 미련을 10만큼 정화합니다. 턴 종료 시 사용되지 않은 채 버려지면 이번 위령 동안 정화량이 5 증가합니다. 최대 2회.", fx:[{t:"damage",v:10,growthStat:"damage"}], hanpuriGrowth:{stat:"damage",perGrowth:5,maxGrowth:2}},
   recollecting_night:{name:"되새기는 밤", cost:1, type:"skill", emoji:"🌙", target:"self", attr:"한풀이 덱", rarity:"common",
           desc:"버림 더미에서 이번 위령 중 수치가 증가한 주문 1장을 선택해 손패로 가져옵니다. 주문을 1장 뽑습니다.", fx:[], migrationTodo:"성장 상태 기반 버림 더미 회수 신규 기믹 미구현"},
   cannot_let_go:{name:"놓지 못한 손", cost:0, type:"skill", emoji:"🤝", target:"self", attr:"한풀이 덱", rarity:"uncommon",
@@ -140,7 +140,7 @@ const CARD_DB = {
   step_together:{name:"발맞춤", cost:1, type:"skill", emoji:"👣", target:"self", attr:"굿판 덱", rarity:"common",
           desc:"주문을 2장 뽑고 손패 1장을 버립니다. 이번 턴 방울치기를 사용했다면 버리지 않습니다.", fx:[], migrationTodo:"조건부 버림/드로우 신규 기믹 미구현"},
   bell_strike:{name:"방울치기", cost:0, type:"attack", emoji:"🔔", target:"enemy", attr:"굿판 덱", rarity:"common",
-          desc:"유령의 미련을 4만큼 정화합니다. 사용 후 소멸. 이 주문은 일반 주문 보상에 등장하지 않습니다.", fx:[], exhaust:true, generatedOnly:true, excludeFromRewards:true, migrationTodo:"생성 전용 카드, 일반 보상 제외"}
+          desc:"유령의 미련을 4만큼 정화합니다. 사용 후 소멸. 이 주문은 일반 주문 보상에 등장하지 않습니다.", fx:[{t:"damage",v:4}], exhaust:true, generatedOnly:true, excludeFromRewards:true, migrationTodo:"생성 전용 카드, 일반 보상 제외"}
 };
 
 if(window.BOHYUN_LIFE_SYSTEM && typeof window.BOHYUN_LIFE_SYSTEM.getStatusCardDb === "function"){
