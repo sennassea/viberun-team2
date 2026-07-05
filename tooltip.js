@@ -371,8 +371,9 @@
   /* ── HTML 빌더 헬퍼 ───────────────────────────────────────────────────── */
   function makeRow(icon, name, desc, nameColor) {
     var cs = nameColor ? ' style="color:' + nameColor + '"' : "";
+    var ico = icon ? '<div class="btt-ico">' + icon + '</div>' : "";
     return '<div class="btt-row">'
-      + '<div class="btt-ico">' + icon + '</div>'
+      + ico
       + '<div class="btt-body">'
       + '<span class="btt-name"' + cs + '>' + name + '</span>'
       + '<span class="btt-desc">' + desc + '</span>'
@@ -506,6 +507,8 @@
     }
 
     cardActiveEl = null;          /* 주문 툴팁 상태 초기화 */
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
     positionCombatantTooltip(cbEl, isPlayer);
@@ -548,6 +551,8 @@
 
   var cardActiveEl = null;
   var activeStatusEl = null;
+  var activeItemSlotEl = null;
+  var activeEnergyEl = null;
 
   function buildStatusIconHtml(statusEl) {
     var type = statusEl.dataset.status;
@@ -578,6 +583,8 @@
     if (!html) return;
     activeId = null;
     cardActiveEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
     activeStatusEl = statusEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -610,7 +617,192 @@
     hideStatusIconTooltip();
   });
 
+  var nativeTitleTargets = "#sideRelicSlots .side-item-slot,#sidePotionSlots .side-item-slot,#startBlessingOverlay .sb-card";
+
+  function moveNativeTitle(el) {
+    if (!el || !el.getAttribute || !el.hasAttribute("title")) return;
+    if (!el.hasAttribute("data-title")) el.setAttribute("data-title", el.getAttribute("title") || "");
+    el.removeAttribute("title");
+  }
+
+  function suppressNativeTitleTooltip(el) {
+    if (!el) return;
+    moveNativeTitle(el);
+    if (el.querySelectorAll) {
+      Array.prototype.forEach.call(el.querySelectorAll("[title]"), moveNativeTitle);
+    }
+  }
+
+  document.addEventListener("mouseover", function (e) {
+    var titleTarget = e.target.closest(nativeTitleTargets);
+    if (titleTarget) suppressNativeTitleTooltip(titleTarget);
+  }, true);
+
   /* ── 주문 설명에서 용어 추출 후 HTML 빌드 ────────────────────────────── */
+  function buildEnergyHtml() {
+    var desc = "카드를 사용할 때 소모되는 행동 자원입니다.";
+    if (typeof S !== "undefined" && S && typeof S.energy === "number") {
+      desc += "\n현재 신통력: " + S.energy;
+    }
+    return makeRow("", "신통력", desc);
+  }
+
+  function positionEnergyTooltip(energyEl) {
+    var gRect   = game.getBoundingClientRect();
+    var eRect   = energyEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+
+    var tx = (eRect.right - gRect.left) + pad;
+    var ty = (eRect.top - gRect.top) + (eRect.height - tipRect.height) * 0.5;
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showEnergyTooltip(energyEl) {
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = energyEl;
+    tooltip.innerHTML = buildEnergyHtml();
+    tooltip.classList.add("tt-show");
+    positionEnergyTooltip(energyEl);
+  }
+
+  function hideEnergyTooltip() {
+    activeEnergyEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var energyEl = e.target.closest("#energy");
+    if (!energyEl || energyEl === activeEnergyEl) return;
+    showEnergyTooltip(energyEl);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeEnergyEl) return;
+    var energyEl = e.target.closest("#energy");
+    if (!energyEl) return;
+    var to = e.relatedTarget;
+    if (to && energyEl.contains(to)) return;
+    hideEnergyTooltip();
+  });
+
+  function getItemSlotInfo(slotEl) {
+    var host = slotEl && slotEl.closest("#sideRelicSlots,#sidePotionSlots");
+    if (!host) return null;
+    var slots = Array.prototype.slice.call(host.querySelectorAll(".side-item-slot"));
+    var index = slots.indexOf(slotEl);
+    if (index < 0) return null;
+    var isRelic = host.id === "sideRelicSlots";
+    var list = (typeof S !== "undefined" && S)
+      ? (isRelic ? S.relics : S.potions)
+      : null;
+    var item = Array.isArray(list) ? list[index] : null;
+    return { item: item, type: isRelic ? "relic" : "potion" };
+  }
+
+  function getMasterItemData(type, id) {
+    if (!id) return null;
+    var db = type === "relic"
+      ? (typeof RELIC_DB !== "undefined" ? RELIC_DB : null)
+      : (typeof POTION_DB !== "undefined" ? POTION_DB : null);
+    if (!Array.isArray(db)) return null;
+    return db.find(function (item) { return item && item.id === id; }) || null;
+  }
+
+  function getShortItemDesc(item, master) {
+    var text = (item && (item.effectText || item.valueText || item.desc || item.effect))
+      || (master && (master.effectText || master.valueText || master.desc || master.effect))
+      || "";
+    return String(text || "").split("\n")[0].trim();
+  }
+
+  function buildItemSlotHtml(slotEl) {
+    var info = getItemSlotInfo(slotEl);
+    if (!info) return "";
+    if (!info.item) {
+      return info.type === "relic"
+        ? makeRow("", "법구 슬롯", "획득한 법구가 표시됩니다.")
+        : makeRow("", "약병 슬롯", "전투 중 사용할 수 있는 약병이 표시됩니다.");
+    }
+    var master = getMasterItemData(info.type, info.item.id);
+    var icon = (info.item && (info.item.emoji || info.item.icon))
+      || (master && (master.emoji || master.icon))
+      || (info.type === "relic" ? "🏺" : "🧪");
+    var name = (info.item && info.item.name)
+      || (master && master.name)
+      || (info.type === "relic" ? "법구" : "약병");
+    var desc = getShortItemDesc(info.item, master) || (info.type === "relic"
+      ? "획득한 법구입니다."
+      : "전투 중 사용할 수 있는 약병입니다.");
+    return makeRow(icon, name, desc);
+  }
+
+  function positionItemSlotTooltip(slotEl) {
+    var info = getItemSlotInfo(slotEl);
+    var gRect   = game.getBoundingClientRect();
+    var sRect   = slotEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+
+    var tx;
+    var ty;
+    if (info && info.type === "potion") {
+      tx = (sRect.right - gRect.left) + 16;
+      ty = (sRect.top - gRect.top) + (sRect.height - tipRect.height) * 0.5;
+    } else {
+      tx = (sRect.left - gRect.left) + (sRect.width - tipRect.width) * 0.5;
+      ty = (sRect.bottom - gRect.top) + pad;
+    }
+
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showItemSlotTooltip(slotEl) {
+    suppressNativeTitleTooltip(slotEl);
+    var html = buildItemSlotHtml(slotEl);
+    if (!html) return;
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeEnergyEl = null;
+    activeItemSlotEl = slotEl;
+    tooltip.innerHTML = html;
+    tooltip.classList.add("tt-show");
+    positionItemSlotTooltip(slotEl);
+  }
+
+  function hideItemSlotTooltip() {
+    activeItemSlotEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var slotEl = e.target.closest("#sideRelicSlots .side-item-slot,#sidePotionSlots .side-item-slot");
+    if (!slotEl || slotEl === activeItemSlotEl) return;
+    showItemSlotTooltip(slotEl);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeItemSlotEl) return;
+    var slotEl = e.target.closest("#sideRelicSlots .side-item-slot,#sidePotionSlots .side-item-slot");
+    if (!slotEl) return;
+    var to = e.relatedTarget;
+    if (to && slotEl.contains(to)) return;
+    hideItemSlotTooltip();
+  });
+
   function buildCardTermHtml(descText) {
     var rows = CARD_TERM_INFO
       .filter(function (t) { return t.test(descText); })
@@ -658,6 +850,8 @@
     }
 
     activeId = null;            /* 전투원 툴팁 상태 초기화 */
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
     cardActiveEl = cardEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
