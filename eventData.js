@@ -12,6 +12,7 @@
   const EVENT_DB = [
     {
       id: "event_01_card_low_risk",
+      backgroundImage: "assets/event_background/park_playground.jpg",
       title: "놀이터의 작은 목소리",
       type: "random",
       category: "reward",
@@ -54,6 +55,7 @@
     },
     {
       id: "event_02_recovery_potion",
+      backgroundImage: "assets/event_background/hospital_hallway.jpg",
       title: "간호 스테이션의 남은 처방",
       type: "random",
       category: "reward",
@@ -97,6 +99,7 @@
     },
     {
       id: "event_03_reward_or_combat",
+      backgroundImage: "assets/event_background/school_classroom.jpg",
       title: "이름 없는 공책",
       type: "random",
       category: "reward",
@@ -142,6 +145,7 @@
     },
     {
       id: "event_04_gold_for_potion",
+      backgroundImage: "assets/event_background/hospital_hallway.jpg",
       title: "잠긴 약품 보관함",
       type: "random",
       category: "trade",
@@ -196,6 +200,7 @@
     },
     {
       id: "event_05_gold_spirit_remove",
+      backgroundImage: "assets/event_background/park_bench_path.jpg",
       title: "벤치 아래 분실물 상자",
       type: "random",
       category: "trade",
@@ -245,6 +250,7 @@
     },
     {
       id: "event_06_potion_choice",
+      backgroundImage: "assets/event_background/school_infirmary.jpg",
       title: "보건실의 약봉투",
       type: "random",
       category: "trade",
@@ -294,6 +300,7 @@
     },
     {
       id: "event_07_deck_edit_basic",
+      backgroundImage: "assets/event_background/school_classroom.jpg",
       title: "찢어진 노트 정리",
       type: "random",
       category: "deck",
@@ -338,6 +345,7 @@
     },
     {
       id: "event_08_duplicate_or_attr",
+      backgroundImage: "assets/event_background/school_blackboard.jpg",
       title: "칠판 위 반복문",
       type: "random",
       category: "deck",
@@ -381,6 +389,7 @@
     },
     {
       id: "event_09_archetype_choice",
+      backgroundImage: "assets/event_background/school_blackboard.jpg",
       title: "세 갈래 낙서",
       type: "random",
       category: "archetype",
@@ -425,6 +434,7 @@
     },
     {
       id: "event_10_risky_relic",
+      backgroundImage: "assets/event_background/hospital_ward.jpg",
       title: "열면 안 되는 병실 서랍",
       type: "random",
       category: "high_risk_high_reward",
@@ -468,6 +478,7 @@
     },
     {
       id: "event_11_late_high_risk",
+      backgroundImage: "assets/event_background/hospital_operating_room.jpg",
       title: "폐쇄 수술실의 봉인 물품",
       type: "random",
       category: "high_risk_high_reward",
@@ -521,6 +532,7 @@
     },
     {
       id: "event_12_ambush_weak",
+      backgroundImage: "assets/event_background/park_playground.jpg",
       title: "혼자 흔들리는 그네",
       type: "combat",
       category: "combat",
@@ -544,6 +556,7 @@
     },
     {
       id: "event_13_multi_gold_combat",
+      backgroundImage: "assets/event_background/school_hallway.jpg",
       title: "종례 후 복도",
       type: "combat",
       category: "combat",
@@ -567,6 +580,7 @@
     },
     {
       id: "event_14_elite_relic_combat",
+      backgroundImage: "assets/event_background/hospital_operating_room.jpg",
       title: "봉인 병동의 호출벨",
       type: "combat",
       category: "combat",
@@ -598,6 +612,7 @@
     },
     {
       id: "event_15_risky_bad_luck",
+      backgroundImage: "assets/event_background/park_sand_carousel.jpg",
       title: "모래밭의 반짝임",
       type: "random",
       category: "bad_luck",
@@ -641,6 +656,7 @@
     },
     {
       id: "event_16_true_bad_luck",
+      backgroundImage: "assets/event_background/park_sand_carousel.jpg",
       title: "멈추지 않는 회전놀이",
       type: "random",
       category: "bad_luck",
