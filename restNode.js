@@ -272,8 +272,9 @@ function prayerOverlayHtml(){
         '<div class="prayer-portrait" id="prayerPortrait">👼</div>' +
         '<div class="prayer-player-body">' +
           '<div class="prayer-player-name"><b id="prayerName"></b><span id="prayerTitle"></span></div>' +
-          '<div class="prayer-hp-row"><span>정신력</span><span id="prayerHpText"></span></div>' +
-          '<div class="prayer-hp-bar"><div class="prayer-hp-fill" id="prayerHpFill"></div></div>' +
+          '<div class="prayer-hp-row">' +
+            '<div class="prayer-hp-bar"><div class="prayer-hp-fill" id="prayerHpFill"></div><span id="prayerHpText"></span></div>' +
+          '</div>' +
           '<div class="prayer-resource-row">' +
             '<span class="prayer-resource">🏺<b id="prayerRelicCount">0</b></span>' +
             '<span class="prayer-resource">🧪<b id="prayerPotionCount">0</b></span>' +
@@ -282,15 +283,15 @@ function prayerOverlayHtml(){
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="prayer-title-badge">' +
-        '<div class="prayer-title-main">기도터</div>' +
-        '<div class="prayer-title-sub">잠시 머물러 몸과 마음을 가다듬으세요.</div>' +
+      '<div class="prayer-stage-info">' +
+        '<div class="prayer-stage-title-main">기도터</div>' +
+        '<div class="prayer-stage-title-sub">잠시 머물러 몸과 마음을 가다듬으세요.</div>' +
       '</div>' +
       '<div class="prayer-header-buttons">' +
-        '<button type="button" class="prayer-header-btn" id="prayerMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
-        '<button type="button" class="prayer-header-btn" id="prayerDeckBtn"><span class="ico">📖</span><span>보유주문</span></button>' +
-        '<button type="button" class="prayer-header-btn" id="prayerBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
-        '<button type="button" class="prayer-header-btn" id="prayerSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
+        '<button type="button" class="prayer-header-btn ui-asset-button ui-map-button" id="prayerMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
+        '<button type="button" class="prayer-header-btn ui-asset-button ui-codex-button" id="prayerDeckBtn"><span class="ico">📖</span><span>보유주문</span></button>' +
+        '<button type="button" class="prayer-header-btn ui-asset-button ui-bag-button" id="prayerBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
+        '<button type="button" class="prayer-header-btn ui-asset-button ui-settings-button" id="prayerSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
     '</div>' +
     '<div class="prayer-body">' +
@@ -397,31 +398,37 @@ function ensurePrayerStyles(){
         "linear-gradient(90deg,rgba(20,24,32,.12) 0%,rgba(20,24,32,.04) 45%,rgba(20,24,32,.34) 100%)," +
         "url(\"assets/node_background/prayer_site.jpg\");background-size:cover,cover,cover;background-position:center,center,center;background-repeat:no-repeat,no-repeat,no-repeat;}" +
     ".prayer-overlay.show{display:flex;}" +
-    ".prayer-header{flex:none;display:flex;align-items:stretch;gap:.8cqw;height:12cqh;}" +
-    ".prayer-player-card{flex:none;display:flex;align-items:center;gap:1.15cqw;width:24cqw;min-width:30cqh;" +
-      "background:var(--c-panel);border:.2cqh solid var(--c-panel-line);border-radius:var(--r);" +
-      "padding:.8cqh 1cqw;box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);backdrop-filter:blur(4px);}" +
-    ".prayer-portrait{flex:none;width:11cqh;height:7cqh;border-radius:1.5cqh;display:grid;place-items:center;" +
-      "font-size:4.2cqh;background:linear-gradient(160deg,#fff,#dcecff);border:.25cqh solid var(--c-gold);box-shadow:0 0 1cqh rgba(231,181,74,.6);}" +
+    ".prayer-header{flex:none;position:relative;height:12cqh;}" +
+    ".prayer-player-card{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;gap:1.15cqw;width:24cqw;min-width:30cqh;" +
+      "background:transparent url(\"assets/ui/player_info_panel_wide.png\") center/100% 100% no-repeat;border:0;border-radius:0;" +
+      "padding:.8cqh 1cqw;box-shadow:none;backdrop-filter:none;}" +
+    ".prayer-portrait{flex:none;width:8.4cqh;height:8.4cqh;border-radius:50%;display:grid;place-items:center;" +
+      "font-size:4.2cqh;background:transparent;border:0;box-shadow:none;overflow:hidden;}" +
     ".prayer-player-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4cqh;}" +
     ".prayer-player-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}" +
     ".prayer-player-name b{font-size:2.3cqh;}" +
     ".prayer-player-name span{display:none;}" +
-    ".prayer-hp-row{display:flex;justify-content:space-between;gap:.8cqw;font-size:1.55cqh;font-weight:800;color:var(--c-ink);}" +
+    ".prayer-hp-row{display:flex;align-items:center;gap:.8cqw;font-size:1.55cqh;font-weight:800;color:var(--c-ink);}" +
     ".prayer-hp-row span:first-child{color:var(--c-red-deep);}" +
-    ".prayer-hp-bar{position:relative;height:1.45cqh;border-radius:.8cqh;overflow:hidden;background:rgba(122,42,42,.62);border:.12cqh solid rgba(0,0,0,.14);}" +
-    ".prayer-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#ff8079,var(--c-hp));transition:width .35s ease;}" +
-    ".prayer-resource-row{display:flex;align-items:center;gap:.65cqw;font-size:1.45cqh;font-weight:900;color:var(--c-ink);}" +
+    ".prayer-hp-bar{position:relative;width:calc(100% - 2cqw);height:1.45cqh;border-radius:.8cqh;overflow:hidden;background:rgba(95,95,95,.58);border:0;}" +
+    ".prayer-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#ff8079,var(--c-hp));transition:width .35s ease;border-radius:.8cqh;}" +
+    "#prayerHpText{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.15cqh;font-weight:900;line-height:1;text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}" +
+    ".prayer-resource-row{display:flex;align-items:center;gap:.65cqw;font-size:1.45cqh;font-weight:900;color:var(--c-ink);transform:translateX(2cqw);width:calc(100% - 2cqw);}" +
     ".prayer-resource{display:inline-flex;align-items:center;gap:.22cqw;}" +
+    ".prayer-stage-info{position:absolute;left:50%;top:0;transform:translateX(-50%);width:32cqw;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
+      "padding:.8cqh 4.2cqw;background:transparent url(\"assets/ui/stage_info_panel.png\") center/100% 100% no-repeat;" +
+      "border:0;border-radius:0;box-shadow:none;backdrop-filter:none;font-size:2.05cqh;font-weight:900;color:var(--c-ink);}" +
+    ".prayer-stage-title-main{font-size:2.35cqh;font-weight:900;letter-spacing:0;line-height:1;}" +
+    ".prayer-stage-title-sub{font-size:1.15cqh;font-weight:800;color:#8a6b3d;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}" +
     ".prayer-title-badge{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;" +
       "background:rgba(255,251,240,.85);border:.2cqh solid rgba(178,140,80,.45);border-radius:1.4cqh;" +
       "box-shadow:0 .4cqh 1cqh rgba(120,90,40,.18);}" +
     ".prayer-title-main{font-size:2.6cqh;font-weight:900;letter-spacing:.25cqh;}" +
     ".prayer-title-sub{font-size:1.2cqh;color:#8a6b3d;margin-top:.35cqh;font-weight:700;}" +
-    ".prayer-header-buttons{flex:none;display:flex;align-items:center;gap:.8cqw;}" +
-    ".prayer-header-btn{width:8.2cqh;height:100%;display:flex;align-items:center;justify-content:center;" +
-      "background:var(--c-panel);border:.2cqh solid var(--c-panel-line);border-radius:var(--r);color:var(--c-ink);" +
-      "cursor:pointer;font:inherit;font-size:3.1cqh;padding:0;box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);backdrop-filter:blur(4px);}" +
+    ".prayer-header-buttons{position:absolute;right:0;top:0;height:100%;display:flex;align-items:center;gap:.8cqw;}" +
+    ".prayer-header-btn{position:relative;width:8.2cqh;height:100%;display:flex;align-items:center;justify-content:center;" +
+      "background-color:transparent;background-position:center;background-repeat:no-repeat;background-size:contain;border:0;border-radius:0;color:transparent;" +
+      "cursor:pointer;font:inherit;font-size:0;padding:0;box-shadow:none;backdrop-filter:none;}" +
     ".prayer-header-btn .ico{font-size:3.1cqh;line-height:1;}" +
     ".prayer-header-btn span:last-child{display:none;}" +
     ".prayer-header-btn:active{transform:scale(.94);}" +
@@ -455,7 +462,7 @@ function ensurePrayerStyles(){
     ".prayer-actions{flex:none;display:flex;justify-content:center;gap:1.2cqw;}" +
     ".prayer-btn{min-width:16cqw;height:5.6cqh;border-radius:1.3cqh;font-size:2cqh;font-weight:900;cursor:pointer;" +
       "font:inherit;border:.22cqh solid rgba(178,140,80,.5);}" +
-    ".prayer-btn-confirm{background:linear-gradient(180deg,#7fbf8a,#4f9c62);color:#fff;border-color:#3f7c4e;}" +
+    ".prayer-btn-confirm{height:5.6cqh;background:transparent url(\"assets/ui_buttons/prayer_select.png\") center/100% 100% no-repeat;color:transparent;border:0;border-radius:0;box-shadow:none;font-size:0;}" +
     ".prayer-btn-confirm:disabled{filter:grayscale(.5) brightness(.92);cursor:default;opacity:.7;}" +
     "@media (max-width:900px){.prayer-cards{flex-direction:column;align-items:stretch;}.prayer-card{max-width:none;min-height:auto;}" +
       ".prayer-tip{display:none;}}";

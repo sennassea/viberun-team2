@@ -515,10 +515,10 @@ function ensureSbOverlay(){
 function sbOverlayHtml(){
   return (
     '<div class="sb-menu">' +
-      '<button type="button" class="sb-menu-btn" id="sbMapBtn"><span class="sb-menu-ico">🗺️</span><span>여정</span></button>' +
-      '<button type="button" class="sb-menu-btn" id="sbDeckBtn"><span class="sb-menu-ico">📖</span><span>보유주문</span></button>' +
-      '<button type="button" class="sb-menu-btn" id="sbBagBtn"><span class="sb-menu-ico">🎒</span><span>가방</span></button>' +
-      '<button type="button" class="sb-menu-btn" id="sbSettingsBtn"><span class="sb-menu-ico">⚙️</span><span>설정</span></button>' +
+      '<button type="button" class="sb-menu-btn ui-asset-button ui-map-button" id="sbMapBtn"><span class="sb-menu-ico">🗺️</span><span>여정</span></button>' +
+      '<button type="button" class="sb-menu-btn ui-asset-button ui-codex-button" id="sbDeckBtn"><span class="sb-menu-ico">📖</span><span>보유주문</span></button>' +
+      '<button type="button" class="sb-menu-btn ui-asset-button ui-bag-button" id="sbBagBtn"><span class="sb-menu-ico">🎒</span><span>가방</span></button>' +
+      '<button type="button" class="sb-menu-btn ui-asset-button ui-settings-button" id="sbSettingsBtn"><span class="sb-menu-ico">⚙️</span><span>설정</span></button>' +
     '</div>' +
     '<div class="sb-title-row">' +
       '<div class="sb-title">신령의 은혜</div>' +
@@ -608,9 +608,9 @@ function ensureSbStyles(){
       "background-size:cover;background-position:center;background-repeat:no-repeat;}" +
     ".sb-overlay.show{display:flex;}" +
     ".sb-menu{position:absolute;top:1.4cqh;right:1.4cqh;height:12cqh;display:flex;align-items:center;gap:.8cqw;z-index:2;}" +
-    ".sb-menu-btn{width:8.2cqh;height:100%;display:flex;align-items:center;justify-content:center;" +
-      "background:var(--c-panel);border:.2cqh solid var(--c-panel-line);border-radius:var(--r);" +
-      "color:var(--c-ink);cursor:pointer;font:inherit;font-size:3.1cqh;padding:0;box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);backdrop-filter:blur(4px);}" +
+    ".sb-menu-btn{position:relative;width:8.2cqh;height:100%;display:flex;align-items:center;justify-content:center;" +
+      "background-color:transparent;background-position:center;background-repeat:no-repeat;background-size:contain;border:0;border-radius:0;" +
+      "color:transparent;cursor:pointer;font:inherit;font-size:0;padding:0;box-shadow:none;backdrop-filter:none;}" +
     ".sb-menu-btn .sb-menu-ico{font-size:3.1cqh;line-height:1;}" +
     ".sb-menu-btn span:last-child{display:none;}" +
     ".sb-menu-btn:active{transform:scale(.94);}" +

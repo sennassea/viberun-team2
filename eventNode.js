@@ -136,8 +136,9 @@ function eventShellHtml(){
         '<div class="event-portrait" id="eventPortrait">👼</div>' +
         '<div class="event-player-body">' +
           '<div class="event-player-name"><b id="eventName"></b></div>' +
-          '<div class="event-hp-row"><span>정신력</span><span id="eventHpText"></span></div>' +
-          '<div class="event-hp-bar"><div class="event-hp-fill" id="eventHpFill"></div></div>' +
+          '<div class="event-hp-row">' +
+            '<div class="event-hp-bar"><div class="event-hp-fill" id="eventHpFill"></div><span id="eventHpText"></span></div>' +
+          '</div>' +
           '<div class="event-resource-row">' +
             '<span class="event-resource">🏺<b id="eventRelicCount">0</b></span>' +
             '<span class="event-resource">🧪<b id="eventPotionCount">0</b></span>' +
@@ -145,12 +146,16 @@ function eventShellHtml(){
           '</div>' +
         '</div>' +
       '</div>' +
+      '<div class="event-stage-info">' +
+        '<div class="event-stage-title-main" id="eventStageTitle">이벤트</div>' +
+        '<div class="event-stage-title-sub" id="eventStageSub"></div>' +
+      '</div>' +
       '<div class="event-topbar-spacer"></div>' +
       '<div class="event-menu" aria-label="이벤트 중 공통 메뉴">' +
-        '<button type="button" class="event-menu-btn" id="eventMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
-        '<button type="button" class="event-menu-btn" id="eventDeckBtn"><span class="ico">📖</span><span>보유 의식</span></button>' +
-        '<button type="button" class="event-menu-btn" id="eventBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
-        '<button type="button" class="event-menu-btn" id="eventSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
+        '<button type="button" class="event-menu-btn ui-asset-button ui-map-button" id="eventMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
+        '<button type="button" class="event-menu-btn ui-asset-button ui-codex-button" id="eventDeckBtn"><span class="ico">📖</span><span>보유 의식</span></button>' +
+        '<button type="button" class="event-menu-btn ui-asset-button ui-bag-button" id="eventBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
+        '<button type="button" class="event-menu-btn ui-asset-button ui-settings-button" id="eventSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
     '</div>' +
     '<div class="event-stage">' +
@@ -263,6 +268,16 @@ function renderEventHeader(){
   overlay.querySelector("#eventRelicCount").textContent = count(s.relics);
   overlay.querySelector("#eventPotionCount").textContent = count(s.potions);
   overlay.querySelector("#eventGold").textContent = s.gold || 0;
+  renderEventStageInfo();
+}
+
+function renderEventStageInfo(){
+  const overlay = eventOverlayEl;
+  if(!overlay) return;
+  const outTitle = overlay.querySelector("#eventStageTitle");
+  const outSub = overlay.querySelector("#eventStageSub");
+  if(outTitle) outTitle.textContent = "이벤트";
+  if(outSub) outSub.textContent = eventState && eventState.event ? (eventState.event.title || "") : "";
 }
 
 function escapeEventHtml(str){
