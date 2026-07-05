@@ -50,27 +50,70 @@
       icon: "💢",
       name: "공격",
       color: "#d14040",
-      desc: function (m, weak) {
-        var s = "이 적은 ";
+            desc: function (m, weak, displayedStatusName, enemy) {
+        var s = "적이 ";
         if (m.name) s += '"' + m.name + '" / ';
-        s += "스트레스 " + m.v + " 의 피해로 공격하려고 합니다.";
-        if (weak > 0 && typeof m.v === "number") {
-          var actualDamage = Math.floor(m.v * 0.75);
-          var reducedDamage = m.v - actualDamage;
-          s += "\n※ 동요 중 — 피해가 " + reducedDamage + " 감소합니다.";
+        var rawDamage = m.v;
+        var actualDamage = m.v;
+        if (window.previewMonsterFinalDamage && enemy) {
+          var preview = window.previewMonsterFinalDamage(enemy, m);
+          rawDamage = preview.rawDamage;
+          actualDamage = preview.finalDamage;
+        } else if (weak > 0 && typeof m.v === "number") {
+          actualDamage = Math.floor(m.v * 0.75);
+        }
+        s += "스트레스 " + actualDamage + " 피해로 공격하려고 합니다.";
+        if (weak > 0 && typeof rawDamage === "number" && rawDamage !== actualDamage) {
+          var reducedDamage = rawDamage - actualDamage;
+          s += "\n동요 중이라 피해가 " + reducedDamage + " 감소합니다.";
           s += "\n실제 피해: " + actualDamage;
         }
         return s;
-      }
-    },
+      }    },
     defend: {
       icon: "🛡️",
       name: "보호",
       color: "#3f8fe0",
-      desc: function (m) {
-        var s = "이 적은 ";
+            desc: function (m, weak, displayedStatusName, enemy) {
+        var s = "적이 ";
         if (m.name) s += '"' + m.name + '" / ';
-        return s + "결계 " + m.v + " 를 획득하려고 합니다.";
+        var target = window.getPlannedMonsterSupportTarget && enemy
+          ? window.getPlannedMonsterSupportTarget(enemy, m)
+          : enemy;
+        var value = window.getMonsterDefendValue && enemy
+          ? window.getMonsterDefendValue(enemy, m, target)
+          : m.v;
+        var targetText = target && enemy && target.id !== enemy.id ? " (" + target.name + ")" : "";
+        return s + "결계 " + value + "를 얻으려고 합니다." + targetText;
+      }    },
+    drawPenalty: {
+      icon: "💭",
+      name: "손패 압박",
+      color: "#8a5cc0",
+      desc: function (m) {
+        var s = "적이 ";
+        if (m.name) s += '"' + m.name + '" / ';
+        return s + "다음 플레이어 턴 주문 뽑기를 " + (m.v || 1) + " 감소시키려 합니다.";
+      }
+    },
+    lock: {
+      icon: "🔒",
+      name: "잠금",
+      color: "#8a5cc0",
+      desc: function (m) {
+        var s = "적이 ";
+        if (m.name) s += '"' + m.name + '" / ';
+        return s + "다음 손패에서 비용이 가장 높은 사용 가능 주문 1장을 잠그려 합니다.";
+      }
+    },
+    exam: {
+      icon: "📝",
+      name: "문항",
+      color: "#8a5cc0",
+      desc: function (m) {
+        var s = "적이 ";
+        if (m.name) s += '"' + m.name + '" / ';
+        return s + "다음 턴의 주문 타입 규칙을 예고합니다.";
       }
     },
     debuff: {
@@ -177,11 +220,14 @@
     if (!intent) return [];
     var names = [];
     var used = {};
-    if (intent.statusCard && typeof CARD_DB !== "undefined" && CARD_DB[intent.statusCard]) {
-      var cardName = CARD_DB[intent.statusCard].name || "";
+    var intentStatusCard = window.getMonsterIntentStatusCardKey
+      ? window.getMonsterIntentStatusCardKey(intent)
+      : intent.statusCard;
+    if (intentStatusCard && typeof CARD_DB !== "undefined" && CARD_DB[intentStatusCard]) {
+      var cardName = CARD_DB[intentStatusCard].name || "";
       addIntentStatusName(names, used, cardName);
     }
-    addIntentStatusName(names, used, intent.statusCard);
+    addIntentStatusName(names, used, intentStatusCard);
     ["status", "effect", "debuff", "applyStatus"].forEach(function (field) {
       var value = intent[field];
       if (Array.isArray(value)) {
@@ -496,7 +542,7 @@
     if (enemy.intent) {
       var info = INTENT_INFO[enemy.intent.t] || INTENT_INFO.attack;
       var displayedStatusName = getDisplayedIntentStatusName(cbEl);
-      var intentDesc = info.desc(enemy.intent, enemy.weak || 0, displayedStatusName);
+      var intentDesc = info.desc(enemy.intent, enemy.weak || 0, displayedStatusName, enemy);
       intentStatusNames = getIntentAppliedStatusNames(enemy.intent, displayedStatusName);
       if (enemy.intent.t !== "debuff" && enemy.intent.t !== "attack") {
         intentDesc = appendIntentStatusEffects(intentDesc, intentStatusNames);
@@ -507,7 +553,7 @@
         intentDesc,
         info.color
       ));
-      if (enemy.intent.t === "attack" && enemy.intent.statusCard && intentStatusNames.length > 0) {
+      if (enemy.intent.t === "attack" && intentStatusNames.length > 0) {
         rows.push('<hr class="btt-sep">');
         rows = rows.concat(buildIntentStatusRows(intentStatusNames));
       }

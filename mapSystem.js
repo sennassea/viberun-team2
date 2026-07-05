@@ -233,11 +233,14 @@ function centerScrollOnFloor(fi){
 }
 
 /* ── 몬스터 배열 in-place 교체 ────────────────────────────────────────── */
-function loadStageMonsters(idx){
+function loadStageMonsters(idx, options={}){
   const d = window.BOHYUN_COMBAT_DATA;
   if(!d || !d.monsters) return;
   if(!d._orig) d._orig = [...d.monsters];
   if(MAP_STAGES[idx]){
+    if(typeof window.ACT1_RESOLVE_STAGE_PACKAGE === "function"){
+      window.ACT1_RESOLVE_STAGE_PACKAGE(MAP_STAGES[idx], { recordHistory:!!options.recordHistory });
+    }
     d.monsters.splice(0, d.monsters.length, ...MAP_STAGES[idx].getMonsters());
   }
 }
@@ -261,7 +264,7 @@ function startStage(stageIdx){
   window.MAP_STATE.currentStage = stageIdx;
   window.MAP_STATE.proceedMode  = false;
   window.MAP_STATE.startMapMode = false;
-  loadStageMonsters(stageIdx);
+  loadStageMonsters(stageIdx, { recordHistory:true });
   updateHudFloor();
   closeMap();
   if(typeof newGame === "function") newGame();

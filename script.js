@@ -444,12 +444,10 @@ function getSelectedLivingEnemy(){
 
 function cloneMonsterRuntimeData(data){
   if(!data || typeof data !== "object") return data;
-  return {
-    ...data,
-    roles: Array.isArray(data.roles) ? [...data.roles] : data.roles,
-    moves: Array.isArray(data.moves) ? data.moves.map(move => ({ ...move })) : data.moves,
-    nextPhase: data.nextPhase ? cloneMonsterRuntimeData(data.nextPhase) : null
-  };
+  if(Array.isArray(data)) return data.map(cloneMonsterRuntimeData);
+  return Object.fromEntries(
+    Object.entries(data).map(([key, value]) => [key, cloneMonsterRuntimeData(value)])
+  );
 }
 
 function applyBattleStartRelics(){
@@ -547,6 +545,16 @@ function newGame(options={}){
     firstAttackUsed: false,
     nextAttackMultiplier: null,
     blockGainedThisTurn: 0,
+    cardsPlayedThisTurn: 0,
+    attackCardsPlayedThisTurn: 0,
+    // Actual enemy HP loss this turn. Damage absorbed by block is excluded.
+    damageDealtThisTurn: 0,
+    pendingDrawPenalty: 0,
+    pendingHandLock: 0,
+    lockedHandCards: [],
+    handLockTokens: [],
+    nextHandLockToken: 1,
+    turnChallenges: [],
     summonCount: 0,
     relicTurnFlags: {},
     retainedBlockFromRelic: 0,
@@ -561,6 +569,7 @@ function newGame(options={}){
   // 전투 시작 효과는 전투당 1회만 적용한다.
   // 드로우 이후에 호출하여 "전투 시작 시 드로우 +1" 계열 법구도 자연스럽게 처리한다.
   applyBattleStartRelics();
+  applyPlayerTurnStartGimmicks();
   renderAll();
 }
 
@@ -577,6 +586,7 @@ function spawnPackageEnemies(){
   S.enemies = defs.map((def, i) => {
     return createCombatEnemy(def, i);
   });
+  S.enemies.forEach(enemy => planEnemyIntentTarget(enemy));
   S.selectedId = S.enemies[0]?.id || null;
 }
 
@@ -643,6 +653,11 @@ function createCombatEnemy(def, index, options = {}){
   if(options.idSuffix) e.id = e.baseId + "_" + options.idSuffix;
   e.spawnIndex = index;
   e.summoned = !!options.summoned;
+  e.ownerId = options.ownerId || null;
+  e.summonGroup = options.summonGroup || null;
+  e.expireAfterActions = Number.isFinite(options.expireAfterActions)
+    ? options.expireAfterActions
+    : (e.runtimeFlags && Number.isFinite(e.runtimeFlags.expireAfterActions) ? e.runtimeFlags.expireAfterActions : null);
   ensureEnemyStatus(e);
   return e;
 }
@@ -666,17 +681,37 @@ function getSummonCountByGrade(summoner){
 function summonEnemy(summoner){
   if(!S || !summoner) return 0;
   const maxLivingEnemies = 4;
-  const count = getSummonCountByGrade(summoner);
-  const def = getBasicSummonMonsterDef(summoner);
+  const config = summoner.summonConfig || null;
+  const count = Number.isFinite(config && config.count) ? config.count : getSummonCountByGrade(summoner);
+  const summonGroup = config && config.summonGroup ? config.summonGroup : null;
+  if(config && Number.isFinite(config.maxLivingSummons)){
+    const livingOwned = livingEnemies().filter(enemy =>
+      enemy.ownerId === summoner.id && (!summonGroup || enemy.summonGroup === summonGroup)
+    ).length;
+    if(livingOwned >= config.maxLivingSummons) return 0;
+  }
+  const def = config && config.summonMonsterId && typeof COMBAT_DATA.getMonsterById === "function"
+    ? COMBAT_DATA.getMonsterById(config.summonMonsterId)
+    : getBasicSummonMonsterDef(summoner);
   if(!def) return 0;
 
   let summoned = 0;
   for(let i = 0; i < count && livingEnemies().length < maxLivingEnemies; i++){
+    if(config && Number.isFinite(config.maxLivingSummons)){
+      const livingOwned = livingEnemies().filter(enemy =>
+        enemy.ownerId === summoner.id && (!summonGroup || enemy.summonGroup === summonGroup)
+      ).length;
+      if(livingOwned >= config.maxLivingSummons) break;
+    }
     S.summonCount = (S.summonCount || 0) + 1;
     const enemy = createCombatEnemy(def, S.enemies.length, {
       summoned: true,
-      idSuffix: "summon" + S.summonCount
+      idSuffix: "summon" + S.summonCount,
+      ownerId: summoner.id,
+      summonGroup,
+      expireAfterActions: config && Number.isFinite(config.expireAfterActions) ? config.expireAfterActions : null
     });
+    planEnemyIntentTarget(enemy);
     S.enemies.push(enemy);
     summoned += 1;
   }
@@ -736,9 +771,557 @@ function applyNextPhaseIfNeeded(enemy){
 /* =========================================================================
    유틸
    ========================================================================= */
+function applyConfiguredPhaseIfNeeded(enemy){
+  const config = enemy && enemy.phaseConfig;
+  if(!enemy || !config) return false;
+  const mode = config.mode || enemy.phaseMode;
+  if(mode === "hpThresholdPatterns"){
+    const thresholds = Array.isArray(config.thresholds) ? config.thresholds : [];
+    const phases = Array.isArray(config.phases) ? config.phases : [];
+    const current = enemy.phaseIndex || 0;
+    let nextIndex = current;
+    thresholds.forEach((threshold, index) => {
+      if(enemy.hp <= threshold) nextIndex = Math.max(nextIndex, index + 1);
+    });
+    if(nextIndex === current) return false;
+    const phase = phases[nextIndex] || phases[phases.length - 1];
+    if(!phase) return false;
+    enemy.phaseIndex = nextIndex;
+    if(Array.isArray(phase.moves)){
+      enemy.moves = cloneMonsterRuntimeData(phase.moves);
+      enemy.patternIndex = 0;
+    }
+    if(phase.summonConfig !== undefined) enemy.summonConfig = cloneMonsterRuntimeData(phase.summonConfig);
+    MONSTER_PATTERN.planNextIntent(enemy);
+    planEnemyIntentTarget(enemy);
+    return true;
+  }
+  if(mode !== "singleHpThreshold") return false;
+  const phases = Array.isArray(config.phases) ? config.phases : [];
+  const nextIndex = (enemy.phaseIndex || 0) + 1;
+  const phase = phases[nextIndex - 1];
+  if(!phase || phase.applied) return false;
+  const thresholdRatio = Number.isFinite(phase.hpRatio) ? phase.hpRatio : config.hpRatio;
+  const thresholdHp = Number.isFinite(phase.hp) ? phase.hp : Math.ceil(enemy.maxHp * (thresholdRatio || 0.5));
+  if(enemy.hp > thresholdHp) return false;
+
+  phase.applied = true;
+  enemy.phaseIndex = nextIndex;
+  if(Array.isArray(phase.moves)){
+    enemy.moves = cloneMonsterRuntimeData(phase.moves);
+    if(phase.resetPattern !== false) enemy.patternIndex = 0;
+    enemy.intent = enemy.moves[0] || enemy.intent;
+    planEnemyIntentTarget(enemy);
+  }
+  return true;
+}
+
 const $ = s => document.querySelector(s);
 const livingEnemies = () => S.enemies.filter(e => e.hp > 0);
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a; }
+
+function notifyMonsterBattleEvent(type, context={}){
+  if(!S) return;
+  S.lastMonsterBattleEvent = { type, context, turn:S.turn || 0 };
+  handleMonsterBattleEvent(type, context);
+}
+
+function clampCounter(enemy, id, maxStack){
+  const value = getMonsterCounter(enemy, id);
+  updateMonsterCounter(enemy, id, "set", value, { min:0, max:Number.isFinite(maxStack) ? maxStack : 99 });
+}
+
+function addMonsterCounter(enemy, id, value, maxStack){
+  updateMonsterCounter(enemy, id, "add", value, { min:0, max:Number.isFinite(maxStack) ? maxStack : 99 });
+}
+
+function reduceMonsterCounter(enemy, id, value){
+  updateMonsterCounter(enemy, id, "reduce", value, { min:0 });
+}
+
+function resetMonsterCounter(enemy, id){
+  updateMonsterCounter(enemy, id, "set", 0, { min:0 });
+}
+
+function handleMonsterBattleEvent(type, context={}){
+  if(!S || !Array.isArray(S.enemies)) return;
+  if(type === "successfulAttackCardPlayed") handleSuccessfulAttackCard(context);
+  if(type === "enemyHit") handleEnemyHit(context);
+  if(type === "enemyBlockBroken") handleEnemyBlockBroken(context);
+  if(type === "enemyDied") handleEnemyDied(context);
+}
+
+function handleSuccessfulAttackCard(context){
+}
+
+function handleEnemyHit(context){
+  const enemy = context.enemy || context.target;
+  const result = context.result || {};
+  if(!enemy || !(result.hpLoss > 0)) return;
+  enemy.hitThisPlayerTurn = true;
+}
+
+function applyPreAttackCardGimmicks(target){
+  if(!target || target.hp <= 0) return;
+  const gimmick = target.gimmick || {};
+  if(gimmick.type === "reflection" && !target.reflectionUsedThisPlayerTurn){
+    const blockValue = gimmick.block || 0;
+    if(blockValue > 0){
+      grantEnemyBlock(target, blockValue);
+      spawnFloat('[data-id="'+target.id+'"]', '+'+blockValue, 'blk');
+    }
+    target.reflectionUsedThisPlayerTurn = true;
+  }
+}
+
+function handleEnemyBlockBroken(context){
+  const enemy = context.enemy;
+  const gimmick = enemy && enemy.gimmick;
+  if(!enemy || !gimmick) return;
+  if((gimmick.type === "charge" || gimmick.type === "scaling") && gimmick.counterId && gimmick.blockBreakReduction){
+    reduceMonsterCounter(enemy, gimmick.counterId, gimmick.blockBreakReduction);
+  }
+}
+
+function handleEnemyDied(context){
+  const dead = context.enemy;
+  if(!dead) return;
+  livingEnemies().forEach(enemy => {
+    const gimmick = enemy.gimmick || {};
+    if(gimmick.type === "emptySeat" && enemy !== dead && gimmick.counterId){
+      addMonsterCounter(enemy, gimmick.counterId, 1, gimmick.maxStack);
+    }
+  });
+}
+
+function emitEnemyDiedOnce(enemy, context={}){
+  if(!enemy || enemy.deathEventEmitted) return;
+  enemy.deathEventEmitted = true;
+  notifyMonsterBattleEvent("enemyDied", { ...context, enemy });
+}
+
+function hasPlayerStatus(statusId){
+  if(!S || !S.player || !statusId) return false;
+  if(statusId === "weak") return (S.player.weak || 0) > 0;
+  if(statusId === "anxiety") return (S.player.anxiety || 0) > 0;
+  if(statusId === "lethargy") return (S.player.lethargy || 0) > 0;
+  if(statusId === "fracture") return (S.player.fracture || 0) > 0;
+  return S.player.status && (S.player.status[statusId] || 0) > 0;
+}
+
+function ensureMonsterCounters(enemy){
+  if(!enemy.counters || typeof enemy.counters !== "object") enemy.counters = {};
+  return enemy.counters;
+}
+
+function getMonsterCounter(enemy, id){
+  return (ensureMonsterCounters(enemy)[id] || 0);
+}
+
+function updateMonsterCounter(enemy, id, op, value=1, options={}){
+  const counters = ensureMonsterCounters(enemy);
+  const before = counters[id] || 0;
+  let next = before;
+  if(op === "add") next += value;
+  else if(op === "reduce") next -= value;
+  else if(op === "reset") next = Number.isFinite(options.resetTo) ? options.resetTo : 0;
+  else if(op === "consume") next = Math.max(0, next - value);
+  else if(op === "set") next = value;
+  if(Number.isFinite(options.min)) next = Math.max(options.min, next);
+  if(Number.isFinite(options.max)) next = Math.min(options.max, next);
+  counters[id] = Math.max(0, next);
+  return counters[id] - before;
+}
+
+function countStatusCards(statusId, zones=["hand","draw","discard"]){
+  if(!S || !statusId) return 0;
+  return zones.reduce((sum, zone) => {
+    const cards = Array.isArray(S[zone]) ? S[zone] : [];
+    return sum + cards.filter(key => key === statusId).length;
+  }, 0);
+}
+
+function countAnyStatusCards(statusIds, zones=["hand","draw","discard"]){
+  const ids = Array.isArray(statusIds) ? statusIds : [statusIds];
+  return ids.reduce((sum, id) => sum + countStatusCards(id, zones), 0);
+}
+
+function countLivingSummons(group){
+  return livingEnemies().filter(enemy => enemy.summoned && (!group || enemy.summonGroup === group || enemy.baseId === group)).length;
+}
+
+function getMoveTargetPolicy(actor, move){
+  const conditional = move && move.conditionalTargetPolicy;
+  if(conditional && hasPlayerStatus(conditional.ifPlayerStatus)){
+    return conditional.targetPolicy || move.targetPolicy || "self";
+  }
+  return move && move.targetPolicy || "self";
+}
+
+function selectMonsterSupportTarget(actor, move){
+  const policy = getMoveTargetPolicy(actor, move);
+  if(policy === "self") return actor;
+  const others = livingEnemies().filter(enemy => enemy !== actor);
+  let target = null;
+  if(policy === "lowestHpAlly"){
+    target = others.sort((a,b) => (a.hp - b.hp) || ((a.spawnIndex || 0) - (b.spawnIndex || 0)))[0] || null;
+  } else if(policy === "lowestHpRatioAlly"){
+    target = others.sort((a,b) => {
+      const ar = a.maxHp ? a.hp / a.maxHp : 1;
+      const br = b.maxHp ? b.hp / b.maxHp : 1;
+      return (ar - br) || ((a.spawnIndex || 0) - (b.spawnIndex || 0));
+    })[0] || null;
+  } else if(policy === "randomOtherAlly"){
+    target = others.length ? others[Math.floor(Math.random() * others.length)] : null;
+  }
+  if(target) return target;
+  return (move && move.fallbackTarget === "self") ? actor : actor;
+}
+
+function planEnemyIntentTarget(enemy){
+  if(!enemy || !enemy.intent || enemy.intent.t !== "defend"){
+    if(enemy) enemy.plannedTargetId = null;
+    return null;
+  }
+  const target = selectMonsterSupportTarget(enemy, enemy.intent);
+  enemy.plannedTargetId = target ? target.id : null;
+  return target;
+}
+
+function getPlannedMonsterSupportTarget(actor, move){
+  if(!actor || !move) return actor;
+  const planned = actor.plannedTargetId ? livingEnemies().find(enemy => enemy.id === actor.plannedTargetId) : null;
+  return planned || selectMonsterSupportTarget(actor, move);
+}
+
+function getMonsterDefendValue(actor, move, target){
+  if(!move) return 0;
+  const usingFallback = target === actor && move.fallbackTarget === "self" && Number.isFinite(move.fallbackValue);
+  let value = usingFallback ? move.fallbackValue : (move.v || 0);
+  const bonus = move.conditionalValueBonus;
+  if(bonus && hasPlayerStatus(bonus.ifPlayerStatus)) value += bonus.v || 0;
+  if(move.counterBlock && move.counterBlock.id){
+    value += getMonsterCounter(actor, move.counterBlock.id) * (move.counterBlock.per || 1);
+  }
+  if(move.statusCardBlock){
+    const statusIds = move.statusCardBlock.statusCards || move.statusCardBlock.statusCard;
+    const count = Math.min(move.statusCardBlock.maxCount || 99, countAnyStatusCards(statusIds));
+    value += count * (move.statusCardBlock.per || 1);
+  }
+  return Math.max(0, value);
+}
+
+function grantEnemyBlock(target, value){
+  if(!target || value <= 0) return 0;
+  LIFE.addBlock(target, value);
+  target.enemyBlockExpiresOnNextAction = true;
+  target.enemyBlockGainedTurn = S.turn || 0;
+  return value;
+}
+
+function clearExpiredEnemyBlockBeforeAction(enemy){
+  if(!enemy || !enemy.enemyBlockExpiresOnNextAction) return false;
+  if((enemy.enemyBlockGainedTurn || 0) >= (S.turn || 0)) return false;
+  enemy.block = 0;
+  enemy.enemyBlockExpiresOnNextAction = false;
+  return true;
+}
+
+function getMonsterIntentRawDamage(enemy, move){
+  if(!move) return 0;
+  let damage = Number.isFinite(move.baseDamage) ? move.baseDamage : (move.v || 0);
+  if(move.speedBurst && getMonsterCounter(enemy, "speed") >= (move.speedBurst.threshold || 3)){
+    damage = move.speedBurst.damage || damage;
+  }
+  const attackRule = enemy && enemy.gimmick && (enemy.gimmick.type === "attackRule" || enemy.gimmick.type === "discipline") ? enemy.gimmick : null;
+  const ruleMoveMatches = attackRule
+    && move.role === attackRule.triggerMoveRole
+    && (!attackRule.triggerMoveName || move.name === attackRule.triggerMoveName);
+  if(ruleMoveMatches && getMonsterCounter(enemy, attackRule.counterId) >= (attackRule.maxStack || 2)){
+    damage = attackRule.burstDamage || damage;
+  }
+  if(move.conditionalDamage && hasPlayerStatus(move.conditionalDamage.ifPlayerStatus)){
+    damage = Number.isFinite(move.conditionalDamage.v) ? move.conditionalDamage.v : damage + (move.conditionalDamage.add || 0);
+  }
+  if(move.counterDamage && move.counterDamage.id){
+    damage += getMonsterCounter(enemy, move.counterDamage.id) * (move.counterDamage.per || 1);
+  }
+  if(move.statusCardDamage){
+    const statusIds = move.statusCardDamage.statusCards || move.statusCardDamage.statusCard;
+    const count = Math.min(move.statusCardDamage.maxCount || 99, countAnyStatusCards(statusIds));
+    damage += count * (move.statusCardDamage.per || 1);
+  }
+  if(move.summonDamage){
+    damage += countLivingSummons(move.summonDamage.group) * (move.summonDamage.per || 1);
+  }
+  return Math.max(0, Math.floor(damage));
+}
+
+function previewMonsterFinalDamage(enemy, move){
+  const rawDamage = getMonsterIntentRawDamage(enemy, move);
+  if(typeof LIFE.previewDamage === "function"){
+    return LIFE.previewDamage(S.player, rawDamage, enemy && enemy.weak);
+  }
+  const finalDamage = Math.max(0, rawDamage - (enemy && enemy.weak > 0 ? 2 : 0));
+  return { rawDamage, finalDamage };
+}
+
+function applyIntentStatusCard(move){
+  if(!move) return 0;
+  let added = 0;
+  if(move.statusCard){
+    added += addStatusCardToDiscard(move.statusCard, move.statusCount || 1);
+    if(added > 0 && CARD_DB[move.statusCard]) spawnFloat('.player', CARD_DB[move.statusCard].name, 'dmg');
+  }
+  const conditional = move.conditionalStatusCard;
+  if(conditional && hasPlayerStatus(conditional.ifPlayerStatus) && conditional.statusCard){
+    const amount = addStatusCardToDiscard(conditional.statusCard, conditional.statusCount || 1);
+    added += amount;
+    if(amount > 0 && CARD_DB[conditional.statusCard]) spawnFloat('.player', CARD_DB[conditional.statusCard].name, 'dmg');
+  }
+  return added;
+}
+
+function getMonsterIntentStatusCardKey(move){
+  if(!move) return null;
+  if(move.statusCard) return move.statusCard;
+  const actor = livingEnemies().find(enemy => enemy.intent === move);
+  const rule = actor && actor.gimmick && (actor.gimmick.type === "attackRule" || actor.gimmick.type === "discipline") ? actor.gimmick : null;
+  if(rule && rule.statusCard && move.role === rule.triggerMoveRole && (!rule.triggerMoveName || move.name === rule.triggerMoveName) && getMonsterCounter(actor, rule.counterId) >= (rule.maxStack || 2)){
+    return rule.statusCard;
+  }
+  const conditional = move.conditionalStatusCard;
+  if(conditional && hasPlayerStatus(conditional.ifPlayerStatus)) return conditional.statusCard || null;
+  return null;
+}
+
+function executeMonsterAttack(enemy, move){
+  notifyMonsterBattleEvent("beforeMonsterDamage", { enemy, move });
+  const result = applyDamageWithFeedback(S.player, getMonsterIntentRawDamage(enemy, move), enemy.weak);
+  applyIntentStatusCard(move);
+  if(move.conditionalStatus && move.conditionalStatus.role === "anxiety"){
+    LIFE.addAnxiety(S.player, move.conditionalStatus.v || 1);
+    spawnFloat('.player', '불안', 'dmg');
+  }
+  const rule = enemy && enemy.gimmick && (enemy.gimmick.type === "attackRule" || enemy.gimmick.type === "discipline") ? enemy.gimmick : null;
+  const ruleMoveMatches = rule
+    && move.role === rule.triggerMoveRole
+    && (!rule.triggerMoveName || move.name === rule.triggerMoveName);
+  if(ruleMoveMatches && getMonsterCounter(enemy, rule.counterId) >= (rule.maxStack || 2)){
+    if(rule.statusCard) addStatusCardToDiscard(rule.statusCard, 1);
+    resetMonsterCounter(enemy, rule.counterId);
+  }
+  if(move.counterDamage && move.counterDamage.resetAfterUse) resetMonsterCounter(enemy, move.counterDamage.id);
+  if(move.speedBurst && move.speedBurst.reset && getMonsterCounter(enemy, "speed") >= (move.speedBurst.threshold || 3)) resetMonsterCounter(enemy, "speed");
+  notifyMonsterBattleEvent("afterMonsterDamage", { enemy, move, result });
+  return result;
+}
+
+function executeEchoMove(enemy){
+  const echo = enemy && enemy.echoMove;
+  if(!enemy || !echo) return;
+  if(echo.t === "attack"){
+    applyDamageWithFeedback(S.player, getMonsterIntentRawDamage(enemy, echo), enemy.weak);
+  } else if(echo.t === "defend"){
+    const value = getMonsterDefendValue(enemy, echo, enemy);
+    grantEnemyBlock(enemy, value);
+    spawnFloat('[data-id="'+enemy.id+'"]', '+'+value, 'blk');
+  } else if(echo.t === "debuff"){
+    if(echo.role === "anxiety") LIFE.addAnxiety(S.player, echo.v || 1);
+    else if(echo.role === "counter") LIFE.addLethargy(S.player, echo.v || 1);
+    else if(echo.role === "fracture") LIFE.addFracture(S.player, echo.v || 1);
+    else LIFE.addWeak(S.player, echo.v || 1);
+    spawnFloat('.player', '메아리', 'dmg');
+  }
+  enemy.echoMove = null;
+}
+
+function isCardTypeMatch(card, requirementType){
+  if(!card) return false;
+  if(requirementType === "attack") return card.type === "attack";
+  if(requirementType === "nonAttack") return card.type !== "attack" && card.type !== "status";
+  return card.type === requirementType;
+}
+
+function createHandLockToken(){
+  S.nextHandLockToken = (S.nextHandLockToken || 1) + 1;
+  return "hand_" + (S.nextHandLockToken - 1);
+}
+
+function ensureHandLockTokens(){
+  if(!Array.isArray(S.handLockTokens)) S.handLockTokens = [];
+  for(let i = 0; i < S.hand.length; i++){
+    if(!S.handLockTokens[i]) S.handLockTokens[i] = createHandLockToken();
+  }
+  if(S.handLockTokens.length > S.hand.length) S.handLockTokens.length = S.hand.length;
+}
+
+function isHandCardLocked(handIndex, key){
+  ensureHandLockTokens();
+  const token = S.handLockTokens[handIndex];
+  return (S.lockedHandCards || []).some(lock => lock.token === token && lock.key === key);
+}
+
+function applyPendingHandLock(){
+  if(!S.pendingHandLock) return;
+  ensureHandLockTokens();
+  const candidates = S.hand
+    .map((key, index) => ({ key, index, token:S.handLockTokens[index], card:CARD_DB[key] }))
+    .filter(info => info.card && info.card.type !== "status" && !info.card.unplayable);
+  if(!candidates.length){ S.pendingHandLock = 0; return; }
+  candidates.sort((a,b) => ((b.card.cost || 0) - (a.card.cost || 0)) || (a.index - b.index));
+  const picked = candidates[0];
+  S.lockedHandCards = [{ key:picked.key, token:picked.token, name:picked.card.name, untilTurnEnd:true }];
+  S.pendingHandLock = 0;
+  toast(picked.card.name+" 잠금");
+}
+
+function getExamPhaseIndex(enemy){
+  const gimmick = enemy.gimmick || {};
+  const thresholds = gimmick.thresholds || [];
+  let index = 0;
+  thresholds.forEach((threshold, i) => {
+    if(enemy.hp <= threshold) index = i + 1;
+  });
+  return index;
+}
+
+function nextChallengeForEnemy(enemy){
+  const gimmick = enemy.gimmick || {};
+  if(gimmick.type === "question"){
+    const sequence = gimmick.sequence || ["attack", "nonAttack"];
+    const index = getMonsterCounter(enemy, "questionIndex") % sequence.length;
+    addMonsterCounter(enemy, "questionIndex", 1, 999);
+    return { enemyId:enemy.id, enemyName:enemy.name, mode:"require", types:[sequence[index]], failStatusCards:[gimmick.failStatusCard || "regret"], counterId:gimmick.burstCounterId, maxStack:gimmick.maxStack };
+  }
+  if(gimmick.type === "exam"){
+    const phaseIndex = getExamPhaseIndex(enemy);
+    const sequence = (gimmick.sequences && gimmick.sequences[phaseIndex]) || [];
+    const index = getMonsterCounter(enemy, "examIndex") % Math.max(1, sequence.length);
+    addMonsterCounter(enemy, "examIndex", 1, 999);
+    const rule = sequence[index] || sequence[0];
+    return { enemyId:enemy.id, enemyName:enemy.name, mode:rule.mode, types:rule.types || ["attack"], failStatusCards:rule.failStatusCards || ["hesitation"] };
+  }
+  return null;
+}
+
+function applyPlayerTurnStartGimmicks(){
+  S.turnChallenges = [];
+  S.lockedHandCards = [];
+  livingEnemies().forEach(enemy => {
+    enemy.reflectionUsedThisPlayerTurn = false;
+    enemy.hitThisPlayerTurn = false;
+    const challenge = nextChallengeForEnemy(enemy);
+    if(challenge){
+      challenge.satisfied = false;
+      challenge.failed = false;
+      S.turnChallenges.push(challenge);
+      toast(enemy.name+" 요구: "+challenge.types.join("+"));
+    }
+  });
+  applyPendingHandLock();
+}
+
+function applyPlayerTurnEndGimmicks(){
+  livingEnemies().forEach(enemy => {
+    const gimmick = enemy.gimmick || {};
+    if(gimmick.type === "attention" && gimmick.counterId){
+      if(enemy.hitThisPlayerTurn) reduceMonsterCounter(enemy, gimmick.counterId, 1);
+      else addMonsterCounter(enemy, gimmick.counterId, 1, gimmick.maxStack);
+    }
+    if(gimmick.type === "resourceRule" && gimmick.counterId && S.energy > 0){
+      addMonsterCounter(enemy, gimmick.counterId, 1, gimmick.maxStack);
+    }
+    if(gimmick.type === "attackRule" && gimmick.counterId && (S.attackCardsPlayedThisTurn || 0) >= (gimmick.threshold || 3)){
+      addMonsterCounter(enemy, gimmick.counterId, 1, gimmick.maxStack);
+    }
+    if(gimmick.type === "discipline" && gimmick.counterId && (S.cardsPlayedThisTurn || 0) >= (gimmick.threshold || 4)){
+      addMonsterCounter(enemy, gimmick.counterId, 1, gimmick.maxStack);
+    }
+    if(gimmick.type === "lap" && gimmick.counterId){
+      const phaseIndex = enemy.phaseIndex || 0;
+      const interruptThreshold = Array.isArray(gimmick.phaseThresholds)
+        ? (gimmick.phaseThresholds[phaseIndex] ?? gimmick.interruptThreshold ?? 0)
+        : (gimmick.interruptThreshold || 0);
+      if((S.damageDealtThisTurn || 0) < interruptThreshold) return;
+      reduceMonsterCounter(enemy, gimmick.counterId, 1);
+    }
+  });
+  (S.turnChallenges || []).forEach(challenge => {
+    let failed = false;
+    if(challenge.mode === "require" || challenge.mode === "requireAll"){
+      failed = !challenge.satisfied;
+    }
+    if(challenge.mode === "forbid"){
+      failed = challenge.failed;
+    }
+    if(failed){
+      (challenge.failStatusCards || []).forEach(cardKey => addStatusCardToDiscard(cardKey, 1));
+      const enemy = livingEnemies().find(item => item.id === challenge.enemyId);
+      if(enemy && challenge.counterId) addMonsterCounter(enemy, challenge.counterId, 1, challenge.maxStack);
+    }
+  });
+  S.lockedHandCards = [];
+}
+
+function updateTurnChallengesForCard(card){
+  (S.turnChallenges || []).forEach(challenge => {
+    const matches = (challenge.types || []).filter(type => isCardTypeMatch(card, type));
+    if(challenge.mode === "require"){
+      if(matches.length > 0) challenge.satisfied = true;
+    } else if(challenge.mode === "requireAll"){
+      challenge.matchedTypes = challenge.matchedTypes || {};
+      matches.forEach(type => { challenge.matchedTypes[type] = true; });
+      challenge.satisfied = (challenge.types || []).every(type => challenge.matchedTypes[type]);
+    } else if(challenge.mode === "forbid"){
+      if(matches.length > 0) challenge.failed = true;
+    }
+  });
+}
+
+function getActiveChallengeForEnemy(enemy){
+  if(!enemy || !Array.isArray(S.turnChallenges)) return null;
+  return S.turnChallenges.find(challenge => challenge.enemyId === enemy.id) || null;
+}
+
+function challengeLabel(challenge){
+  if(!challenge) return "문항";
+  const typeLabel = (challenge.types || []).map(type => type === "attack" ? "공격" : type === "nonAttack" ? "비공격" : type).join("+");
+  if(challenge.mode === "forbid") return "금지 "+typeLabel;
+  return "요구 "+typeLabel;
+}
+
+function applyEnemyMoveAfterAction(enemy, move){
+  if(!enemy || !move) return;
+  if(move.afterActionCounter && move.afterActionCounter.id){
+    const op = move.afterActionCounter.op || "add";
+    updateMonsterCounter(enemy, move.afterActionCounter.id, op, move.afterActionCounter.v || 1, { min:0, max:enemy.gimmick && enemy.gimmick.maxStack });
+  }
+  if(enemy.gimmick && enemy.gimmick.type === "scaling" && enemy.gimmick.afterActionAdd && enemy.gimmick.counterId){
+    addMonsterCounter(enemy, enemy.gimmick.counterId, enemy.gimmick.afterActionAdd, enemy.gimmick.maxStack);
+  }
+  if(enemy.gimmick && enemy.gimmick.type === "lap" && enemy.gimmick.counterId){
+    addMonsterCounter(enemy, enemy.gimmick.counterId, 1, enemy.gimmick.maxStack);
+  }
+  if(move.t === "lock") S.pendingHandLock = Math.max(S.pendingHandLock || 0, move.v || 1);
+  if(move.t === "drawPenalty") S.pendingDrawPenalty = Math.max(S.pendingDrawPenalty || 0, move.v || 1);
+  if(enemy.gimmick && enemy.gimmick.type === "echo" && ["attack", "defend", "debuff"].includes(move.t)){
+    const ratio = enemy.gimmick.ratio || 0.5;
+    const minValue = enemy.gimmick.minValue || 1;
+    const echoValue = Math.max(minValue, Math.floor((move.v || 0) * ratio));
+    enemy.echoMove = { ...move, v:echoValue };
+    if(enemy.gimmick.repeatStatusCard === false) delete enemy.echoMove.statusCard;
+  }
+}
+
+if(typeof window !== "undefined"){
+  window.countStatusCards = countStatusCards;
+  window.getMonsterIntentRawDamage = getMonsterIntentRawDamage;
+  window.previewMonsterFinalDamage = previewMonsterFinalDamage;
+  window.getPlannedMonsterSupportTarget = getPlannedMonsterSupportTarget;
+  window.getMonsterDefendValue = getMonsterDefendValue;
+  window.getMonsterIntentStatusCardKey = getMonsterIntentStatusCardKey;
+}
 
 function ensureEnemyStatus(enemy){
   if(!enemy) return {};
@@ -870,13 +1453,39 @@ function statusIconHtml(statusId, count){
        + icon + '<b>'+count+'</b></div>';
 }
 
+const MONSTER_COUNTER_LABELS = {
+  waiting: "기다림",
+  violation: "위반",
+  neglect: "외면",
+  patience: "참음",
+  years: "세월",
+  emptySeat: "빈자리",
+  leftover: "잔반",
+  discipline: "지적",
+  speed: "속도",
+  wrongAnswer: "오답"
+};
+
+function monsterCounterIconHtml(enemyLike, counterId, count){
+  if(!count || count <= 0) return "";
+  const label = MONSTER_COUNTER_LABELS[counterId] || counterId;
+  const max = enemyLike.gimmick && enemyLike.gimmick.counterId === counterId ? enemyLike.gimmick.maxStack : null;
+  const tooltip = label + "\n현재 스택 : " + count + (Number.isFinite(max) ? "/" + max : "");
+  return '<div class="enemy-status-icon status-counter" data-status-id="counter-'+escapeHtml(counterId)+'" data-status-name="'+escapeHtml(label)+'" data-status-tooltip="'+escapeHtml(tooltip)+'" style="--status-color:#9b7a32">'
+       + '<span>●</span><b>'+count+'</b></div>';
+}
+
 function renderEnemyStatusIcons(enemyLike){
   if(!enemyLike || enemyLike.hideHud) return "";
   ensureEnemyStatus(enemyLike);
   const orderedStatusIds = ["agitation", "fracture", "recollection", "mark", ...Object.keys(STATUS_DATA).filter(id => !["agitation", "fracture", "recollection", "mark"].includes(id))];
-  const html = orderedStatusIds
+  const statusHtml = orderedStatusIds
     .map(statusId => statusIconHtml(statusId, enemyLike.status?.[statusId] || 0))
     .join("");
+  const counterHtml = Object.entries(enemyLike.counters || {})
+    .map(([counterId, count]) => monsterCounterIconHtml(enemyLike, counterId, count))
+    .join("");
+  const html = statusHtml + counterHtml;
   return html ? '<div class="enemy-status-icons">'+html+'</div>' : "";
 }
 
@@ -898,7 +1507,10 @@ function drawCards(n){
     }
     const drawn = S.draw.pop();
     if(S.hand.length >= 10) discardCard(drawn, { source:"drawOverflow" });
-    else S.hand.push(drawn);
+    else {
+      S.hand.push(drawn);
+      if(Array.isArray(S.handLockTokens)) S.handLockTokens.push(createHandLockToken());
+    }
   }
 }
 
@@ -947,10 +1559,12 @@ function playCard(handIndex, targetEnemy){
     return false;
   }
   if(card.unplayable){ toast(card.name+"은 사용할 수 없습니다"); return false; }
+  if(isHandCardLocked(handIndex, key)){ toast(card.name+"은 잠겨 있습니다"); return false; }
   if(S.energy < card.cost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
 
   S.energy -= card.cost;
+  if(card.type === "attack") applyPreAttackCardGimmicks(targetEnemy);
 
   for(const e of card.fx){
     switch(e.t){
@@ -1105,7 +1719,15 @@ function playCard(handIndex, targetEnemy){
   }
 
   S.hand.splice(handIndex, 1);
+  if(Array.isArray(S.handLockTokens)) S.handLockTokens.splice(handIndex, 1);
   discardCard(key, { source:"played" });
+  S.cardsPlayedThisTurn = (S.cardsPlayedThisTurn || 0) + 1;
+  updateTurnChallengesForCard(card);
+  notifyMonsterBattleEvent("successfulCardPlayed", { cardKey:key, card });
+  if(card.type === "attack"){
+    S.attackCardsPlayedThisTurn = (S.attackCardsPlayedThisTurn || 0) + 1;
+    notifyMonsterBattleEvent("successfulAttackCardPlayed", { cardKey:key, card, target:targetEnemy });
+  }
   autoSelectTarget();
   if(window.TUTORIAL_BATTLE &&
      typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
@@ -1126,12 +1748,22 @@ function playCard(handIndex, targetEnemy){
 }
 
 function applyDamageWithFeedback(target, rawDamage, attackerWeak){
+  const beforeHp = target ? target.hp || 0 : 0;
+  const beforeBlock = target ? target.block || 0 : 0;
   const result = LIFE.applyDamage(target, rawDamage, attackerWeak);
   const sel = target===S.player ? '.player' : '[data-id="'+target.id+'"]';
   if(result.absorbed > 0)                          spawnFloat(sel, '-'+result.absorbed, 'blk');
   if(result.hpLoss   > 0)                          spawnFloat(sel, '-'+result.hpLoss,   'dmg');
   if(result.absorbed === 0 && result.hpLoss === 0) spawnFloat(sel, '0', 'blk');
-  if(target !== S.player) applyNextPhaseIfNeeded(target);
+  if(target !== S.player){
+    S.damageDealtThisTurn = (S.damageDealtThisTurn || 0) + (result.hpLoss || 0);
+    if((result.absorbed || result.hpLoss) > 0) notifyMonsterBattleEvent("enemyHit", { enemy:target, result });
+    if(beforeBlock > 0 && (target.block || 0) === 0) notifyMonsterBattleEvent("enemyBlockBroken", { enemy:target, result });
+    if(beforeHp > 0 && target.hp <= 0) emitEnemyDiedOnce(target, { result });
+    applyConfiguredPhaseIfNeeded(target);
+    applyNextPhaseIfNeeded(target);
+  }
+  return result;
 }
 
 /* =========================================================================
@@ -1825,7 +2457,9 @@ async function endTurn(){
   S.busy = true;
   updateEndBtn();
 
+  applyPlayerTurnEndGimmicks();
   applyRelicTrigger("turnEnd");
+  notifyMonsterBattleEvent("playerTurnEnd");
 
   LIFE.reduceWeak(S.player, 1);
   LIFE.reduceFracture(S.player, 1);
@@ -1834,6 +2468,7 @@ async function endTurn(){
 
   S.hand.forEach(key => discardCard(key, { source:"turnEnd" }));
   S.hand = [];
+  S.handLockTokens = [];
   renderAll();
   await wait(250);
 
@@ -1844,16 +2479,17 @@ async function endTurn(){
   for(const e of actingEnemies){
     const mv = e.intent;
     if(!mv) continue;
+    clearExpiredEnemyBlockBeforeAction(e);
+    notifyMonsterBattleEvent("enemyActionStart", { enemy:e, move:mv });
+    executeEchoMove(e);
 
     if(mv.t==="attack"){
-      applyDamageWithFeedback(S.player, mv.v, e.weak);
-      if(mv.statusCard){
-        const added = addStatusCardToDiscard(mv.statusCard, mv.statusCount||1);
-        if(added>0) spawnFloat('.player', CARD_DB[mv.statusCard].name, 'dmg');
-      }
+      executeMonsterAttack(e, mv);
     } else if(mv.t==="defend"){
-      LIFE.addBlock(e, mv.v);
-      spawnFloat('[data-id="'+e.id+'"]', '+'+mv.v, 'blk');
+      const target = getPlannedMonsterSupportTarget(e, mv);
+      const value = getMonsterDefendValue(e, mv, target);
+      grantEnemyBlock(target, value);
+      spawnFloat('[data-id="'+target.id+'"]', '+'+value, 'blk');
     } else if(mv.t==="summon"){
       const summoned = summonEnemy(e);
       spawnFloat('[data-id="'+e.id+'"]', summoned > 0 ? '소환' : '소환 실패', summoned > 0 ? 'heal' : 'blk');
@@ -1872,7 +2508,17 @@ async function endTurn(){
         spawnFloat('.player', '동요', 'dmg');
       }
     }
+    if(Number.isFinite(e.expireAfterActions)){
+      e.expireAfterActions -= 1;
+      if(e.expireAfterActions <= 0){
+        const beforeHp = e.hp || 0;
+        e.hp = 0;
+        if(beforeHp > 0) emitEnemyDiedOnce(e, { move:mv, expired:true });
+      }
+    }
+    applyEnemyMoveAfterAction(e, mv);
 
+    notifyMonsterBattleEvent("enemyActionEnd", { enemy:e, move:mv });
     decayEnemyStatuses(e, "afterEnemyAction");
     renderAll();
     if(S.player.hp<=0 && !tryApplyFatalRelic()) return endGame("lose");
@@ -1888,16 +2534,27 @@ async function endTurn(){
   }
   S.retainedBlockFromRelic = 0;
   S.blockGainedThisTurn = 0;
+  S.cardsPlayedThisTurn = 0;
+  S.attackCardsPlayedThisTurn = 0;
+  S.damageDealtThisTurn = 0;
   const anxietyPenalty  = (S.player.anxiety||0)  > 0 ? 1 : 0;
   const lethargyPenalty = (S.player.lethargy||0) > 0 ? 1 : 0;
   S.energy    = Math.max(0, getMaxEnergy() - lethargyPenalty);
-  const drawCount = Math.max(0, DRAW_PER_TURN - anxietyPenalty);
+  const drawPenalty = S.pendingDrawPenalty || 0;
+  const drawCount = Math.max(0, DRAW_PER_TURN - anxietyPenalty - drawPenalty);
+  S.pendingDrawPenalty = 0;
   if(anxietyPenalty>0)  toast("불안으로 주문 뽑기 -1");
+  if(drawPenalty>0)     toast("수술등 압박으로 주문 뽑기 -"+drawPenalty);
   if(lethargyPenalty>0) toast("무기력으로 정신력 -1");
   S.turn += 1;
   drawCards(drawCount);
+  notifyMonsterBattleEvent("playerTurnStart");
   // 생존 적 다음 행동 의도 계획
-  livingEnemies().forEach(e => MONSTER_PATTERN.planNextIntent(e));
+  livingEnemies().forEach(e => {
+    MONSTER_PATTERN.planNextIntent(e);
+    planEnemyIntentTarget(e);
+  });
+  applyPlayerTurnStartGimmicks();
   S.busy = false;
   renderAll();
   if(window.TUTORIAL_BATTLE &&
@@ -2395,12 +3052,23 @@ function renderIntents(){
     if(!m) return "";
     let ico, txt, cls;
     if(m.t==="attack"){
-      const sn = m.statusCard && CARD_DB[m.statusCard] ? " + "+CARD_DB[m.statusCard].name : "";
-      ico="💢"; txt=(m.name ? m.name+" / " : "")+"정신력 "+m.v+(e.weak>0?" (동요)":"")+sn; cls="atk";
+      const statusCardKey = getMonsterIntentStatusCardKey(m);
+      const sn = statusCardKey && CARD_DB[statusCardKey] ? " + "+CARD_DB[statusCardKey].name : "";
+      const preview = previewMonsterFinalDamage(e, m);
+      ico="💢"; txt=(m.name ? m.name+" / " : "")+"정신력 "+preview.finalDamage+(e.weak>0?" (동요)":"")+sn; cls="atk";
     } else if(m.t==="defend"){
-      ico="🛡️"; txt=(m.name ? m.name+" / " : "")+"결계 "+m.v+" 획득"; cls="def";
+      const target = getPlannedMonsterSupportTarget(e, m);
+      const value = getMonsterDefendValue(e, m, target);
+      const targetName = target && target.id !== e.id ? " / "+target.name : "";
+      ico="🛡️"; txt=(m.name ? m.name+" / " : "")+"결계 "+value+" 획득"+targetName; cls="def";
     } else if(m.t==="summon"){
       ico="🚪"; txt=(m.name ? m.name+" / " : "")+"소환"; cls="sum";
+    } else if(m.t==="drawPenalty"){
+      ico="💭"; txt=(m.name ? m.name+" / " : "")+"다음 턴 주문 뽑기 -"+(m.v || 1); cls="deb";
+    } else if(m.t==="lock"){
+      ico="🔒"; txt=(m.name ? m.name+" / " : "")+"주문 잠금"; cls="deb";
+    } else if(m.t==="exam"){
+      ico="📝"; txt=(m.name ? m.name+" / " : "")+challengeLabel(getActiveChallengeForEnemy(e)); cls="deb";
     } else {
       const isAnx = m.role==="anxiety", isLet = m.role==="counter", isFracture = m.role==="fracture";
       ico = isAnx ? "💭" : isLet ? "🌫️" : isFracture ? "💔" : "🌀";
@@ -2414,7 +3082,6 @@ function renderIntents(){
   }).join("");
   $("#intentList").innerHTML = html || '<div class="eff-empty">성불 완료</div>';
 }
-
 function renderField(){
   const f = $("#field");
   f.innerHTML = "";
@@ -2448,7 +3115,7 @@ function renderField(){
       hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, mark:e.mark, status:e.status,
       anxiety:e.anxiety, lethargy:e.lethargy,
       x: xList[positionIndex] ?? 55, bottom:"4cqh",
-      intent:e.intent, id:e.id,
+      intent:e.intent, id:e.id, runtimeEnemy:e,
     });
     if(e.hp<=0) el.classList.add("dead");
     el.addEventListener("pointerdown", () => { if(e.hp>0){ S.selectedId=e.id; renderField(); } });
@@ -2463,7 +3130,7 @@ function combatantEl(o){
   el.style.bottom = o.bottom || "2cqh";
   el.style.transform = "translateX(-50%)";
   if(o.id) el.dataset.id = o.id;
-  const intentHtml = o.intent ? intentBubble(o.intent, o.weak) : "";
+  const intentHtml = o.intent ? intentBubble(o.intent, o.runtimeEnemy || o) : "";
   const avatarHtml = o.sprite
     ? '<div class="avatar sprite-avatar"><img src="'+o.sprite+'" alt=""></div>'
     : '<div class="avatar">'+(o.emoji || "")+'</div>';
@@ -2478,19 +3145,27 @@ function combatantEl(o){
   return el;
 }
 
-function intentBubble(m, weak){
+function intentBubble(m, enemy){
   if(m.t==="attack"){
-    const sn = m.statusCard && CARD_DB[m.statusCard] ? ' +'+CARD_DB[m.statusCard].name : '';
-    return '<div class="intent atk">💢 '+m.v+(weak>0?'↓':'')+sn+'</div>';
+    const statusCardKey = getMonsterIntentStatusCardKey(m);
+    const sn = statusCardKey && CARD_DB[statusCardKey] ? ' +'+CARD_DB[statusCardKey].name : '';
+    const preview = previewMonsterFinalDamage(enemy, m);
+    return '<div class="intent atk">💢 '+preview.finalDamage+((enemy && enemy.weak>0)?'↓':'')+sn+'</div>';
   }
-  if(m.t==="defend")     return '<div class="intent def">🛡️ 보호</div>';
+  if(m.t==="defend"){
+    const target = getPlannedMonsterSupportTarget(enemy, m);
+    const ally = target && enemy && target.id !== enemy.id ? ' 아군' : '';
+    return '<div class="intent def">🛡️ 보호'+ally+'</div>';
+  }
   if(m.t==="summon")     return '<div class="intent deb">🚪 소환</div>';
+  if(m.t==="drawPenalty") return '<div class="intent deb">💭 뽑기 -'+(m.v || 1)+'</div>';
+  if(m.t==="lock")       return '<div class="intent deb">🔒 잠금</div>';
+  if(m.t==="exam")       return '<div class="intent deb">📝 '+challengeLabel(getActiveChallengeForEnemy(enemy))+'</div>';
   if(m.role==="anxiety") return '<div class="intent deb">💭 불안</div>';
   if(m.role==="counter") return '<div class="intent deb">🌫️ 무기력</div>';
   if(m.role==="fracture") return '<div class="intent deb">💔 균열</div>';
   return '<div class="intent deb">🌀 동요</div>';
 }
-
 function renderHand(){
   const h = $("#hand");
   h.innerHTML = "";

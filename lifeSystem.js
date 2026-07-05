@@ -56,8 +56,26 @@
       fx: [],
       unplayable: true,
       exhaustOnTurnEnd: true
+    },
+    intrusive_accident: {
+      name: "침투 사고",
+      cost: 0,
+      type: "status",
+      emoji: "💭",
+      target: "none",
+      attr: "상태",
+      rarity: "status",
+      desc: "사용 불가\n덱과 손패 흐름을 방해합니다",
+      fx: [],
+      unplayable: true
     }
   };
+
+  function cloneRuntimeData(value){
+    if(Array.isArray(value)) return value.map(cloneRuntimeData);
+    if(value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, cloneRuntimeData(item)]));
+    return value;
+  }
 
   const LifeSystem = {
     config: {
@@ -90,6 +108,8 @@
     },
 
     createMonster(monsterData, index){
+      const moves = Array.isArray(monsterData.moves) ? monsterData.moves.map(cloneRuntimeData) : [];
+      const firstIndex = monsterData.first || 0;
       return {
         id: monsterData.id || `enemy_${index}`,
         name: monsterData.name,
@@ -107,17 +127,27 @@
         lethargy: monsterData.lethargy || 0,
         grade: monsterData.grade || "normal",
         x: monsterData.x || 72,
-        moves: monsterData.moves || [],
-        nextPhase: monsterData.nextPhase || null,
-        intent: (monsterData.moves || [])[monsterData.first || 0] || null,
+        emoji: monsterData.emoji || "",
+        moves,
+        patternMode: monsterData.patternMode || "random",
+        patternIndex: monsterData.patternMode === "fixed" && moves.length > 0 ? (firstIndex + 1) % moves.length : 0,
+        gimmick: cloneRuntimeData(monsterData.gimmick || null),
+        counters: cloneRuntimeData(monsterData.counters || {}),
+        phaseConfig: cloneRuntimeData(monsterData.phaseConfig || null),
+        phaseIndex: monsterData.phaseIndex || 0,
+        summonConfig: cloneRuntimeData(monsterData.summonConfig || null),
+        plannedTargetId: monsterData.plannedTargetId || null,
+        runtimeFlags: cloneRuntimeData(monsterData.runtimeFlags || {}),
+        nextPhase: cloneRuntimeData(monsterData.nextPhase || null),
+        intent: moves[firstIndex] || null,
         lastIntentType: null,
         intentRepeatCount: 0
       };
     },
 
-    applyDamage(target, rawDamage, attackerWeak){
+    previewDamage(target, rawDamage, attackerWeak){
       if(!target || rawDamage <= 0){
-        return { rawDamage: 0, finalDamage: 0, absorbed: 0, hpLoss: 0 };
+        return { rawDamage: 0, finalDamage: 0 };
       }
 
       const baseDamage = attackerWeak > 0
@@ -126,6 +156,16 @@
       const finalDamage = (target.fracture || 0) > 0
         ? Math.floor(baseDamage * 1.25)
         : baseDamage;
+
+      return { rawDamage, finalDamage };
+    },
+
+    applyDamage(target, rawDamage, attackerWeak){
+      if(!target || rawDamage <= 0){
+        return { rawDamage: 0, finalDamage: 0, absorbed: 0, hpLoss: 0 };
+      }
+
+      const finalDamage = this.previewDamage(target, rawDamage, attackerWeak).finalDamage;
 
       const absorbed = Math.min(target.block || 0, finalDamage);
       const hpLoss = Math.max(0, finalDamage - absorbed);
