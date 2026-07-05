@@ -2731,6 +2731,7 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
   const list  = Array.isArray(items) ? items : [];
   const count = Array.isArray(items) ? items.length : resourceCount(items);
   const isPotionSlots = selector === "#sidePotionSlots";
+  if(isPotionSlots) hidePotionDiscardButton();
   host.innerHTML = "";
   for(let i=0; i<maxSlots; i++){
     const item   = list[i];
@@ -2751,6 +2752,11 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
       slot.addEventListener("click", ev => {
         ev.stopPropagation();
         onPotionSlotClick(item, i, slot);
+      });
+      slot.addEventListener("mouseenter", () => showPotionDiscardButton(i, slot));
+      slot.addEventListener("mouseleave", ev => {
+        if(ev.relatedTarget && ev.relatedTarget.id === "potionDiscardButton") return;
+        hidePotionDiscardButton();
       });
     }
     host.appendChild(slot);
@@ -2867,6 +2873,54 @@ function applySelfPotionEffect(potion){
   }
 }
 
+function ensurePotionDiscardButton(){
+  let btn = document.querySelector("#potionDiscardButton");
+  if(btn) return btn;
+  btn = document.createElement("button");
+  btn.id = "potionDiscardButton";
+  btn.type = "button";
+  btn.textContent = "버리기";
+  btn.addEventListener("click", ev => {
+    ev.stopPropagation();
+    const index = Number(btn.dataset.potionIndex);
+    discardPotion(index);
+  });
+  btn.addEventListener("mouseleave", () => hidePotionDiscardButton());
+  document.querySelector("#game").appendChild(btn);
+  return btn;
+}
+
+function showPotionDiscardButton(index, slot){
+  const btn = ensurePotionDiscardButton();
+  const game = document.querySelector("#game");
+  if(!slot || !game) return;
+  const anchorRect = slot.getBoundingClientRect();
+  const gameRect = game.getBoundingClientRect();
+  btn.dataset.potionIndex = String(index);
+  btn.style.left = (anchorRect.right - gameRect.left + 6) + "px";
+  btn.style.top = (anchorRect.top - gameRect.top + anchorRect.height + 4) + "px";
+  btn.classList.add("show");
+}
+
+function hidePotionDiscardButton(){
+  const btn = document.querySelector("#potionDiscardButton");
+  if(!btn) return;
+  btn.classList.remove("show");
+  btn.dataset.potionIndex = "";
+}
+
+function discardPotion(index){
+  if(!Array.isArray(S.potions)) return;
+  const potion = S.potions[index];
+  hidePotionDiscardButton();
+  if(!potion) return;
+  if(!window.confirm("이 약병을 버리시겠습니까?")) return;
+  if(!Array.isArray(S.potions) || S.potions[index] !== potion) return;
+  S.potions.splice(index, 1);
+  syncRunStateFromCombat();
+  hidePotionUseButton();
+  renderAll();
+}
 
 let potionDragState = null;
 function attachPotionDrag(slot, item, index){
