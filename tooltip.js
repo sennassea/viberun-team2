@@ -592,6 +592,7 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
     positionCombatantTooltip(cbEl, isPlayer);
@@ -645,6 +646,7 @@
   var activeEnergyEl = null;
   var activeHudEl = null;
   var activeProgressEl = null;
+  var activeMenuEl = null;
 
   function buildStatusIconHtml(statusEl) {
     var type = statusEl.dataset.status;
@@ -679,6 +681,7 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
     activeStatusEl = statusEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -764,6 +767,7 @@
     activeItemSlotEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
     activeEnergyEl = energyEl;
     tooltip.innerHTML = buildEnergyHtml();
     tooltip.classList.add("tt-show");
@@ -875,6 +879,7 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
     activeItemSlotEl = slotEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -955,6 +960,7 @@
     activeEnergyEl = null;
     activeHudEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
     cardActiveEl = cardEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -1059,6 +1065,7 @@
     activeItemSlotEl = null;
     activeEnergyEl = null;
     activeProgressEl = null;
+    activeMenuEl = null;
     activeHudEl = anchorEl;
     tooltip.innerHTML = html;
     tooltip.classList.add("tt-show");
@@ -1161,6 +1168,7 @@
     activeItemSlotEl = null;
     activeEnergyEl = null;
     activeHudEl = null;
+    activeMenuEl = null;
     activeProgressEl = progressEl;
     tooltip.innerHTML = buildProgressHtml(progressEl);
     tooltip.classList.add("tt-show");
@@ -1185,6 +1193,81 @@
     var to = e.relatedTarget;
     if (to && progressEl.contains(to)) return;
     hideProgressTooltip();
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     VIII. 우측 상단 메뉴 아이콘 툴팁
+     ══════════════════════════════════════════════════════════════════════ */
+
+  var TOP_MENU_INFO = [
+    { cls: "ui-map-button",      name: "지도", desc: "현재 진행 경로를 확인합니다." },
+    { cls: "ui-codex-button",    name: "도감", desc: "카드와 정보를 확인합니다." },
+    { cls: "ui-bag-button",      name: "가방", desc: "보유 중인 법구와 약병을 확인합니다." },
+    { cls: "ui-settings-button", name: "설정", desc: "게임 설정을 변경합니다." },
+    { cls: "ui-menu-button",     name: "메뉴", desc: "게임 메뉴를 엽니다." }
+  ];
+
+  function findTopMenuButton(target) {
+    var btnEl = target && target.closest && target.closest(".top-menu-button");
+    if (!btnEl || !btnEl.classList) return null;
+    for (var i = 0; i < TOP_MENU_INFO.length; i++) {
+      if (btnEl.classList.contains(TOP_MENU_INFO[i].cls)) return { el: btnEl, info: TOP_MENU_INFO[i] };
+    }
+    return null;
+  }
+
+  function positionTopMenuTooltip(anchorEl) {
+    var gRect   = game.getBoundingClientRect();
+    var aRect   = anchorEl.getBoundingClientRect();
+    var tipRect = tooltip.getBoundingClientRect();
+    var pad = 8;
+    var gap = 10;
+
+    /* 아이콘 중앙과 툴팁 중앙을 맞추고, 아이콘 바로 아래(간격 약 10px)에 배치 */
+    var tx = (aRect.left - gRect.left) + (aRect.width - tipRect.width) * 0.5;
+    var ty = (aRect.bottom - gRect.top) + gap;
+
+    /* 화면(게임 영역) 밖으로 나가면 안쪽으로만 보정 (설정 등 우측 끝 아이콘 대응) */
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+
+    tooltip.style.left = tx + "px";
+    tooltip.style.top  = ty + "px";
+  }
+
+  function showTopMenuTooltip(anchorEl, info) {
+    if (!anchorEl || !info) return;
+    activeId = null;
+    cardActiveEl = null;
+    activeStatusEl = null;
+    activeItemSlotEl = null;
+    activeEnergyEl = null;
+    activeHudEl = null;
+    activeProgressEl = null;
+    activeMenuEl = anchorEl;
+    tooltip.innerHTML = makeRow("", info.name, info.desc);
+    tooltip.classList.add("tt-show");
+    positionTopMenuTooltip(anchorEl);
+  }
+
+  function hideTopMenuTooltip() {
+    activeMenuEl = null;
+    tooltip.classList.remove("tt-show");
+  }
+
+  game.addEventListener("mouseover", function (e) {
+    var found = findTopMenuButton(e.target);
+    if (!found || found.el === activeMenuEl) return;
+    showTopMenuTooltip(found.el, found.info);
+  });
+
+  game.addEventListener("mouseout", function (e) {
+    if (!activeMenuEl) return;
+    var found = findTopMenuButton(e.target);
+    if (!found || found.el !== activeMenuEl) return;
+    var to = e.relatedTarget;
+    if (to && activeMenuEl.contains && activeMenuEl.contains(to)) return;
+    hideTopMenuTooltip();
   });
 
 })();
