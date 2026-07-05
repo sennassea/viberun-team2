@@ -318,6 +318,73 @@
     } */
   ];
 
+  function cardTermInfoMatches(keyword) {
+    return CARD_TERM_INFO.some(function (term) {
+      try {
+        return term && typeof term.test === "function" && term.test(keyword);
+      } catch (e) {
+        return false;
+      }
+    });
+  }
+
+  if (!cardTermInfoMatches("화상")) {
+    CARD_TERM_INFO.push({
+      test: function (d) { return /화상/.test(d); },
+      icon: "",
+      name: "화상",
+      desc: "턴이 지날 때 피해를 받는 상태입니다."
+    });
+  }
+
+  function getCardPurifyDamage(descText) {
+    var text = String(descText || "");
+    var match = text.match(/(\d+)\s*만큼\s*정화/) || text.match(/(\d+)\s*정화/);
+    if (!match) return null;
+    var value = parseInt(match[1], 10);
+    return isNaN(value) ? null : value;
+  }
+
+  function buildFractureCardTermDesc(descText) {
+    var desc = "해당 대상이 받는 정화 피해가 25% 증가합니다.";
+    var damage = getCardPurifyDamage(descText);
+    if (typeof damage === "number") {
+      desc += "\n실제 정화 피해: " + Math.floor(damage * 1.25);
+    }
+    return desc;
+  }
+
+  if (!cardTermInfoMatches("균열")) {
+    CARD_TERM_INFO.push({
+      test: function (d) { return /균열/.test(d); },
+      icon: "",
+      name: "균열",
+      desc: buildFractureCardTermDesc
+    });
+  }
+
+  function addCardTermFallback(keyword, desc, test) {
+    if (cardTermInfoMatches(keyword)) return;
+    CARD_TERM_INFO.push({
+      test: test || function (d) { return d.indexOf(keyword) >= 0; },
+      icon: "",
+      name: keyword,
+      desc: desc
+    });
+  }
+
+  addCardTermFallback("결계", "피해를 막아주는 보호 수치입니다.", function (d) {
+    return /결계/.test(d) && !/마음의 결계/.test(d);
+  });
+  addCardTermFallback("보호", "피해를 막아주는 효과입니다.");
+  addCardTermFallback("회복", "잃은 정신력을 되돌립니다.", function (d) {
+    return /회복/.test(d) && !/스트레스.{0,6}회복/.test(d);
+  });
+  addCardTermFallback("회상", "매 턴 수치만큼 피해를 입습니다.");
+  addCardTermFallback("후회", "사용할 수 없는 카드입니다. 버려지면 정신력에 3 피해를 주고 소멸합니다.");
+  addCardTermFallback("잡념", "사용할 수 없는 방해 카드입니다.");
+  addCardTermFallback("불안", "다음 턴 시작 시 주문 뽑기가 감소하는 상태입니다.");
+
   /* ══════════════════════════════════════════════════════════════════════
      III. DOM 공통 준비
      ══════════════════════════════════════════════════════════════════════ */
@@ -520,9 +587,16 @@
   }
 
   /* ── 전투원 이벤트 위임 ───────────────────────────────────────────────── */
+  function isEnemyTooltipHit(target, cbEl) {
+    if (!target || !cbEl || !cbEl.contains(target)) return false;
+    if (target.closest(".enemy-status-icons,.enemy-status-icon")) return false;
+    var hitEl = target.closest(".avatar,.intent,.combatant-info");
+    return !!(hitEl && cbEl.contains(hitEl));
+  }
+
   field.addEventListener("mouseover", function (e) {
     var cb = e.target.closest(".combatant");
-    if (!cb || cb.classList.contains("dead") || !cb.classList.contains("enemy")) {
+    if (!cb || cb.classList.contains("dead") || !cb.classList.contains("enemy") || !isEnemyTooltipHit(e.target, cb)) {
       if (activeId !== null) hideCombatantTooltip();
       return;
     }
@@ -806,7 +880,10 @@
   function buildCardTermHtml(descText) {
     var rows = CARD_TERM_INFO
       .filter(function (t) { return t.test(descText); })
-      .map(function (t) { return makeRow(t.icon, t.name, t.desc, null); });
+      .map(function (t) {
+        var desc = typeof t.desc === "function" ? t.desc(descText) : t.desc;
+        return makeRow(t.icon, t.name, desc, null);
+      });
     return rows.join("");
   }
 
