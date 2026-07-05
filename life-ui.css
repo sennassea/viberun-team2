@@ -19,8 +19,9 @@
 @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-1.4cqh)}}
 .ghost .avatar{opacity:.92; filter:drop-shadow(0 0 1.4cqh rgba(150,200,255,.8));}
 .player{min-width:42cqw; z-index:3; pointer-events:auto;}
-.player .sprite-avatar{width:49cqh; height:65cqh; display:grid; place-items:end center; overflow:visible;}
+.player .sprite-avatar{width:68.99cqh; height:90.99cqh; display:grid; place-items:end center; overflow:visible;}
 .player .sprite-avatar img{max-width:100%; max-height:100%; object-fit:contain; display:block;
+  transform:translateY(12cqh);
   filter:drop-shadow(0 1.4cqh 1.6cqh rgba(40,70,120,.32));}
 .enemy{min-width:16cqw; height:43cqh; z-index:2; pointer-events:auto;}
 .enemy .avatar{font-size:12.8cqh;}
