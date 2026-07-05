@@ -1,0 +1,171 @@
+/* =========================================================================
+   Font Theme
+   - 제목/타이틀/버튼/영역명: 경복궁 수문장 제목체
+   - 본문/설명/툴팁/안내문: 경복궁 수문장 본문체
+   - 기존 UI 구조/색상/크기/배치는 변경하지 않음
+   ========================================================================= */
+
+@font-face {
+  font-family: 'GyeongbokgungSumunjangTitle';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleL.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GyeongbokgungSumunjangTitle';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleM.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GyeongbokgungSumunjangTitle';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleB.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GyeongbokgungSumunjangBodyText';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyL.woff2') format('woff2');
+  font-weight: 300;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GyeongbokgungSumunjangBodyText';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyM.woff2') format('woff2');
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'GyeongbokgungSumunjangBodyText';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyB.woff2') format('woff2');
+  font-weight: 700;
+  font-display: swap;
+}
+
+:root {
+  --font-title: 'GyeongbokgungSumunjangTitle', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'GyeongbokgungSumunjangBodyText', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+}
+
+/* 게임 전체 기본 본문 폰트 */
+html,
+body,
+#game {
+  font-family: var(--font-body) !important;
+}
+
+/* 제목, 타이틀, 버튼, UI 영역명 */
+h1,
+h2,
+h3,
+button,
+.start-logo-main,
+.start-logo-sub,
+.start-menu-button,
+.start-mailbox-label,
+.start-moon-count,
+.progress-region,
+.progress-floor,
+.progress-turn,
+.side h3,
+.side-item-title,
+.card .cname,
+.card-frame-card .card-name-text,
+.deck-viewer-head h2,
+.deck-viewer-tab,
+.codex-section-tab,
+.codex-home-label,
+.card-detail-title h3,
+.over-box h2,
+.over-box button,
+.map-title,
+.legend-title,
+.map-node-popup .popup-title,
+.dmap-title-char,
+.dmap-legend-title,
+.dmap-loc-badge,
+.dmap-action-btn,
+.mnode-lbl,
+.mnode-sublbl,
+.mfloor-lbl,
+.mnode-dimmed-badge,
+.event-stage-title-main,
+.event-title,
+.event-choice-label,
+.event-card-name,
+.event-btn,
+.auth-login-head h2,
+.auth-login-button,
+.settings-account-label,
+.settings-account-actions button,
+.mailbox-ui-title,
+.mailbox-tab,
+.mailbox-item-title,
+.mailbox-claim-btn,
+.mailbox-claim-all-btn,
+.mailbox-close-btn,
+.bm-store-heading h2,
+.bm-store-tab,
+.bm-store-product h3,
+.bm-store-buy-btn,
+.bag-ui-title,
+.bag-ui-col-title,
+.settings-viewer-head h2,
+.settings-viewer-section h3,
+.settings-viewer-confirm-panel h3,
+.settings-viewer-help-head h3,
+.record-page-head h2,
+.record-page-main strong,
+.rr-badge span,
+.rr-choice-titlebar span,
+.rr-summary-titlebar span,
+.rr-detail-titlebar span,
+.status-tooltip-title,
+.btt-name {
+  font-family: var(--font-title) !important;
+  font-weight: 700;
+}
+
+/* 본문, 설명, 툴팁, 안내문 */
+p,
+label,
+input,
+select,
+textarea,
+.card .desc,
+.card-frame-card .card-desc-text,
+.deck-viewer-card .desc,
+.card-detail-desc,
+.auth-login-desc,
+.auth-login-message,
+.auth-login-note,
+.settings-account-value,
+.settings-account-message,
+.mailbox-item-desc,
+.mailbox-item-meta,
+.mailbox-status-msg,
+.bm-store-heading p,
+.bm-store-product p,
+.bm-store-recommend-notice,
+.bm-store-charge-notice,
+.event-story p,
+.event-choice-desc,
+.event-guide,
+.event-card-desc,
+.event-result-row,
+.bag-detail-desc,
+.record-page-main span,
+.rr-lines p,
+.rr-choice-lines p,
+.rr-choice-card-desc,
+.rr-summary-row-label,
+.rr-detail-content,
+.btt-desc {
+  font-family: var(--font-body) !important;
+  font-weight: 500;
+}
