@@ -261,11 +261,10 @@
       }
 
       if(card.damageOnDiscard){
-        const damage = this.applyDamage(player, card.damageOnDiscard, 0);
         return {
           handled: true,
           discard: false,
-          damage,
+          damageAmount: card.damageOnDiscard,
           message: card.name + "이 마음을 찔렀습니다"
         };
       }

@@ -21,6 +21,8 @@ const PRAYER_REST_HEAL_RATIO = 0.25;
 const PRAYER_CARD_REMOVE_COST_TABLE = [60, 100, 150];
 
 function getCardRemoveCost(){
+  if(typeof hasRelic === "function" && hasRelic("empty_spirit_tablet") &&
+     typeof S !== "undefined" && S && (S.cleanseCount || 0) === 0) return 0;
   const count = (typeof S !== "undefined" && S && typeof S.cleanseCount === "number") ? S.cleanseCount : 0;
   const idx = Math.min(count, PRAYER_CARD_REMOVE_COST_TABLE.length - 1);
   return PRAYER_CARD_REMOVE_COST_TABLE[idx];
@@ -84,6 +86,7 @@ function closePrayerNode(){
 
 /* 기도터를 마치고 다음 노드를 고를 수 있도록 맵으로 복귀 (주문 보상 흐름과 동일 패턴) */
 function resolvePrayerNode(){
+  if(typeof applyRelicTrigger === "function") applyRelicTrigger("onPrayerActionComplete", { action:prayerSelected });
   closePrayerNode();
   window.MAP_STATE.proceedMode = true;
   if(typeof openMap === "function") openMap();
@@ -153,7 +156,8 @@ function openRestCardAdd(){
     if(typeof toast === "function") toast("주문 추가 기능을 불러올 수 없습니다.");
     return;
   }
-  const keys = typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(3) : [];
+  const offerCount = (typeof hasRelic === "function" && hasRelic("tricolor_ritual_bowl")) ? 4 : 3;
+  const keys = typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(offerCount) : [];
   if(keys.length === 0){
     if(typeof toast === "function") toast("추가할 수 있는 주문이 없습니다.");
     return;
@@ -163,8 +167,20 @@ function openRestCardAdd(){
     title: "받아들이기",
     desc: "추가할 주문 1장을 선택하세요.",
     onChoose: key => {
-      if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
-      if(typeof S !== "undefined" && S && Array.isArray(S.discard)) S.discard.push(key);
+      if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"prayerAccept" });
+      else {
+        if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
+        if(typeof S !== "undefined" && S && Array.isArray(S.discard)){
+          if(typeof pushDiscardCard === "function") pushDiscardCard(key, typeof createCardInstance === "function" ? createCardInstance(key) : undefined);
+          else {
+            S.discard.push(key);
+            if(!Array.isArray(S.discardInstances)) S.discardInstances = [];
+            S.discardInstances.push(typeof createCardInstance === "function"
+              ? createCardInstance(key)
+              : { key, runtime:{ hanpuriGrowth:0 } });
+          }
+        }
+      }
       if(typeof renderHud === "function") renderHud();
     }
   }).then(() => {
@@ -183,7 +199,7 @@ function openRestCardRemove(){
     if(typeof toast === "function") toast("제거할 주문이 없습니다.");
     return;
   }
-  const cost = getCardRemoveCost();
+  const cost = (typeof hasRelic === "function" && hasRelic("empty_spirit_tablet") && S && (S.cleanseCount || 0) === 0) ? 0 : getCardRemoveCost();
   window.OPEN_DECK_VIEWER_CARD_PICK({
     title: "정리하기",
     confirmText: "제거 완료",
@@ -218,7 +234,8 @@ function openRestCardRemove(){
 function applyPrayerRest(){
   if(typeof S === "undefined" || !S || !S.player) return;
   const player     = S.player;
-  const healAmount = Math.max(0, Math.round(player.maxHp * PRAYER_REST_HEAL_RATIO));
+  const ratio = (typeof hasRelic === "function" && hasRelic("mugwort_bundle")) ? 0.35 : PRAYER_REST_HEAL_RATIO;
+  const healAmount = Math.max(0, Math.round(player.maxHp * ratio));
   const healed     = (typeof LIFE !== "undefined" && LIFE) ? LIFE.heal(player, healAmount) : 0;
   if(typeof renderHud === "function") renderHud();
   if(typeof toast === "function"){

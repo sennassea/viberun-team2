@@ -115,6 +115,52 @@ RELIC_MASTER_DB.forEach(item => {
   item.iconImage = RELIC_ICON_PATHS[item.id];
 });
 
+const IMPLEMENTED_RELIC_IDS = new Set([
+  "bronze_incense_burner",
+  "moon_spirit_tablet",
+  "lizard_tail_charm",
+  "broken_rosary",
+  "leftover_candle_wax",
+  "tricolor_cotton_fan",
+  "old_hairpin",
+  "ash_smeared_mirror",
+  "paper_crane_bundle",
+  "threshold_salt",
+  "demon_sealing_tablet",
+  "red_golden_rope",
+  "ink_line_spool",
+  "damp_letter_tie",
+  "ward_pocket_watch",
+  "tear_catcher_gourd",
+  "lotus_lamp",
+  "lotus_seed_bead",
+  "cheondo_bell",
+  "old_letter_box",
+  "broken_red_thread",
+  "unsealed_letter",
+  "gilt_bell_clapper",
+  "sevenstar_knot",
+  "torn_gut_fan",
+  "mugwort_bundle",
+  "empty_spirit_tablet",
+  "tricolor_ritual_bowl",
+  "prayer_knot",
+  "empty_lucky_pouch",
+  "peddler_abacus",
+  "twin_marriage_tablet",
+  "inverted_bell",
+  "cracked_divine_tablet",
+  "closed_sutra_box",
+  "reversed_talisman_book"
+]);
+
+RELIC_MASTER_DB.forEach(item => {
+  if (!item || !/^RE\d{3}$/.test(item.dataId || "")) return;
+  if (!IMPLEMENTED_RELIC_IDS.has(item.id)) return;
+  item.runtimeEnabled = true;
+  item.implementationStatus = "implemented";
+});
+
 /* =========================================================================
    equipment.js 공식 런타임 DB 변환부
    - RELIC_MASTER_DB: 기획 원본 데이터

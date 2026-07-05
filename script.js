@@ -163,6 +163,8 @@ function createFreshRunState(){
     potions: [],
     gold: STARTING_GOLD,
     moonShards: STARTING_MOON_SHARDS,
+    relicRuntime: {},
+    nextBattleStartBlock: 0,
     // 기도터 "정리하기"(주문 제거)를 이번 런에서 사용한 횟수 - 새 런 시작 시 0으로 초기화
     cleanseCount: 0,
     // 전투 요약/상세 화면(runResult.js)에서 사용하는 이번 여정 누적 기록 (기획서 §5-1)
@@ -212,6 +214,8 @@ function syncRunStateFromCombat(){
   RUN_STATE.gold       = typeof S.gold === "number" ? S.gold : STARTING_GOLD;
   RUN_STATE.moonShards = typeof S.moonShards === "number" ? S.moonShards : STARTING_MOON_SHARDS;
   RUN_STATE.cleanseCount = typeof S.cleanseCount === "number" ? S.cleanseCount : 0;
+  RUN_STATE.relicRuntime = S.relicRuntime || RUN_STATE.relicRuntime || {};
+  RUN_STATE.nextBattleStartBlock = S.nextBattleStartBlock || 0;
 }
 
 function hasRelic(id){
@@ -219,7 +223,86 @@ function hasRelic(id){
 }
 
 function getMaxEnergy(){
-  return MAX_ENERGY + (hasRelic("charm_box") ? 1 : 0);
+  return MAX_ENERGY + (hasRelic("charm_box") ? 1 : 0) + (hasRelic("inverted_bell") || hasRelic("cracked_divine_tablet") ? 1 : 0);
+}
+
+function ensureRelicRuntime(){
+  if(!RUN_STATE) RUN_STATE = createFreshRunState();
+  if(!RUN_STATE.relicRuntime || typeof RUN_STATE.relicRuntime !== "object") RUN_STATE.relicRuntime = {};
+  if(S && (!S.relicRuntime || typeof S.relicRuntime !== "object")) S.relicRuntime = RUN_STATE.relicRuntime;
+  return S ? S.relicRuntime : RUN_STATE.relicRuntime;
+}
+
+function relicFlag(scope, relicId, key){
+  const rt = ensureRelicRuntime();
+  const turn = S ? (S.turn || 0) : 0;
+  const battle = S ? (S.battleRuntimeId || 0) : 0;
+  if(scope === "turn") return "turn:" + battle + ":" + turn + ":" + relicId + ":" + key;
+  if(scope === "battle") return "battle:" + battle + ":" + relicId + ":" + key;
+  return "run:" + relicId + ":" + key;
+}
+
+function useRelicFlag(scope, relicId, key, limit=1){
+  const rt = ensureRelicRuntime();
+  const flag = relicFlag(scope, relicId, key);
+  const used = rt[flag] || 0;
+  if(used >= limit) return false;
+  rt[flag] = used + 1;
+  return true;
+}
+
+function addPermanentCard(key, options={}){
+  if(!key || !CARD_DB[key]) return false;
+  const card = CARD_DB[key];
+  STARTER_DECK.push(key);
+  if(S && Array.isArray(S.discard) && options.addToDiscard !== false) pushDiscardCard(key, createCardInstance(key));
+  const isSpellCard = card && ["attack", "defense", "skill"].includes(card.type) && card.rarity !== "status" && !card.generatedOnly;
+  if(S && isSpellCard && !options.skipRelicEvent){
+    applyRelicTrigger("onPermanentCardAdded", { cardKey:key, source:options.source || "unknown", duplicateByRelic:!!options.duplicateByRelic });
+  }
+  if(typeof syncRunStateFromCombat === "function" && S) syncRunStateFromCombat();
+  return true;
+}
+window.addPermanentCard = addPermanentCard;
+
+function createCardInstance(key, existing={}){
+  if(!S) return { uid:"card_prebattle_"+Math.random().toString(36).slice(2), key, runtime:{ hanpuriGrowth:0 } };
+  S.nextCardUid = (S.nextCardUid || 1) + 1;
+  return {
+    uid: existing.uid || ("card_runtime_" + (S.nextCardUid - 1)),
+    key,
+    runtime: { hanpuriGrowth:0, ...existing.runtime }
+  };
+}
+
+function createCardInstancesForKeys(keys){
+  return (keys || []).map(key => createCardInstance(key));
+}
+
+function zipShuffleCards(keys, instances){
+  const pairs = (keys || []).map((key, index) => ({ key, instance:instances && instances[index] ? instances[index] : createCardInstance(key) }));
+  shuffle(pairs);
+  return {
+    keys: pairs.map(item => item.key),
+    instances: pairs.map(item => item.instance)
+  };
+}
+
+function ensureCardInstanceZones(){
+  if(!S) return;
+  if(!Array.isArray(S.handInstances)) S.handInstances = createCardInstancesForKeys(S.hand || []);
+  if(!Array.isArray(S.drawInstances)) S.drawInstances = createCardInstancesForKeys(S.draw || []);
+  if(!Array.isArray(S.discardInstances)) S.discardInstances = createCardInstancesForKeys(S.discard || []);
+  if(S.handInstances.length !== (S.hand || []).length) S.handInstances = createCardInstancesForKeys(S.hand || []);
+  if(S.drawInstances.length !== (S.draw || []).length) S.drawInstances = createCardInstancesForKeys(S.draw || []);
+  if(S.discardInstances.length !== (S.discard || []).length) S.discardInstances = createCardInstancesForKeys(S.discard || []);
+}
+
+function pushDiscardCard(key, instance){
+  if(!S || !Array.isArray(S.discard)) return;
+  ensureCardInstanceZones();
+  S.discard.push(key);
+  S.discardInstances.push(instance || createCardInstance(key));
 }
 
 function getPlayerAttackDamage(rawDamage, targetEnemy){
@@ -285,11 +368,14 @@ function applyRelicTrigger(trigger, context={}){
   if(!S || !Array.isArray(S.relics)) return;
   S.relics = S.relics.map(hydrateRelicData);
   S.relics.forEach(relic => {
-    if(!relic || !Array.isArray(relic.fx)) return;
-    relic.fx.forEach(effect => {
-      if(effect.timing !== trigger) return;
-      applyRelicEffect(relic, effect, context);
-    });
+    if(!relic) return;
+    if(Array.isArray(relic.fx)){
+      relic.fx.forEach(effect => {
+        if(effect.timing !== trigger) return;
+        applyRelicEffect(relic, effect, context);
+      });
+    }
+    if(relic.plannedTrigger === trigger) applyRelicPlannedEffect(relic, context);
   });
 }
 
@@ -302,7 +388,7 @@ function applyRelicEffect(relic, effect, context={}){
         if(S.relicTurnFlags[key]) return;
         S.relicTurnFlags[key] = true;
       }
-      drawCards(effect.v || 1);
+      drawCards(effect.v || 1, { source:"relic" });
       toast(relic.name+" 발동");
       break;
     case "heal": {
@@ -344,7 +430,6 @@ function applyRelicEffect(relic, effect, context={}){
       const target = effect.target === "frontEnemy" ? livingEnemies()[0] : getSelectedLivingEnemy();
       if(target){
         addStatus(target, "mark", effect.v || 1);
-        applyRelicTrigger("onMarkApply", { target, amount: effect.v || 1 });
       }
       break;
     }
@@ -359,23 +444,217 @@ function applyRelicEffect(relic, effect, context={}){
   }
 }
 
+function applyRelicPlannedEffect(relic, context={}){
+  const c = relic.plannedConditions || {};
+  const e = relic.plannedEffects || {};
+  switch(relic.id){
+    case "bronze_incense_burner":
+      drawCards(e.draw || 1, { source:"relic" });
+      toast(relic.name+" 발동");
+      break;
+    case "moon_spirit_tablet":
+      if(context.card && context.card.type === "attack" && useRelicFlag("battle", relic.id, "firstPurify")){
+        context.bonusDamage = (context.bonusDamage || 0) + (e.purifyBonus || 0);
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "broken_rosary":
+      if(!context.generated && useRelicFlag("turn", relic.id, "draw")){
+        drawCards(e.draw || 1, { source:"relic" });
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "leftover_candle_wax": {
+      const energy = Math.max(0, S.energy || 0);
+      if(energy >= (c.remainingEnergyMin || 1)){
+        const amount = Math.min(e.maxBlock || 999, energy * (e.blockPerRemainingEnergy || 0));
+        if(amount > 0){ gainPlayerBlock(amount); toast(relic.name+" 발동"); }
+      }
+      break;
+    }
+    case "tricolor_cotton_fan":
+      if((c.requiredTypes || []).every(type => S.spellTypesPlayedThisTurn && S.spellTypesPlayedThisTurn[type]) && useRelicFlag("turn", relic.id, "energy")){
+        S.energy = Math.min(getMaxEnergy(), (S.energy || 0) + (e.restoreEnergy || 1));
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "old_hairpin":
+      applyRandomHandCostReduction(e.temporaryCostReduction || 1);
+      toast(relic.name+" 발동");
+      break;
+    case "ash_smeared_mirror":
+      if((context.hpLoss || 0) > 0 && useRelicFlag("battle", relic.id, "hit")){
+        S.nextTurnEnergyBonus = (S.nextTurnEnergyBonus || 0) + (e.nextTurnEnergyBonus || 1);
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "paper_crane_bundle":
+      if(S.playerTurnActive && Array.isArray(S.hand) && S.hand.length === 0 && useRelicFlag("battle", relic.id, "empty")){
+        drawCards(e.draw || 2, { source:"relic" });
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "threshold_salt":
+      if((context.rawDamage || 0) <= 0) break;
+      if(useRelicFlag("battle", relic.id, "reduce")){
+        context.rawDamage = Math.max(0, (context.rawDamage || 0) - (e.reduceHpDamage || 0));
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "demon_sealing_tablet":
+      gainPlayerBlock(e.block || 8);
+      toast(relic.name+" 발동");
+      break;
+    case "red_golden_rope":
+      if(useRelicFlag("turn", relic.id, "damage")){
+        damageRandomEnemy(e.damageRandomEnemy || 2);
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "ink_line_spool":
+      if((context.beforeBlock || 0) >= (c.minBarrierBeforeConsume || 15) && useRelicFlag("battle", relic.id, "reward")){
+        drawCards(e.draw || 1, { source:"relic" });
+        S.energy = Math.min(getMaxEnergy(), (S.energy || 0) + (e.restoreEnergy || 1));
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "damp_letter_tie":
+      if((context.before || 0) >= (c.targetRecollectionAtLeast || 3) && (context.added || 0) > 0 && useRelicFlag("turn", relic.id, "draw")){
+        drawCards(e.draw || 1, { source:"relic" });
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "ward_pocket_watch":
+      if(useRelicFlag("turn", relic.id, "bonus")){
+        context.bonusDamage = (context.bonusDamage || 0) + (e.recollectionDamageBonus || 1);
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "tear_catcher_gourd":
+      if(context.hadRecollection && useRelicFlag("battle", relic.id, "transfer")){
+        const targets = livingEnemies().filter(enemy => enemy !== context.enemy);
+        if(targets.length){
+          const target = targets[Math.floor(Math.random() * targets.length)];
+          addStatus(target, "recollection", e.transferRecollection || 2);
+          toast(relic.name+" 발동");
+        }
+      }
+      break;
+    case "lotus_lamp":
+      if((context.before || 0) === 0 && (context.added || 0) > 0 && context.target){
+        const flagKey = "target:" + (context.target.id || context.target.spawnIndex || "unknown");
+        if(useRelicFlag("battle", relic.id, flagKey)){
+          addStatus(context.target, "mark", e.markBonus || 1, { skipRelic:true });
+          toast(relic.name+" 발동");
+        }
+      }
+      break;
+    case "lotus_seed_bead": {
+      const target = livingEnemies()[0];
+      if(target){ addStatus(target, "mark", e.applyMark || 1); toast(relic.name+" 발동"); }
+      break;
+    }
+    case "cheondo_bell":
+      if((context.consumed || 0) >= (c.minMarksConsumed || 4) && useRelicFlag("battle", relic.id, "reserve")){
+        S.nextTurnEnergyBonus = (S.nextTurnEnergyBonus || 0) + (e.nextTurnRestoreEnergy || 1);
+        S.nextTurnDrawBonus = (S.nextTurnDrawBonus || 0) + (e.nextTurnDraw || 1);
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "old_letter_box":
+      markRandomHanpuriGrowth(e.applyGrowthCount || 1);
+      break;
+    case "broken_red_thread":
+      if(useRelicFlag("turn", relic.id, "draw")){ drawCards(e.draw || 1, { source:"relic" }); toast(relic.name+" 발동"); }
+      break;
+    case "unsealed_letter":
+      if(context.cardKey && context.cardUid && useRelicFlag("battle", relic.id, "return")){
+        S.nextTurnReturnCard = { cardUid:context.cardUid, cardKey:context.cardKey, costReduction:e.temporaryCostReduction || 1 };
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "gilt_bell_clapper":
+      if(useRelicFlag("turn", relic.id, "bonus")){
+        context.bonusDamage = (context.bonusDamage || 0) + (e.purifyBonus || 2);
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "sevenstar_knot":
+      if((S.cardsPlayedThisTurn || 0) + 1 === (c.spellCount || 5) && useRelicFlag("turn", relic.id, "draw")){
+        drawCards(e.draw || 1, { source:"relic" });
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "torn_gut_fan":
+      if((S.exhaustedSpellCountThisTurn || 0) === (c.exhaustedSpellCount || 3) &&
+         useRelicFlag("turn", relic.id, "block") &&
+         useRelicFlag("battle", relic.id, "block", c.maxPerBattle || 2)){
+        gainPlayerBlock(e.block || 5);
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "prayer_knot":
+      S.nextBattleStartBlock = (S.nextBattleStartBlock || 0) + (e.nextBattleStartBlock || 6);
+      if(RUN_STATE) RUN_STATE.nextBattleStartBlock = S.nextBattleStartBlock;
+      toast(relic.name+" 발동");
+      break;
+    case "empty_lucky_pouch":
+      if(useRelicFlag("run", relic.id, "skip", c.maxPerRun || 4)){
+        S.gold = (S.gold || 0) + (e.gold || 15);
+        syncRunStateFromCombat();
+        toast(relic.name+" 발동: 복채 +" + (e.gold || 15));
+      }
+      break;
+    case "twin_marriage_tablet":
+      if(context.cardKey && !context.duplicateByRelic){
+        addPermanentCard(context.cardKey, { source:"relic", duplicateByRelic:true, skipRelicEvent:true });
+        toast(relic.name+" 발동");
+      }
+      break;
+    case "inverted_bell":
+      if(S.turn === 1 && !S.invertedBellAutoPlayed){
+        S.invertedBellAutoPlayed = true;
+        setTimeout(autoPlayInvertedBellFirstTurn, 0);
+      }
+      break;
+    case "closed_sutra_box":
+      drawCards(e.draw || 1, { source:"turnStartRelic" });
+      break;
+    case "reversed_talisman_book":
+      if(Number.isFinite(context.handIndex)){
+        setHandCardCostOverride(context.handIndex, Math.floor(Math.random() * 4));
+      }
+      break;
+  }
+}
+
+function damageRandomEnemy(amount){
+  const targets = livingEnemies();
+  if(!targets.length || amount <= 0) return 0;
+  const target = targets[Math.floor(Math.random() * targets.length)];
+  applyDamageWithFeedback(target, amount, 0);
+  return amount;
+}
+
 function tryApplyFatalRelic(){
   if(!S || !S.player || S.player.hp > 0 || !Array.isArray(S.relics)) return false;
   S.relics = S.relics.map(hydrateRelicData);
   const relicIndex = S.relics.findIndex(relic =>
-    relic && Array.isArray(relic.fx) && relic.fx.some(effect =>
-      effect && effect.timing === "fatalDamage" && effect.t === "revive"
+    relic && (
+      (Array.isArray(relic.fx) && relic.fx.some(effect => effect && effect.timing === "fatalDamage" && effect.t === "revive")) ||
+      relic.id === "lizard_tail_charm"
     )
   );
   if(relicIndex < 0) return false;
 
   const relic = S.relics[relicIndex];
-  const effect = relic.fx.find(fx => fx && fx.timing === "fatalDamage" && fx.t === "revive");
-  const ratio = typeof effect.v === "number" ? effect.v : 0.5;
+  const effect = Array.isArray(relic.fx) ? relic.fx.find(fx => fx && fx.timing === "fatalDamage" && fx.t === "revive") : null;
+  const planned = relic.plannedEffects || {};
+  const ratio = typeof effect?.v === "number" ? effect.v : (planned.healByMaxHpRatio || 0.5);
   const healValue = Math.max(1, Math.floor((S.player.maxHp || 1) * ratio));
   S.player.hp = 0;
   const healed = LIFE.heal(S.player, healValue);
-  if(effect.consume) S.relics.splice(relicIndex, 1);
+  if(!effect || effect.consume || (relic.plannedConditions && relic.plannedConditions.consumeRelic)) S.relics.splice(relicIndex, 1);
   if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
   toast(relic.name+" 발동");
   renderAll();
@@ -416,8 +695,20 @@ function getRelicCandidatesBySource(source, options = {}) {
   return db.filter(item => {
     if (!item || ownedIds.has(item.id)) return false;
     if (item.category === "blessingRelic" || item.source === "startBlessing") return false;
-    if (source && Array.isArray(item.obtainFrom) && !item.obtainFrom.includes(source)) {
-      return false;
+    if (source) {
+      const sourceLabels = {
+        battle: ["battle", "일반전"],
+        enemy: ["enemy", "일반전"],
+        elite: ["elite", "엘리트"],
+        boss: ["boss", "보스"],
+        shop: ["shop", "상점"],
+        event: ["event", "이벤트"],
+        prayer: ["prayer", "기도터"],
+        rest: ["rest", "기도터"]
+      }[source] || [source];
+      const from = Array.isArray(item.obtainFrom) ? item.obtainFrom : [];
+      const proposal = Array.isArray(item.obtainFromProposal) ? item.obtainFromProposal : [];
+      if(!sourceLabels.some(label => from.includes(label) || proposal.includes(label))) return false;
     }
     if (options.rarity && item.rarity !== options.rarity) {
       return false;
@@ -531,10 +822,13 @@ function newGame(options={}){
     busy: false, over: null, rewardOpen: false,
     relics: cloneRunArray(RUN_STATE.relics), potions: cloneRunArray(RUN_STATE.potions),
     gold: RUN_STATE.gold, moonShards: RUN_STATE.moonShards,
+    relicRuntime: RUN_STATE.relicRuntime || {},
+    battleRuntimeId: Date.now() + ":" + Math.random(),
     cleanseCount: typeof RUN_STATE.cleanseCount === "number" ? RUN_STATE.cleanseCount : 0,
     turn: 1,
     // 전투 시작 효과 중복 적용 방지 플래그
     battleStartApplied: false,
+    nextBattleStartBlock: RUN_STATE.nextBattleStartBlock || 0,
     // 노드 컨텍스트 (기획서 §2)
     battleStage: curStage || null,
     tutorialMode: !!options.tutorial,
@@ -552,8 +846,14 @@ function newGame(options={}){
     pendingDrawPenalty: 0,
     pendingHandLock: 0,
     lockedHandCards: [],
+    handInstances: [],
+    drawInstances: [],
+    discardInstances: [],
     handLockTokens: [],
+    handCostOverrides: [],
+    playerTurnActive: true,
     nextHandLockToken: 1,
+    nextCardUid: 1,
     turnChallenges: [],
     summonCount: 0,
     relicTurnFlags: {},
@@ -564,11 +864,21 @@ function newGame(options={}){
   spawnPackageEnemies();
   applyBattleBackground();
 
-  S.draw = shuffle([...STARTER_DECK]);
-  drawCards(DRAW_PER_TURN);
+  const initialDeck = zipShuffleCards([...STARTER_DECK], createCardInstancesForKeys(STARTER_DECK));
+  S.draw = initialDeck.keys;
+  S.drawInstances = initialDeck.instances;
+  drawCards(DRAW_PER_TURN, { source:"turnStartBase" });
   // 전투 시작 효과는 전투당 1회만 적용한다.
   // 드로우 이후에 호출하여 "전투 시작 시 드로우 +1" 계열 법구도 자연스럽게 처리한다.
   applyBattleStartRelics();
+  applyRelicTrigger("battleStartAfterDraw");
+  if(S.nextBattleStartBlock > 0){
+    gainPlayerBlock(S.nextBattleStartBlock);
+    S.nextBattleStartBlock = 0;
+    if(RUN_STATE) RUN_STATE.nextBattleStartBlock = 0;
+  }
+  applyRelicTrigger("turnStart");
+  if(hasRelic("reversed_talisman_book")) drawCards(1, { source:"turnStartRelic" });
   applyPlayerTurnStartGimmicks();
   renderAll();
 }
@@ -896,8 +1206,10 @@ function handleEnemyDied(context){
 
 function emitEnemyDiedOnce(enemy, context={}){
   if(!enemy || enemy.deathEventEmitted) return;
+  const hadRecollection = getStatus(enemy, "recollection") > 0;
   enemy.deathEventEmitted = true;
   notifyMonsterBattleEvent("enemyDied", { ...context, enemy });
+  applyRelicTrigger("onEnemyDefeated", { ...context, enemy, hadRecollection });
 }
 
 function hasPlayerStatus(statusId){
@@ -1346,7 +1658,7 @@ function syncLegacyStatusFields(enemy){
   });
 }
 
-function addStatus(enemy, statusId, amount){
+function addStatus(enemy, statusId, amount, options={}){
   if(!enemy || !statusId || !amount) return 0;
   const data = STATUS_DATA[statusId] || { maxStack: 99 };
   ensureEnemyStatus(enemy);
@@ -1354,7 +1666,12 @@ function addStatus(enemy, statusId, amount){
   const next = Math.min(data.maxStack || 99, before + amount);
   enemy.status[statusId] = Math.max(0, next);
   syncLegacyStatusFields(enemy);
-  return Math.max(0, enemy.status[statusId] - before);
+  const added = Math.max(0, enemy.status[statusId] - before);
+  if(added > 0 && !options.skipRelic){
+    if(statusId === "mark") applyRelicTrigger("onMarkApply", { target:enemy, before, added, amount });
+    if(statusId === "recollection") applyRelicTrigger("onRecollectionApplied", { target:enemy, before, added, amount });
+  }
+  return added;
 }
 
 function removeStatus(enemy, statusId, amount){
@@ -1386,8 +1703,13 @@ function decayEnemyStatuses(enemy, timing){
     if(!data || !data.showOnEnemy) return;
     if(data.decayTiming && data.decayTiming !== timing) return;
     if(statusId === "recollection" && timing === "afterEnemyAction"){
-      const damage = enemy.status[statusId] || 0;
-      if(damage > 0) applyDamageWithFeedback(enemy, damage, 0);
+      let damage = enemy.status[statusId] || 0;
+      if(damage > 0){
+        const ctx = { enemy, damage, bonusDamage:0 };
+        applyRelicTrigger("onRecollectionDamage", ctx);
+        damage += ctx.bonusDamage || 0;
+        applyDamageWithFeedback(enemy, damage, 0);
+      }
     }
     const amount = data.decayAmount || 1;
     if(amount > 0) removeStatus(enemy, statusId, amount);
@@ -1499,17 +1821,162 @@ function autoSelectTarget(){
 /* =========================================================================
    주문 드로우
    ========================================================================= */
-function drawCards(n){
+function getHandCardCost(handIndex, key){
+  const card = CARD_DB[key];
+  const base = card ? (card.cost || 0) : 0;
+  if(S && Array.isArray(S.handCostOverrides) && Number.isFinite(S.handCostOverrides[handIndex])){
+    return Math.max(0, S.handCostOverrides[handIndex]);
+  }
+  return base;
+}
+
+function setHandCardCostOverride(handIndex, cost){
+  if(!S || !Array.isArray(S.hand) || handIndex < 0 || handIndex >= S.hand.length) return false;
+  if(!Array.isArray(S.handCostOverrides)) S.handCostOverrides = [];
+  S.handCostOverrides[handIndex] = Math.max(0, cost || 0);
+  return true;
+}
+
+function applyRandomHandCostReduction(amount){
+  if(!S || !Array.isArray(S.hand) || !S.hand.length) return false;
+  const candidates = S.hand
+    .map((key, index) => ({ key, index, card:CARD_DB[key] }))
+    .filter(item => item.card && !item.card.unplayable);
+  if(!candidates.length) return false;
+  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+  const current = getHandCardCost(picked.index, picked.key);
+  return setHandCardCostOverride(picked.index, Math.max(0, current - (amount || 1)));
+}
+
+function markRandomHanpuriGrowth(amount){
+  if(!S) return false;
+  ensureCardInstanceZones();
+  const instanceZones = ["hand", "draw", "discard"];
+  const instanceCandidates = [];
+  instanceZones.forEach(zone => {
+    (S[zone] || []).forEach((key, index) => {
+      const card = CARD_DB[key];
+      const instance = S[zone + "Instances"] && S[zone + "Instances"][index];
+      if(card && card.hanpuriGrowth && instance) instanceCandidates.push({ zone, key, index, instance });
+    });
+  });
+  if(!instanceCandidates.length) return false;
+  const pickedInstance = instanceCandidates[Math.floor(Math.random() * instanceCandidates.length)];
+  return applyHanpuriGrowth(pickedInstance.instance, amount || 1, { source:"relic", cardKey:pickedInstance.key });
+}
+
+function getHanpuriGrowth(cardRef){
+  if(cardRef && typeof cardRef === "object") return (cardRef.runtime && cardRef.runtime.hanpuriGrowth) || 0;
+  return 0;
+}
+
+function applyHanpuriGrowth(cardRef, amount=1, options={}){
+  const cardKey = (cardRef && typeof cardRef === "object") ? cardRef.key : (options.cardKey || cardRef);
+  const card = CARD_DB[cardKey];
+  const meta = card && card.hanpuriGrowth;
+  if(!card || !meta || amount <= 0) return false;
+  const instance = (cardRef && typeof cardRef === "object") ? cardRef : null;
+  if(!instance) return false;
+  instance.key = instance.key || cardKey;
+  instance.runtime = instance.runtime || {};
+  const beforeGrowth = getHanpuriGrowth(instance);
+  const maxGrowth = Number.isFinite(meta.maxGrowth) ? meta.maxGrowth : 99;
+  const afterGrowth = Math.min(maxGrowth, beforeGrowth + amount);
+  if(afterGrowth <= beforeGrowth) return false;
+  instance.runtime.hanpuriGrowth = afterGrowth;
+  applyRelicTrigger("onHanpuriGrowth", { cardUid:instance.uid, cardKey, beforeGrowth, afterGrowth, amount:afterGrowth - beforeGrowth, maxGrowth, source:options.source || "unknown" });
+  if(beforeGrowth < maxGrowth && afterGrowth >= maxGrowth){
+    applyRelicTrigger("onHanpuriReachMaxGrowth", { cardUid:instance.uid, cardKey, beforeGrowth, afterGrowth, amount:afterGrowth - beforeGrowth, maxGrowth, source:options.source || "unknown" });
+  }
+  return true;
+}
+
+function getGrowthAdjustedValue(cardRef, effect){
+  const cardKey = (cardRef && typeof cardRef === "object") ? cardRef.key : cardRef;
+  const card = CARD_DB[cardKey];
+  const meta = card && card.hanpuriGrowth;
+  const base = effect.v || 0;
+  if(!meta || !effect.growthStat || effect.growthStat !== meta.stat) return base;
+  return base + getHanpuriGrowth(cardRef) * (meta.perGrowth || 0);
+}
+
+function removeCardFromBattleZones(cardKey){
+  if(!S || !cardKey) return false;
+  ensureCardInstanceZones();
+  for(const zone of ["hand", "draw", "discard"]){
+    const list = S[zone];
+    if(!Array.isArray(list)) continue;
+    const idx = list.indexOf(cardKey);
+    if(idx < 0) continue;
+    list.splice(idx, 1);
+    const instances = S[zone + "Instances"];
+    if(Array.isArray(instances)) instances.splice(idx, 1);
+    if(zone === "hand"){
+      if(Array.isArray(S.handLockTokens)) S.handLockTokens.splice(idx, 1);
+      if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.splice(idx, 1);
+    }
+    return true;
+  }
+  return false;
+}
+
+function removeCardFromBattleZonesByUid(cardUid){
+  if(!S || !cardUid) return null;
+  ensureCardInstanceZones();
+  for(const zone of ["hand", "draw", "discard"]){
+    const list = S[zone];
+    const instances = S[zone + "Instances"];
+    if(!Array.isArray(list) || !Array.isArray(instances)) continue;
+    const idx = instances.findIndex(instance => instance && instance.uid === cardUid);
+    if(idx < 0) continue;
+    const key = list.splice(idx, 1)[0];
+    const instance = instances.splice(idx, 1)[0];
+    if(zone === "hand"){
+      if(Array.isArray(S.handLockTokens)) S.handLockTokens.splice(idx, 1);
+      if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.splice(idx, 1);
+    }
+    return { key, instance, zone };
+  }
+  return null;
+}
+
+function autoPlayInvertedBellFirstTurn(){
+  if(!S || S.busy || S.over || !hasRelic("inverted_bell")) return;
+  let guard = 0;
+  while(S.hand && S.hand.length && guard < 20){
+    guard += 1;
+    const key = S.hand[0];
+    const card = CARD_DB[key];
+    if(!card || card.unplayable || S.energy < getHandCardCost(0, key)) break;
+    const target = card.target === "enemy" ? getSelectedLivingEnemy() : null;
+    if(card.target === "enemy" && !target) break;
+    if(!playCard(0, target)) break;
+  }
+}
+
+function drawCards(n, options={}){
+  if(hasRelic("closed_sutra_box") && S.playerTurnActive && options.source && !["turnStartBase","turnStartRelic"].includes(options.source)){
+    return;
+  }
+  ensureCardInstanceZones();
   for(let i=0;i<n;i++){
     if(S.draw.length===0){
       if(S.discard.length===0) break;
-      S.draw = shuffle(S.discard); S.discard = [];
+      const reshuffled = zipShuffleCards(S.discard, S.discardInstances);
+      S.draw = reshuffled.keys;
+      S.drawInstances = reshuffled.instances;
+      S.discard = [];
+      S.discardInstances = [];
     }
     const drawn = S.draw.pop();
-    if(S.hand.length >= 10) discardCard(drawn, { source:"drawOverflow" });
+    const drawnInstance = S.drawInstances.pop();
+    if(S.hand.length >= 10) discardCard(drawn, { source:"drawOverflow", instance:drawnInstance });
     else {
       S.hand.push(drawn);
+      S.handInstances.push(drawnInstance || createCardInstance(drawn));
       if(Array.isArray(S.handLockTokens)) S.handLockTokens.push(createHandLockToken());
+      if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.push(null);
+      applyRelicTrigger("onCardDrawnFromDrawPile", { cardUid:(drawnInstance && drawnInstance.uid) || null, cardKey:drawn, handIndex:S.hand.length - 1, source:options.source || "unknown" });
     }
   }
 }
@@ -1517,25 +1984,32 @@ function drawCards(n){
 function discardCard(key, options={}){
   const card = CARD_DB[key];
   if(!card) return;
+  ensureCardInstanceZones();
+  const instance = options.instance || createCardInstance(key);
+  if(options.source === "turnEnd") applyHanpuriGrowth(instance, 1, { source:"turnEndDiscard", cardKey:key });
   const sr = LIFE.resolveStatusCardDiscard(card, S.player, options);
   if(sr.handled){
-    if(sr.damage){
-      if(sr.damage.absorbed > 0) spawnFloat('.player', '-'+sr.damage.absorbed, 'blk');
-      if(sr.damage.hpLoss  > 0) spawnFloat('.player', '-'+sr.damage.hpLoss,   'dmg');
-    }
+    if(sr.damageAmount) applyDamageWithFeedback(S.player, sr.damageAmount, 0);
     if(sr.message) toast(sr.message);
-    if(sr.discard) S.discard.push(key);
+    if(sr.discard) pushDiscardCard(key, instance);
     return;
   }
-  if(card.exhaust){ toast(card.name+" 소멸"); return; }
-  S.discard.push(key);
+  if(card.exhaust){
+    S.exhaustedSpellCountThisTurn = (S.exhaustedSpellCountThisTurn || 0) + 1;
+    const generated = !!(card.generatedOnly || options.generated);
+    applyRelicTrigger("onCardExhaust", { cardUid:instance.uid, cardKey:key, card, generated, source:options.source || "unknown" });
+    applyRelicTrigger("onExhaustCountEachTurn", { count:S.exhaustedSpellCountThisTurn });
+    toast(card.name+" 소멸");
+    return;
+  }
+  pushDiscardCard(key, instance);
 }
 
 function addStatusCardToDiscard(cardKey, count=1){
   const card = CARD_DB[cardKey];
   if(!card || card.rarity!=="status") return 0;
   const amount = Math.max(1, count||1);
-  for(let i=0;i<amount;i++) S.discard.push(cardKey);
+  for(let i=0;i<amount;i++) pushDiscardCard(cardKey, createCardInstance(cardKey));
   toast(card.name+" "+amount+"장 추가");
   return amount;
 }
@@ -1547,6 +2021,8 @@ function playCard(handIndex, targetEnemy){
   const key  = S.hand[handIndex];
   const card = CARD_DB[key];
   if(!card) return false;
+  ensureCardInstanceZones();
+  const cardInstance = S.handInstances && S.handInstances[handIndex] ? S.handInstances[handIndex] : createCardInstance(key);
   if(window.TUTORIAL_BATTLE &&
      typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
      window.TUTORIAL_BATTLE.isTutorialBattle() &&
@@ -1555,27 +2031,40 @@ function playCard(handIndex, targetEnemy){
     const message = typeof window.TUTORIAL_BATTLE.getTutorialRestrictionMessage === "function"
       ? window.TUTORIAL_BATTLE.getTutorialRestrictionMessage("card")
       : "";
-    if(message && typeof toast === "function") toast(message);
+  if(message && typeof toast === "function") toast(message);
     return false;
   }
   if(card.unplayable){ toast(card.name+"은 사용할 수 없습니다"); return false; }
   if(isHandCardLocked(handIndex, key)){ toast(card.name+"은 잠겨 있습니다"); return false; }
-  if(S.energy < card.cost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
+  if(hasRelic("cracked_divine_tablet") && (S.cardsPlayedThisTurn || 0) >= 3){
+    toast("금 간 신통패: 한 턴에 주문은 최대 3장까지만 사용할 수 있습니다.");
+    return false;
+  }
+  const cardCost = getHandCardCost(handIndex, key);
+  if(S.energy < cardCost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
 
-  S.energy -= card.cost;
+  S.energy -= cardCost;
   if(card.type === "attack") applyPreAttackCardGimmicks(targetEnemy);
+  const relicCardContext = { cardUid:cardInstance.uid, cardKey:key, card, handIndex, target:targetEnemy, bonusDamage:0 };
+  S.spellTypesPlayedThisTurn = S.spellTypesPlayedThisTurn || {};
+  S.spellTypesPlayedThisTurn[card.type] = true;
+  applyRelicTrigger("onNthSpellPlayedEachTurn", relicCardContext);
+  applyRelicTrigger("onSpellTypeSetCompleted", relicCardContext);
+  if(card.type === "attack") applyRelicTrigger("onFirstPurifySpellEachBattle", relicCardContext);
+  if(key === "bell_strike") applyRelicTrigger("onBellStrikePurify", relicCardContext);
+  const relicDamageBonus = relicCardContext.bonusDamage || 0;
 
   for(const e of card.fx){
     switch(e.t){
       case "damage":
-        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak); break;
+        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus, targetEnemy), S.player.weak); break;
       case "bonusLowHpDamage":
         if(targetEnemy && targetEnemy.hp>0 && targetEnemy.hp<=Math.ceil(targetEnemy.maxHp/2))
           applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak);
         break;
       case "damageAll":
-        livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v, en), S.player.weak)); break;
+        livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus, en), S.player.weak)); break;
       case "applyWeakAll":
         livingEnemies().forEach(en => addStatus(en, "agitation", e.v)); break;
       case "applyFracture":
@@ -1591,7 +2080,7 @@ function playCard(handIndex, targetEnemy){
         livingEnemies().forEach(en => addStatus(en, "recollection", e.v || 1));
         break;
       case "block":
-        gainPlayerBlock(e.v); break;
+        gainPlayerBlock(getGrowthAdjustedValue(cardInstance, e)); break;
       case "damageByBlockRatio":
         applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.player.block || 0) * e.v), targetEnemy), S.player.weak); break;
       case "damageByBlockRatioConsume": {
@@ -1599,9 +2088,12 @@ function playCard(handIndex, targetEnemy){
         const ratio = Number.isFinite(e.v) ? e.v : 0;
         const damage = Math.floor(currentBlock * ratio);
         if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(damage, targetEnemy), S.player.weak);
-        const consumeRatio = Number.isFinite(e.consumeRatio) ? e.consumeRatio : 0.5;
+        const consumeRatio = Number.isFinite(e.consumeRatio) ? e.consumeRatio : 1;
         const consumed = Math.ceil(currentBlock * consumeRatio);
         S.player.block = Math.max(0, currentBlock - consumed);
+        if(currentBlock >= 15 && consumed >= currentBlock && S.player.block === 0){
+          applyRelicTrigger("onBarrierFullyConsumed", { beforeBlock:currentBlock, consumed, cardKey:key });
+        }
         break;
       }
       case "damageByBlockGainedThisTurn":
@@ -1628,10 +2120,10 @@ function playCard(handIndex, targetEnemy){
         break;
       }
       case "ifAgitationAtLeastDraw":
-        if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)) drawCards(e.v || 1);
+        if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)) drawCards(e.v || 1, { source:"cardEffect" });
         break;
       case "ifRecollectionAtLeastDraw":
-        if(targetEnemy && getStatus(targetEnemy, "recollection") >= (e.threshold || 0)) drawCards(e.v || 1);
+        if(targetEnemy && getStatus(targetEnemy, "recollection") >= (e.threshold || 0)) drawCards(e.v || 1, { source:"cardEffect" });
         break;
       case "ifAgitationAtLeastDamageAll":
         if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)){
@@ -1679,7 +2171,7 @@ function playCard(handIndex, targetEnemy){
       case "blockGainPlusThisTurn":
         gainPlayerBlock((e.v || 0) + (S.blockGainedThisTurn || 0)); break;
       case "draw":
-        drawCards(e.v); break;
+        drawCards(e.v, { source:"cardEffect" }); break;
       case "heal": {
         const healed = LIFE.heal(S.player, e.v);
         if(healed>0) spawnFloat('.player', '+'+healed, 'heal');
@@ -1697,7 +2189,6 @@ function playCard(handIndex, targetEnemy){
         if(targetEnemy){
           const amount = e.v || 0;
           addStatus(targetEnemy, "mark", amount);
-          applyRelicTrigger("onMarkApply", { target: targetEnemy, amount });
           spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
         }
         break;
@@ -1708,8 +2199,9 @@ function playCard(handIndex, targetEnemy){
       case "consumeAllMarksDamage":
         if(targetEnemy){
           const marks = getStatus(targetEnemy, "mark");
-          const amount = (e.base || 0) + marks * (e.per || 0);
+          const amount = (e.base || 0) + relicDamageBonus + marks * (e.per || 0);
           setStatus(targetEnemy, "mark", 0);
+          applyRelicTrigger("onMarksConsumed", { target:targetEnemy, consumed:marks });
           applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
         }
         break;
@@ -1719,14 +2211,17 @@ function playCard(handIndex, targetEnemy){
   }
 
   S.hand.splice(handIndex, 1);
+  if(Array.isArray(S.handInstances)) S.handInstances.splice(handIndex, 1);
   if(Array.isArray(S.handLockTokens)) S.handLockTokens.splice(handIndex, 1);
-  discardCard(key, { source:"played" });
+  if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.splice(handIndex, 1);
+  discardCard(key, { source:"played", instance:cardInstance });
+  if(S.hand.length === 0) applyRelicTrigger("onHandEmpty", { source:"playCard" });
   S.cardsPlayedThisTurn = (S.cardsPlayedThisTurn || 0) + 1;
   updateTurnChallengesForCard(card);
-  notifyMonsterBattleEvent("successfulCardPlayed", { cardKey:key, card });
+  notifyMonsterBattleEvent("successfulCardPlayed", { cardUid:cardInstance.uid, cardKey:key, card });
   if(card.type === "attack"){
     S.attackCardsPlayedThisTurn = (S.attackCardsPlayedThisTurn || 0) + 1;
-    notifyMonsterBattleEvent("successfulAttackCardPlayed", { cardKey:key, card, target:targetEnemy });
+    notifyMonsterBattleEvent("successfulAttackCardPlayed", { cardUid:cardInstance.uid, cardKey:key, card, target:targetEnemy });
   }
   autoSelectTarget();
   if(window.TUTORIAL_BATTLE &&
@@ -1750,7 +2245,9 @@ function playCard(handIndex, targetEnemy){
 function applyDamageWithFeedback(target, rawDamage, attackerWeak){
   const beforeHp = target ? target.hp || 0 : 0;
   const beforeBlock = target ? target.block || 0 : 0;
-  const result = LIFE.applyDamage(target, rawDamage, attackerWeak);
+  const damageContext = { target, rawDamage, attackerWeak };
+  if(target === S.player) applyRelicTrigger("beforePlayerHpDamage", damageContext);
+  const result = LIFE.applyDamage(target, damageContext.rawDamage, attackerWeak);
   const sel = target===S.player ? '.player' : '[data-id="'+target.id+'"]';
   if(result.absorbed > 0)                          spawnFloat(sel, '-'+result.absorbed, 'blk');
   if(result.hpLoss   > 0)                          spawnFloat(sel, '-'+result.hpLoss,   'dmg');
@@ -1762,6 +2259,8 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak){
     if(beforeHp > 0 && target.hp <= 0) emitEnemyDiedOnce(target, { result });
     applyConfiguredPhaseIfNeeded(target);
     applyNextPhaseIfNeeded(target);
+  } else {
+    if(result.hpLoss > 0) applyRelicTrigger("onPlayerHpDamage", { hpLoss:result.hpLoss, result });
   }
   return result;
 }
@@ -1909,8 +2408,7 @@ function chooseRewardCard(key){
   if(!S || !S.rewardOpen) return;
   const card = CARD_DB[key];
   if(!card) return;
-  STARTER_DECK.push(key);
-  S.discard.push(key);
+  addPermanentCard(key, { source:"battleReward" });
   if(S.victoryCardRewardOpen){
     toast(card.name+" 획득");
     finishBattleVictoryCardReward();
@@ -1929,9 +2427,11 @@ function skipRewardCard(){
   }
   if(!S || !S.rewardOpen) return;
   if(S.victoryCardRewardOpen){
+    applyRelicTrigger("onCardRewardSkipped", { source:"battleVictory" });
     finishBattleVictoryCardReward();
     return;
   }
+  applyRelicTrigger("onCardRewardSkipped", { source:"cardReward" });
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
   proceedToMap();
@@ -1940,7 +2440,9 @@ function skipRewardCard(){
 function grantRelic(source = "elite"){
   if(!S.relics) S.relics = [];
   // 이벤트 전투는 source를 "event"로 넘겨 일반 엘리트 법구 풀을 건드리지 않는다.
-  const pool = RELIC_DB.filter(item => Array.isArray(item.obtainFrom) && item.obtainFrom.includes(source));
+  const pool = typeof window.getRelicCandidatesBySource === "function"
+    ? window.getRelicCandidatesBySource(source)
+    : RELIC_DB.filter(item => Array.isArray(item.obtainFrom) && item.obtainFrom.includes(source));
   const list = (pool.length ? pool : RELIC_DB).filter(item => item && item.category !== "blessingRelic" && item.source !== "startBlessing");
   const relic = list[Math.floor(Math.random()*list.length)];
   if(!relic) return;
@@ -2455,6 +2957,7 @@ async function endTurn(){
     window.TUTORIAL_BATTLE.onEndTurnClicked();
   }
   S.busy = true;
+  S.playerTurnActive = false;
   updateEndBtn();
 
   applyPlayerTurnEndGimmicks();
@@ -2466,9 +2969,12 @@ async function endTurn(){
   LIFE.reduceAnxiety(S.player, 1);
   LIFE.reduceLethargy(S.player, 1);
 
-  S.hand.forEach(key => discardCard(key, { source:"turnEnd" }));
+  ensureCardInstanceZones();
+  S.hand.forEach((key, index) => discardCard(key, { source:"turnEnd", instance:S.handInstances && S.handInstances[index] }));
   S.hand = [];
+  S.handInstances = [];
   S.handLockTokens = [];
+  S.handCostOverrides = [];
   renderAll();
   await wait(250);
 
@@ -2537,6 +3043,9 @@ async function endTurn(){
   S.cardsPlayedThisTurn = 0;
   S.attackCardsPlayedThisTurn = 0;
   S.damageDealtThisTurn = 0;
+  S.exhaustedSpellCountThisTurn = 0;
+  S.spellTypesPlayedThisTurn = {};
+  S.handCostOverrides = [];
   const anxietyPenalty  = (S.player.anxiety||0)  > 0 ? 1 : 0;
   const lethargyPenalty = (S.player.lethargy||0) > 0 ? 1 : 0;
   S.energy    = Math.max(0, getMaxEnergy() - lethargyPenalty);
@@ -2547,7 +3056,28 @@ async function endTurn(){
   if(drawPenalty>0)     toast("수술등 압박으로 주문 뽑기 -"+drawPenalty);
   if(lethargyPenalty>0) toast("무기력으로 정신력 -1");
   S.turn += 1;
-  drawCards(drawCount);
+  S.playerTurnActive = true;
+  const bonusEnergy = S.nextTurnEnergyBonus || 0;
+  const bonusDraw = S.nextTurnDrawBonus || 0;
+  S.nextTurnEnergyBonus = 0;
+  S.nextTurnDrawBonus = 0;
+  if(S.nextTurnReturnCard && S.nextTurnReturnCard.cardUid){
+    const returnedCard = removeCardFromBattleZonesByUid(S.nextTurnReturnCard.cardUid);
+    if(returnedCard){
+      const returnKey = returnedCard.key || S.nextTurnReturnCard.cardKey;
+      S.hand.push(returnKey);
+      S.handInstances.push(returnedCard.instance || createCardInstance(returnKey, { uid:S.nextTurnReturnCard.cardUid }));
+      if(Array.isArray(S.handLockTokens)) S.handLockTokens.push(createHandLockToken());
+      if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.push(null);
+      setHandCardCostOverride(S.hand.length - 1, Math.max(0, (CARD_DB[returnKey]?.cost || 0) - (S.nextTurnReturnCard.costReduction || 1)));
+    }
+    S.nextTurnReturnCard = null;
+  }
+  S.energy = Math.min(getMaxEnergy(), S.energy + bonusEnergy);
+  drawCards(drawCount, { source:"turnStartBase" });
+  if(bonusDraw > 0) drawCards(bonusDraw, { source:"scheduledEffect" });
+  applyRelicTrigger("turnStart");
+  if(hasRelic("reversed_talisman_book")) drawCards(1, { source:"turnStartRelic" });
   notifyMonsterBattleEvent("playerTurnStart");
   // 생존 적 다음 행동 의도 계획
   livingEnemies().forEach(e => {
@@ -2858,7 +3388,7 @@ function applySelfPotionEffect(potion){
       LIFE.reduceWeak(S.player, potion.removeWeak || 1);
       break;
     case "draw":
-      drawCards(amount);
+      drawCards(amount, { source:"potion" });
       break;
     case "nextAttackDouble":
       S.nextAttackMultiplier = potion.value || 2;
@@ -2962,7 +3492,6 @@ function useMarkPotion(index, targetEnemy){
   if(!targetEnemy || targetEnemy.hp <= 0) return false;
   const amount = typeof potion.value === "number" ? potion.value : 3;
   addStatus(targetEnemy, "mark", amount);
-  applyRelicTrigger("onMarkApply", { target: targetEnemy, amount });
   spawnFloat('[data-id="'+targetEnemy.id+'"]', '표식 '+amount, 'heal');
   S.potions.splice(index, 1);
   recordPotionUsed(potion);
@@ -3171,10 +3700,11 @@ function renderHand(){
   h.innerHTML = "";
   S.hand.forEach((key, i) => {
     const c  = CARD_DB[key];
+    const displayCard = c ? { ...c, cost:getHandCardCost(i, key) } : c;
     const el = document.createElement("div");
     el.className     = "card card-frame-card cost-"+c.type;
     el.dataset.index = i;
-    el.innerHTML = cardFaceHtml(c);
+    el.innerHTML = cardFaceHtml(displayCard);
     attachDrag(el, i);
     h.appendChild(el);
   });
