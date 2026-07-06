@@ -464,7 +464,10 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .pile .stack{width:7cqh; height:7cqh; margin:0 auto; border-radius:0;
   background:center/contain no-repeat; border:0;
   box-shadow:none; display:grid; place-items:center;
-  font-size:2.4cqh; font-weight:900; color:#8a5b16; text-shadow:0 .12cqh .18cqh rgba(255,248,222,.85);}
+  font-size:2.4cqh; font-weight:900; color:#8a5b16;
+  text-shadow:0 .12cqh .18cqh rgba(255,248,222,.85),
+    -.045cqh -.045cqh 0 rgba(58,34,8,.6), .045cqh -.045cqh 0 rgba(58,34,8,.6),
+    -.045cqh  .045cqh 0 rgba(58,34,8,.6), .045cqh  .045cqh 0 rgba(58,34,8,.6);}
 #deckPile .stack{background-image:url("assets/ui_buttons/deck_pile.png");}
 #discardPile .stack{background-image:url("assets/ui_buttons/discard_pile.png");}
 .pile .plbl{display:none;}
