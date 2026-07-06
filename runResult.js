@@ -1056,10 +1056,31 @@ function escapeRrHtml(value){
 }
 
 /* ── 전역 인터페이스 ─────────────────────────────────────────────────────── */
+function submitRunRankingIfAvailable(snapshot){
+  if(!snapshot) return;
+
+  const rankingService = window.VIBERUN_RANKING_SERVICE;
+  if(!rankingService || typeof rankingService.submitRunResult !== "function"){
+    return;
+  }
+
+  rankingService.submitRunResult(snapshot)
+    .then(result => {
+      if(result && result.ok){
+        console.log("[Ranking] 랭킹 제출 완료:", result);
+      }
+    })
+    .catch(error => {
+      console.warn("[Ranking] 랭킹 제출 중 오류:", error);
+    });
+}
+
 function rrOpen(result, onContinue){
   if(result !== "win" && result !== "lose") return false;
 
   const snapshot = buildRunResultSnapshot(result);
+
+  submitRunRankingIfAvailable(snapshot);
 
   if(result === "win"){
     const spirit = getSavedEndingSpirit();
