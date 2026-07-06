@@ -1313,7 +1313,7 @@
 
   var TOP_MENU_INFO = [
     { cls: "ui-map-button",      name: "지도", desc: "현재 진행 경로를 확인합니다." },
-    { cls: "ui-codex-button",    name: "도감", desc: "카드와 정보를 확인합니다." },
+    { cls: "ui-codex-button",    name: "주문", desc: "카드와 정보를 확인합니다." },
     { cls: "ui-bag-button",      name: "가방", desc: "보유 중인 법구와 약병을 확인합니다." },
     { cls: "ui-settings-button", name: "설정", desc: "게임 설정을 변경합니다." },
     { cls: "ui-menu-button",     name: "메뉴", desc: "게임 메뉴를 엽니다." }
