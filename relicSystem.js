@@ -196,6 +196,15 @@ function applyRelicEffect(relic, effect, context={}){
       if(potion && Array.isArray(S.potions) && S.potions.length < limit){
         S.potions.push({ ...potion });
         toast(relic.name+" 발동: "+potion.name+" 획득");
+        if(typeof window.OPEN_RANDOM_ITEM_RESULT_POPUP === "function"){
+          window.OPEN_RANDOM_ITEM_RESULT_POPUP({
+            title: "약병 획득",
+            items: [{
+              type: "potion", action: "gain", key: potion.id, name: potion.name,
+              icon: potion.iconImage || potion.icon || potion.emoji || "🧪"
+            }]
+          });
+        }
       }
       break;
     }

@@ -15,7 +15,6 @@ function nodeClear(){
     grantBattleGoldReward();
     return endGame("win");
   }
-  if(nodeType==="elite") grantRelic(S.battleVictoryRelicSource || "elite");             // 엘리트 → 유물 추가 (기획서 §10)
   openBattleVictoryReward();
 }
 
@@ -123,6 +122,136 @@ function resourceIconHtml(icon){
   }
   return icon || "";
 }
+
+/* ── 무작위 주문/법구/약병 획득·제거 결과 팝업 (공통) ─────────────────────────
+   신령의 은혜 / 이벤트 / 전투 중 법구 발동 등 무작위 처리 결과를 플레이어가
+   인지할 수 있도록 이름과 에셋을 보여주는 확인 팝업이다. 선택 획득/선택
+   제거 UI(카드 보상 선택, 약병 선택 등)에는 사용하지 않는다. */
+function randomItemResultIconHtml(icon, name){
+  if(typeof icon === "string" && icon.indexOf("assets/") === 0){
+    return '<img src="' + escapeHtml(icon) + '" alt="' + escapeHtml(name || "") + '">';
+  }
+  return escapeHtml(icon || "?");
+}
+
+function randomItemResultCardHtml(item){
+  const icon = item.icon || (item.type === "relic" ? "🏺" : item.type === "potion" ? "🧪" : "?");
+  const name = item.name || "";
+  const actionText = item.action === "remove" ? "제거됨" : "획득";
+  return (
+    '<div class="random-item-result-card ' + escapeHtml(item.action || "gain") + '">' +
+      '<div class="random-item-result-icon">' + randomItemResultIconHtml(icon, name) + '</div>' +
+      '<div class="random-item-result-name">' + escapeHtml(name) + '</div>' +
+      '<div class="random-item-result-tag">' + escapeHtml(actionText) + '</div>' +
+    '</div>'
+  );
+}
+
+function ensureRandomItemResultPopupStyle(){
+  if(document.querySelector("#randomItemResultPopupStyle")) return;
+  const style = document.createElement("style");
+  style.id = "randomItemResultPopupStyle";
+  style.textContent =
+    '#randomItemResultPopup{' +
+      'position:absolute;inset:0;z-index:320;display:none;align-items:center;justify-content:center;' +
+      'background:rgba(24,18,12,.42);pointer-events:auto;' +
+    '}' +
+    '#randomItemResultPopup.show{display:flex;}' +
+    '#randomItemResultPopup .random-item-result-box{' +
+      'width:min(64cqw,760px);max-height:82cqh;padding:2.6cqh 2.6cqw;' +
+      'border-radius:2cqh;border:.22cqh solid rgba(183,146,82,.72);' +
+      'background:linear-gradient(180deg,rgba(255,250,235,.98),rgba(239,224,193,.98));' +
+      'box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.38);' +
+      'display:flex;flex-direction:column;align-items:center;gap:1.8cqh;' +
+      'overflow-y:auto;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-title{' +
+      'font-size:2.6cqh;font-weight:900;color:#3b2818;text-align:center;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-message{' +
+      'font-size:1.55cqh;font-weight:800;color:#6a4a2d;text-align:center;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-list{' +
+      'display:flex;flex-wrap:wrap;justify-content:center;gap:1.4cqh;max-width:100%;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-card{' +
+      'width:13cqh;min-height:15cqh;padding:1.1cqh;border-radius:1.4cqh;' +
+      'border:.18cqh solid rgba(174,137,80,.55);background:rgba(255,253,244,.86);' +
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8cqh;' +
+      'box-shadow:0 .45cqh 1.2cqh rgba(65,45,25,.16);' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-icon{' +
+      'width:7.5cqh;height:7.5cqh;display:flex;align-items:center;justify-content:center;' +
+      'font-size:5.4cqh;line-height:1;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-icon img{' +
+      'width:100%;height:100%;object-fit:contain;display:block;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-name{' +
+      'font-size:1.35cqh;font-weight:900;color:#332115;text-align:center;line-height:1.25;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-tag{' +
+      'font-size:1.1cqh;font-weight:900;color:#8a5c2b;text-align:center;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-card.remove .random-item-result-tag{color:#a3402f;}' +
+    '#randomItemResultPopup .random-item-result-ok{' +
+      'margin-top:.8cqh;min-width:12cqw;padding:1.1cqh 2.4cqw;border-radius:999px;' +
+      'border:.18cqh solid rgba(132,91,45,.55);background:linear-gradient(180deg,#f8dfa6,#c8913d);' +
+      'font-size:1.55cqh;font-weight:900;color:#2d1d10;cursor:pointer;' +
+    '}';
+  document.head.appendChild(style);
+}
+
+let randomItemResultPopupEl = null;
+
+function ensureRandomItemResultPopup(){
+  ensureRandomItemResultPopupStyle();
+  if(randomItemResultPopupEl) return randomItemResultPopupEl;
+
+  const popup = document.createElement("div");
+  popup.id = "randomItemResultPopup";
+  popup.setAttribute("aria-hidden", "true");
+  popup.innerHTML =
+    '<div class="random-item-result-box" role="dialog" aria-modal="true">' +
+      '<div class="random-item-result-title"></div>' +
+      '<div class="random-item-result-message"></div>' +
+      '<div class="random-item-result-list"></div>' +
+      '<button type="button" class="random-item-result-ok">확인</button>' +
+    '</div>';
+
+  (document.querySelector("#game") || document.body).appendChild(popup);
+  randomItemResultPopupEl = popup;
+  return popup;
+}
+
+function openRandomItemResultPopup(options = {}){
+  const items = Array.isArray(options.items) ? options.items.filter(Boolean) : [];
+  if(!items.length) return Promise.resolve();
+
+  const popup = ensureRandomItemResultPopup();
+
+  popup.querySelector(".random-item-result-title").textContent = options.title || "결과 확인";
+  popup.querySelector(".random-item-result-message").textContent = options.message || "";
+
+  const list = popup.querySelector(".random-item-result-list");
+  list.innerHTML = items.map(randomItemResultCardHtml).join("");
+
+  const okButton = popup.querySelector(".random-item-result-ok");
+  okButton.textContent = options.confirmText || "확인";
+
+  popup.classList.add("show");
+  popup.setAttribute("aria-hidden", "false");
+
+  return new Promise(resolve => {
+    okButton.onclick = () => {
+      popup.classList.remove("show");
+      popup.setAttribute("aria-hidden", "true");
+      resolve();
+    };
+  });
+}
+
+window.OPEN_RANDOM_ITEM_RESULT_POPUP = openRandomItemResultPopup;
 const BATTLE_VICTORY_POTION_CANDIDATES = (typeof window.POTION_DB !== "undefined") ? window.POTION_DB : [
   { id:"cheongsim_pill", name:"청심환", icon:"藥", emoji:"💊", desc:"정신력을 18 회복합니다.", type:"heal", effect:"healPlayerHp", value:18, target:"player" },
   { id:"focus_talisman", name:"집중부", icon:"符", emoji:"🔖", desc:"이번 턴 정신력을 1 회복합니다.", type:"energy", effect:"gainEnergy", value:1, target:"player" },
@@ -169,20 +298,6 @@ function skipRewardCard(){
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
   proceedToMap();
-}
-
-function grantRelic(source = "elite"){
-  if(!S.relics) S.relics = [];
-  // 이벤트 전투는 source를 "event"로 넘겨 일반 엘리트 법구 풀을 건드리지 않는다.
-  const pool = typeof window.getRelicCandidatesBySource === "function"
-    ? window.getRelicCandidatesBySource(source)
-    : RELIC_DB.filter(item => Array.isArray(item.obtainFrom) && item.obtainFrom.includes(source));
-  const list = (pool.length ? pool : RELIC_DB).filter(item => item && item.category !== "blessingRelic" && item.source !== "startBlessing");
-  const relic = list[Math.floor(Math.random()*list.length)];
-  if(!relic) return;
-  S.relics.push(relic);
-  toast("법구 획득: "+relic.emoji+" "+relic.name);
-  renderHud();
 }
 
 function ensureBattleVictoryOverlay(){
@@ -250,7 +365,9 @@ function getBattleVictoryRewards(){
   if(!S.victoryRewards){
     S.victoryRewards = createBattleVictoryBaseRewards();
     if(!S.battleSuppressOptionalRewards){
-      const relicReward = buildBattleVictoryOptionalReward("relic", BATTLE_VICTORY_RELIC_CHANCE);
+      const isEliteStage = S && S.battleNodeType === "elite";
+      const relicChance = isEliteStage ? 1 : BATTLE_VICTORY_RELIC_CHANCE;             // 엘리트 → 유물 확정 지급 (기획서 §10)
+      const relicReward = buildBattleVictoryOptionalReward("relic", relicChance);
       const potionReward = buildBattleVictoryOptionalReward("potion", getBattleVictoryPotionChance());
       if(relicReward) S.victoryRewards.push(relicReward);
       if(potionReward) S.victoryRewards.push(potionReward);
@@ -263,8 +380,9 @@ function buildBattleVictoryOptionalReward(type, chance){
   if(Math.random() >= chance) return null;
   if(type === "relic"){
     const isEliteStage = S && S.battleNodeType === "elite";
+    const relicSource = isEliteStage ? (S.battleVictoryRelicSource || "elite") : "battle";
     const relicCandidates = typeof window.getRelicCandidatesBySource === "function"
-      ? window.getRelicCandidatesBySource(isEliteStage ? "elite" : "battle")
+      ? window.getRelicCandidatesBySource(relicSource)
       : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
     const relic = pickBattleVictoryCandidate(relicCandidates);
     if(!relic) return null;
