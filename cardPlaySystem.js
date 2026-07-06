@@ -550,8 +550,13 @@ function isCardRewardEligible(key){
    재정규화한다. 같은 보상 선택지 안에서는 중복 카드가 나오지 않는다. */
 function getWeightedCardRewardKeys(count, sourcePool, options = {}){
   const rarityWeights = getRewardRarityWeights(options.context || "default");
-  const pool = (Array.isArray(sourcePool) ? sourcePool : CARD_REWARD_POOL)
-    .filter(isCardRewardEligible);
+  const rawPool = Array.isArray(sourcePool) ? sourcePool : CARD_REWARD_POOL;
+  const pathFilteredPool =
+    window.VIBERUN_SPIRIT_PATH_FILTER &&
+    typeof window.VIBERUN_SPIRIT_PATH_FILTER.filterCardKeysBySpiritPath === "function"
+      ? window.VIBERUN_SPIRIT_PATH_FILTER.filterCardKeysBySpiritPath(rawPool)
+      : rawPool;
+  const pool = pathFilteredPool.filter(isCardRewardEligible);
   const candidates = [...new Set(pool)];
   const picked = [];
   const amount = Math.max(0, count || 0);

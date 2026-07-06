@@ -1,10 +1,9 @@
 "use strict";
 
 /* =========================================================================
-   Spirit Path UI (신령의 길) - temporary UI-only implementation
-   - script.js를 수정하지 않는 임시 UI입니다.
-   - 선택값은 sessionStorage / window 전역값에만 저장하며, 실제 카드/약병/법구
-     출현 풀 필터링에는 아직 연결되어 있지 않습니다 (temporaryUiOnly: true).
+   Spirit Path UI (신령의 길)
+   - 선택값은 sessionStorage / window 전역값에 저장되며, spiritPathFilter.js를
+     통해 카드/약병/법구 출현 풀 필터링에 사용됩니다.
    - 확장덱(한풀이/굿판)의 가격, 잠금 여부는 bmStoreData.js / bmStoreService.js에
      이미 구현된 BM 정보를 그대로 가져와 표시합니다.
    ========================================================================= */
@@ -310,8 +309,7 @@
 
     const payload = {
       selectedDeckIds: selectedDeckIds.slice(),
-      alwaysIncludeGeneric: true,
-      temporaryUiOnly: true
+      alwaysIncludeGeneric: true
     };
 
     try {

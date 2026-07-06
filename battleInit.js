@@ -216,6 +216,10 @@ function newGame(options={}){
     relics: cloneRunArray(RUN_STATE.relics), potions: cloneRunArray(RUN_STATE.potions),
     gold: RUN_STATE.gold, moonShards: RUN_STATE.moonShards,
     relicRuntime: RUN_STATE.relicRuntime || {},
+    selectedSpiritPathDeckIds: Array.isArray(RUN_STATE.selectedSpiritPathDeckIds)
+      ? RUN_STATE.selectedSpiritPathDeckIds.slice()
+      : ["barrier", "memory", "soul_mark"],
+    alwaysIncludeGenericItems: true,
     battleRuntimeId: Date.now() + ":" + Math.random(),
     cleanseCount: typeof RUN_STATE.cleanseCount === "number" ? RUN_STATE.cleanseCount : 0,
     turn: 1,
