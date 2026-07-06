@@ -62,14 +62,14 @@
 
     const card = getCardDbEntryByName(name);
     if (card) {
-      const icon = card.emoji ? card.emoji + " " : "";
-      return { title: icon + card.name, body: card.desc || "" };
+      const icon = card.emoji ? " " + card.emoji : "";
+      return { title: card.name + icon, body: card.desc || "" };
     }
 
     const item = getRelicOrPotionDbEntryByName(name);
     if (item) {
-      const icon = item.emoji ? item.emoji + " " : "";
-      return { title: icon + item.name, body: item.desc || "" };
+      const icon = item.emoji ? " " + item.emoji : "";
+      return { title: item.name + icon, body: item.desc || "" };
     }
 
     return null;
@@ -91,8 +91,8 @@
       }
       const card = getCardDbEntryByName(anchor.dataset.spiritPathCardName);
       if (!card) return null;
-      const icon = card.emoji ? card.emoji + " " : "";
-      return { title: icon + (card.name || ""), body: card.desc || "" };
+      const icon = card.emoji ? " " + card.emoji : "";
+      return { title: (card.name || "") + icon, body: card.desc || "" };
     }
 
     if (anchor.classList && anchor.classList.contains("random-item-result-card")) {

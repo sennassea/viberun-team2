@@ -52,7 +52,6 @@
       color: "#d14040",
             desc: function (m, weak, displayedStatusName, enemy) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         var rawDamage = m.v;
         var actualDamage = m.v;
         if (window.previewMonsterFinalDamage && enemy) {
@@ -76,7 +75,6 @@
       color: "#3f8fe0",
             desc: function (m, weak, displayedStatusName, enemy) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         var target = window.getPlannedMonsterSupportTarget && enemy
           ? window.getPlannedMonsterSupportTarget(enemy, m)
           : enemy;
@@ -92,7 +90,6 @@
       color: "#8a5cc0",
       desc: function (m) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         return s + "다음 플레이어 턴 주문 뽑기를 " + (m.v || 1) + " 감소시키려 합니다.";
       }
     },
@@ -102,7 +99,6 @@
       color: "#8a5cc0",
       desc: function (m) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         return s + "다음 손패에서 비용이 가장 높은 사용 가능 주문 1장을 잠그려 합니다.";
       }
     },
@@ -112,7 +108,6 @@
       color: "#8a5cc0",
       desc: function (m) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         return s + "다음 턴의 주문 타입 규칙을 예고합니다.";
       }
     },
@@ -123,7 +118,6 @@
       desc: function (m, weak, displayedStatusName) {
         var statusName = getIntentTitleName(m, displayedStatusName) || "동요";
         var s = "이 적은 ";
-        if (m.name) s += '"' + m.name + '" / ';
         s += statusName + " " + m.v + "을 부여하려고 합니다.";
         return appendIntentStatusEffects(s, [statusName]);
       }
@@ -264,6 +258,13 @@
   function getIntentIcon(intent, info, displayedStatusName) {
     var statusName = getIntentTitleName(intent, displayedStatusName);
     return (statusName && INTENT_STATUS_INFO[statusName] && INTENT_STATUS_INFO[statusName].icon) || info.icon;
+  }
+
+  /* 스킬명이 있으면 스킬명을, 없으면 부여 상태명/행동 타입명을 제목으로 사용한다 (아이콘은 makeRow가 제목 뒤에 붙임) */
+  function getIntentDisplayTitle(intent, info, displayedStatusName) {
+    if (!intent) return info.name;
+    var statusName = getIntentTitleName(intent, displayedStatusName);
+    return intent.name || statusName || info.name;
   }
 
   function appendIntentStatusEffects(text, statusNames) {
@@ -471,16 +472,14 @@
     "#battle-tooltip.tt-show{display:block}" +
 
     /* 행 */
-    ".btt-row{display:flex;align-items:flex-start;gap:.75cqw;padding:.6cqh 0}" +
+    ".btt-row{display:flex;align-items:flex-start;padding:.6cqh 0}" +
     ".btt-row+.btt-row{border-top:.12cqh solid rgba(255,255,255,.09)}" +
-
-    /* 아이콘 */
-    ".btt-ico{font-size:2.1cqh;line-height:1.2;flex:none;width:2.7cqh;text-align:center}" +
-    ".btt-ico img{width:2.2cqh;height:2.2cqh;object-fit:contain;display:block;margin:0 auto;}" +
 
     /* 텍스트 */
     ".btt-body{flex:1;min-width:0}" +
     ".btt-name{display:block;font-size:1.6cqh;font-weight:800;color:#fff;line-height:1.3}" +
+    ".btt-name-ico{font-size:1.4cqh;margin-left:.3cqw;vertical-align:middle}" +
+    ".btt-name-ico img{width:1.5cqh;height:1.5cqh;object-fit:contain;display:inline-block;vertical-align:middle;margin-left:.3cqw}" +
     ".btt-desc{display:block;font-size:1.28cqh;color:rgba(190,210,235,.80);" +
       "margin-top:.15cqh;line-height:1.45;white-space:pre-wrap}" +
 
@@ -494,7 +493,8 @@
     "#battle-subcard-preview{position:absolute;z-index:100001;pointer-events:none;display:none;}" +
     "#battle-subcard-preview.show{display:block;}" +
     ".bsp-face{position:relative;width:100%;aspect-ratio:2/3;border-radius:1cqh;overflow:hidden;" +
-      "box-shadow:0 .6cqh 2cqh rgba(0,0,0,.5);background:#f5efe4;}" +
+      "border:.22cqh solid rgba(255,220,120,.9);" +
+      "box-shadow:0 .6cqh 2cqh rgba(0,0,0,.5),0 0 0 .3cqh rgba(255,220,120,.35);background:#f5efe4;}" +
     ".bsp-face .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;" +
       "overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);}" +
     ".bsp-face .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;}" +
@@ -512,14 +512,15 @@
   /* ── HTML 빌더 헬퍼 ───────────────────────────────────────────────────── */
   function makeRow(icon, name, desc, nameColor) {
     var cs = nameColor ? ' style="color:' + nameColor + '"' : "";
-    var iconHtml = (typeof icon === "string" && icon.indexOf("assets/") === 0)
-      ? '<img src="' + icon + '" alt="" aria-hidden="true">'
-      : icon;
-    var ico = icon ? '<div class="btt-ico">' + iconHtml + '</div>' : "";
+    var nameIconHtml = "";
+    if (icon) {
+      nameIconHtml = (typeof icon === "string" && icon.indexOf("assets/") === 0)
+        ? '<img class="btt-name-ico" src="' + icon + '" alt="" aria-hidden="true">'
+        : '<span class="btt-name-ico">' + icon + '</span>';
+    }
     return '<div class="btt-row">'
-      + ico
       + '<div class="btt-body">'
-      + '<span class="btt-name"' + cs + '>' + name + '</span>'
+      + '<span class="btt-name"' + cs + '>' + name + nameIconHtml + '</span>'
       + '<span class="btt-desc">' + desc + '</span>'
       + '</div></div>';
   }
@@ -571,7 +572,7 @@
       }
       rows.push(makeRow(
         getIntentIcon(enemy.intent, info, displayedStatusName),
-        getIntentTitleName(enemy.intent, displayedStatusName) || info.name,
+        getIntentDisplayTitle(enemy.intent, info, displayedStatusName),
         intentDesc,
         info.color
       ));
@@ -1051,11 +1052,21 @@
   /* 서브카드는 메인 카드보다 살짝 작게(85%) 표시 */
   var SUBCARD_SCALE = 0.85;
 
+  /* 도감/카드상세처럼 화면보다 좁은 모달 안에서 카드를 볼 때는 game 전체가 아니라
+     그 모달 패널을 기준으로 겹침/뒤집힘을 판단해야 한다. 해당 모달이 없으면(전투 손패 등)
+     기존처럼 game 전체를 기준으로 삼는다. */
+  function getPreviewBoundsRect(cardEl) {
+    var panel = cardEl.closest && cardEl.closest(".deck-viewer-panel, .card-detail-panel");
+    return (panel || game).getBoundingClientRect();
+  }
+
   /* ── 서브카드 미리보기 표시/숨김/위치 ───────────────────────────────────── */
-  /* 메인 카드 상단과 같은 줄에 정렬되고, 카드 오른쪽에 붙되 화면 밖으로
-     나가면 왼쪽으로 뒤집힌다. 반환값은 뒤이어 툴팁을 이어붙이는 데 쓰인다. */
+  /* 메인 카드 상단과 같은 줄에 정렬되고, 카드 오른쪽에 붙되 (모달이면 모달 기준,
+     아니면 화면 기준) 공간 밖으로 나가면 왼쪽으로 뒤집힌다.
+     반환값은 뒤이어 툴팁을 이어붙이는 데 쓰인다. */
   function positionSubCardPreview(cardEl) {
     var gRect = game.getBoundingClientRect();
+    var boundsRect = getPreviewBoundsRect(cardEl);
     var cRect = cardEl.getBoundingClientRect();
     var pad = 8;
 
@@ -1064,17 +1075,28 @@
 
     var cardLeft  = cRect.left  - gRect.left;
     var cardRight = cRect.right - gRect.left;
+    var boundsLeft   = boundsRect.left   - gRect.left;
+    var boundsRight  = boundsRect.right  - gRect.left;
+    var boundsTop    = boundsRect.top    - gRect.top;
+    var boundsBottom = boundsRect.bottom - gRect.top;
+
+    /* 서브카드 뒤에는 설명 툴팁(#battle-tooltip, max-width:26cqw)이 이어붙기 때문에
+       서브카드 자신만 오른쪽에 들어가는지가 아니라, 툴팁 최대 너비까지 합쳐서
+       들어가는지로 뒤집힘을 판단해야 4번째 열처럼 서브카드만 겨우 들어가는
+       위치에서 툴팁이 잘리지 않는다. */
+    var TOOLTIP_MAX_WIDTH_RATIO = 0.26;
+    var reservedForTooltip = pRect.width + pad + gRect.width * TOOLTIP_MAX_WIDTH_RATIO;
 
     var flippedLeft = false;
     var tx = cardRight + pad;
-    if (tx + pRect.width > gRect.width - pad) {
+    if (tx + reservedForTooltip > boundsRight - pad) {
       tx = cardLeft - pRect.width - pad;
       flippedLeft = true;
     }
-    tx = Math.max(pad, Math.min(gRect.width - pRect.width - pad, tx));
+    tx = Math.max(boundsLeft + pad, Math.min(boundsRight - pRect.width - pad, tx));
 
     var ty = cRect.top - gRect.top; /* 메인 카드와 윗면 정렬 */
-    ty = Math.max(pad, Math.min(gRect.height - pRect.height - pad, ty));
+    ty = Math.max(boundsTop + pad, Math.min(boundsBottom - pRect.height - pad, ty));
 
     subCardPreview.style.left = tx + "px";
     subCardPreview.style.top = ty + "px";
@@ -1099,27 +1121,42 @@
      바로 옆(서브카드가 뒤집혔으면 반대쪽)에 이어붙인다.                        */
   function positionCardTooltip(cardEl, subCardRect) {
     var gRect   = game.getBoundingClientRect();
+    var boundsRect = getPreviewBoundsRect(cardEl);
     var cRect   = cardEl.getBoundingClientRect();
     var tipRect = tooltip.getBoundingClientRect();
     var pad = 8;
 
-    var tx;
-    if (subCardRect) {
+    var boundsLeft   = boundsRect.left   - gRect.left;
+    var boundsRight  = boundsRect.right  - gRect.left;
+    var boundsTop    = boundsRect.top    - gRect.top;
+    var boundsBottom = boundsRect.bottom - gRect.top;
+
+    var tx, ty;
+
+    if (cardEl.classList && cardEl.classList.contains("shop-detail-card-preview")) {
+      /* 상점 상세 패널의 선택 카드: 다른 상점 상품(약병/법구) 툴팁과 동일하게
+         카드 바로 아래에 표시하고, 화면 아래로 넘치면 위로 뒤집는다.          */
+      tx = (cRect.left - gRect.left) + (cRect.width - tipRect.width) / 2;
+      ty = (cRect.bottom - gRect.top) + pad;
+      if (ty + tipRect.height > boundsBottom - pad) {
+        ty = (cRect.top - gRect.top) - tipRect.height - pad;
+      }
+    } else if (subCardRect) {
       tx = subCardRect.flippedLeft
         ? subCardRect.left - tipRect.width - pad
         : subCardRect.right + pad;
+      ty = (cRect.top - gRect.top);
     } else {
       var cardMidX = (cRect.left + cRect.right) / 2;
-      var gameMidX = gRect.left + gRect.width / 2;
-      tx = cardMidX > gameMidX
+      var boundsMidX = boundsLeft + (boundsRight - boundsLeft) / 2;
+      tx = cardMidX - gRect.left > boundsMidX
         ? (cRect.left  - gRect.left) - tipRect.width - pad
         : (cRect.right - gRect.left) + pad;
+      ty = (cRect.top - gRect.top);
     }
 
-    var ty = (cRect.top - gRect.top);
-
-    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
-    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+    tx = Math.max(boundsLeft + pad, Math.min(boundsRight  - tipRect.width  - pad, tx));
+    ty = Math.max(boundsTop + pad,  Math.min(boundsBottom - tipRect.height - pad, ty));
 
     tooltip.style.left = tx + "px";
     tooltip.style.top  = ty + "px";
