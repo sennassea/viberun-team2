@@ -300,6 +300,26 @@
     return purchaseFromCatalog(productId, findOrderPackProduct(productId), "/bm-store/package");
   }
 
+  /* 주문 덱 BM 임시 구현: 한풀이 덱 / 굿판 덱 확장덱 구매입니다. 달빛조각 결제이며,
+     실제 소유권 부여는 하지 않고 서버가 선물함 구매 메일을 생성합니다. */
+  function purchaseDeckPack(productId){
+    return requestJson("/bm-store/deck-pack/" + encodeURIComponent(productId) + "/purchase", {
+      method: "POST"
+    }).then(result => {
+      if(result && result.wallet){
+        result.wallet = syncWallet(result.wallet);
+      }
+      return result;
+    });
+  }
+
+  /* 계정이 보유 중인 확장덱 ID 목록을 조회합니다. */
+  function fetchDeckPackUnlocks(){
+    return requestJson("/bm-store/deck-pack/unlocks", {
+      method: "GET"
+    });
+  }
+
   /* 달빛조각 충전은 실제 결제가 아닌 테스트 구매입니다.
      달빛조각 잔액 확인/차감 없이 rewardAmount만큼 wallet.moonShards만 증가시킵니다. */
   function purchaseMoonCharge(productId){
@@ -394,6 +414,7 @@
     if(product.rewardType === "monthly_pass") return purchaseMonthlyPass(productId);
     if(product.rewardType === "moon_shard") return purchaseMoonCharge(productId);
     if(product.rewardType === "character_skin") return purchaseCharacterSkin(productId);
+    if(product.rewardType === "deck_pack") return purchaseDeckPack(productId);
     return purchaseFromCatalog(productId, product, "/bm-store/package");
   }
 
@@ -456,6 +477,8 @@
     purchaseCharacterSkin,
     getOrderPackProducts,
     purchaseOrderPack,
+    purchaseDeckPack,
+    fetchDeckPackUnlocks,
     getMoonChargeProducts,
     purchaseMoonCharge,
     getMonthlyPassProducts,
