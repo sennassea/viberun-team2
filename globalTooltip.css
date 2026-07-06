@@ -25,7 +25,7 @@
   margin-bottom: .32cqh;
   color: #fff;
   font-family: var(--font-title, inherit);
-  font-size: 1.45cqh;
+  font-size:1.67cqh;
   font-weight: 900;
   line-height: 1.25;
 }
@@ -33,7 +33,7 @@
 .global-tooltip-body {
   display: block;
   color: rgba(220, 232, 250, .92);
-  font-size: 1.25cqh;
+  font-size:1.44cqh;
   font-weight: 700;
   line-height: 1.45;
   white-space: pre-wrap;

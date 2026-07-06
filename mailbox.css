@@ -23,23 +23,23 @@
   flex:none; display:flex; align-items:center; gap:1cqw;
   padding-bottom:1.2cqh; border-bottom:0.15cqh solid var(--c-panel-line);
 }
-.mailbox-ui-title{ flex:1; font-size:2.6cqh; font-weight:900; color:#4a2b07; text-shadow:0 .08cqh 0 rgba(255,255,255,.78); }
+.mailbox-ui-title{ flex:1; font-size:2.99cqh; font-weight:900; color:#4a2b07; text-shadow:0 .08cqh 0 rgba(255,255,255,.78); }
 .mailbox-ui-wallet{
-  display:flex; align-items:center; gap:.4cqw; font:inherit; font-size:1.9cqh; font-weight:900;
+  display:flex; align-items:center; gap:.4cqw; font:inherit; font-size:2.18cqh; font-weight:900;
   color:#6f4210; background:rgba(255,248,225,.72);
   border:0.16cqh solid rgba(231,181,74,.4); border-radius:1cqh; padding:.5cqh 1cqw;
   cursor:pointer;
 }
-.mailbox-wallet-icon{ font-size:2cqh; }
+.mailbox-wallet-icon{ font-size:2.3cqh; }
 .mailbox-ui-close{
   width:4.2cqh; height:4.2cqh; border-radius:50%; border:0.2cqh solid var(--c-panel-line);
-  background:#fff; color:var(--c-ink); font-size:2.2cqh; font-weight:900; line-height:1; cursor:pointer;
+  background:#fff; color:var(--c-ink); font-size:2.53cqh; font-weight:900; line-height:1; cursor:pointer;
 }
 
 .mailbox-ui-tabs{ flex:none; display:flex; gap:.8cqw; }
 .mailbox-tab{
   flex:1; height:4.2cqh; border-radius:1cqh; border:0.18cqh solid var(--c-panel-line);
-  background:rgba(255,255,255,.96); color:#3a2408; font:inherit; font-size:1.7cqh; font-weight:900; cursor:pointer;
+  background:rgba(255,255,255,.96); color:#3a2408; font:inherit; font-size:1.95cqh; font-weight:900; cursor:pointer;
   text-shadow:0 .06cqh 0 rgba(255,255,255,.86);
 }
 .mailbox-tab.active{
@@ -51,11 +51,11 @@
   flex:1; min-height:24cqh; overflow-y:auto; display:flex; flex-direction:column; gap:1cqh;
   padding-right:.3cqw;
 }
-.mailbox-status-msg{ margin:auto; text-align:center; color:#4f3410; font-size:1.8cqh; font-weight:900; text-shadow:0 .06cqh 0 rgba(255,255,255,.7); }
+.mailbox-status-msg{ margin:auto; text-align:center; color:#4f3410; font-size:2.07cqh; font-weight:900; text-shadow:0 .06cqh 0 rgba(255,255,255,.7); }
 .mailbox-status-error{ color:var(--c-red-deep); }
 .mailbox-retry-btn{
   margin:0 auto; height:4cqh; padding:0 1.4cqw; border-radius:1cqh; border:0.18cqh solid var(--c-panel-line);
-  background:#fff; color:var(--c-ink); font:inherit; font-size:1.6cqh; font-weight:900; cursor:pointer;
+  background:#fff; color:var(--c-ink); font:inherit; font-size:1.84cqh; font-weight:900; cursor:pointer;
 }
 
 .mailbox-item{
@@ -63,16 +63,16 @@
   border:0.16cqh solid var(--c-panel-line); border-radius:1.2cqh; padding:1.2cqh 1.2cqw;
 }
 .mailbox-item.claimed{ opacity:.55; }
-.mailbox-item-icon{ flex:none; font-size:3.2cqh; line-height:1; }
+.mailbox-item-icon{ flex:none; font-size:3.68cqh; line-height:1; }
 .mailbox-item-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.35cqh; }
-.mailbox-item-title{ font-size:1.85cqh; font-weight:900; color:#2f220f; }
-.mailbox-item-desc{ font-size:1.4cqh; font-weight:800; color:#4f3410; }
-.mailbox-item-meta{ display:flex; flex-wrap:wrap; gap:.8cqw; font-size:1.3cqh; font-weight:900; color:#5a3b12; }
+.mailbox-item-title{ font-size:2.13cqh; font-weight:900; color:#2f220f; }
+.mailbox-item-desc{ font-size:1.61cqh; font-weight:800; color:#4f3410; }
+.mailbox-item-meta{ display:flex; flex-wrap:wrap; gap:.8cqw; font-size:1.5cqh; font-weight:900; color:#5a3b12; }
 .mailbox-item-reward{ color:#8a5a0a; }
 .mailbox-item-expiry{ color:var(--c-red-deep); }
 .mailbox-claim-btn{
   flex:none; height:4.4cqh; min-width:8cqw; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
-  background:linear-gradient(180deg,#4f95dd,#2869b4); color:#fff; font:inherit; font-size:1.6cqh; font-weight:900; cursor:pointer;
+  background:linear-gradient(180deg,#4f95dd,#2869b4); color:#fff; font:inherit; font-size:1.84cqh; font-weight:900; cursor:pointer;
   text-shadow:0 .12cqh .18cqh rgba(15,35,70,.45);
 }
 .mailbox-claim-btn:disabled{
@@ -84,23 +84,23 @@
 .mailbox-item-purchase{ align-items:stretch; border-color:rgba(231,181,74,.5); }
 .mailbox-item-purchase.refunded{ opacity:.55; }
 .mailbox-item-purchase-tag{
-  align-self:flex-start; font-size:1.15cqh; font-weight:900; color:#7a5010;
+  align-self:flex-start; font-size:1.32cqh; font-weight:900; color:#7a5010;
   background:rgba(231,181,74,.14); border-radius:.7cqh; padding:.2cqh .7cqw; margin-bottom:.3cqh;
 }
 .mailbox-item-purchase-meta{
-  display:flex; flex-wrap:wrap; gap:.8cqw; font-size:1.3cqh; font-weight:900; color:#5a3b12;
+  display:flex; flex-wrap:wrap; gap:.8cqw; font-size:1.5cqh; font-weight:900; color:#5a3b12;
 }
 .mailbox-item-reward-label{ color:#4f3410; font-weight:900; }
 .mailbox-item-actions{ flex:none; display:flex; flex-direction:column; gap:.6cqh; }
 .mailbox-refund-btn{
   flex:none; height:4.4cqh; min-width:8cqw; border-radius:1cqh; border:0.2cqh solid var(--c-red-deep);
-  background:#fff; color:var(--c-red-deep); font:inherit; font-size:1.5cqh; font-weight:900; cursor:pointer;
+  background:#fff; color:var(--c-red-deep); font:inherit; font-size:1.73cqh; font-weight:900; cursor:pointer;
 }
 
 .mailbox-ui-actions{ flex:none; display:flex; gap:1cqw; }
 .mailbox-claim-all-btn{
   flex:1; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
-  background:linear-gradient(180deg,#fff5d2,#e2bd58); color:#3a2408; font:inherit; font-size:1.8cqh; font-weight:900; cursor:pointer;
+  background:linear-gradient(180deg,#fff5d2,#e2bd58); color:#3a2408; font:inherit; font-size:2.07cqh; font-weight:900; cursor:pointer;
   border-color:#b98924; text-shadow:0 .08cqh 0 rgba(255,255,255,.72);
 }
 .mailbox-claim-all-btn:disabled{
@@ -109,7 +109,7 @@
 }
 .mailbox-close-btn{
   flex:none; min-width:10cqw; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
-  background:rgba(255,255,255,.96); color:#3a2408; font:inherit; font-size:1.8cqh; font-weight:900; cursor:pointer;
+  background:rgba(255,255,255,.96); color:#3a2408; font:inherit; font-size:2.07cqh; font-weight:900; cursor:pointer;
   text-shadow:0 .06cqh 0 rgba(255,255,255,.86);
 }
 
@@ -118,7 +118,7 @@
 .start-screen .start-mailbox-button{ position:absolute; }
 .mailbox-badge{
   position:absolute; top:-.5cqh; right:-.5cqh; min-width:2cqh; height:2cqh; padding:0 .4cqh;
-  border-radius:1cqh; background:var(--c-red); color:#fff; font-size:1.2cqh; font-weight:900;
+  border-radius:1cqh; background:var(--c-red); color:#fff; font-size:1.38cqh; font-weight:900;
   line-height:2cqh; text-align:center; box-shadow:0 .2cqh .5cqh rgba(0,0,0,.25); pointer-events:none;
 }
 .mailbox-badge[hidden]{ display:none; }

@@ -63,7 +63,7 @@
 
 .menu-profile-name{
   font-family:var(--font-title);
-  font-size:2cqh;
+  font-size:2.3cqh;
   font-weight:900;
   color:var(--c-ink, #2b3b54);
   white-space:nowrap;
@@ -128,7 +128,7 @@
 }
 
 .menu-profile-option span{
-  font-size:1.65cqh;
+  font-size:1.9cqh;
   font-weight:800;
   white-space:nowrap;
 }
@@ -177,13 +177,13 @@
 .nickname-modal-title{
   margin:0 0 1cqh;
   font-family:var(--font-title, inherit);
-  font-size:2.6cqh;
+  font-size:2.99cqh;
   font-weight:900;
 }
 
 .nickname-modal-desc{
   margin:0 0 1.4cqh;
-  font-size:1.45cqh;
+  font-size:1.67cqh;
   color:#6b4a2e;
 }
 
@@ -196,7 +196,7 @@
   background:#fffaf0;
   color:#3d2516;
   font:inherit;
-  font-size:1.8cqh;
+  font-size:2.07cqh;
   font-weight:800;
   text-align:center;
   box-sizing:border-box;
@@ -206,7 +206,7 @@
   min-height:2.2cqh;
   margin:1cqh 0 0;
   color:#a5362c;
-  font-size:1.35cqh;
+  font-size:1.55cqh;
   font-weight:800;
 }
 
@@ -222,7 +222,7 @@
   border:0;
   border-radius:.75cqh;
   font:inherit;
-  font-size:1.6cqh;
+  font-size:1.84cqh;
   font-weight:900;
   cursor:pointer;
 }

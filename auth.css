@@ -29,7 +29,7 @@
 }
 .auth-login-head h2{
   flex:1;
-  font-size:2.9cqh;
+  font-size:3.33cqh;
   line-height:1;
   color:var(--c-ink);
 }
@@ -40,7 +40,7 @@
   border-radius:50%;
   background:#fff;
   color:var(--c-ink);
-  font-size:3cqh;
+  font-size:3.45cqh;
   font-weight:900;
   line-height:1;
   cursor:pointer;
@@ -48,7 +48,7 @@
 .auth-login-desc{
   margin:1.6cqh 0;
   color:var(--c-ink-soft);
-  font-size:1.75cqh;
+  font-size:2.01cqh;
   font-weight:800;
   line-height:1.45;
 }
@@ -64,7 +64,7 @@
   background:#fff;
   color:var(--c-ink);
   font:inherit;
-  font-size:1.9cqh;
+  font-size:2.18cqh;
   font-weight:900;
   letter-spacing:0;
   cursor:pointer;
@@ -84,7 +84,7 @@
   margin-top:1.2cqh;
   padding:1cqh 1cqw;
   border-radius:1cqh;
-  font-size:1.45cqh;
+  font-size:1.67cqh;
   font-weight:900;
   line-height:1.42;
   text-align:center;
@@ -106,7 +106,7 @@
 .auth-login-note{
   margin-top:1.3cqh;
   color:var(--c-red-deep);
-  font-size:1.35cqh;
+  font-size:1.55cqh;
   font-weight:800;
   line-height:1.4;
 }
@@ -114,7 +114,7 @@
   display:grid;
   gap:.8cqh;
   color:var(--c-ink-soft);
-  font-size:1.6cqh;
+  font-size:1.84cqh;
   font-weight:800;
 }
 .settings-account-row{
@@ -147,7 +147,7 @@
   background:#fff;
   color:var(--c-ink);
   font:inherit;
-  font-size:1.55cqh;
+  font-size:1.78cqh;
   font-weight:900;
   letter-spacing:0;
   cursor:pointer;
@@ -157,7 +157,7 @@
   margin-top:1.2cqh;
   padding:1cqh 1cqw;
   border-radius:1cqh;
-  font-size:1.45cqh;
+  font-size:1.67cqh;
   font-weight:900;
   line-height:1.42;
   text-align:center;

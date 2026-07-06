@@ -35,14 +35,14 @@
 
 .spirit-path-title{
   margin:0;
-  font-size:3.6cqh;
+  font-size:4.14cqh;
   font-weight:900;
   letter-spacing:.1em;
 }
 
 .spirit-path-desc{
   margin:1cqh 0 1.2cqh;
-  font-size:1.5cqh;
+  font-size:1.73cqh;
   line-height:1.5;
   font-weight:700;
   color:#6b4a2e;
@@ -50,7 +50,7 @@
 
 .spirit-path-count{
   margin:0 auto 1.8cqh;
-  font-size:1.6cqh;
+  font-size:1.84cqh;
   font-weight:900;
   color:#278267;
 }
@@ -102,7 +102,7 @@
   border-radius:.4cqh;
   background:#2f6f6a;
   color:#fff8dc;
-  font-size:1.05cqh;
+  font-size:1.21cqh;
   font-weight:900;
 }
 
@@ -114,14 +114,14 @@
   position:absolute;
   left:.7cqh;
   top:.6cqh;
-  font-size:1.6cqh;
+  font-size:1.84cqh;
   opacity:.9;
 }
 
 .spirit-path-card-title{
   display:block;
   margin-top:1.6cqh;
-  font-size:2cqh;
+  font-size:2.3cqh;
   font-weight:900;
 }
 
@@ -129,7 +129,7 @@
   display:block;
   margin-top:.9cqh;
   min-height:3.4cqh;
-  font-size:1.15cqh;
+  font-size:1.32cqh;
   line-height:1.35;
   font-family:inherit;
   font-weight:500;
@@ -161,7 +161,7 @@
 }
 
 .spirit-path-preview-emoji{
-  font-size:1.7cqh;
+  font-size:1.95cqh;
 }
 
 .spirit-path-card-tags{
@@ -177,7 +177,7 @@
   border:.1cqh solid rgba(122, 82, 38, .4);
   border-radius:999px;
   font-style:normal;
-  font-size:1.05cqh;
+  font-size:1.21cqh;
   font-weight:800;
 }
 
@@ -195,7 +195,7 @@
   background:#2f6f6a;
   color:#fff8dc;
   font:inherit;
-  font-size:1.1cqh;
+  font-size:1.26cqh;
   font-weight:900;
   padding-top:.7cqh;
   padding-bottom:.7cqh;
@@ -208,7 +208,7 @@
 
 .spirit-path-note{
   margin:1.6cqh 0 0;
-  font-size:1.15cqh;
+  font-size:1.32cqh;
   color:#6b4a2e;
   font-weight:600;
 }
@@ -223,7 +223,7 @@
 
 .spirit-path-wallet{
   flex:1;
-  font-size:1.3cqh;
+  font-size:1.5cqh;
   font-weight:800;
   color:#4d2f1d;
 }
@@ -239,7 +239,7 @@
   border:0;
   border-radius:.85cqh;
   font:inherit;
-  font-size:1.5cqh;
+  font-size:1.73cqh;
   font-weight:900;
   cursor:pointer;
 }
