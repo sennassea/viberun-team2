@@ -151,8 +151,8 @@ function openSbMapPreview(){
   const footer = document.getElementById("mapFooter");
   if(footer){
     footer.textContent = sbResolved
-      ? "⬆️ 다음 스테이지를 클릭하여 진행하세요"
-      : "은혜를 선택하면 다음 노드를 고를 수 있습니다.";
+      ? "⬆️ 다음 구역을 클릭하여 진행하세요"
+      : "은혜를 선택하면 다음 구역을 고를 수 있습니다.";
   }
 }
 

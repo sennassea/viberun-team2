@@ -54,7 +54,7 @@ function startStage(stageIdx){
     updateHudFloor();
     renderCanvas(getCurrentNodeId());
     const footer = document.getElementById("mapFooter");
-    if(footer) footer.textContent = "⬆️ 다음 스테이지를 클릭하여 진행하세요";
+    if(footer) footer.textContent = "⬆️ 다음 구역을 클릭하여 진행하세요";
     return;
   }
 

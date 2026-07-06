@@ -471,7 +471,7 @@ function renderRunSummary(snapshot, onFinish){
   const rows = [
     { icon:"🏆", label:"최종 여정 점수",      value:scoreBreakdown.total,   unit:"점" },
     { icon:"🌙", label:"달빛조각 지급 예정",  value:moonReward.moonShards,  unit:"개" },
-    { icon:"🗼", label:"진행한 스테이지 수", value:snapshot.highestFloor, unit:"층" },
+    { icon:"🗼", label:"진행한 구역 수", value:snapshot.highestFloor, unit:"층" },
     { icon:"💀", label:"클리어 보스 수",     value:snapshot.cleared.boss,  unit:"개" },
     { icon:"👺", label:"클리어 노멀 수",      value:snapshot.cleared.enemy, unit:"개" },
     { icon:"👹", label:"클리어 엘리트 수",    value:snapshot.cleared.elite, unit:"개" },
@@ -541,7 +541,7 @@ function renderRunDetail(snapshot, onFinish){
     '<div class="rr-score-breakdown">' +
       '<div class="rr-score-breakdown-title">여정 점수 상세</div>' +
       '<div class="rr-score-breakdown-grid">' +
-        '<div><span>노드 진행</span><strong>' + scoreBreakdown.nodeProgress + '점</strong></div>' +
+        '<div><span>구역 진행</span><strong>' + scoreBreakdown.nodeProgress + '점</strong></div>' +
         '<div><span>ACT1 완주</span><strong>' + scoreBreakdown.act1Clear + '점</strong></div>' +
         '<div><span>몬스터 처치</span><strong>' + scoreBreakdown.monsterKill + '점</strong></div>' +
         '<div><span>전투 수행</span><strong>' + scoreBreakdown.combatPerformance + '점</strong></div>' +
@@ -562,7 +562,7 @@ function renderRunDetail(snapshot, onFinish){
     '<div class="rr-detail-panel">' +
       '<div class="rr-detail-titlebar"><span>전투 상세</span></div>' +
       '<div class="rr-detail-section">' +
-        '<div class="rr-detail-section-title">❀ 밟은 노드 루트 ❀</div>' +
+        '<div class="rr-detail-section-title">❀ 밟은 구역 루트 ❀</div>' +
         rrDragWrapHtml(routeHtml, "rr-route-viewport") +
       '</div>' +
       scoreDetailHtml +
