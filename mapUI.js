@@ -235,6 +235,7 @@ const DMAP_EMOJI = {
   start:    "🚩",
   unknown:  "❓",
   merchant: "🛍️",
+  treasure: "🎁",
 };
 
 const DMAP_ICON = {
@@ -247,6 +248,7 @@ const DMAP_ICON = {
   boss: "assets/map_icons/boss.png",
   lobby: "assets/map_icons/start.png",
   start: "assets/map_icons/start.png",
+  treasure: "assets/map_icons/treasure.png",
 };
 
 function mapIconPath(type) {
@@ -442,7 +444,26 @@ const DMAP_LEGEND_DATA = [
     label: "보스",
     tip: "ACT 1의 마지막 전투입니다. 최종 목표를 향해 나아가세요.",
   },
+  {
+    type: "treasure",
+    icon: "🎁",
+    label: "보물",
+    tip: "10층에서만 발견되는 특별한 보상입니다. 복채와 법구를 얻을 수 있습니다.",
+  },
 ];
+
+/* ── 튜토리얼 맵에서는 보물 범례를 노출하지 않는다 (튜토리얼 진행/맵 구조는 그대로 유지) ── */
+function isTutorialMapLegendMode() {
+  const firstStage = Array.isArray(MAP_STAGES) ? MAP_STAGES[0] : null;
+
+  return !!(
+    firstStage &&
+    (
+      firstStage.packageId === "tutorial_battle" ||
+      firstStage.type === "tutorial"
+    )
+  );
+}
 
 /* ── buildOverlay 오버라이드 ────────────────────────────────────────────── */
 function buildOverlay() {
@@ -450,7 +471,11 @@ function buildOverlay() {
   div.id = "mapOverlay";
   div.style.opacity = "0";
 
-  const legendHtml = DMAP_LEGEND_DATA.map(item =>
+  const legendItems = isTutorialMapLegendMode()
+    ? DMAP_LEGEND_DATA.filter(item => item.type !== "treasure")
+    : DMAP_LEGEND_DATA;
+
+  const legendHtml = legendItems.map(item =>
     `<div class="legend-item dmap-legend-item" data-type="${item.type}" data-tip="${item.tip.replace(/"/g, '&quot;')}">
       <span class="leg-ico dmap-leg-ico ${item.type}">${mapLegendIconHtml(item)}</span>
       <span class="dmap-leg-label">${item.label}</span>

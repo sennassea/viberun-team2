@@ -763,6 +763,7 @@
     console.log([
       "── 기획자용 필수 명령어 10개 ──",
       "CHEAT.node.boss()                              보스전으로 이동",
+      "CHEAT.node.treasure()                          보물 노드로 이동",
       "CHEAT.node.goto(10)                             10층으로 이동",
       'CHEAT.node.type("shop")                         상점 노드로 이동',
       'CHEAT.node.type("rest")                         휴식 노드로 이동',
@@ -806,6 +807,7 @@
       goto: cheatNodeGoto,
       type: cheatNodeType,
       boss: () => cheatNodeType("boss"),
+      treasure: () => cheatNodeType("treasure"),
       lobby: cheatNodeLobby,
       map: cheatNodeMap
     },
