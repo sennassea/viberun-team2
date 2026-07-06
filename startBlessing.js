@@ -556,7 +556,7 @@ function grantSbBlessingRelic(blessing){
   if(!run || !blessing) return;
   if(!Array.isArray(run.relics)) run.relics = [];
   if(run.relics.some(relic => relic && relic.id === blessing.id)) return;
-  // EquipmentData(RELIC_DB)에 같은 id로 등록된 은혜 전용 법구 데이터를 그대로 사용한다
+  // equipment.js의 RELIC_DB에 같은 id로 등록된 은혜 전용 법구 데이터를 그대로 사용한다
   // (법구 도감에도 노출되도록). DB를 찾지 못하는 예외 상황에서만 최소 데이터로 대체한다.
   const master = (typeof RELIC_DB !== "undefined" && Array.isArray(RELIC_DB))
     ? RELIC_DB.find(item => item && item.id === blessing.id)
