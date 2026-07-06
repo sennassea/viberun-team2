@@ -170,3 +170,31 @@
 .monthly-pass-claim-card.is-claimed{
   opacity:.88;
 }
+
+.monthly-pass-claim-card.is-not-purchased{
+  opacity:.96;
+}
+
+.monthly-pass-claim-card.is-not-purchased .monthly-pass-claim-dday{
+  background:#6b4a24;
+}
+
+.monthly-pass-claim-card.is-not-purchased .monthly-pass-claim-button{
+  background:linear-gradient(180deg, #b98235 0%, #7b4b1f 100%);
+}
+
+.monthly-pass-claim-card.is-not-purchased .monthly-pass-claim-button:hover:not(:disabled){
+  filter:brightness(1.08);
+}
+
+.monthly-pass-claim-card.is-expired{
+  opacity:.92;
+}
+
+.monthly-pass-claim-card.is-expired .monthly-pass-claim-dday{
+  background:#55301d;
+}
+
+.monthly-pass-claim-card.is-expired .monthly-pass-claim-button{
+  background:linear-gradient(180deg, #9f6a31 0%, #613618 100%);
+}

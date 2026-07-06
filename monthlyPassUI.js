@@ -68,17 +68,45 @@
     rootEl.style.display = visible ? "" : "none";
   }
 
+  /* 미구매 상태에서 사용할 기본 표시값입니다. 실제 monthlyPass 레코드를 만들지 않고
+     화면 안내용으로만 쓰이며, 구매/지급 관련 서버 로직에는 영향을 주지 않습니다. */
+  function isExpiredMonthlyPass(status){
+    if(!status) return false;
+
+    const expiresAt = Number(status.expiresAt) || 0;
+    return !!expiresAt && expiresAt <= Date.now();
+  }
+
   function render(monthlyPass){
     if(!ensureElements()) return;
 
     cachedStatus = monthlyPass || null;
 
-    if(!cachedStatus || !cachedStatus.active){
-      setVisible(false);
+    setVisible(true);
+
+    if(isExpiredMonthlyPass(cachedStatus)){
+      ddayEl.textContent = "D-0";
+      rewardTextEl.textContent = "달빛조각 x15";
+
+      claimButtonEl.disabled = false;
+      claimButtonEl.textContent = "다시 구매";
+
+      rootEl.classList.remove("is-claimable", "is-claimed", "is-not-purchased");
+      rootEl.classList.add("is-expired");
       return;
     }
 
-    setVisible(true);
+    if(!cachedStatus || !cachedStatus.active){
+      ddayEl.textContent = "D-30";
+      rewardTextEl.textContent = "달빛조각 x15";
+
+      claimButtonEl.disabled = false;
+      claimButtonEl.textContent = "구매하기";
+
+      rootEl.classList.remove("is-claimable", "is-claimed", "is-expired");
+      rootEl.classList.add("is-not-purchased");
+      return;
+    }
 
     const daysRemaining = Math.max(0, Number(cachedStatus.daysRemaining) || 0);
     const rewardAmount = Math.max(0, Number(cachedStatus.todayRewardAmount || cachedStatus.dailyRewardAmount) || 15);
@@ -88,6 +116,7 @@
 
     claimButtonEl.disabled = false;
     claimButtonEl.classList.remove("is-claimed", "is-disabled");
+    rootEl.classList.remove("is-not-purchased", "is-expired");
 
     if(cachedStatus.canClaimToday){
       claimButtonEl.textContent = "받기";
@@ -102,6 +131,14 @@
     }
   }
 
+  const FALLBACK_STATUS = {
+    active: false,
+    daysRemaining: 30,
+    dailyRewardAmount: 15,
+    todayRewardAmount: 15,
+    canClaimToday: false
+  };
+
   function refresh(){
     if(!ensureElements()) return;
 
@@ -113,21 +150,39 @@
     const service = getService();
 
     if(!service || typeof service.fetchMonthlyPassStatus !== "function"){
-      setVisible(false);
+      render(FALLBACK_STATUS);
       return;
     }
 
     Promise.resolve(service.fetchMonthlyPassStatus()).then(result => {
       if(!result || !result.ok){
-        setVisible(false);
+        render(FALLBACK_STATUS);
         return;
       }
 
       render(result.monthlyPass);
     }).catch(error => {
       console.warn("[MonthlyPassUI] 월영의 약속 상태 조회 실패", error);
-      setVisible(false);
+      render(FALLBACK_STATUS);
     });
+  }
+
+  /* 미구매/비활성/만료 상태에서 구매하기·다시 구매 클릭 시 호출됩니다.
+     월영당을 추천 탭으로 열어 구매를 유도할 뿐, 구매 API를 직접 호출하지 않습니다. */
+  function openMonthlyPassPurchase(){
+    if(window.VIBERUN_BM_STORE_UI){
+      if(typeof window.VIBERUN_BM_STORE_UI.open === "function"){
+        window.VIBERUN_BM_STORE_UI.open("recommended");
+        return;
+      }
+
+      if(typeof window.VIBERUN_BM_STORE_UI.show === "function"){
+        window.VIBERUN_BM_STORE_UI.show("recommended");
+        return;
+      }
+    }
+
+    showToastMessage("월영당에서 월영의 약속을 구매할 수 있습니다.", "info");
   }
 
   function refreshWallet(wallet){
@@ -145,9 +200,8 @@
   function handleClaimClick(){
     if(isClaiming) return;
 
-    if(!cachedStatus || !cachedStatus.active){
-      showToastMessage("월영의 약속이 활성화되어 있지 않습니다.", "info");
-      refresh();
+    if(!cachedStatus || !cachedStatus.active || isExpiredMonthlyPass(cachedStatus)){
+      openMonthlyPassPurchase();
       return;
     }
 

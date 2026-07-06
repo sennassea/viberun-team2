@@ -117,14 +117,16 @@
     return els;
   }
 
-  function open(){
+  /* tabId를 넘기면 해당 탭을 열어 시작하고(예: 월영의 약속 구매 유도),
+     생략하면 기존과 동일하게 패키지 탭으로 연다. */
+  function open(tabId){
     if(window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.requireLogin === "function" &&
-       !window.VIBERUN_AUTH.requireLogin(open)){
+       !window.VIBERUN_AUTH.requireLogin(() => open(tabId))){
       return;
     }
 
     ensureUI();
-    state.activeTab = "package";
+    state.activeTab = tabId || "package";
     state.products = getProductsForTab(state.activeTab);
 
     els.overlay.classList.add("show");
