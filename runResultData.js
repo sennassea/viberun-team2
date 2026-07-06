@@ -96,7 +96,7 @@ window.BOHYUN_RUN_RESULT_DATA = Object.assign({}, window.BOHYUN_RUN_RESULT_DATA,
     labels: {
       totalScore: "최종 여정 점수",
       moonReward: "달빛조각 지급 예정",
-      nodeScore: "노드 점수",
+      nodeScore: "구역 점수",
       temporaryNotice: "현재 점수는 script.js 미연결 상태의 임시 점수입니다."
     },
 

@@ -390,7 +390,7 @@ function renderCanvas(currentNodeId) {
     footer.textContent = tutorialCurrentLabel
       ? "📍 현재 위치: " + tutorialCurrentLabel
       : window.MAP_STATE.proceedMode
-      ? "강조된 다음 노드를 클릭/터치하여 진행하세요"
+      ? "강조된 다음 구역을 클릭/터치하여 진행하세요"
       : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
   }
 

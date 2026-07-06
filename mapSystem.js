@@ -257,7 +257,7 @@ function startStage(stageIdx){
     /* 맵 캔버스 현재 위치 갱신 (이미 열린 맵 오버레이 내에서 리렌더) */
     renderCanvas(getCurrentNodeId());
     const footer = document.getElementById("mapFooter");
-    if(footer) footer.textContent = "⬆️ 다음 스테이지를 클릭하여 진행하세요";
+    if(footer) footer.textContent = "⬆️ 다음 구역을 클릭하여 진행하세요";
     return;
   }
 
@@ -500,7 +500,7 @@ function renderCanvas(currentNodeId){
   // 푸터 업데이트
   const footer = document.getElementById("mapFooter");
   if(footer) footer.textContent = window.MAP_STATE.proceedMode
-    ? "⬆️ 다음 스테이지를 클릭하여 진행하세요"
+    ? "⬆️ 다음 구역을 클릭하여 진행하세요"
     : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
 
   // 다음 스테이지 클릭 이벤트

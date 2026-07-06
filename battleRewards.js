@@ -424,7 +424,7 @@ function getBattleVictoryInfo(){
   const floorMatch = stageLabel.match(/(\d+)\s*층/);
   const hudFloor = $("#hudFloor") ? $("#hudFloor").textContent.trim() : "";
   const floorNum = floorMatch ? floorMatch[1] : hudFloor.replace(/F$/, "") || "1";
-  const floor = floorNum + " 스테이지";
+  const floor = floorNum + " 구역";
   return {
     floor,
     turn: "TURN " + (S.turn || 1),
