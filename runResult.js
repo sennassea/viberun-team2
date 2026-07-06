@@ -626,13 +626,15 @@ function renderRunSummary(snapshot, onFinish){
   const claimButtonLabel = getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward);
 
   const moonClaimBoxHtml =
-    '<div class="rr-moon-claim-box' + (isClaimed ? " is-claimed" : "") + '">' +
-      '<div class="rr-moon-claim-icon">🌙</div>' +
-      '<div class="rr-moon-claim-label">' + (isClaimed ? "수령 완료" : "점수 보상") + '</div>' +
-      '<div class="rr-moon-claim-count">' + rrToSafeNumber(moonReward.moonShards, 0) + '개</div>' +
-      '<button type="button" class="rr-moon-claim-btn" id="rrMoonClaimBtn" ' +
-        (canClaimMoon ? "" : "disabled") +
-      '>' + escapeRrHtml(claimButtonLabel) + '</button>' +
+    '<div class="rr-moon-claim-wrap">' +
+      '<div class="rr-moon-claim-box' + (isClaimed ? " is-claimed" : "") + '">' +
+        '<div class="rr-moon-claim-icon">🌙</div>' +
+        '<div class="rr-moon-claim-label">' + (isClaimed ? "수령 완료" : "점수 보상") + '</div>' +
+        '<div class="rr-moon-claim-count">' + rrToSafeNumber(moonReward.moonShards, 0) + '개</div>' +
+        '<button type="button" class="rr-moon-claim-btn" id="rrMoonClaimBtn" ' +
+          (canClaimMoon ? "" : "disabled") +
+        '>' + escapeRrHtml(claimButtonLabel) + '</button>' +
+      '</div>' +
     '</div>';
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
@@ -1276,8 +1278,10 @@ function ensureRrStyles(){
 
     ".rr-score-reward-line strong{color:#a5322a;}" +
 
+    ".rr-moon-claim-wrap{width:100%;margin:1.6cqh 0 1cqh;padding-top:1.4cqh;}" +
+
     ".rr-moon-claim-box{width:100%;display:flex;align-items:center;gap:.9cqw;" +
-      "margin:1cqh 0;padding:1cqh 1.2cqw;border-radius:1.2cqh;" +
+      "padding:1cqh 1.2cqw;border-radius:1.2cqh;" +
       "background:rgba(255,248,230,.82);border:.16cqh solid rgba(203,154,76,.58);}" +
 
     ".rr-moon-claim-box.is-claimed{opacity:.82;}" +
@@ -1288,7 +1292,7 @@ function ensureRrStyles(){
 
     ".rr-moon-claim-count{flex:0 0 auto;font-size:2.1cqh;font-weight:900;color:#0e4e83;}" +
 
-    ".rr-moon-claim-btn{min-width:12cqw;padding:.9cqh 1.4cqw;border-radius:1.1cqh;" +
+    ".rr-moon-claim-btn{min-width:7cqw;padding:.8cqh 1cqw;border-radius:1.1cqh;" +
       "border:.18cqh solid rgba(207,157,75,.8);background:linear-gradient(180deg,#fff8df,#ecd49b);" +
       "color:#0e4e83;font-size:1.45cqh;font-weight:900;cursor:pointer;" +
       "box-shadow:0 .35cqh .8cqh rgba(0,0,0,.2);}" +
