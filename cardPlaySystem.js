@@ -39,7 +39,7 @@ function cardFaceHtml(card){
 function chooseCardFromCandidates(options={}){
   const candidates = options.candidates || [];
   if(!candidates.length) return Promise.resolve(null);
-  if(candidates.length === 1) return Promise.resolve(candidates[0]);
+  if(options.autoPickSingle === true && candidates.length === 1) return Promise.resolve(candidates[0]);
   if(S) S.pendingCardChoice = true;
   updateEndBtn();
   let ov = document.querySelector("#battleCardChoiceOverlay");

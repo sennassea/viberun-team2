@@ -201,7 +201,7 @@ function openRestCardRemove(){
   }
   const cost = (typeof hasRelic === "function" && hasRelic("empty_spirit_tablet") && S && (S.cleanseCount || 0) === 0) ? 0 : getCardRemoveCost();
   window.OPEN_DECK_VIEWER_CARD_PICK({
-    title: "정리하기",
+    title: "제거할 카드 선택",
     confirmText: "제거 완료",
     helpText: "제거할 주문 1장을 선택하세요.",
     costText: "제거 비용: " + cost + " 복채",
