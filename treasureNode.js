@@ -365,8 +365,8 @@ function ensureTreasureStyles(){
     ".treasure-relic-name{font-size:1.8cqh;font-weight:900;color:#4a3a24;}" +
     ".treasure-relic-desc{font-size:1.3cqh;font-weight:700;color:#6b4a20;line-height:1.4;}" +
     ".treasure-relic-actions{display:flex;gap:1.2cqw;width:100%;justify-content:center;}" +
-    ".treasure-relic-btn{min-width:12cqw;height:5cqh;border-radius:1.2cqh;font-size:1.7cqh;font-weight:900;cursor:pointer;" +
-      "font:inherit;border:.2cqh solid rgba(178,140,80,.5);}" +
+    ".treasure-relic-btn{min-width:12cqw;height:5cqh;border-radius:1.2cqh;font-size:1.7cqh;cursor:pointer;" +
+      "font-family:'Paperozi',var(--font-body);font-weight:700;border:.2cqh solid rgba(178,140,80,.5);}" +
     ".treasure-relic-skip{background:rgba(255,251,240,.9);color:#6b4a20;}" +
     ".treasure-relic-take{background:linear-gradient(180deg,#7fbf8a,#4f9c62);color:#fff;border-color:#3f7c4e;}" +
     "@media (max-width:900px){.treasure-chest-btn{width:min(80cqw,45cqh);}.treasure-relic-box{width:min(80cqw,60cqh);}}";
