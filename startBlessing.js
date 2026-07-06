@@ -420,11 +420,29 @@ function addSbDiscountedCommonCard(){
 function getSbRegularRelicPool(){
   const db = (typeof RELIC_DB !== "undefined" && Array.isArray(RELIC_DB)) ? RELIC_DB : [];
   const run = getSbRunState();
-  const ownedIds = new Set((run && Array.isArray(run.relics) ? run.relics : []).map(relic => relic && relic.id).filter(Boolean));
-  return db.filter(relic =>
-    relic && relic.category !== "blessingRelic" && relic.source !== "startBlessing" &&
-    relic.dropWeight !== 0 && !ownedIds.has(relic.id)
+
+  const ownedIds = new Set(
+    (run && Array.isArray(run.relics) ? run.relics : [])
+      .map(relic => relic && relic.id)
+      .filter(Boolean)
   );
+
+  // 신령의 은혜 보상은 현재 런타임에 반영된 일반 법구(RELIC_DB) 전체에서 균등 랜덤으로 뽑는다.
+  // 주의: 신령의 은혜 선택 결과로 지급되는 은혜 전용 법구는 여기서 다시 뽑히면 안 된다.
+  // 현재 dropWeight는 최종 밸런스 조정 전이며 0으로 등록된 법구도 있으므로 후보 제외 조건으로 사용하지 않는다.
+  return db.filter(relic => {
+    if (!relic) return false;
+
+    // 이미 보유 중인 법구는 중복 지급하지 않는다.
+    if (ownedIds.has(relic.id)) return false;
+
+    // 신령의 은혜 전용 법구는 무작위 법구 후보에서 제외한다.
+    if (relic.category === "blessingRelic") return false;
+    if (relic.source === "startBlessing") return false;
+    if (typeof relic.id === "string" && relic.id.indexOf("blessing_relic_") === 0) return false;
+
+    return true;
+  });
 }
 
 function addSbRandomRelic(){
