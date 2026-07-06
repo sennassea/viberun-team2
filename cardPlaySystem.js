@@ -31,7 +31,7 @@ function cardFaceHtml(card){
     '<div class="card-text-layer">' +
       '<div class="card-cost-text">' + escapeHtml(safeCard.cost ?? "") + '</div>' +
       '<div class="card-name-text">' + escapeHtml(safeCard.name || "") + '</div>' +
-      '<div class="card-desc-text">' + escapeHtml(safeCard.desc || "") + '</div>' +
+      '<div class="card-desc-text">' + colorizeRarityLabels(escapeHtml(safeCard.desc || "")) + '</div>' +
     '</div>' +
     '<div class="card-hit-layer" aria-hidden="true"></div>';
 }

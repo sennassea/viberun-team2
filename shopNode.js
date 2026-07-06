@@ -529,7 +529,7 @@ function shopProductCardHtml(item) {
       '<div class="shop-product-name">' + escapeShopHtml(item.name) + '</div>' +
       '<div class="shop-product-art">' + shopItemArtHtml(item) + '</div>' +
       '<div class="shop-product-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
-      '<div class="shop-product-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
+      '<div class="shop-product-desc">' + colorizeRarityLabels(escapeShopHtml(item.desc || "").replace(/\n/g, "<br>")) + '</div>' +
       '<div class="shop-product-price">' + (item.soldOut ? "품절" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>' +
     '</button>'
   );
@@ -573,7 +573,7 @@ function renderShopDetail() {
       '<div class="shop-detail-name">' + escapeShopHtml(item.name) + '</div>' +
       '<div class="shop-detail-art">' + shopItemArtHtml(item) + '</div>' +
       '<div class="shop-detail-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
-      '<div class="shop-detail-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
+      '<div class="shop-detail-desc">' + colorizeRarityLabels(escapeShopHtml(item.desc || "").replace(/\n/g, "<br>")) + '</div>' +
       '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(displayPrice)) + '</div>' +
       '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
     );

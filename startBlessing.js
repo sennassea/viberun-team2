@@ -638,7 +638,7 @@ function sbChoiceHtml(blessing, index){
     '<button type="button" class="sb-card" data-id="' + blessing.id + '">' +
       '<div class="sb-card-icon">' + sbIconHtml(blessing.icon) + '</div>' +
       '<div class="sb-card-name">' + blessing.name + '</div>' +
-      '<div class="sb-card-desc">' + blessing.desc + '</div>' +
+      '<div class="sb-card-desc">' + colorizeRarityLabels(blessing.desc) + '</div>' +
     '</button>'
   );
 }
