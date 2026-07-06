@@ -664,12 +664,22 @@ function applyEventCardDuplicate(effect){
 
 function buildTaggedCardPool(attr){
   if(typeof CARD_DB === "undefined") return [];
-  return Object.keys(CARD_DB).filter(k => CARD_DB[k].attr === attr && !["starter", "status"].includes(CARD_DB[k].rarity));
+  return Object.keys(CARD_DB).filter(k => {
+    const card = CARD_DB[k];
+    return card &&
+      (card.attr === attr || (attr && card.attr && card.attr.includes(attr))) &&
+      !card.excludeFromRewards &&
+      !card.generatedOnly &&
+      !["starter", "status"].includes(card.rarity);
+  });
 }
 
 function buildRareCardPool(){
   if(typeof CARD_DB === "undefined") return [];
-  return Object.keys(CARD_DB).filter(k => CARD_DB[k].rarity === "rare");
+  return Object.keys(CARD_DB).filter(k => {
+    const card = CARD_DB[k];
+    return card && card.rarity === "rare" && !card.excludeFromRewards && !card.generatedOnly;
+  });
 }
 
 /* 현재 덱(STARTER_DECK)에서 가장 많이 보유한 attr 계열을 계산한다.
@@ -751,10 +761,20 @@ function applyEventPotionSpecific(effect){
 function buildEventCardCandidates(effect){
   const count = effect.count || effect.rewardCount || 3;
   if(effect.type === "cardRewardTagged"){
-    return shuffle([...buildTaggedCardPool(effect.attr)]).slice(0, count);
+    const pool = buildTaggedCardPool(effect.attr);
+    if(!pool.length){
+      console.warn("[Event] cardRewardTagged 후보가 없어 일반 카드 보상으로 대체합니다.", effect.attr);
+      return typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(count) : [];
+    }
+    return typeof getWeightedCardRewardKeys === "function"
+      ? getWeightedCardRewardKeys(count, pool)
+      : shuffle([...pool]).slice(0, count);
   }
   if(effect.type === "cardRewardDominantAttr"){
-    return shuffle([...buildTaggedCardPool(computeDominantDeckAttr())]).slice(0, count);
+    const pool = buildTaggedCardPool(computeDominantDeckAttr());
+    return typeof getWeightedCardRewardKeys === "function"
+      ? getWeightedCardRewardKeys(count, pool)
+      : shuffle([...pool]).slice(0, count);
   }
   if(effect.type === "cardRewardRare"){
     return shuffle([...buildRareCardPool()]).slice(0, count);
