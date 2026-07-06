@@ -162,7 +162,7 @@
         '<div class="spirit-path-actions">' +
           '<button type="button" class="spirit-path-back">뒤로가기</button>' +
           '<span class="spirit-path-wallet">🌙 보유 달빛 조각 <strong>' + formatMoonShards(walletMoonShards) + '</strong></span>' +
-          '<button type="button" class="spirit-path-start"' + (canStart ? "" : " disabled") + '>의식 시작</button>' +
+          '<button type="button" class="spirit-path-start"' + (canStart ? "" : " disabled") + '>여정 시작</button>' +
         '</div>' +
       '</section>';
 

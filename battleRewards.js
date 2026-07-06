@@ -117,7 +117,7 @@ function createBattleVictoryBaseRewards(){
     rewards.push({ id:"gold", name:"복채", icon:"assets/ui/resource_icons/gold.png", value:"+" + gold, amount:gold, doneText:"수령 완료" });
   }
   if(!S || !S.battleSuppressCardReward){
-    rewards.push({ id:"card", name:"의식 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" });
+    rewards.push({ id:"card", name:"주문 보상", icon:"札", value:"1개 선택", doneText:"선택 완료" });
   }
   return rewards;
 }
