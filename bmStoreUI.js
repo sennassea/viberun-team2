@@ -16,6 +16,8 @@
   const RECOMMENDED_CASH_NOTICE = "테스트 구매 상품은 실제 결제가 발생하지 않습니다.";
   let els = null;
   let purchasingProductId = "";
+  let pendingPurchaseProduct = null;
+  let isPurchaseConfirmOpen = false;
 
   const state = {
     activeTab: "package",
@@ -142,6 +144,7 @@
     if(!els) return;
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
+    closePurchaseConfirm();
   }
 
   function refreshWallet(){
@@ -202,7 +205,7 @@
   function handleBodyClick(event){
     const button = event.target.closest(".bm-store-buy-btn");
     if(button){
-      if(!button.disabled) purchase(button.dataset.productId);
+      if(!button.disabled) handleBuyButtonClick(button.dataset.productId);
       return;
     }
 
@@ -271,6 +274,82 @@
     return state.products.find(product => product.id === productId) || null;
   }
 
+  function formatPurchasePrice(product){
+    if(!product) return "";
+    if(product.priceLabel) return product.priceLabel;
+    if(product.priceType === "test_cash") return formatKRW(product.price);
+    return "달빛조각 " + formatCount(product.price) + "개";
+  }
+
+  /* 구매 버튼 클릭 시 바로 구매하지 않고 구매 확인 팝업을 먼저 띄웁니다.
+     dimmed/comingSoon/purchasable:false/판매 종료 상품은 버튼 자체가 disabled 처리되어
+     handleBodyClick에서 이미 걸러지므로 여기서는 확인 팝업만 담당합니다. */
+  function handleBuyButtonClick(productId){
+    const product = findProductById(productId);
+    if(!product){
+      showToastMessage("존재하지 않는 상품입니다.", "error");
+      return;
+    }
+    openPurchaseConfirm(product);
+  }
+
+  function openPurchaseConfirm(product){
+    pendingPurchaseProduct = product;
+    isPurchaseConfirmOpen = true;
+    renderPurchaseConfirmModal(product);
+  }
+
+  function closePurchaseConfirm(){
+    pendingPurchaseProduct = null;
+    isPurchaseConfirmOpen = false;
+    renderPurchaseConfirmModal(null);
+  }
+
+  function confirmPendingPurchase(){
+    const product = pendingPurchaseProduct;
+    if(!product){
+      closePurchaseConfirm();
+      return;
+    }
+    closePurchaseConfirm();
+    purchase(product.id);
+  }
+
+  function renderPurchaseConfirmModal(product){
+    let modal = document.querySelector(".bm-purchase-confirm");
+
+    if(!product){
+      if(modal) modal.remove();
+      return;
+    }
+
+    if(!modal){
+      modal = document.createElement("div");
+      modal.className = "bm-purchase-confirm";
+      document.body.appendChild(modal);
+    }
+
+    const priceText = formatPurchasePrice(product);
+
+    modal.innerHTML =
+      '<div class="bm-purchase-confirm-backdrop"></div>' +
+      '<section class="bm-purchase-confirm-panel" role="dialog" aria-modal="true">' +
+        '<h2 class="bm-purchase-confirm-title">구매 확인</h2>' +
+        '<p class="bm-purchase-confirm-message">' +
+          '<strong>' + escapeHtml(product.name) + '</strong> 상품을 구매하시겠습니까?' +
+        '</p>' +
+        (priceText ? '<p class="bm-purchase-confirm-price">가격: ' + escapeHtml(priceText) + '</p>' : "") +
+        '<div class="bm-purchase-confirm-actions">' +
+          '<button type="button" class="bm-purchase-confirm-cancel">취소</button>' +
+          '<button type="button" class="bm-purchase-confirm-ok">구매</button>' +
+        '</div>' +
+      '</section>';
+
+    modal.querySelector(".bm-purchase-confirm-backdrop").addEventListener("click", closePurchaseConfirm);
+    modal.querySelector(".bm-purchase-confirm-cancel").addEventListener("click", closePurchaseConfirm);
+    modal.querySelector(".bm-purchase-confirm-ok").addEventListener("click", confirmPendingPurchase);
+  }
+
   function render(){
     if(!els) return;
     renderTabs();
@@ -312,6 +391,11 @@
 
     if(state.activeTab === "recommended"){
       renderRecommendedLayout();
+      return;
+    }
+
+    if(state.activeTab === "moon_charge" && state.products.length){
+      renderMoonChargeLayout();
       return;
     }
 
@@ -475,6 +559,47 @@
       '<article class="bm-product-card bm-expansion-placeholder is-dimmed" data-disabled-reason="준비 중입니다.">' +
         '<h3>확장팩 1종</h3>' +
         '<p>🌙 1,200 달빛 조각</p>' +
+      '</article>'
+    );
+  }
+
+  /* 달빛조각 충전 탭 전용 레이아웃입니다. 4개 상품을 가로 4카드로 배치하며,
+     구매 버튼은 기존 .bm-store-buy-btn 클래스/data-product-id를 그대로 사용해
+     공통 구매 확인 팝업 → purchaseProduct 흐름을 그대로 탑니다. */
+  function renderMoonChargeLayout(){
+    const sortedProducts = state.products.slice().sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+    els.body.innerHTML =
+      '<div class="bm-moon-charge-layout">' +
+        sortedProducts.map(renderMoonChargeCard).join("") +
+      '</div>' +
+      '<p class="bm-moon-charge-notice">' + escapeHtml(MOON_CHARGE_NOTICE) + '</p>';
+  }
+
+  function renderMoonChargeCard(product){
+    const isBusy = purchasingProductId === product.id;
+    const priceText = product.priceLabel || formatKRW(product.price);
+    const rewardAmount = Number(product.rewardAmount) || 0;
+
+    return (
+      '<article class="bm-moon-charge-card">' +
+        (product.recommendedBadge ? '<div class="bm-moon-charge-badge">' + escapeHtml(product.recommendedBadge) + '</div>' : "") +
+        '<h3 class="bm-moon-charge-title">' + escapeHtml(product.name) + '</h3>' +
+        (product.subtitle ? '<p class="bm-moon-charge-subtitle">' + escapeHtml(product.subtitle) + '</p>' : "") +
+
+        '<div class="bm-moon-charge-art" aria-hidden="true">' +
+          '<span class="bm-store-art-moon"></span>' +
+          '<span class="bm-moon-charge-amount">' + formatCount(rewardAmount) + '</span>' +
+        '</div>' +
+
+        (product.description ? '<p class="bm-moon-charge-desc">' + escapeHtml(product.description) + '</p>' : "") +
+        (product.unitPriceLabel ? '<p class="bm-moon-charge-unit">' + escapeHtml(product.unitPriceLabel) + '</p>' : "") +
+
+        '<button type="button" class="bm-store-buy-btn bm-moon-charge-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+          (isBusy ? " disabled" : "") + '>' +
+          '<span class="bm-store-price-icon" aria-hidden="true"></span>' +
+          '<span>' + (isBusy ? "구매 중..." : escapeHtml(priceText)) + '</span>' +
+        '</button>' +
       '</article>'
     );
   }
