@@ -65,6 +65,66 @@ const MIME_TYPES = {
 const accounts = new Map();      // accountId -> { mailbox: [...], wallet: {...}, dummyInventory: [...] }
 const tokenToAccount = new Map(); // accessToken -> accountId
 
+/* ------------------------------------------------------------------------
+   랭킹 Mock 저장소
+   - 서버 재시작 시 초기화되며, 실제 삭제 없이 achievedAt 기준으로 기간 필터링만 한다.
+   - accountId + runId 조합으로 중복 제출을 막는다 (클라이언트 submittedRunIds는 보조 방어용).
+   ------------------------------------------------------------------------ */
+const rankingRuns = [];
+const rankingSubmittedKeys = new Map(); // "accountId:runId" -> true
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+function getDailyRankingPeriodStart(now) {
+  const kst = new Date(now + KST_OFFSET_MS);
+  const y = kst.getUTCFullYear(), m = kst.getUTCMonth(), d = kst.getUTCDate();
+  let start = Date.UTC(y, m, d, 9, 0, 0, 0) - KST_OFFSET_MS;
+  if (now < start) start -= 24 * 60 * 60 * 1000;
+  return start;
+}
+
+function getWeeklyRankingPeriodStart(now) {
+  const kst = new Date(now + KST_OFFSET_MS);
+  const y = kst.getUTCFullYear(), m = kst.getUTCMonth(), d = kst.getUTCDate();
+  const dayOfWeek = kst.getUTCDay(); // 0=Sun ... 6=Sat
+  const daysSinceMonday = (dayOfWeek + 6) % 7;
+  let start = Date.UTC(y, m, d - daysSinceMonday, 9, 0, 0, 0) - KST_OFFSET_MS;
+  if (now < start) start -= 7 * 24 * 60 * 60 * 1000;
+  return start;
+}
+
+function getRankingPeriodStart(period, now) {
+  if (period === "daily") return getDailyRankingPeriodStart(now);
+  if (period === "weekly") return getWeeklyRankingPeriodStart(now);
+  return null;
+}
+
+function isBetterRankingRun(a, b) {
+  if (a.score !== b.score) return a.score > b.score;
+  if (a.playTimeMs !== b.playTimeMs) return a.playTimeMs < b.playTimeMs;
+  return a.achievedAt < b.achievedAt;
+}
+
+/* 계정당 최고 기록 1개만 남기고, 점수 내림차순 → 플레이타임 오름차순 → 먼저 달성한 순으로 정렬한다. */
+function buildRankingRows(period) {
+  const now = Date.now();
+  const start = getRankingPeriodStart(period, now);
+  const filtered = rankingRuns.filter((run) => start === null || run.achievedAt >= start);
+
+  const bestByAccount = new Map();
+  filtered.forEach((run) => {
+    const existing = bestByAccount.get(run.accountId);
+    if (!existing || isBetterRankingRun(run, existing)) {
+      bestByAccount.set(run.accountId, run);
+    }
+  });
+
+  return Array.from(bestByAccount.values()).sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.playTimeMs !== b.playTimeMs) return a.playTimeMs - b.playTimeMs;
+    return a.achievedAt - b.achievedAt;
+  });
+}
+
 /* 월영당 로컬 Mock 검증용 상품 테이블입니다.
    UI 표시 데이터는 bmStoreData.js가 관리하며, 이 테이블은 서버 차감/지급 검증만 담당합니다. */
 const BM_PACKAGE_PRODUCTS = [
@@ -710,6 +770,116 @@ function handleAct1MoonRewardClaim(req, res, body) {
     score,
     claimedAt: record.claimedAt,
     wallet: account.wallet
+  });
+}
+
+/* ------------------------------------------------------------------------
+   /ranking Mock 핸들러
+   - 실제 랭킹 서버를 흉내낸다. 점수 제출은 로그인 필요, runId 필수, 임시 점수(scoreBreakdown.isTemporary) 거부.
+   - GET /ranking, /ranking/me는 항상 최신 데이터를 즉시 계산해서 반환한다 (캐시 없음).
+   ------------------------------------------------------------------------ */
+function handleRankingSubmit(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_JSON", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const runId = String(payload.runId || "").trim();
+  if (!runId) {
+    sendJson(res, 400, { ok: false, code: "MISSING_RUN_ID", message: "runId가 없습니다." });
+    return;
+  }
+
+  const score = Number(payload.score);
+  if (!Number.isFinite(score)) {
+    sendJson(res, 400, { ok: false, code: "INVALID_SCORE", message: "score가 올바르지 않습니다." });
+    return;
+  }
+
+  const playTimeMs = Number(payload.playTimeMs);
+  if (!Number.isFinite(playTimeMs)) {
+    sendJson(res, 400, { ok: false, code: "INVALID_PLAYTIME", message: "playTimeMs가 올바르지 않습니다." });
+    return;
+  }
+
+  const scoreBreakdown = payload.scoreBreakdown && typeof payload.scoreBreakdown === "object" ? payload.scoreBreakdown : {};
+  if (scoreBreakdown.isTemporary) {
+    sendJson(res, 400, { ok: false, code: "TEMPORARY_SCORE", message: "임시 점수는 랭킹에 제출할 수 없습니다." });
+    return;
+  }
+
+  const dedupeKey = accountId + ":" + runId;
+  if (rankingSubmittedKeys.has(dedupeKey)) {
+    sendJson(res, 200, { ok: true, skipped: true, code: "ALREADY_SUBMITTED" });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const record = {
+    accountId,
+    nickname: account.profile.nickname || DEFAULT_DISPLAY_NAME,
+    runId,
+    result: String(payload.result || ""),
+    score: Math.floor(score),
+    playTimeMs: Math.max(0, Math.floor(playTimeMs)),
+    scoreBreakdown,
+    achievedAt: Date.now()
+  };
+
+  rankingRuns.push(record);
+  rankingSubmittedKeys.set(dedupeKey, true);
+
+  sendJson(res, 200, { ok: true, run: record });
+}
+
+function handleRankingList(req, res, period) {
+  const safePeriod = ["all", "weekly", "daily"].includes(period) ? period : "all";
+  const rows = buildRankingRows(safePeriod).map((run) => ({
+    nickname: run.nickname,
+    score: run.score,
+    playTimeMs: run.playTimeMs,
+    achievedAt: run.achievedAt
+  }));
+
+  sendJson(res, 200, { ok: true, period: safePeriod, rows });
+}
+
+function handleRankingMe(req, res, period) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const safePeriod = ["all", "weekly", "daily"].includes(period) ? period : "all";
+  const rows = buildRankingRows(safePeriod);
+  const rankIndex = rows.findIndex((run) => run.accountId === accountId);
+
+  if (rankIndex === -1) {
+    sendJson(res, 200, { ok: true, period: safePeriod, myRank: null });
+    return;
+  }
+
+  const myRun = rows[rankIndex];
+  sendJson(res, 200, {
+    ok: true,
+    period: safePeriod,
+    myRank: {
+      rank: rankIndex + 1,
+      nickname: myRun.nickname,
+      score: myRun.score,
+      playTimeMs: myRun.playTimeMs,
+      achievedAt: myRun.achievedAt
+    }
   });
 }
 
@@ -1475,6 +1645,21 @@ const server = http.createServer((req, res) => {
 
   if (method === "POST" && pathname === "/run-result/act1/moon-reward/claim") {
     readRequestBody(req).then((body) => handleAct1MoonRewardClaim(req, res, body));
+    return;
+  }
+
+  if (method === "POST" && pathname === "/ranking/submit") {
+    readRequestBody(req).then((body) => handleRankingSubmit(req, res, body));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/ranking/me") {
+    handleRankingMe(req, res, url.searchParams.get("period"));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/ranking") {
+    handleRankingList(req, res, url.searchParams.get("period"));
     return;
   }
 
