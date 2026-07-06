@@ -190,63 +190,45 @@
   const DEFAULT_PROFILE_ICON = "assets/profile/profile_default.png";
   const DEFAULT_BATTLE_STANDING_IMAGE = "assets/characters/player-temp-cutout.png";
 
-  /* 주문 팩 탭 상품 4종입니다. 패키지 탭과 동일한 카드 UI/구매 로직을 그대로 재사용하며,
-     보상은 실제 플레이에 영향을 주지 않는 더미 아이템(dummyRewardId)만 지급합니다. */
+  /* 주문 팩 탭 임시 구현입니다(작업명: 주문 덱 BM 임시 구현).
+     기존 주문 부적 팩 4종 대신 한풀이 덱 / 굿판 덱 확장덱 2종을 임시로 노출합니다.
+     구매 시 실제 게임 콘텐츠 풀 필터링은 하지 않으며, 계정 소유권(ownedDeckPackIds)만 저장합니다. */
   const ORDER_PACK_PRODUCTS = [
     {
-      id: "order_pack_summon_charm",
+      id: "deck_pack_hanpuri",
       tab: "order_pack",
-      name: "소환 부적 팩",
+      name: "한풀이 덱",
+      subtitle: "응어리를 풀어내는 확장 주문 덱",
       priceType: "moon_shard",
-      price: 1000,
-      rewardType: "dummy_item",
-      dummyRewardId: "dummy_summon_charm_pack",
-      rewardId: "dummy_summon_charm_pack",
-      description: "소환을 바꾸는 주문 부적",
-      limitText: "매일 1회",
-      icon: "📜",
-      recommended: true,
-      recommendOrder: 30,
-      recommendBadge: "매일 추천"
+      price: 1200,
+      rewardType: "deck_pack",
+      deckPackId: "hanpuri",
+      unlockKeyword: "한풀이 덱",
+      unlockTags: ["한풀이", "한풀이 덱", "hanpuri"],
+      description: "한풀이 덱 키워드가 있는 주문, 약병, 법구를 해금하는 확장팩입니다.",
+      contentSummary: "한풀이 키워드 주문 / 약병 / 법구 포함",
+      icon: "🌙",
+      sortOrder: 1,
+      purchasable: true,
+      dimmed: false
     },
     {
-      id: "order_pack_soul_charm",
+      id: "deck_pack_gutpan",
       tab: "order_pack",
-      name: "영혼 부적 팩",
+      name: "굿판 덱",
+      subtitle: "신명을 끌어올리는 확장 주문 덱",
       priceType: "moon_shard",
-      price: 2000,
-      rewardType: "dummy_item",
-      dummyRewardId: "dummy_soul_charm_pack",
-      rewardId: "dummy_soul_charm_pack",
-      description: "영혼을 모으는 주문 부적",
-      limitText: "매일 1회",
-      icon: "📜"
-    },
-    {
-      id: "order_pack_divine_charm",
-      tab: "order_pack",
-      name: "신력 부적 팩",
-      priceType: "moon_shard",
-      price: 3000,
-      rewardType: "dummy_item",
-      dummyRewardId: "dummy_divine_charm_pack",
-      rewardId: "dummy_divine_charm_pack",
-      description: "강력한 인연 소환 주문 부적",
-      limitText: "주간 2회",
-      icon: "📜"
-    },
-    {
-      id: "order_pack_legend_support",
-      tab: "order_pack",
-      name: "전설 보조 팩",
-      priceType: "moon_shard",
-      price: 10000,
-      rewardType: "dummy_item",
-      dummyRewardId: "dummy_legend_support_pack",
-      rewardId: "dummy_legend_support_pack",
-      description: "전설 등급 신력 확정 소환",
-      limitText: "월간 1회",
-      icon: "📜"
+      price: 1200,
+      rewardType: "deck_pack",
+      deckPackId: "gutpan",
+      unlockKeyword: "굿판 덱",
+      unlockTags: ["굿판", "굿판 덱", "gutpan"],
+      description: "굿판 덱 키워드가 있는 주문, 약병, 법구를 해금하는 확장팩입니다.",
+      contentSummary: "굿판 키워드 주문 / 약병 / 법구 포함",
+      icon: "🔔",
+      sortOrder: 2,
+      purchasable: true,
+      dimmed: false
     }
   ];
 
@@ -467,6 +449,15 @@
     },
     findOrderPackProduct(productId){
       return clone(ORDER_PACK_PRODUCTS.find(product => product.id === productId) || null);
+    },
+    getDeckPackProducts(){
+      return clone(ORDER_PACK_PRODUCTS.filter(product => product.rewardType === "deck_pack"));
+    },
+    findDeckPackProduct(productId){
+      return clone(ORDER_PACK_PRODUCTS.find(product =>
+        product.id === productId &&
+        product.rewardType === "deck_pack"
+      ) || null);
     },
     getMoonChargeProducts(){
       return clone(MOON_CHARGE_PRODUCTS)

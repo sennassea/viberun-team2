@@ -303,8 +303,9 @@
   font-weight:900;
 }
 .bm-store-product-grid--order_pack{
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:1.1cqh .9cqw;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:1.8cqh;
+  align-items:stretch;
 }
 .bm-store-product-grid--order_pack .bm-store-product{
   min-height:44cqh;
@@ -601,6 +602,30 @@
   pointer-events:none;
 }
 .bm-store-skin-card.is-owned .bm-store-buy-btn:disabled{
+  opacity:.85;
+}
+
+/* 주문 덱 BM 임시 구현: 보유 중인 확장덱 카드 표시입니다. */
+.bm-store-product.is-owned{
+  cursor:pointer;
+  filter:grayscale(.6) brightness(.94);
+}
+.bm-store-owned-flag{
+  position:absolute;
+  inset:.6cqh;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(30,22,16,.38);
+  border-radius:.55cqh;
+  color:#fff3d0;
+  font-weight:900;
+  font-size:2cqh;
+  text-shadow:0 .2cqh .4cqh rgba(0,0,0,.5);
+  pointer-events:none;
+}
+.bm-store-product.is-owned .bm-store-buy-btn:disabled{
   opacity:.85;
 }
 

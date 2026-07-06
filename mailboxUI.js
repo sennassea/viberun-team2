@@ -177,6 +177,7 @@
       render();
       refreshBadge();
       window.dispatchEvent(new CustomEvent("viberun:mailbox-changed"));
+      syncDeckPackUnlocksIfNeeded(item);
 
       const message = item && item.source === "bm_purchase"
         ? purchaseClaimToastMessage(item)
@@ -242,6 +243,11 @@
       render();
       refreshBadge();
       window.dispatchEvent(new CustomEvent("viberun:mailbox-changed"));
+      if(claimedIds.some(mailId => {
+        const claimedItem = state.items.find(i => i.mailId === mailId);
+        return claimedItem && Array.isArray(claimedItem.rewards) &&
+          claimedItem.rewards.some(reward => reward.type === "deck_pack");
+      })) syncDeckPackUnlocksIfNeeded();
       if(typeof toast === "function") toast(rewardToastMessage(result.rewards) || "모든 선물을 받았습니다.", "success");
     }).catch(error => {
       console.warn("[MailboxUI] 모두 받기 중 오류가 발생했습니다.", error);
@@ -256,6 +262,7 @@
     if(reward.type === "dummy_item") return "테스트용 더미 아이템";
     if(reward.type === "monthly_pass") return "월영의 약속 활성화";
     if(reward.type === "character_skin") return (reward.name || "캐릭터 스킨") + " 획득";
+    if(reward.type === "deck_pack") return (reward.name || "주문 덱") + " 해금";
     return String(reward.type || "") + " " + amount;
   }
 
@@ -442,6 +449,21 @@
         return rankDiff !== 0 ? rankDiff : a.index - b.index;
       })
       .map(entry => entry.item);
+  }
+
+  /* 주문 덱 BM 임시 구현: 선물함에서 확장덱을 수령하면 최신 보유 목록을 조회해
+     window.VIBERUN_CONTENT_UNLOCKS에 저장합니다. 이번 단계에서는 script.js가 이 값을
+     사용하지 않으므로 실제 게임 플레이에는 영향이 없으며, 후속 콘텐츠 필터링 작업에서 사용합니다. */
+  function syncDeckPackUnlocksIfNeeded(item){
+    if(item && (!Array.isArray(item.rewards) || !item.rewards.some(reward => reward.type === "deck_pack"))) return;
+
+    if(window.VIBERUN_BM_STORE_SERVICE && typeof window.VIBERUN_BM_STORE_SERVICE.fetchDeckPackUnlocks === "function"){
+      Promise.resolve(window.VIBERUN_BM_STORE_SERVICE.fetchDeckPackUnlocks()).then(result => {
+        if(result && result.ok){
+          window.VIBERUN_CONTENT_UNLOCKS = result.deckPackUnlocks;
+        }
+      }).catch(() => {});
+    }
   }
 
   function syncCommonWallet(wallet){
