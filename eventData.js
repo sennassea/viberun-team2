@@ -81,7 +81,7 @@
           desc: "이벤트 일반 약병 1개 70% / 정신력 -8 30%",
           outcomes: [
             { kind: "positive", icon: "potion", text: "이벤트 일반 약병 1개", chance: 70,
-              effects: [{ type: "potionRandom", source: "event", rarity: "common" }] },
+              effects: [{ type: "potionRandom", source: "event" }] },
             { kind: "negative", icon: "minus", text: "정신력 -8", chance: 30,
               effects: [{ type: "spirit", value: -8 }] }
           ]
@@ -267,7 +267,7 @@
           desc: "이벤트 일반 약병 2개 중 1개 선택",
           outcomes: [
             { kind: "positive", icon: "potion", text: "이벤트 일반 약병 2개 중 1개 선택", chance: 100,
-              effects: [{ type: "potionChoice", count: 2, source: "event", rarity: "common" }] }
+              effects: [{ type: "potionChoice", count: 2, source: "event" }] }
           ]
         },
         {

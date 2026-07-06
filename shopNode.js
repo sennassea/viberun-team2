@@ -164,9 +164,32 @@ function pickShopItems(list, count) {
     .slice(0, count);
 }
 
+/**
+ * 상점 판매 후보(법구/약병처럼 rarity를 가진 객체)에서 등급 우선 추첨(60/30/10)으로
+ * 지정 개수만큼 중복 없이 뽑습니다. 원본 배열은 변경하지 않습니다.
+ */
+function pickShopItemsByRarity(list, count) {
+  if (!Array.isArray(list)) {
+    console.warn("[Shop] 판매 후보 목록이 배열이 아닙니다.", list);
+    return [];
+  }
+  const pool = list.slice();
+  const picked = [];
+  for (let i = 0; i < count && pool.length; i++) {
+    const item = typeof window.pickRewardItemByRarity === "function"
+      ? window.pickRewardItemByRarity(pool, { context: "shop" })
+      : pool[Math.floor(Math.random() * pool.length)];
+    if (!item) break;
+    const idx = pool.indexOf(item);
+    if (idx >= 0) pool.splice(idx, 1);
+    picked.push(item);
+  }
+  return picked;
+}
+
 function buildCardStock() {
   const keys = typeof window.getWeightedCardRewardKeys === "function"
-    ? window.getWeightedCardRewardKeys(SHOP_CARD_STOCK_COUNT, CARD_REWARD_POOL)
+    ? window.getWeightedCardRewardKeys(SHOP_CARD_STOCK_COUNT, CARD_REWARD_POOL, { context: "shop" })
     : pickShopItems(CARD_REWARD_POOL, SHOP_CARD_STOCK_COUNT);
   return keys.map((key) => {
     const card = CARD_DB[key];
@@ -195,7 +218,7 @@ function buildPotionStock() {
     ? window.getPotionCandidatesBySource("shop")
     : SHOP_POTION_DB;
 
-  return pickShopItems(db, SHOP_POTION_STOCK_COUNT).map((p) => ({
+  return pickShopItemsByRarity(db, SHOP_POTION_STOCK_COUNT).map((p) => ({
     ...p,
     category: "potion",
     price: p.shopPrice || p.price || 0,
@@ -210,7 +233,7 @@ function buildRelicStock() {
 
   if (!db.length) db = getShopRelicMasterCandidates();
 
-  return pickShopItems(db, SHOP_RELIC_STOCK_COUNT).map((r) => ({
+  return pickShopItemsByRarity(db, SHOP_RELIC_STOCK_COUNT).map((r) => ({
     ...r,
     category: "relic",
     price: r.shopPrice || r.price || SHOP_RELIC_PRICE[r.rarity] || 100,
