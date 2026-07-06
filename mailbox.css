@@ -117,8 +117,8 @@
 .mailbox-trigger-button{ position:relative; }
 .start-screen .start-mailbox-button{ position:absolute; }
 .mailbox-badge{
-  position:absolute; top:-.5cqh; right:-.5cqh; min-width:2cqh; height:2cqh; padding:0 .4cqh;
-  border-radius:1cqh; background:var(--c-red); color:#fff; font-size:1.38cqh; font-weight:900;
-  line-height:2cqh; text-align:center; box-shadow:0 .2cqh .5cqh rgba(0,0,0,.25); pointer-events:none;
+  position:absolute; top:-.7cqh; right:-.7cqh; min-width:2.8cqh; height:2.8cqh; padding:0 .5cqh; z-index:1;
+  border-radius:1.4cqh; background:#e3342f; border:.2cqh solid #fff; color:#fff; font-size:1.76cqh; font-weight:900;
+  line-height:2.8cqh; text-align:center; box-shadow:0 .2cqh .5cqh rgba(0,0,0,.35); pointer-events:none;
 }
 .mailbox-badge[hidden]{ display:none; }
