@@ -640,7 +640,7 @@ function renderRunSummary(snapshot, onFinish){
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
     '<div class="rr-summary-panel">' +
-      '<div class="rr-summary-titlebar"><span>전투 요약</span></div>' +
+      '<div class="rr-summary-titlebar"><span>여정 요약</span></div>' +
       '<div class="rr-summary-rows">' +
         rows.map(row =>
           '<div class="rr-summary-row">' +
@@ -734,7 +734,7 @@ function renderRunDetail(snapshot, onFinish){
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
     '<div class="rr-detail-panel">' +
-      '<div class="rr-detail-titlebar"><span>전투 상세</span></div>' +
+      '<div class="rr-detail-titlebar"><span>여정 상세</span></div>' +
       '<div class="rr-detail-section">' +
         '<div class="rr-detail-section-title">❀ 밟은 구역 루트 ❀</div>' +
         rrDragWrapHtml(routeHtml, "rr-route-viewport") +
