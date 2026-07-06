@@ -1,0 +1,40 @@
+.global-tooltip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100000;
+  display: none;
+  max-width: min(32cqw, 360px);
+  min-width: min(18cqw, 220px);
+  padding: 1.05cqh 1.1cqw;
+  border: .18cqh solid rgba(100, 140, 200, .42);
+  border-radius: 1.1cqh;
+  background: rgba(14, 22, 38, .94);
+  color: #edf5ff;
+  box-shadow: 0 .6cqh 2.1cqh rgba(0, 0, 0, .46);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.global-tooltip.is-show {
+  display: block;
+}
+
+.global-tooltip-title {
+  display: block;
+  margin-bottom: .32cqh;
+  color: #fff;
+  font-family: var(--font-title, inherit);
+  font-size: 1.45cqh;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.global-tooltip-body {
+  display: block;
+  color: rgba(220, 232, 250, .92);
+  font-size: 1.25cqh;
+  font-weight: 700;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
