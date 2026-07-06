@@ -193,6 +193,7 @@ function updateStartScreenMode(options={}){
   const tutorial = document.querySelector(".start-tutorial-button");
   const newGame = document.querySelector(".start-new-game");
   const continueGame = document.querySelector(".start-continue-game");
+  const ranking = document.querySelector(".start-ranking-button");
   const codex = document.querySelector(".start-codex-button");
   const record = document.querySelector(".start-record-button");
   const mailbox = document.querySelector(".start-mailbox-button");
@@ -203,6 +204,7 @@ function updateStartScreenMode(options={}){
   setStartMenuVisible(tutorial, isNewbie);
   setStartMenuVisible(newGame, !isNewbie);
   setStartMenuVisible(continueGame, !isNewbie);
+  setStartMenuVisible(ranking, !isNewbie);
   setStartMenuVisible(codex, !isNewbie);
   setStartMenuVisible(record, !isNewbie);
   setStartMenuVisible(codexRecordRow, !isNewbie);
