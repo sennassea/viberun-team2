@@ -157,7 +157,7 @@ function openRestCardAdd(){
     return;
   }
   const offerCount = (typeof hasRelic === "function" && hasRelic("tricolor_ritual_bowl")) ? 4 : 3;
-  const keys = typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(offerCount) : [];
+  const keys = typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(offerCount, "prayer") : [];
   if(keys.length === 0){
     if(typeof toast === "function") toast("추가할 수 있는 주문이 없습니다.");
     return;

@@ -13,5 +13,16 @@ window.BOHYUN_BALANCE = {
     rare: 120
   },
   shopDefaultCardPrice: 60,
-  eventRelicFallbackGold: 70
+  eventRelicFallbackGold: 70,
+  rewardRarityWeights: {
+    default: { common: 60, uncommon: 30, rare: 10 },
+    battle: { common: 60, uncommon: 30, rare: 10 },
+    enemy: { common: 60, uncommon: 30, rare: 10 },
+    normal: { common: 60, uncommon: 30, rare: 10 },
+    event: { common: 60, uncommon: 30, rare: 10 },
+    shop: { common: 60, uncommon: 30, rare: 10 },
+    blessing: { common: 60, uncommon: 30, rare: 10 },
+    prayer: { common: 60, uncommon: 30, rare: 10 },
+    elite: { common: 45, uncommon: 35, rare: 20 }
+  }
 };

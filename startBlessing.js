@@ -465,7 +465,9 @@ function addSbRandomRelic(){
   if(!run) return null;
   if(!Array.isArray(run.relics)) run.relics = [];
   const pool = getSbRegularRelicPool();
-  const relic = pickSbRandom(pool);
+  const relic = typeof window.pickRewardItemByRarity === "function"
+    ? window.pickRewardItemByRarity(pool, { context:"blessing" })
+    : pickSbRandom(pool);
   if(!relic) return null;
   run.relics.push({ ...relic });
   return relic;
@@ -478,7 +480,9 @@ function addSbRandomPotion(count){
   const limit = typeof POTION_SLOT_LIMIT === "number" ? POTION_SLOT_LIMIT : 3;
   const added = [];
   for(let i = 0; i < count && run.potions.length < limit; i++){
-    const potion = pickSbRandom(POTION_DB);
+    const potion = typeof window.pickRewardItemByRarity === "function"
+      ? window.pickRewardItemByRarity(POTION_DB, { context:"blessing" })
+      : pickSbRandom(POTION_DB);
     if(potion){
       const cloned = { ...potion };
       run.potions.push(cloned);
