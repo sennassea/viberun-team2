@@ -11,6 +11,7 @@
 (function(){
   const API_BASE = (window.VIBERUN_BM_STORE_API_BASE || window.VIBERUN_AUTH_API_BASE || "").replace(/\/$/, "");
   let cachedDummyInventory = [];
+  let cachedDeckPackUnlocks = { ownedDeckPackIds: [] };
 
   function getData(){
     return window.VIBERUN_BM_STORE_DATA;
@@ -40,6 +41,21 @@
       window.VIBERUN_WALLET.setCachedWallet(normalized);
     }
     return normalized;
+  }
+
+  function normalizeDeckPackUnlocks(deckPackUnlocks){
+    const ownedDeckPackIds = deckPackUnlocks && Array.isArray(deckPackUnlocks.ownedDeckPackIds)
+      ? deckPackUnlocks.ownedDeckPackIds
+          .map(id => String(id || "").trim())
+          .filter(Boolean)
+      : [];
+    return { ownedDeckPackIds: Array.from(new Set(ownedDeckPackIds)) };
+  }
+
+  function syncDeckPackUnlocks(deckPackUnlocks){
+    cachedDeckPackUnlocks = normalizeDeckPackUnlocks(deckPackUnlocks);
+    window.VIBERUN_CONTENT_UNLOCKS = cachedDeckPackUnlocks;
+    return cachedDeckPackUnlocks;
   }
 
   function getCachedWallet(){
@@ -309,6 +325,9 @@
       if(result && result.wallet){
         result.wallet = syncWallet(result.wallet);
       }
+      if(result && result.deckPackUnlocks){
+        result.deckPackUnlocks = syncDeckPackUnlocks(result.deckPackUnlocks);
+      }
       return result;
     });
   }
@@ -317,6 +336,11 @@
   function fetchDeckPackUnlocks(){
     return requestJson("/bm-store/deck-pack/unlocks", {
       method: "GET"
+    }).then(result => {
+      if(result && result.ok && result.deckPackUnlocks){
+        result.deckPackUnlocks = syncDeckPackUnlocks(result.deckPackUnlocks);
+      }
+      return result;
     });
   }
 
@@ -492,6 +516,9 @@
     fetchProfileStatus,
     updateProfileNickname,
     fetchDummyInventory,
+    getCachedDeckPackUnlocks(){
+      return normalizeDeckPackUnlocks(cachedDeckPackUnlocks);
+    },
     getCachedDummyInventory(){
       return cachedDummyInventory.slice();
     }
