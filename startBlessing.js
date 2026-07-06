@@ -368,9 +368,15 @@ function chooseSbStarterCardToRemove(){
   });
 }
 
+function isSbCardAllowedBySpiritPath(card){
+  return !window.VIBERUN_SPIRIT_PATH_FILTER ||
+    typeof window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath !== "function" ||
+    window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath(card);
+}
+
 function addSbRandomCardByRarity(rarity){
   if(typeof CARD_DB === "undefined") return null;
-  const keys = Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity);
+  const keys = Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity && isSbCardAllowedBySpiritPath(CARD_DB[key]));
   const key = pickSbRandom(keys);
   if(!key) return null;
   const run = getSbRunState();
@@ -380,7 +386,7 @@ function addSbRandomCardByRarity(rarity){
 
 function chooseSbCardRewardByRarity(rarity, options = {}){
   if(typeof CARD_DB === "undefined") return null;
-  const keys = shuffleSbList(Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity)).slice(0, 3);
+  const keys = shuffleSbList(Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity && isSbCardAllowedBySpiritPath(CARD_DB[key]))).slice(0, 3);
   if(keys.length === 0){
     console.warn("[StartBlessing] 선택 가능한 " + rarity + " 카드가 없어 카드 보상을 건너뜁니다.");
     return null;
@@ -456,6 +462,8 @@ function getSbRegularRelicPool(){
     if (relic.source === "startBlessing") return false;
     if (typeof relic.id === "string" && relic.id.indexOf("blessing_relic_") === 0) return false;
 
+    if (!isSbCardAllowedBySpiritPath(relic)) return false;
+
     return true;
   });
 }
@@ -478,11 +486,12 @@ function addSbRandomPotion(count){
   if(!run || typeof POTION_DB === "undefined" || !Array.isArray(POTION_DB)) return [];
   if(!Array.isArray(run.potions)) run.potions = [];
   const limit = typeof POTION_SLOT_LIMIT === "number" ? POTION_SLOT_LIMIT : 3;
+  const potionPool = POTION_DB.filter(potion => potion && isSbCardAllowedBySpiritPath(potion));
   const added = [];
   for(let i = 0; i < count && run.potions.length < limit; i++){
     const potion = typeof window.pickRewardItemByRarity === "function"
-      ? window.pickRewardItemByRarity(POTION_DB, { context:"blessing" })
-      : pickSbRandom(POTION_DB);
+      ? window.pickRewardItemByRarity(potionPool, { context:"blessing" })
+      : pickSbRandom(potionPool);
     if(potion){
       const cloned = { ...potion };
       run.potions.push(cloned);

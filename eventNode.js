@@ -737,10 +737,16 @@ function buildTaggedCardPool(attr){
     if(!card || card.excludeFromRewards || card.generatedOnly) return false;
     if(["starter", "status"].includes(card.rarity)) return false;
     const cardAttr = card.attr || "";
-    return cardAttr === normalizedAttr ||
+    const attrMatches = cardAttr === normalizedAttr ||
       cardAttr === attr ||
       cardAttr.includes(normalizedAttr) ||
       (attr && cardAttr.includes(attr));
+    if(!attrMatches) return false;
+    const allowedBySpiritPath =
+      !window.VIBERUN_SPIRIT_PATH_FILTER ||
+      typeof window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath !== "function" ||
+      window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath(card);
+    return allowedBySpiritPath;
   });
 }
 
@@ -748,7 +754,12 @@ function buildRareCardPool(){
   if(typeof CARD_DB === "undefined") return [];
   return Object.keys(CARD_DB).filter(k => {
     const card = CARD_DB[k];
-    return card && card.rarity === "rare" && !card.excludeFromRewards && !card.generatedOnly;
+    if(!card || card.rarity !== "rare" || card.excludeFromRewards || card.generatedOnly) return false;
+    const allowedBySpiritPath =
+      !window.VIBERUN_SPIRIT_PATH_FILTER ||
+      typeof window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath !== "function" ||
+      window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath(card);
+    return allowedBySpiritPath;
   });
 }
 

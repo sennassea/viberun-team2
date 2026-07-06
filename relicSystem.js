@@ -466,6 +466,11 @@ function getPotionCandidatesBySource(source, options = {}) {
     if (options.rarity && item.rarity !== options.rarity) {
       return false;
     }
+    if (window.VIBERUN_SPIRIT_PATH_FILTER &&
+        typeof window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath === "function" &&
+        !window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath(item)) {
+      return false;
+    }
     return true;
   });
 }
@@ -505,6 +510,11 @@ function getRelicCandidatesBySource(source, options = {}) {
       return false;
     }
     if (options.attr && item.attr !== options.attr) {
+      return false;
+    }
+    if (window.VIBERUN_SPIRIT_PATH_FILTER &&
+        typeof window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath === "function" &&
+        !window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath(item)) {
       return false;
     }
     return true;
