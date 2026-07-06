@@ -2,7 +2,8 @@
 /* =========================================================================
    Ranking UI
    - Ranking overlay: all-time / weekly / daily tabs + my-ranking lookup.
-   - Data comes from rankingService.js (mock until the backend is wired up).
+   - 열릴 때/탭을 바꿀 때마다 항상 서버에서 최신 데이터를 조회한다 (캐시 없음).
+   - 데이터는 rankingService.js에서 가져온다.
    ========================================================================= */
 
 const RANKING_TABS = [
@@ -11,7 +12,25 @@ const RANKING_TABS = [
   { period: "daily", label: "일일 랭킹" }
 ];
 
+const RANKING_NOTICE_TEXT = "여정이 끝나면 점수가 즉시 랭킹에 반영됩니다.";
+
 let rankingActivePeriod = "all";
+
+function isRankingOpen(){
+  const overlay = document.getElementById("rankingPageOverlay");
+  return !!(overlay && overlay.classList.contains("show"));
+}
+
+function refreshCurrentRankingTab(){
+  const overlay = document.getElementById("rankingPageOverlay");
+  if(!overlay) return;
+  renderRankingTab(overlay, rankingActivePeriod);
+}
+
+window.addEventListener("viberun:ranking-updated", () => {
+  if(!isRankingOpen()) return;
+  refreshCurrentRankingTab();
+});
 
 function openRankingPage(){
   let overlay = document.getElementById("rankingPageOverlay");
@@ -45,9 +64,10 @@ function buildRankingPage(){
           '<button type="button" class="ranking-page-tab" data-period="' + tab.period + '">' + tab.label + '</button>'
         ).join("") +
       '</div>' +
-      '<div class="ranking-page-meta"></div>' +
+      '<div class="ranking-page-meta">' + RANKING_NOTICE_TEXT + '</div>' +
       '<div class="ranking-page-body"></div>' +
       '<button type="button" class="ranking-page-my-button">내 랭킹 확인</button>' +
+      '<div class="ranking-page-my-result"></div>' +
     '</div>';
 
   overlay.querySelector(".ranking-page-close").addEventListener("click", closeRankingPage);
@@ -57,6 +77,7 @@ function buildRankingPage(){
   overlay.querySelectorAll(".ranking-page-tab").forEach(tab => {
     tab.addEventListener("click", () => {
       rankingActivePeriod = tab.dataset.period;
+      overlay.querySelector(".ranking-page-my-result").innerHTML = "";
       renderRankingTab(overlay, rankingActivePeriod);
     });
   });
@@ -73,37 +94,30 @@ function renderRankingTab(overlay, period){
     tab.classList.toggle("active", tab.dataset.period === period);
   });
 
-  const meta = overlay.querySelector(".ranking-page-meta");
   const body = overlay.querySelector(".ranking-page-body");
-  meta.textContent = "불러오는 중...";
-  body.innerHTML = "";
+  body.innerHTML = '<p class="ranking-page-empty">불러오는 중...</p>';
 
   const service = window.VIBERUN_RANKING_SERVICE;
   if(!service){
-    meta.textContent = "";
     body.innerHTML = '<p class="ranking-page-empty">랭킹 데이터 연결 전입니다.</p>';
     return;
   }
 
   service.fetchRanking(period).then(response => {
     if(rankingActivePeriod !== period) return;
-    renderRankingMeta(meta, response);
     renderRankingRows(body, response);
   });
 }
 
-function renderRankingMeta(meta, response){
-  if(!response || !response.lastUpdatedAt){
-    meta.textContent = "";
+function renderRankingRows(body, response){
+  if(!response || !response.ok){
+    body.innerHTML = '<p class="ranking-page-empty">' +
+      escapeRankingHtml((response && response.message) || "랭킹을 불러오지 못했습니다.") +
+      '</p>';
     return;
   }
-  const updated = formatRankingTimestamp(response.lastUpdatedAt);
-  const minutesLeft = Math.max(0, Math.round((response.nextUpdateAt - Date.now()) / 60000));
-  meta.textContent = "최근 갱신: " + updated + " · 다음 갱신: 약 " + minutesLeft + "분 후";
-}
 
-function renderRankingRows(body, response){
-  const rows = response && Array.isArray(response.rows) ? response.rows : [];
+  const rows = Array.isArray(response.rows) ? response.rows : [];
   if(!rows.length){
     body.innerHTML = '<p class="ranking-page-empty">아직 랭킹 데이터가 없습니다.</p>';
     return;
@@ -111,12 +125,11 @@ function renderRankingRows(body, response){
 
   body.innerHTML = rows.map((row, index) => {
     const playTime = formatRankingPlayTime(row.playTimeMs);
-    const achievedAt = row.achievedAt ? formatRankingTimestamp(row.achievedAt) : "";
     return '<div class="ranking-page-item">' +
       '<div class="ranking-page-rank">' + (index + 1) + '</div>' +
       '<div class="ranking-page-main">' +
-        '<strong>' + (row.nickname || "익명") + '</strong>' +
-        '<span>' + (row.score || 0) + '점 · ' + playTime + (achievedAt ? ' · ' + achievedAt : '') + '</span>' +
+        '<strong>' + escapeRankingHtml(row.nickname || "익명") + '</strong>' +
+        '<span>' + (row.score || 0) + '점 · ' + playTime + '</span>' +
       '</div>' +
     '</div>';
   }).join("");
@@ -126,19 +139,38 @@ function handleMyRankingClick(overlay){
   const auth = window.VIBERUN_AUTH;
   const isLoggedIn = !!(auth && typeof auth.isLoggedIn === "function" && auth.isLoggedIn());
 
-  if(!isLoggedIn && auth && typeof auth.requireLogin === "function"){
-    auth.requireLogin(() => handleMyRankingClick(overlay));
+  if(!isLoggedIn){
+    if(auth && typeof auth.requireLogin === "function"){
+      auth.requireLogin(() => handleMyRankingClick(overlay));
+    }
     return;
   }
 
-  const meta = overlay.querySelector(".ranking-page-meta");
-  meta.textContent = "랭킹 데이터 연결 전입니다.";
-}
+  const resultBox = overlay.querySelector(".ranking-page-my-result");
+  resultBox.textContent = "내 랭킹을 확인하는 중...";
 
-function formatRankingTimestamp(timestamp){
-  const date = new Date(timestamp);
-  return date.toLocaleDateString("ko-KR") + " " +
-    String(date.getHours()).padStart(2, "0") + ":" + String(date.getMinutes()).padStart(2, "0");
+  const service = window.VIBERUN_RANKING_SERVICE;
+  if(!service || typeof service.fetchMyRanking !== "function"){
+    resultBox.textContent = "랭킹 데이터 연결 전입니다.";
+    return;
+  }
+
+  service.fetchMyRanking(rankingActivePeriod).then(response => {
+    if(!response || !response.ok){
+      resultBox.textContent = (response && response.message) || "내 랭킹을 불러오지 못했습니다.";
+      return;
+    }
+
+    const myRank = response.myRank;
+    if(!myRank){
+      resultBox.textContent = "아직 랭킹에 등록된 기록이 없습니다.";
+      return;
+    }
+
+    resultBox.textContent =
+      "내 순위: " + myRank.rank + "위 · " + (myRank.score || 0) + "점 · " +
+      formatRankingPlayTime(myRank.playTimeMs);
+  });
 }
 
 function formatRankingPlayTime(playTimeMs){
@@ -147,6 +179,15 @@ function formatRankingPlayTime(playTimeMs){
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return minutes + ":" + String(seconds).padStart(2, "0");
+}
+
+function escapeRankingHtml(value){
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function injectRankingPageStyles(){
@@ -172,7 +213,8 @@ function injectRankingPageStyles(){
     '.ranking-page-main strong{font-size:2.2cqh;line-height:1.1;color:#52371f;}' +
     '.ranking-page-main span{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);}' +
     '.ranking-page-my-button{margin-top:1.2cqh;height:6cqh;border:.24cqh solid rgba(201,164,91,.72);border-radius:1.2cqh;background:linear-gradient(180deg, rgba(255,250,238,.96), rgba(239,211,151,.94));color:#6b4628;font-family:var(--font-title);font-size:2.1cqh;font-weight:900;cursor:pointer;}' +
-    '.ranking-page-my-button:hover{border-color:var(--c-gold);}';
+    '.ranking-page-my-button:hover{border-color:var(--c-gold);}' +
+    '.ranking-page-my-result{margin-top:1cqh;min-height:2cqh;text-align:center;font-size:1.45cqh;font-weight:800;color:#52371f;}';
   document.head.appendChild(style);
 }
 
