@@ -54,53 +54,57 @@
   background: rgba(255, 255, 255, .04);
 }
 
-/* 월영당 주문 팩 탭 덱 포함 카드 프리뷰 패널 */
-.bm-deck-preview-panel {
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 100000;
-  display: none;
-  width: min(48cqw, 560px);
-  max-height: 66cqh;
+/* 월영당 주문 팩(덱) 구매 확인 팝업에 주입되는 덱 구성 미리보기.
+   bmStoreUI.js가 그리는 .bm-purchase-confirm-panel(따뜻한 크림색 테마) 맨 위에 얹히므로
+   그 팔레트(#4d2f1d 잉크색, 크림 배경)에 맞춘다. 내용이 많아지면 이 영역만 스크롤된다.
+   기본 팝업 폭(bmStore.css)이 카드 목록엔 좁아 전용 클래스로 폭을 넓힌다 */
+.bm-purchase-confirm-panel.bm-has-deck-preview {
+  width: min(96cqw, 92cqh, 98vw);
+}
+
+.bm-purchase-deck-preview {
+  margin-bottom: 1.6cqh;
+  text-align: left;
+}
+
+.bm-purchase-deck-scroll {
+  max-height: 56cqh;
   overflow-y: auto;
-  padding: 1.1cqh 1.1cqw;
-  border: .18cqh solid rgba(100, 140, 200, .42);
-  border-radius: 1.1cqh;
-  background: rgba(14, 22, 38, .96);
-  color: #edf5ff;
-  box-shadow: 0 .6cqh 2.1cqh rgba(0, 0, 0, .46);
-  box-sizing: border-box;
+  padding: 1.2cqh 1.2cqw;
+  border: .16cqh solid rgba(165, 103, 58, .35);
+  border-radius: .9cqh;
+  background: rgba(255, 255, 255, .4);
 }
 
-.bm-deck-preview-panel.is-show {
-  display: block;
+.bm-purchase-deck-section + .bm-purchase-deck-section {
+  margin-top: 1.3cqh;
 }
 
-.bm-deck-preview-title {
-  font-weight: 800;
-  font-size: 1.5cqh;
-  margin-bottom: .4cqh;
-  color: #fff;
+.bm-purchase-deck-section-title {
+  font-size: 1.6cqh;
+  font-weight: 900;
+  color: #a5673a;
+  margin-bottom: .6cqh;
 }
 
-.bm-deck-preview-desc {
-  font-size: 1.2cqh;
-  color: rgba(220, 232, 250, .85);
-  margin-bottom: .7cqh;
-  line-height: 1.4;
-}
-
-.bm-deck-preview-grid {
+.bm-purchase-deck-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1cqh .6cqw;
+  gap: 1.2cqh .8cqw;
+}
+
+.bm-purchase-deck-grid--cards {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.bm-purchase-deck-grid--items {
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .bm-deck-preview-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  gap: .4cqh;
 }
 
 /* container-type:size로 이 박스 자신을 새 컨테이너 쿼리 기준으로 삼아, 카드 실제
@@ -143,9 +147,10 @@
   pointer-events: none;
 }
 
-/* 아래 3개는 deckViewer.js의 card-cost-text/card-name-text/card-desc-text와 동일한
-   위치 비율(%)이며, 폰트 크기는 원본의 "폰트 크기 ÷ 기준 카드 높이(25cqh)" 비율을
-   .bm-deck-preview-card-visual 자신을 컨테이너로 한 로컬 cqh로 환산한 값이다 */
+/* 아래 3개는 deckViewer.js의 카드 상세보기(card-detail-card.card-frame-card, height:45cqh)와
+   동일한 위치 비율(%)이며, 폰트 크기도 그 화면의 "폰트 크기 ÷ 45cqh" 비율을
+   .bm-deck-preview-card-visual 자신을 컨테이너로 한 로컬 cqh로 그대로 환산해 실제 카드
+   상세보기와 같은 비례로 보이게 한다(설명만 문장이 길어 잘리지 않도록 폰트를 살짝 더 줄임) */
 .bm-deck-preview-card-cost {
   position: absolute;
   left: 6.2%;
@@ -157,7 +162,7 @@
   place-items: center;
   color: #2b3848;
   font-weight: 900;
-  font-size: 9cqh;
+  font-size: 7.5cqh;
   line-height: 1;
   text-shadow: 0 .3cqh 0 rgba(255, 255, 255, .95);
 }
@@ -174,7 +179,7 @@
   text-align: center;
   color: #10243f;
   font-weight: 900;
-  font-size: 5.4cqh;
+  font-size: 4.8cqh;
   line-height: 1.05;
   overflow: hidden;
   text-shadow: 0 .3cqh 0 rgba(255, 255, 255, .75);
@@ -187,16 +192,59 @@
   top: 77.8%;
   bottom: 7.4%;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: #10243f;
-  font-weight: 600;
-  font-size: 4.08cqh;
-  line-height: 1.28;
-  white-space: pre-line;
+  font-weight: 700;
+  font-size: 2.6cqh;
+  line-height: 1.3;
   overflow: hidden;
+  text-shadow: 0 .2cqh 0 rgba(255, 255, 255, .8);
+}
+
+/* 법구/약병 타일: 카드처럼 프레임은 없고 원형 아이콘 + 이름만 표시한다 */
+.bm-deck-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .5cqh;
+  cursor: default;
+}
+
+.bm-deck-preview-item-visual {
+  position: relative;
+  width: 88%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #f5efe4;
+  border: .16cqh solid rgba(165, 103, 58, .35);
+  display: grid;
+  place-items: center;
+}
+
+.bm-deck-preview-item-emoji {
+  font-size: 3.4cqh;
+}
+
+.bm-deck-preview-item-icon {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bm-deck-preview-item-name {
+  font-size: 1.5cqh;
+  text-align: center;
+  line-height: 1.25;
+  color: #4d2f1d;
 }
 
 .bm-deck-preview-empty {
   font-size: 1.2cqh;
-  color: rgba(220, 232, 250, .75);
+  color: #7a5b3f;
 }
