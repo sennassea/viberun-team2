@@ -470,27 +470,107 @@ const CARD_RARITY_REWARD_WEIGHT = Object.freeze({
   rare: 1
 });
 
-function getCardRewardWeight(key){
-  const card = CARD_DB[key];
-  return card ? (CARD_RARITY_REWARD_WEIGHT[card.rarity] || 0) : 0;
+/* 등급 우선 추첨용 확률표. balanceData.js의 rewardRarityWeights를 컨텍스트별로
+   조회하며, 없으면 default(60/30/10)로 대체한다. */
+function getRewardRarityWeights(context){
+  const balance = window.BOHYUN_BALANCE || {};
+  const table = balance.rewardRarityWeights || {};
+  return table[context] || table.default || { common: 60, uncommon: 30, rare: 10 };
 }
 
-function getWeightedCardRewardKeys(count, sourcePool){
-  const picked = [];
+/* availableRarities로 후보가 있는 등급만 남겨 재정규화한 뒤 1개를 뽑는다.
+   후보 있는 등급이 하나도 없으면 null을 반환한다. */
+function pickRarityFromWeights(weights, availableRarities){
+  const rarities = (Array.isArray(availableRarities) && availableRarities.length)
+    ? availableRarities
+    : Object.keys(weights || {});
+  const entries = rarities
+    .map(rarity => ({ rarity, weight: Math.max(0, (weights && weights[rarity]) || 0) }))
+    .filter(entry => entry.weight > 0);
+  if(!entries.length) return null;
+  const total = entries.reduce((sum, entry) => sum + entry.weight, 0);
+  let roll = Math.random() * total;
+  for(const entry of entries){
+    roll -= entry.weight;
+    if(roll <= 0) return entry.rarity;
+  }
+  return entries[entries.length - 1].rarity;
+}
+
+/* dropWeight는 등급 확률을 대체하지 않고, 같은 등급 안에서만 보조 가중치로 쓴다. */
+function pickFromPoolByDropWeight(pool){
+  if(!pool || !pool.length) return null;
+  const total = pool.reduce((sum, item) => sum + (item.dropWeight || 1), 0);
+  if(total <= 0) return pool[Math.floor(Math.random() * pool.length)];
+  let roll = Math.random() * total;
+  for(const item of pool){
+    roll -= (item.dropWeight || 1);
+    if(roll <= 0) return item;
+  }
+  return pool[pool.length - 1];
+}
+
+/* 법구/약병처럼 rarity 필드를 가진 후보 배열에서 등급 우선 추첨으로 1개를 뽑는다.
+   options.rarity가 있으면 해당 등급으로 고정, options.rarityWeights가 있으면
+   context 대신 그 확률표를 우선 사용한다. */
+function pickRewardItemByRarity(candidates, options = {}){
+  const list = Array.isArray(candidates) ? candidates.filter(Boolean) : [];
+  if(!list.length) return null;
+
+  if(options.rarity){
+    const fixedPool = list.filter(item => item.rarity === options.rarity);
+    return pickFromPoolByDropWeight(fixedPool.length ? fixedPool : list);
+  }
+
+  const byRarity = { common: [], uncommon: [], rare: [] };
+  const others = [];
+  list.forEach(item => {
+    if(item && byRarity[item.rarity]) byRarity[item.rarity].push(item);
+    else others.push(item);
+  });
+
+  const availableRarities = Object.keys(byRarity).filter(r => byRarity[r].length > 0);
+  if(!availableRarities.length) return pickFromPoolByDropWeight(others.length ? others : list);
+
+  const rarityWeights = options.rarityWeights || getRewardRarityWeights(options.context || "default");
+  const rarity = pickRarityFromWeights(rarityWeights, availableRarities);
+  if(!rarity) return pickFromPoolByDropWeight(others.length ? others : list);
+  return pickFromPoolByDropWeight(byRarity[rarity]);
+}
+
+function isCardRewardEligible(key){
+  const card = CARD_DB[key];
+  return !!card && !card.excludeFromRewards && !card.generatedOnly &&
+    !["starter", "status"].includes(card.rarity) &&
+    ["common", "uncommon", "rare"].includes(card.rarity);
+}
+
+/* 카드 보상 등급 우선 추첨: 먼저 등급을 뽑고(context 확률표), 그 등급 카드 중
+   1장을 dropWeight 보조 가중치로 뽑는다. 후보가 없는 등급은 남은 등급끼리
+   재정규화한다. 같은 보상 선택지 안에서는 중복 카드가 나오지 않는다. */
+function getWeightedCardRewardKeys(count, sourcePool, options = {}){
+  const rarityWeights = getRewardRarityWeights(options.context || "default");
   const pool = (Array.isArray(sourcePool) ? sourcePool : CARD_REWARD_POOL)
-    .filter(key => CARD_DB[key] && getCardRewardWeight(key) > 0);
+    .filter(isCardRewardEligible);
   const candidates = [...new Set(pool)];
+  const picked = [];
   const amount = Math.max(0, count || 0);
   while(picked.length < amount && candidates.length){
-    const total = candidates.reduce((sum, key) => sum + getCardRewardWeight(key), 0);
-    if(total <= 0) break;
+    const byRarity = { common: [], uncommon: [], rare: [] };
+    candidates.forEach(key => byRarity[CARD_DB[key].rarity].push(key));
+    const availableRarities = Object.keys(byRarity).filter(r => byRarity[r].length > 0);
+    const rarity = pickRarityFromWeights(rarityWeights, availableRarities);
+    if(!rarity) break;
+    const rarityCandidates = byRarity[rarity];
+    const total = rarityCandidates.reduce((sum, key) => sum + (CARD_DB[key].dropWeight || 1), 0);
     let roll = Math.random() * total;
     let index = 0;
-    for(; index < candidates.length; index++){
-      roll -= getCardRewardWeight(candidates[index]);
+    for(; index < rarityCandidates.length; index++){
+      roll -= (CARD_DB[rarityCandidates[index]].dropWeight || 1);
       if(roll <= 0) break;
     }
-    const key = candidates.splice(Math.min(index, candidates.length - 1), 1)[0];
+    const key = rarityCandidates[Math.min(index, rarityCandidates.length - 1)];
+    candidates.splice(candidates.indexOf(key), 1);
     picked.push(key);
   }
   return picked;
@@ -498,6 +578,9 @@ function getWeightedCardRewardKeys(count, sourcePool){
 
 window.getWeightedCardRewardKeys = getWeightedCardRewardKeys;
 window.CARD_RARITY_REWARD_WEIGHT = CARD_RARITY_REWARD_WEIGHT;
+window.getRewardRarityWeights = getRewardRarityWeights;
+window.pickRarityFromWeights = pickRarityFromWeights;
+window.pickRewardItemByRarity = pickRewardItemByRarity;
 
 function discardCard(key, options={}){
   const card = CARD_DB[key];
@@ -800,6 +883,35 @@ async function playCard(handIndex, targetEnemy){
   renderAll();
   return true;
 }
+
+/* 개발 전용 콘솔 검증 함수. 실제 유저 UI에는 노출되지 않으며, 콘솔에서 직접
+   호출해 등급 우선 추첨이 의도한 확률에 수렴하는지 확인하는 용도다.
+   예) BOHYUN_DEV_SIMULATE_REWARD_RARITY("card", "battle", 10000)
+   예) BOHYUN_DEV_SIMULATE_REWARD_RARITY("potion", "elite", 10000) */
+function BOHYUN_DEV_SIMULATE_REWARD_RARITY(kind, context, trials = 10000){
+  const counts = { common:0, uncommon:0, rare:0, none:0 };
+  for(let i = 0; i < trials; i++){
+    let rarity = null;
+    if(kind === "card"){
+      const keys = getWeightedCardRewardKeys(1, typeof CARD_REWARD_POOL !== "undefined" ? CARD_REWARD_POOL : [], { context });
+      rarity = keys[0] ? CARD_DB[keys[0]].rarity : null;
+    } else if(kind === "potion"){
+      const db = typeof POTION_DB !== "undefined" ? POTION_DB : [];
+      const item = pickRewardItemByRarity(db, { context });
+      rarity = item ? item.rarity : null;
+    } else if(kind === "relic"){
+      const db = typeof RELIC_DB !== "undefined" ? RELIC_DB : [];
+      const item = pickRewardItemByRarity(db, { context });
+      rarity = item ? item.rarity : null;
+    }
+    counts[rarity || "none"] += 1;
+  }
+  const pct = key => ((counts[key] / trials) * 100).toFixed(1) + "%";
+  console.log("[BOHYUN][RewardRaritySim] kind=" + kind + " context=" + context + " trials=" + trials,
+    { common:pct("common"), uncommon:pct("uncommon"), rare:pct("rare"), none:pct("none") });
+  return counts;
+}
+window.BOHYUN_DEV_SIMULATE_REWARD_RARITY = BOHYUN_DEV_SIMULATE_REWARD_RARITY;
 
 function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
   const beforeHp = target ? target.hp || 0 : 0;

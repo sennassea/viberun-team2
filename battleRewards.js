@@ -21,8 +21,9 @@ function nodeClear(){
 /* =========================================================================
    보상
    ========================================================================= */
-function getRandomRewardKeys(count){
-  return getWeightedCardRewardKeys(count);
+function getRandomRewardKeys(count, context){
+  const resolvedContext = context || (S && S.battleNodeType === "elite" ? "elite" : "battle");
+  return getWeightedCardRewardKeys(count, undefined, { context: resolvedContext });
 }
 
 let cardRewardPickMode = null;
@@ -384,13 +385,14 @@ function getBattleVictoryRewards(){
 
 function buildBattleVictoryOptionalReward(type, chance){
   if(Math.random() >= chance) return null;
+  const isEliteStage = S && S.battleNodeType === "elite";
+  const rewardContext = isEliteStage ? "elite" : "battle";
   if(type === "relic"){
-    const isEliteStage = S && S.battleNodeType === "elite";
     const relicSource = isEliteStage ? (S.battleVictoryRelicSource || "elite") : "battle";
     const relicCandidates = typeof window.getRelicCandidatesBySource === "function"
       ? window.getRelicCandidatesBySource(relicSource)
       : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
-    const relic = pickBattleVictoryCandidate(relicCandidates);
+    const relic = pickRewardItemByRarity(relicCandidates, { context:rewardContext });
     if(!relic) return null;
     return {
       id:"relic", itemId:relic.id, name:relic.name, icon:relic.iconImage || relic.emoji || "具",
@@ -402,7 +404,7 @@ function buildBattleVictoryOptionalReward(type, chance){
     const potionDb = typeof window.getPotionCandidatesBySource === "function"
       ? window.getPotionCandidatesBySource("battle")
       : (typeof window.POTION_DB !== "undefined" ? window.POTION_DB : BATTLE_VICTORY_POTION_CANDIDATES);
-    const potion = pickBattleVictoryCandidate(potionDb);
+    const potion = pickRewardItemByRarity(potionDb, { context:rewardContext });
     if(!potion) return null;
     return {
       id:"potion", itemId:potion.id, name:potion.name, icon:potion.emoji || potion.icon || "藥",

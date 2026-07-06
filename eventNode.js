@@ -584,17 +584,12 @@ function pickEventRelic(rarityFilter){
   const candidates = typeof window.getRelicCandidatesBySource === "function"
     ? window.getRelicCandidatesBySource("event")
     : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
-  const pool = (candidates || []).filter(r =>
-    r && !ownedIds.includes(r.id) && (!rarityFilter || r.rarity === rarityFilter)
-  );
+  const pool = (candidates || []).filter(r => r && !ownedIds.includes(r.id));
   if(!pool.length) return null;
-  const total = pool.reduce((sum, r) => sum + (r.dropWeight || 1), 0);
-  let roll = Math.random() * total;
-  for(const r of pool){
-    roll -= (r.dropWeight || 1);
-    if(roll <= 0) return { ...r };
-  }
-  return { ...pool[0] };
+  const picked = typeof window.pickRewardItemByRarity === "function"
+    ? window.pickRewardItemByRarity(pool, rarityFilter ? { rarity:rarityFilter } : { context:"event" })
+    : pool[Math.floor(Math.random() * pool.length)];
+  return picked ? { ...picked } : null;
 }
 
 function applyEventRelicGrant(rarityFilter, labelPrefix){
@@ -782,16 +777,29 @@ function pickEventPotion(rarityFilter){
   const db = typeof window.getPotionCandidatesBySource === "function"
     ? window.getPotionCandidatesBySource("event")
     : (typeof POTION_DB !== "undefined" ? POTION_DB : []);
-  let pool = (db || []).filter(Boolean);
-  if(rarityFilter) pool = pool.filter(p => p.rarity === rarityFilter);
+  const pool = (db || []).filter(Boolean);
   if(!pool.length) return null;
-  const total = pool.reduce((sum, p) => sum + (p.dropWeight || 1), 0);
-  let roll = Math.random() * total;
-  for(const p of pool){
-    roll -= (p.dropWeight || 1);
-    if(roll <= 0) return { ...p };
+  const picked = typeof window.pickRewardItemByRarity === "function"
+    ? window.pickRewardItemByRarity(pool, rarityFilter ? { rarity:rarityFilter } : { context:"event" })
+    : pool[Math.floor(Math.random() * pool.length)];
+  return picked ? { ...picked } : null;
+}
+
+/* potionChoice 후보 count개를 등급 우선 추첨(context:"event")으로 중복 없이 뽑는다. */
+function pickEventPotionCandidatesByRarity(pool, count){
+  const remaining = (pool || []).slice();
+  const picked = [];
+  const amount = Math.max(0, count || 0);
+  for(let i = 0; i < amount && remaining.length; i++){
+    const item = typeof window.pickRewardItemByRarity === "function"
+      ? window.pickRewardItemByRarity(remaining, { context:"event" })
+      : remaining[Math.floor(Math.random() * remaining.length)];
+    if(!item) break;
+    const idx = remaining.indexOf(item);
+    if(idx >= 0) remaining.splice(idx, 1);
+    picked.push(item);
   }
-  return { ...pool[0] };
+  return picked;
 }
 
 /* 약병 슬롯(POTION_SLOT_LIMIT, 기본 3개) 초과 시 지급하지 않고 결과에만 남긴다. */
@@ -843,16 +851,16 @@ function buildEventCardCandidates(effect){
     const pool = buildTaggedCardPool(effect.attr);
     if(!pool.length){
       console.warn("[Event] cardRewardTagged 후보가 없어 일반 카드 보상으로 대체합니다.", effect.attr);
-      return typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(count) : [];
+      return typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(count, "event") : [];
     }
     return typeof getWeightedCardRewardKeys === "function"
-      ? getWeightedCardRewardKeys(count, pool)
+      ? getWeightedCardRewardKeys(count, pool, { context:"event" })
       : shuffle([...pool]).slice(0, count);
   }
   if(effect.type === "cardRewardDominantAttr"){
     const pool = buildTaggedCardPool(computeDominantDeckAttr());
     return typeof getWeightedCardRewardKeys === "function"
-      ? getWeightedCardRewardKeys(count, pool)
+      ? getWeightedCardRewardKeys(count, pool, { context:"event" })
       : shuffle([...pool]).slice(0, count);
   }
   if(effect.type === "cardRewardRare"){
@@ -860,7 +868,7 @@ function buildEventCardCandidates(effect){
   }
   /* cardReward / cardRewardOptional / cardTransform */
   return typeof getRandomRewardKeys === "function"
-    ? getRandomRewardKeys(count)
+    ? getRandomRewardKeys(count, "event")
     : (typeof CARD_REWARD_POOL !== "undefined" && typeof shuffle === "function"
         ? shuffle([...CARD_REWARD_POOL]).slice(0, count)
         : []);
@@ -916,11 +924,12 @@ function openEventPotionPick(effect){
   const db = typeof window.getPotionCandidatesBySource === "function"
     ? window.getPotionCandidatesBySource("event")
     : (typeof POTION_DB !== "undefined" ? POTION_DB : []);
-  let pool = (db || []).filter(Boolean);
-  if(effect.rarity) pool = pool.filter(p => p.rarity === effect.rarity);
+  const pool = (db || []).filter(Boolean);
 
   eventState.step = "potionPick";
-  eventState.potionCandidates = shuffle([...pool]).slice(0, count);
+  eventState.potionCandidates = effect.rarity
+    ? shuffle(pool.filter(p => p.rarity === effect.rarity)).slice(0, count)
+    : pickEventPotionCandidatesByRarity(pool, count);
   eventState.potionSelected = null;
   renderEventOverlay();
 }
