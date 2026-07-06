@@ -1372,6 +1372,7 @@
 
   var DOCK_ICON_INFO = [
     { sel: "#endTurn",     name: "턴 종료",   desc: "현재 턴을 종료하고 적의 행동을 진행합니다." },
+    { sel: "#exhaustPile", name: "소멸 주문", desc: "이번 전투에서 소멸되어 다시 뽑을 수 없는 주문을 확인합니다." },
     { sel: "#deckPile",    name: "손패",     desc: "현재 손에 들고 있는 카드를 확인합니다." },
     { sel: "#discardPile", name: "버린 카드", desc: "이번 전투에서 사용했거나 버려진 카드를 확인합니다." }
   ];
