@@ -858,6 +858,12 @@ function newGame(options={}){
     summonCount: 0,
     relicTurnFlags: {},
     retainedBlockFromRelic: 0,
+    blessings: {},
+    blessingTurnFlags: {},
+    nextTurnBlessingBlock: 0,
+    hanpuriRecoveredThisTurn: false,
+    bellStrikeUsedThisTurn: false,
+    pendingCardChoice: false,
   };
 
   // 패키지 몬스터 전체 동시 배치 (기획서 §8-3)
@@ -1667,6 +1673,7 @@ function addStatus(enemy, statusId, amount, options={}){
   enemy.status[statusId] = Math.max(0, next);
   syncLegacyStatusFields(enemy);
   const added = Math.max(0, enemy.status[statusId] - before);
+  if(added > 0 && statusId === "mark") triggerBlessingOnMarkApplied();
   if(added > 0 && !options.skipRelic){
     if(statusId === "mark") applyRelicTrigger("onMarkApply", { target:enemy, before, added, amount });
     if(statusId === "recollection") applyRelicTrigger("onRecollectionApplied", { target:enemy, before, added, amount });
@@ -1751,6 +1758,58 @@ function cardFaceHtml(card){
       '<div class="card-desc-text">' + escapeHtml(safeCard.desc || "") + '</div>' +
     '</div>' +
     '<div class="card-hit-layer" aria-hidden="true"></div>';
+}
+
+function chooseCardFromCandidates(options={}){
+  const candidates = options.candidates || [];
+  if(!candidates.length) return Promise.resolve(null);
+  if(candidates.length === 1) return Promise.resolve(candidates[0]);
+  if(S) S.pendingCardChoice = true;
+  updateEndBtn();
+  let ov = document.querySelector("#battleCardChoiceOverlay");
+  if(!ov){
+    ov = document.createElement("div");
+    ov.id = "battleCardChoiceOverlay";
+    ov.innerHTML =
+      '<div class="battle-card-choice-panel">' +
+        '<h2></h2>' +
+        '<p></p>' +
+        '<div class="battle-card-choice-cards"></div>' +
+        '<button type="button" class="battle-card-choice-cancel">취소</button>' +
+      '</div>';
+    document.body.appendChild(ov);
+  }
+  const title = ov.querySelector("h2");
+  const desc = ov.querySelector("p");
+  const wrap = ov.querySelector(".battle-card-choice-cards");
+  title.textContent = options.title || "카드 선택";
+  desc.textContent = options.desc || "";
+  wrap.innerHTML = "";
+  ov.classList.add("show");
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = picked => {
+      if(settled) return;
+      settled = true;
+      ov.classList.remove("show");
+      wrap.innerHTML = "";
+      if(S) S.pendingCardChoice = false;
+      updateEndBtn();
+      resolve(picked || null);
+    };
+    candidates.forEach((item, choiceIndex) => {
+      const card = CARD_DB[item.key];
+      if(!card) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "battle-card-choice-card reward-card card-frame-card cost-"+card.type;
+      button.innerHTML = cardFaceHtml({ ...card, cost:item.cost ?? card.cost });
+      button.addEventListener("click", () => finish(candidates[choiceIndex]));
+      wrap.appendChild(button);
+    });
+    const cancel = ov.querySelector(".battle-card-choice-cancel");
+    cancel.onclick = () => finish(null);
+  });
 }
 
 function statusTooltipText(statusId, count){
@@ -1885,6 +1944,7 @@ function applyHanpuriGrowth(cardRef, amount=1, options={}){
   if(afterGrowth <= beforeGrowth) return false;
   instance.runtime.hanpuriGrowth = afterGrowth;
   applyRelicTrigger("onHanpuriGrowth", { cardUid:instance.uid, cardKey, beforeGrowth, afterGrowth, amount:afterGrowth - beforeGrowth, maxGrowth, source:options.source || "unknown" });
+  triggerBlessingOnHanpuriGrowth();
   if(beforeGrowth < maxGrowth && afterGrowth >= maxGrowth){
     applyRelicTrigger("onHanpuriReachMaxGrowth", { cardUid:instance.uid, cardKey, beforeGrowth, afterGrowth, amount:afterGrowth - beforeGrowth, maxGrowth, source:options.source || "unknown" });
   }
@@ -1898,6 +1958,212 @@ function getGrowthAdjustedValue(cardRef, effect){
   const base = effect.v || 0;
   if(!meta || !effect.growthStat || effect.growthStat !== meta.stat) return base;
   return base + getHanpuriGrowth(cardRef) * (meta.perGrowth || 0);
+}
+
+function ensureBlessingState(){
+  if(!S) return;
+  if(!S.blessings || typeof S.blessings !== "object") S.blessings = {};
+  if(!S.blessingTurnFlags || typeof S.blessingTurnFlags !== "object") S.blessingTurnFlags = {};
+  if(typeof S.nextTurnBlessingBlock !== "number") S.nextTurnBlessingBlock = 0;
+  if(typeof S.hanpuriRecoveredThisTurn !== "boolean") S.hanpuriRecoveredThisTurn = false;
+  if(typeof S.bellStrikeUsedThisTurn !== "boolean") S.bellStrikeUsedThisTurn = false;
+}
+
+function getBlessingCount(key){
+  ensureBlessingState();
+  return Math.max(0, S && S.blessings ? (S.blessings[key] || 0) : 0);
+}
+
+function gainBlessing(key, amount=1){
+  if(!key || !amount) return 0;
+  ensureBlessingState();
+  const before = S.blessings[key] || 0;
+  S.blessings[key] = Math.max(0, before + amount);
+  return S.blessings[key] - before;
+}
+
+function resetBlessingTurnFlags(){
+  ensureBlessingState();
+  S.blessingTurnFlags = {};
+  S.hanpuriRecoveredThisTurn = false;
+  S.bellStrikeUsedThisTurn = false;
+}
+
+function triggerBlessingOnTurnEnd(){
+  ensureBlessingState();
+  const healingFragrance = getBlessingCount("healingFragrance");
+  if(healingFragrance > 0){
+    const healed = LIFE.heal(S.player, healingFragrance);
+    if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
+  }
+  const quietBarrier = getBlessingCount("quietBarrier");
+  if(quietBarrier > 0 && (S.player.block || 0) > 0){
+    S.nextTurnBlessingBlock = (S.nextTurnBlessingBlock || 0) + quietBarrier * 3;
+  }
+}
+
+function triggerBlessingOnTurnStart(){
+  ensureBlessingState();
+  const block = Math.max(0, S.nextTurnBlessingBlock || 0);
+  S.nextTurnBlessingBlock = 0;
+  if(block > 0) gainPlayerBlock(block);
+}
+
+function triggerBlessingOnMarkApplied(){
+  const guidingHand = getBlessingCount("guidingHand");
+  if(guidingHand <= 0 || S.blessingTurnFlags.guidingHand) return;
+  S.blessingTurnFlags.guidingHand = true;
+  drawCards(guidingHand, { source:"blessing" });
+}
+
+function triggerBlessingOnDamageDealt(target, result, beforeRecollection, context={}){
+  const recollectionEcho = getBlessingCount("recollectionEcho");
+  if(recollectionEcho <= 0 || S.blessingTurnFlags.recollectionEcho) return;
+  if(!S.playerTurnActive) return;
+  if(context.source !== "card" || context.damageKind !== "purification") return;
+  if(!target || target === S.player || target.hp <= 0 || !result || ((result.absorbed || 0) + (result.hpLoss || 0)) <= 0) return;
+  if((beforeRecollection || 0) <= 0) return;
+  S.blessingTurnFlags.recollectionEcho = true;
+  addStatus(target, "recollection", recollectionEcho);
+}
+
+function triggerBlessingOnHanpuriGrowth(){
+  const grudgeBlessing = getBlessingCount("grudgeBlessing");
+  if(grudgeBlessing > 0) gainPlayerBlock(grudgeBlessing * 2);
+}
+
+function triggerBlessingOnCardPlayed(card, key, context={}){
+  const altarEnergy = getBlessingCount("altarEnergy");
+  if(altarEnergy > 0 && !S.blessingTurnFlags.altarEnergy && card && card.type === "skill" && key !== "altar_preparation"){
+    S.blessingTurnFlags.altarEnergy = true;
+    gainPlayerBlock(altarEnergy * 2);
+  }
+  const heat = Math.max(0, context.heatBeforePlay || 0);
+  if(heat > 0 && !S.blessingTurnFlags.heat && (S.cardsPlayedThisTurn || 0) === 4){
+    S.blessingTurnFlags.heat = true;
+    livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(heat * 2, en), S.player.weak, { source:"blessing", blessingKey:"heat", damageKind:"purification" }));
+  }
+}
+
+function createCardToHand(cardKey, count=1){
+  if(!cardKey || !CARD_DB[cardKey]) return 0;
+  ensureCardInstanceZones();
+  let created = 0;
+  const amount = Math.max(0, count || 0);
+  for(let i=0;i<amount;i++){
+    const instance = createCardInstance(cardKey);
+    if(S.hand.length >= 10){
+      discardCard(cardKey, { source:"generatedOverflow", instance, generated:true });
+    } else {
+      S.hand.push(cardKey);
+      S.handInstances.push(instance);
+      if(Array.isArray(S.handLockTokens)) S.handLockTokens.push(createHandLockToken());
+      if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.push(null);
+    }
+    created += 1;
+  }
+  return created;
+}
+
+function getGrownHanpuriDiscardCandidates(){
+  ensureCardInstanceZones();
+  return S.discard.map((cardKey, index) => {
+    const card = CARD_DB[cardKey];
+    const instance = S.discardInstances && S.discardInstances[index];
+    if(!card || !card.hanpuriGrowth || !instance || getHanpuriGrowth(instance) <= 0) return null;
+    return { key:cardKey, index, instance, uid:instance.uid, zone:"discard" };
+  }).filter(Boolean);
+}
+
+async function recoverGrownHanpuriFromDiscard(options={}){
+  ensureCardInstanceZones();
+  const candidates = getGrownHanpuriDiscardCandidates();
+  if(!candidates.length || S.hand.length >= 10) return false;
+  const picked = await chooseCardFromCandidates({
+    title: options.costZero ? "한을 풀다" : "되새기는 밤",
+    desc: "버림 더미에서 가져올 한풀이 주문을 선택하세요.",
+    candidates
+  });
+  if(!picked) return false;
+  const idx = S.discardInstances.findIndex(instance => instance && instance.uid === picked.uid);
+  if(idx < 0) return false;
+  const key = S.discard.splice(idx, 1)[0];
+  const instance = S.discardInstances.splice(idx, 1)[0];
+  S.hand.push(key);
+  S.handInstances.push(instance || createCardInstance(key));
+  if(Array.isArray(S.handLockTokens)) S.handLockTokens.push(createHandLockToken());
+  if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.push(null);
+  if(options.costZero) setHandCardCostOverride(S.hand.length - 1, 0);
+  S.hanpuriRecoveredThisTurn = true;
+  return true;
+}
+
+function getOtherHanpuriHandCandidates(currentCardUid){
+  ensureCardInstanceZones();
+  return S.hand.map((cardKey, index) => {
+    const card = CARD_DB[cardKey];
+    const instance = S.handInstances && S.handInstances[index];
+    if(!card || !instance || instance.uid === currentCardUid) return null;
+    if(card.attr !== "한풀이 덱") return null;
+    return { key:cardKey, index, instance, uid:instance.uid, zone:"hand", cost:getHandCardCost(index, cardKey) };
+  }).filter(Boolean);
+}
+
+async function discardOtherHanpuriAndGrow(currentCardUid){
+  ensureCardInstanceZones();
+  const candidates = getOtherHanpuriHandCandidates(currentCardUid);
+  if(!candidates.length) return -1;
+  const picked = await chooseCardFromCandidates({
+    title: "놓지 못한 손",
+    desc: "버릴 한풀이 주문을 선택하세요.",
+    candidates
+  });
+  if(!picked) return -1;
+  const idx = S.handInstances.findIndex(instance => instance && instance.uid === picked.uid);
+  if(idx < 0) return -1;
+  const key = S.hand.splice(idx, 1)[0];
+  const instance = S.handInstances.splice(idx, 1)[0];
+  if(Array.isArray(S.handLockTokens)) S.handLockTokens.splice(idx, 1);
+  if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.splice(idx, 1);
+  applyHanpuriGrowth(instance, 1, { source:"cardEffect", cardKey:key });
+  discardCard(key, { source:"cardEffectDiscard", instance });
+  return idx;
+}
+
+function getOtherHandCandidates(currentCardUid){
+  ensureCardInstanceZones();
+  return S.hand.map((cardKey, index) => {
+    const card = CARD_DB[cardKey];
+    const instance = S.handInstances && S.handInstances[index];
+    if(!card || !instance || instance.uid === currentCardUid) return null;
+    return { key:cardKey, index, instance, uid:instance.uid, zone:"hand", cost:getHandCardCost(index, cardKey) };
+  }).filter(Boolean);
+}
+
+async function discardHandUnlessBellUsed(count=1, currentCardUid){
+  if(S.bellStrikeUsedThisTurn) return -1;
+  ensureCardInstanceZones();
+  const amount = Math.max(0, count || 0);
+  let firstRemoved = -1;
+  for(let i=0;i<amount;i++){
+    const candidates = getOtherHandCandidates(currentCardUid);
+    if(!candidates.length) break;
+    const picked = await chooseCardFromCandidates({
+      title: "발맞춤",
+      desc: "버릴 손패 1장을 선택하세요.",
+      candidates
+    });
+    if(!picked) break;
+    const idx = S.handInstances.findIndex(instance => instance && instance.uid === picked.uid);
+    if(idx < 0) break;
+    const key = S.hand.splice(idx, 1)[0];
+    const instance = S.handInstances.splice(idx, 1)[0];
+    if(Array.isArray(S.handLockTokens)) S.handLockTokens.splice(idx, 1);
+    if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.splice(idx, 1);
+    discardCard(key, { source:"cardEffectDiscard", instance });
+    if(firstRemoved < 0) firstRemoved = idx;
+  }
+  return firstRemoved;
 }
 
 function removeCardFromBattleZones(cardKey){
@@ -1940,7 +2206,7 @@ function removeCardFromBattleZonesByUid(cardUid){
   return null;
 }
 
-function autoPlayInvertedBellFirstTurn(){
+async function autoPlayInvertedBellFirstTurn(){
   if(!S || S.busy || S.over || !hasRelic("inverted_bell")) return;
   let guard = 0;
   while(S.hand && S.hand.length && guard < 20){
@@ -1950,7 +2216,7 @@ function autoPlayInvertedBellFirstTurn(){
     if(!card || card.unplayable || S.energy < getHandCardCost(0, key)) break;
     const target = card.target === "enemy" ? getSelectedLivingEnemy() : null;
     if(card.target === "enemy" && !target) break;
-    if(!playCard(0, target)) break;
+    if(!await playCard(0, target)) break;
   }
 }
 
@@ -1980,6 +2246,41 @@ function drawCards(n, options={}){
     }
   }
 }
+
+const CARD_RARITY_REWARD_WEIGHT = Object.freeze({
+  common: 6,
+  uncommon: 3,
+  rare: 1
+});
+
+function getCardRewardWeight(key){
+  const card = CARD_DB[key];
+  return card ? (CARD_RARITY_REWARD_WEIGHT[card.rarity] || 0) : 0;
+}
+
+function getWeightedCardRewardKeys(count, sourcePool){
+  const picked = [];
+  const pool = (Array.isArray(sourcePool) ? sourcePool : CARD_REWARD_POOL)
+    .filter(key => CARD_DB[key] && getCardRewardWeight(key) > 0);
+  const candidates = [...new Set(pool)];
+  const amount = Math.max(0, count || 0);
+  while(picked.length < amount && candidates.length){
+    const total = candidates.reduce((sum, key) => sum + getCardRewardWeight(key), 0);
+    if(total <= 0) break;
+    let roll = Math.random() * total;
+    let index = 0;
+    for(; index < candidates.length; index++){
+      roll -= getCardRewardWeight(candidates[index]);
+      if(roll <= 0) break;
+    }
+    const key = candidates.splice(Math.min(index, candidates.length - 1), 1)[0];
+    picked.push(key);
+  }
+  return picked;
+}
+
+window.getWeightedCardRewardKeys = getWeightedCardRewardKeys;
+window.CARD_RARITY_REWARD_WEIGHT = CARD_RARITY_REWARD_WEIGHT;
 
 function discardCard(key, options={}){
   const card = CARD_DB[key];
@@ -2017,7 +2318,8 @@ function addStatusCardToDiscard(cardKey, count=1){
 /* =========================================================================
    주문 사용
    ========================================================================= */
-function playCard(handIndex, targetEnemy){
+async function playCard(handIndex, targetEnemy){
+  if(S.pendingCardChoice) return false;
   const key  = S.hand[handIndex];
   const card = CARD_DB[key];
   if(!card) return false;
@@ -2044,6 +2346,7 @@ function playCard(handIndex, targetEnemy){
   if(S.energy < cardCost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
 
+  const heatBeforePlay = getBlessingCount("heat");
   S.energy -= cardCost;
   if(card.type === "attack") applyPreAttackCardGimmicks(targetEnemy);
   const relicCardContext = { cardUid:cardInstance.uid, cardKey:key, card, handIndex, target:targetEnemy, bonusDamage:0 };
@@ -2057,14 +2360,17 @@ function playCard(handIndex, targetEnemy){
 
   for(const e of card.fx){
     switch(e.t){
-      case "damage":
-        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus, targetEnemy), S.player.weak); break;
+      case "damage": {
+        const gutpanBonus = e.gutpanBonus ? getBlessingCount(e.gutpanBonus) : 0;
+        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus + gutpanBonus, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+        break;
+      }
       case "bonusLowHpDamage":
         if(targetEnemy && targetEnemy.hp>0 && targetEnemy.hp<=Math.ceil(targetEnemy.maxHp/2))
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak);
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       case "damageAll":
-        livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus, en), S.player.weak)); break;
+        livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus, en), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" })); break;
       case "applyWeakAll":
         livingEnemies().forEach(en => addStatus(en, "agitation", e.v)); break;
       case "applyFracture":
@@ -2076,18 +2382,27 @@ function playCard(handIndex, targetEnemy){
       case "applyRecollection":
         if(targetEnemy && targetEnemy.hp > 0) addStatus(targetEnemy, "recollection", e.v || 1);
         break;
+      case "applyRecollectionByCurrentRatio":
+        if(targetEnemy && targetEnemy.hp > 0){
+          const current = getStatus(targetEnemy, "recollection");
+          const min = Number.isFinite(e.min) ? e.min : 0;
+          const max = Number.isFinite(e.max) ? e.max : 99;
+          const amount = Math.max(min, Math.min(max, Math.floor(current * (e.ratio || 0))));
+          if(amount > 0) addStatus(targetEnemy, "recollection", amount);
+        }
+        break;
       case "applyRecollectionAll":
         livingEnemies().forEach(en => addStatus(en, "recollection", e.v || 1));
         break;
       case "block":
         gainPlayerBlock(getGrowthAdjustedValue(cardInstance, e)); break;
       case "damageByBlockRatio":
-        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.player.block || 0) * e.v), targetEnemy), S.player.weak); break;
+        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.player.block || 0) * e.v), targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }); break;
       case "damageByBlockRatioConsume": {
         const currentBlock = Number.isFinite(S.player.block) ? Math.max(0, S.player.block) : 0;
         const ratio = Number.isFinite(e.v) ? e.v : 0;
         const damage = Math.floor(currentBlock * ratio);
-        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(damage, targetEnemy), S.player.weak);
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(damage, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         const consumeRatio = Number.isFinite(e.consumeRatio) ? e.consumeRatio : 1;
         const consumed = Math.ceil(currentBlock * consumeRatio);
         S.player.block = Math.max(0, currentBlock - consumed);
@@ -2097,17 +2412,17 @@ function playCard(handIndex, targetEnemy){
         break;
       }
       case "damageByBlockGainedThisTurn":
-        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.blockGainedThisTurn || 0) * e.v), targetEnemy), S.player.weak); break;
+        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.blockGainedThisTurn || 0) * e.v), targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }); break;
       case "damageByWeak": {
         const weak = targetEnemy ? Math.max(0, targetEnemy.weak || 0) : 0;
         const amount = Math.floor((e.base || 0) + weak * (e.per || 0));
-        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       }
       case "damageByRecollection": {
         const recollection = targetEnemy ? Math.max(0, getStatus(targetEnemy, "recollection")) : 0;
         const amount = Math.floor((e.base || 0) + recollection * (e.per || 0));
-        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       }
       case "consumeAllAgitationDamage": {
@@ -2115,7 +2430,7 @@ function playCard(handIndex, targetEnemy){
           const agitation = Math.max(0, getStatus(targetEnemy, "agitation"));
           const amount = Math.floor((e.base || 0) + agitation * (e.per || 0));
           setStatus(targetEnemy, "agitation", 0);
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         }
         break;
       }
@@ -2127,17 +2442,22 @@ function playCard(handIndex, targetEnemy){
         break;
       case "ifAgitationAtLeastDamageAll":
         if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)){
-          livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak));
+          livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }));
         }
         break;
       case "ifRecollectionAtLeastDamageAll":
         if(targetEnemy && getStatus(targetEnemy, "recollection") >= (e.threshold || 0)){
-          livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak));
+          livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }));
         }
         break;
       case "ifRecollectionAtLeastApplyRecollectionAll":
         if(targetEnemy && getStatus(targetEnemy, "recollection") >= (e.threshold || 0)){
           livingEnemies().forEach(en => { if(en !== targetEnemy) addStatus(en, "recollection", e.v || 1); });
+        }
+        break;
+      case "ifHanpuriRecoveredDamage":
+        if(S.hanpuriRecoveredThisTurn && targetEnemy){
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v || 0, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         }
         break;
       case "transferAgitationOnKill": {
@@ -2157,7 +2477,7 @@ function playCard(handIndex, targetEnemy){
       case "transferRecollectionOnKill": {
         if(targetEnemy && targetEnemy.hp <= 0){
           const currentRecollection = getStatus(targetEnemy, "recollection");
-          if(currentRecollection <= 0) break;
+          if(currentRecollection <= 0 && !e.v) break;
           const targets = livingEnemies().filter(en => en !== targetEnemy);
           const amount = Math.max(0, e.v || currentRecollection);
           if(targets.length && amount > 0){
@@ -2172,6 +2492,22 @@ function playCard(handIndex, targetEnemy){
         gainPlayerBlock((e.v || 0) + (S.blockGainedThisTurn || 0)); break;
       case "draw":
         drawCards(e.v, { source:"cardEffect" }); break;
+      case "createCardToHand":
+        createCardToHand(e.key, e.v || 1); break;
+      case "recoverGrownHanpuri":
+        await recoverGrownHanpuriFromDiscard({ costZero:!!e.costZero }); break;
+      case "discardOtherHanpuriGrow": {
+        const removedIndex = await discardOtherHanpuriAndGrow(cardInstance.uid);
+        if(removedIndex >= 0 && removedIndex < handIndex) handIndex -= 1;
+        break;
+      }
+      case "discardHandUnlessBellUsed": {
+        const removedIndex = await discardHandUnlessBellUsed(e.v || 1, cardInstance.uid);
+        if(removedIndex >= 0 && removedIndex < handIndex) handIndex -= 1;
+        break;
+      }
+      case "gainBlessing":
+        gainBlessing(e.key, e.v || 1); break;
       case "heal": {
         const healed = LIFE.heal(S.player, e.v);
         if(healed>0) spawnFloat('.player', '+'+healed, 'heal');
@@ -2194,7 +2530,7 @@ function playCard(handIndex, targetEnemy){
         break;
       case "ifMarkedDamage":
         if(targetEnemy && getStatus(targetEnemy, "mark") > 0)
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak);
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       case "consumeAllMarksDamage":
         if(targetEnemy){
@@ -2202,11 +2538,14 @@ function playCard(handIndex, targetEnemy){
           const amount = (e.base || 0) + relicDamageBonus + marks * (e.per || 0);
           setStatus(targetEnemy, "mark", 0);
           applyRelicTrigger("onMarksConsumed", { target:targetEnemy, consumed:marks });
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak);
+          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         }
         break;
       case "removeWeak":
         LIFE.reduceWeak(S.player, e.v); break;
+      default:
+        console.warn("[Card FX] Unsupported effect", e.t, key);
+        break;
     }
   }
 
@@ -2217,6 +2556,8 @@ function playCard(handIndex, targetEnemy){
   discardCard(key, { source:"played", instance:cardInstance });
   if(S.hand.length === 0) applyRelicTrigger("onHandEmpty", { source:"playCard" });
   S.cardsPlayedThisTurn = (S.cardsPlayedThisTurn || 0) + 1;
+  if(key === "bell_strike") S.bellStrikeUsedThisTurn = true;
+  triggerBlessingOnCardPlayed(card, key, { heatBeforePlay });
   updateTurnChallengesForCard(card);
   notifyMonsterBattleEvent("successfulCardPlayed", { cardUid:cardInstance.uid, cardKey:key, card });
   if(card.type === "attack"){
@@ -2242,9 +2583,10 @@ function playCard(handIndex, targetEnemy){
   return true;
 }
 
-function applyDamageWithFeedback(target, rawDamage, attackerWeak){
+function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
   const beforeHp = target ? target.hp || 0 : 0;
   const beforeBlock = target ? target.block || 0 : 0;
+  const beforeRecollection = target && target !== S.player ? getStatus(target, "recollection") : 0;
   const damageContext = { target, rawDamage, attackerWeak };
   if(target === S.player) applyRelicTrigger("beforePlayerHpDamage", damageContext);
   const result = LIFE.applyDamage(target, damageContext.rawDamage, attackerWeak);
@@ -2254,6 +2596,7 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak){
   if(result.absorbed === 0 && result.hpLoss === 0) spawnFloat(sel, '0', 'blk');
   if(target !== S.player){
     S.damageDealtThisTurn = (S.damageDealtThisTurn || 0) + (result.hpLoss || 0);
+    triggerBlessingOnDamageDealt(target, result, beforeRecollection, options);
     if((result.absorbed || result.hpLoss) > 0) notifyMonsterBattleEvent("enemyHit", { enemy:target, result });
     if(beforeBlock > 0 && (target.block || 0) === 0) notifyMonsterBattleEvent("enemyBlockBroken", { enemy:target, result });
     if(beforeHp > 0 && target.hp <= 0) emitEnemyDiedOnce(target, { result });
@@ -2289,7 +2632,7 @@ function nodeClear(){
    보상
    ========================================================================= */
 function getRandomRewardKeys(count){
-  return shuffle([...CARD_REWARD_POOL]).slice(0, count);
+  return getWeightedCardRewardKeys(count);
 }
 
 let cardRewardPickMode = null;
@@ -2938,7 +3281,7 @@ async function endTurn(){
     window.TUTORIAL_BATTLE.isTutorialBattle() &&
     typeof window.TUTORIAL_BATTLE.isEndTurnStepActive === "function" &&
     window.TUTORIAL_BATTLE.isEndTurnStepActive();
-  if((S.busy && !tutorialEndTurnStepActive) || S.over) return;
+  if((S.busy && !tutorialEndTurnStepActive) || S.pendingCardChoice || S.over) return;
   if(window.TUTORIAL_BATTLE &&
      typeof window.TUTORIAL_BATTLE.isTutorialBattle === "function" &&
      window.TUTORIAL_BATTLE.isTutorialBattle() &&
@@ -2975,6 +3318,7 @@ async function endTurn(){
   S.handInstances = [];
   S.handLockTokens = [];
   S.handCostOverrides = [];
+  triggerBlessingOnTurnEnd();
   renderAll();
   await wait(250);
 
@@ -3046,6 +3390,7 @@ async function endTurn(){
   S.exhaustedSpellCountThisTurn = 0;
   S.spellTypesPlayedThisTurn = {};
   S.handCostOverrides = [];
+  resetBlessingTurnFlags();
   const anxietyPenalty  = (S.player.anxiety||0)  > 0 ? 1 : 0;
   const lethargyPenalty = (S.player.lethargy||0) > 0 ? 1 : 0;
   S.energy    = Math.max(0, getMaxEnergy() - lethargyPenalty);
@@ -3074,6 +3419,7 @@ async function endTurn(){
     S.nextTurnReturnCard = null;
   }
   S.energy = Math.min(getMaxEnergy(), S.energy + bonusEnergy);
+  triggerBlessingOnTurnStart();
   drawCards(drawCount, { source:"turnStartBase" });
   if(bonusDraw > 0) drawCards(bonusDraw, { source:"scheduledEffect" });
   applyRelicTrigger("turnStart");
@@ -3865,7 +4211,7 @@ function updateEndBtn(){
     window.TUTORIAL_BATTLE.isTutorialBattle() &&
     typeof window.TUTORIAL_BATTLE.canEndTurn === "function" &&
     !window.TUTORIAL_BATTLE.canEndTurn();
-  $("#endTurn").disabled = !!((S.busy && !tutorialEndTurnStepActive) || S.over || tutorialBlocksEndTurn);
+  $("#endTurn").disabled = !!((S.busy && !tutorialEndTurnStepActive) || S.pendingCardChoice || S.over || tutorialBlocksEndTurn);
 }
 
 /* =========================================================================
@@ -3876,7 +4222,7 @@ function attachDrag(cardEl, index){
   let startX=0, startY=0, dragging=false, pid=null;
   cardEl.addEventListener("pointerdown", down);
   function down(ev){
-    if(S.busy||S.over) return;
+    if(S.busy||S.pendingCardChoice||S.over) return;
     const key = S.hand[index];
     const card = CARD_DB[key];
     if(window.TUTORIAL_BATTLE &&
@@ -4046,6 +4392,14 @@ function injectRewardStyles(){
     .reward-card.card-frame-card .card-name-text{position:absolute;left:12%;right:8%;top:5.9%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.85cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}
     .reward-card.card-frame-card .card-desc-text{position:absolute;left:8%;right:8%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.25cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}
     .reward-card.card-frame-card .card-hit-layer{position:absolute;inset:0;z-index:4;background:transparent;cursor:inherit;}
+    #battleCardChoiceOverlay{position:absolute;inset:0;z-index:235;display:none;place-items:center;background:rgba(10,20,40,.48);backdrop-filter:blur(.35cqh);}
+    #battleCardChoiceOverlay.show{display:grid;}
+    .battle-card-choice-panel{width:min(72cqw,92cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.95);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;}
+    .battle-card-choice-panel h2{font-size:3cqh;margin-bottom:.8cqh;color:var(--c-ink);}
+    .battle-card-choice-panel p{font-size:1.65cqh;color:var(--c-ink-soft);margin-bottom:1.8cqh;}
+    .battle-card-choice-cards{display:flex;justify-content:center;align-items:stretch;gap:1.4cqw;margin-bottom:1.6cqh;flex-wrap:wrap;}
+    .battle-card-choice-card{font:inherit;}
+    .battle-card-choice-cancel{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#fff;cursor:pointer;color:var(--c-ink-soft);}
     #battleVictoryOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.64);backdrop-filter:blur(.5cqh);}
     #battleVictoryOverlay.show{display:grid;}
     .victory-reward-panel{width:min(62cqw,82cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.95);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;display:flex;flex-direction:column;gap:2cqh;}

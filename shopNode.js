@@ -165,7 +165,10 @@ function pickShopItems(list, count) {
 }
 
 function buildCardStock() {
-  return pickShopItems(CARD_REWARD_POOL, SHOP_CARD_STOCK_COUNT).map((key) => {
+  const keys = typeof window.getWeightedCardRewardKeys === "function"
+    ? window.getWeightedCardRewardKeys(SHOP_CARD_STOCK_COUNT, CARD_REWARD_POOL)
+    : pickShopItems(CARD_REWARD_POOL, SHOP_CARD_STOCK_COUNT);
+  return keys.map((key) => {
     const card = CARD_DB[key];
 
     if (!card) {
