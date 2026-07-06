@@ -355,7 +355,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 
 /* =========================== ?섎떒: ?몃뱶/議곗옉 =========================== */
 #dock{position:absolute; left:0; right:0; bottom:0; height:29cqh; z-index:25;}
-.card-hand-area{position:absolute; left:21cqw; right:calc(14cqh + 3.2cqw); bottom:0; height:28cqh; overflow:visible; z-index:2;}
+.card-hand-area{position:absolute; left:21cqw; right:calc(17.5cqh + 4.2cqw); bottom:0; height:28cqh; overflow:visible; z-index:2;}
 .right-bottom-actions{position:absolute; right:1.4cqh; bottom:3cqh; width:max-content;
   display:grid; grid-template-columns:3.5cqh repeat(2, 7cqh); grid-auto-rows:max-content;
   align-items:end; justify-content:end; gap:1.2cqh 1cqw;}
@@ -412,10 +412,21 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 #sidePotionSlots .side-item-slot.empty{background:transparent url("assets/ui/potion_slot.png") center/100% 100% no-repeat;}
 #sidePotionSlots .side-empty-potion-icon{width:2.45cqh; height:2.45cqh; display:block; background:url("assets/ui/resource_icons/potion.png") center/contain no-repeat; filter:grayscale(1) saturate(0) opacity(.58); transform:translateY(.05cqh);}
 .side-item-slot.potion-dragging{opacity:.45;transform:scale(.94);}
-#potionUseButton{position:absolute;z-index:30;display:none;align-items:center;justify-content:center;padding:0 1.1cqh;border-radius:.9cqh;border:.2cqh solid #d9b879;background:linear-gradient(180deg,#fff7e9,#f4d8a8);color:var(--c-ink);font:inherit;font-size:1.25cqh;font-weight:900;box-shadow:0 .45cqh 1cqh rgba(65,45,25,.18);cursor:pointer;}
+#potionActionPanel{position:absolute;z-index:30;display:none;align-items:center;gap:.5cqh;padding:.4cqh;border-radius:1.05cqh;border:.16cqh solid rgba(180,150,102,.5);background:rgba(255,250,240,.97);box-shadow:0 .45cqh 1.2cqh rgba(65,45,25,.22);}
+#potionActionPanel.show{display:flex;}
+#potionUseButton{display:none;align-items:center;justify-content:center;height:100%;padding:0 1.1cqh;border-radius:.7cqh;border:.2cqh solid #d9b879;background:linear-gradient(180deg,#fff7e9,#f4d8a8);color:var(--c-ink);font:inherit;font-size:1.25cqh;font-weight:900;cursor:pointer;}
 #potionUseButton.show{display:flex;}
-#potionDiscardButton{position:absolute;z-index:30;display:none;align-items:center;justify-content:center;padding:0 1.1cqh;height:3.2cqh;border-radius:.9cqh;border:.2cqh solid #c98d8d;background:linear-gradient(180deg,#fff0f0,#f4c9c9);color:var(--c-ink);font:inherit;font-size:1.15cqh;font-weight:900;box-shadow:0 .45cqh 1cqh rgba(65,45,25,.18);cursor:pointer;}
+#potionDiscardButton{display:none;align-items:center;justify-content:center;height:100%;padding:0 1.1cqh;border-radius:.7cqh;border:.2cqh solid #c98d8d;background:linear-gradient(180deg,#fff0f0,#f4c9c9);color:var(--c-ink);font:inherit;font-size:1.15cqh;font-weight:900;cursor:pointer;}
 #potionDiscardButton.show{display:flex;}
+#potionDiscardConfirm{position:absolute;inset:0;z-index:90;display:none;align-items:center;justify-content:center;}
+#potionDiscardConfirm.show{display:flex;}
+#potionDiscardConfirm .potion-discard-confirm-backdrop{position:absolute;inset:0;background:rgba(10,14,24,.45);}
+#potionDiscardConfirm .potion-discard-confirm-box{position:relative;z-index:1;max-width:70cqw;padding:2cqh 2.2cqw;border-radius:1.3cqh;border:.2cqh solid rgba(180,150,102,.55);background:rgba(255,250,240,.98);box-shadow:0 .6cqh 2cqh rgba(0,0,0,.35);text-align:center;}
+#potionDiscardConfirm .potion-discard-confirm-text{margin:0 0 1.4cqh;font-size:1.7cqh;font-weight:800;color:var(--c-ink);}
+#potionDiscardConfirm .potion-discard-confirm-actions{display:flex;gap:.8cqh;justify-content:center;}
+#potionDiscardConfirm .potion-discard-confirm-cancel,#potionDiscardConfirm .potion-discard-confirm-ok{padding:.8cqh 1.6cqh;border-radius:.8cqh;font:inherit;font-size:1.35cqh;font-weight:900;cursor:pointer;}
+#potionDiscardConfirm .potion-discard-confirm-cancel{border:.18cqh solid rgba(150,150,150,.6);background:#f0f0f0;color:var(--c-ink);}
+#potionDiscardConfirm .potion-discard-confirm-ok{border:.2cqh solid #c98d8d;background:linear-gradient(180deg,#fff0f0,#f4c9c9);color:var(--c-ink);}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1cqw)}75%{transform:translateX(1cqw)}}
 
 /* ?먰뙣 */

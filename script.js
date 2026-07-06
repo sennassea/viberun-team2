@@ -3737,11 +3737,6 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
         ev.stopPropagation();
         onPotionSlotClick(item, i, slot);
       });
-      slot.addEventListener("mouseenter", () => showPotionDiscardButton(i, slot));
-      slot.addEventListener("mouseleave", ev => {
-        if(ev.relatedTarget && ev.relatedTarget.id === "potionDiscardButton") return;
-        hidePotionDiscardButton();
-      });
     }
     host.appendChild(slot);
   }
@@ -3773,17 +3768,65 @@ function isAttackPotion(item){
 
 function onPotionSlotClick(item, index, slot){
   hidePotionUseButton();
-  if(!isSelfUsePotion(item)) return;
-  if(!canUsePotionNow()){
-    toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
+  if(isSelfUsePotion(item)){
+    if(!canUsePotionNow()){
+      toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
+      return;
+    }
+    showPotionUseButton(index, slot);
+    showPotionDiscardButton(index, slot);
+    refreshPotionTooltipPosition();
     return;
   }
-  showPotionUseButton(index, slot);
+  if(isAttackPotion(item)){
+    showPotionDiscardButton(index, slot);
+    refreshPotionTooltipPosition();
+  }
+}
+
+function refreshPotionTooltipPosition(){
+  if(window.refreshItemSlotTooltipPosition) window.refreshItemSlotTooltipPosition();
+}
+
+function ensurePotionActionPanel(){
+  let panel = document.querySelector("#potionActionPanel");
+  if(panel) return panel;
+  panel = document.createElement("div");
+  panel.id = "potionActionPanel";
+  document.querySelector("#game").appendChild(panel);
+  document.addEventListener("click", hidePotionActionPanel);
+  return panel;
+}
+
+function updatePotionActionPanelVisibility(){
+  const panel = document.querySelector("#potionActionPanel");
+  if(!panel) return;
+  const useBtn = document.querySelector("#potionUseButton");
+  const discardBtn = document.querySelector("#potionDiscardButton");
+  const visible = !!((useBtn && useBtn.classList.contains("show")) || (discardBtn && discardBtn.classList.contains("show")));
+  panel.classList.toggle("show", visible);
+}
+
+function positionPotionActionPanel(slot){
+  const panel = ensurePotionActionPanel();
+  const game = document.querySelector("#game");
+  if(!slot || !game) return;
+  const anchorRect = slot.getBoundingClientRect();
+  const gameRect = game.getBoundingClientRect();
+  panel.style.left = (anchorRect.right - gameRect.left + 14) + "px";
+  panel.style.top = (anchorRect.top - gameRect.top) + "px";
+  panel.style.height = anchorRect.height + "px";
+}
+
+function hidePotionActionPanel(){
+  hidePotionUseButton();
+  hidePotionDiscardButton();
 }
 
 function ensurePotionUseButton(){
   let btn = document.querySelector("#potionUseButton");
   if(btn) return btn;
+  const panel = ensurePotionActionPanel();
   btn = document.createElement("button");
   btn.id = "potionUseButton";
   btn.type = "button";
@@ -3793,34 +3836,32 @@ function ensurePotionUseButton(){
     if(btn.disabled) return;
     btn.disabled = true;
     const index = Number(btn.dataset.potionIndex);
-    useSelfPotion(index);
+    if(!useSelfPotion(index)) btn.disabled = false;
   });
-  document.querySelector("#game").appendChild(btn);
-  document.addEventListener("click", hidePotionUseButton);
+  panel.appendChild(btn);
   return btn;
 }
 
 function showPotionUseButton(index, slot){
   const btn = ensurePotionUseButton();
   const anchor = slot || document.querySelector('#sidePotionSlots [data-potion-index="'+index+'"]');
-  const game = document.querySelector("#game");
-  if(!anchor || !game) return;
-  const anchorRect = anchor.getBoundingClientRect();
-  const gameRect = game.getBoundingClientRect();
+  if(!anchor) return;
   btn.dataset.potionIndex = String(index);
   btn.disabled = false;
-  btn.style.left = (anchorRect.right - gameRect.left + 6) + "px";
-  btn.style.top = (anchorRect.top - gameRect.top) + "px";
-  btn.style.height = anchorRect.height + "px";
   btn.classList.add("show");
+  positionPotionActionPanel(anchor);
+  updatePotionActionPanelVisibility();
 }
 
 function hidePotionUseButton(){
   const btn = document.querySelector("#potionUseButton");
   if(!btn) return;
+  const wasShown = btn.classList.contains("show");
   btn.classList.remove("show");
   btn.dataset.potionIndex = "";
   btn.disabled = false;
+  updatePotionActionPanelVisibility();
+  if(wasShown) refreshPotionTooltipPosition();
 }
 
 function getPotionFxList(potion){
@@ -3953,16 +3994,17 @@ function executeSinglePotionFx(fx, context={}){
 }
 
 function useSelfPotion(index){
-  if(!canUsePotionNow()) return;
-  if(!Array.isArray(S.potions)) return;
+  if(!canUsePotionNow()) return false;
+  if(!Array.isArray(S.potions)) return false;
   const potion = S.potions[index];
-  if(!potion || !isSelfUsePotion(potion)) return;
-  if(!applySelfPotionEffect(potion, { potion, potionIndex:index })) return;
+  if(!potion || !isSelfUsePotion(potion)) return false;
+  if(!applySelfPotionEffect(potion, { potion, potionIndex:index })) return false;
   S.potions.splice(index, 1);
   recordPotionUsed(potion);
   syncRunStateFromCombat();
   hidePotionUseButton();
   renderAll();
+  return true;
 }
 
 function applySelfPotionEffect(potion, context={}){
@@ -3972,6 +4014,7 @@ function applySelfPotionEffect(potion, context={}){
 function ensurePotionDiscardButton(){
   let btn = document.querySelector("#potionDiscardButton");
   if(btn) return btn;
+  const panel = ensurePotionActionPanel();
   btn = document.createElement("button");
   btn.id = "potionDiscardButton";
   btn.type = "button";
@@ -3981,36 +4024,83 @@ function ensurePotionDiscardButton(){
     const index = Number(btn.dataset.potionIndex);
     discardPotion(index);
   });
-  btn.addEventListener("mouseleave", () => hidePotionDiscardButton());
-  document.querySelector("#game").appendChild(btn);
+  panel.appendChild(btn);
   return btn;
 }
 
 function showPotionDiscardButton(index, slot){
   const btn = ensurePotionDiscardButton();
-  const game = document.querySelector("#game");
-  if(!slot || !game) return;
-  const anchorRect = slot.getBoundingClientRect();
-  const gameRect = game.getBoundingClientRect();
+  if(!slot) return;
   btn.dataset.potionIndex = String(index);
-  btn.style.left = (anchorRect.right - gameRect.left + 6) + "px";
-  btn.style.top = (anchorRect.top - gameRect.top + anchorRect.height + 4) + "px";
   btn.classList.add("show");
+  positionPotionActionPanel(slot);
+  updatePotionActionPanelVisibility();
 }
 
 function hidePotionDiscardButton(){
   const btn = document.querySelector("#potionDiscardButton");
   if(!btn) return;
+  const wasShown = btn.classList.contains("show");
   btn.classList.remove("show");
   btn.dataset.potionIndex = "";
+  updatePotionActionPanelVisibility();
+  if(wasShown) refreshPotionTooltipPosition();
 }
+
+let pendingDiscardPotion = null;
 
 function discardPotion(index){
   if(!Array.isArray(S.potions)) return;
   const potion = S.potions[index];
   hidePotionDiscardButton();
   if(!potion) return;
-  if(!window.confirm("이 약병을 버리시겠습니까?")) return;
+  pendingDiscardPotion = potion;
+  showPotionDiscardConfirm(index);
+}
+
+function ensurePotionDiscardConfirm(){
+  let modal = document.querySelector("#potionDiscardConfirm");
+  if(modal) return modal;
+  modal = document.createElement("div");
+  modal.id = "potionDiscardConfirm";
+  modal.innerHTML =
+    '<div class="potion-discard-confirm-backdrop"></div>' +
+    '<div class="potion-discard-confirm-box">' +
+      '<p class="potion-discard-confirm-text">이 약병을 버리시겠습니까?</p>' +
+      '<div class="potion-discard-confirm-actions">' +
+        '<button type="button" class="potion-discard-confirm-cancel">취소</button>' +
+        '<button type="button" class="potion-discard-confirm-ok">버리기</button>' +
+      '</div>' +
+    '</div>';
+  modal.addEventListener("click", ev => ev.stopPropagation());
+  modal.querySelector(".potion-discard-confirm-backdrop").addEventListener("click", () => hidePotionDiscardConfirm());
+  modal.querySelector(".potion-discard-confirm-cancel").addEventListener("click", () => hidePotionDiscardConfirm());
+  modal.querySelector(".potion-discard-confirm-ok").addEventListener("click", () => {
+    const index = Number(modal.dataset.potionIndex);
+    const potion = pendingDiscardPotion;
+    hidePotionDiscardConfirm();
+    confirmDiscardPotion(index, potion);
+  });
+  document.querySelector("#game").appendChild(modal);
+  return modal;
+}
+
+function showPotionDiscardConfirm(index){
+  const modal = ensurePotionDiscardConfirm();
+  modal.dataset.potionIndex = String(index);
+  modal.classList.add("show");
+}
+
+function hidePotionDiscardConfirm(){
+  const modal = document.querySelector("#potionDiscardConfirm");
+  pendingDiscardPotion = null;
+  if(!modal) return;
+  modal.classList.remove("show");
+  modal.dataset.potionIndex = "";
+}
+
+function confirmDiscardPotion(index, potion){
+  if(!potion) return;
   if(!Array.isArray(S.potions) || S.potions[index] !== potion) return;
   S.potions.splice(index, 1);
   syncRunStateFromCombat();
@@ -4024,6 +4114,7 @@ function attachPotionDrag(slot, item, index){
   slot.addEventListener("pointerdown", down);
   function down(ev){
     hidePotionUseButton();
+    hidePotionDiscardButton();
     if(!canUsePotionNow()){
       toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
       return;
