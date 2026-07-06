@@ -92,8 +92,6 @@ button,
 .record-page-main strong,
 .rr-badge span,
 .rr-choice-titlebar span,
-.rr-summary-titlebar span,
-.rr-detail-titlebar span,
 .status-tooltip-title,
 .btt-name {
   font-family: var(--font-title) !important;
@@ -186,7 +184,9 @@ textarea,
 #shopName,
 #eventName,
 #prayerName,
-.event-title {
+.event-title,
+.rr-summary-titlebar span,
+.rr-detail-titlebar span {
   font-family: var(--font-special-title) !important;
   font-weight: 700;
 }

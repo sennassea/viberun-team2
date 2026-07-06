@@ -63,7 +63,7 @@ window.BOHYUN_RUN_RESULT_DATA = {
     choices: {
       exit: {
         title: "여정 종료",
-        desc: "이번 여정을 마치고 전투 요약을 확인합니다."
+        desc: "이번 여정을 마치고 여정 요약을 확인합니다."
       },
       infinite: {
         title: "끝없는 여정 진입",
