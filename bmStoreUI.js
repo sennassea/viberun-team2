@@ -11,17 +11,21 @@
   const PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 수령할 수 있습니다.";
   const SKIN_PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 스킨을 수령할 수 있습니다.";
   const MOON_CHARGE_SUCCESS_MESSAGE = "테스트 구매가 완료되었습니다. 선물함에서 달빛조각을 수령할 수 있습니다.";
+  const DECK_PACK_PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 주문 덱을 수령할 수 있습니다.";
   const MOON_CHARGE_NOTICE = "테스트 구매입니다. 실제 결제가 발생하지 않습니다.";
   const RECOMMENDED_NOTICE = "운영자가 추천하는 특별 상품입니다.";
   const RECOMMENDED_CASH_NOTICE = "테스트 구매 상품은 실제 결제가 발생하지 않습니다.";
   let els = null;
   let purchasingProductId = "";
+  let pendingPurchaseProduct = null;
+  let isPurchaseConfirmOpen = false;
 
   const state = {
     activeTab: "package",
     wallet: { moonShards: 0 },
     products: [],
-    ownedSkinIds: []
+    ownedSkinIds: [],
+    ownedDeckPackIds: []
   };
 
   function escapeHtml(str){
@@ -136,12 +140,14 @@
     render();
     refreshWallet();
     refreshOwnedSkins();
+    refreshOwnedDeckPacks();
   }
 
   function close(){
     if(!els) return;
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
+    closePurchaseConfirm();
   }
 
   function refreshWallet(){
@@ -184,6 +190,24 @@
     });
   }
 
+  /* 주문 덱 BM 임시 구현: 주문 팩 탭 재구매 방지용 보유 확장덱 목록 조회입니다. 구매만 하고
+     선물함에서 수령하지 않은 덱은 ownedDeckPackIds에 없으므로 재구매 방지는 서버가 처리합니다. */
+  function refreshOwnedDeckPacks(){
+    const service = window.VIBERUN_BM_STORE_SERVICE;
+    if(!service || typeof service.fetchDeckPackUnlocks !== "function") return;
+
+    Promise.resolve(service.fetchDeckPackUnlocks()).then(result => {
+      const ownedDeckPackIds = result && result.ok && result.deckPackUnlocks &&
+        Array.isArray(result.deckPackUnlocks.ownedDeckPackIds)
+        ? result.deckPackUnlocks.ownedDeckPackIds.slice()
+        : [];
+      state.ownedDeckPackIds = ownedDeckPackIds;
+      if(state.activeTab === "order_pack") renderProducts();
+    }).catch(error => {
+      console.warn("[BMStoreUI] 보유 확장덱 조회 중 오류가 발생했습니다.", error);
+    });
+  }
+
   function handleTabClick(event){
     const tab = event.target.closest(".bm-store-tab");
     if(!tab) return;
@@ -197,12 +221,13 @@
     state.products = getProductsForTab(state.activeTab);
     render();
     if(state.activeTab === "package") refreshOwnedSkins();
+    if(state.activeTab === "order_pack") refreshOwnedDeckPacks();
   }
 
   function handleBodyClick(event){
     const button = event.target.closest(".bm-store-buy-btn");
     if(button){
-      if(!button.disabled) purchase(button.dataset.productId);
+      if(!button.disabled) handleBuyButtonClick(button.dataset.productId);
       return;
     }
 
@@ -215,6 +240,12 @@
     const ownedSkinCard = event.target.closest(".bm-store-skin-card.is-owned");
     if(ownedSkinCard){
       showToastMessage("이미 보유 중인 스킨입니다.", "info");
+      return;
+    }
+
+    const ownedDeckPackCard = event.target.closest(".bm-store-product.is-owned");
+    if(ownedDeckPackCard){
+      showToastMessage("이미 보유 중인 주문 덱입니다.", "info");
     }
   }
 
@@ -258,6 +289,11 @@
         return;
       }
 
+      if(product && product.rewardType === "deck_pack"){
+        showToastMessage(DECK_PACK_PURCHASE_SUCCESS_MESSAGE, "success");
+        return;
+      }
+
       showToastMessage(PURCHASE_SUCCESS_MESSAGE, "success");
     }).catch(error => {
       console.warn("[BMStoreUI] 패키지 구매 중 오류가 발생했습니다.", error);
@@ -269,6 +305,82 @@
 
   function findProductById(productId){
     return state.products.find(product => product.id === productId) || null;
+  }
+
+  function formatPurchasePrice(product){
+    if(!product) return "";
+    if(product.priceLabel) return product.priceLabel;
+    if(product.priceType === "test_cash") return formatKRW(product.price);
+    return "달빛조각 " + formatCount(product.price) + "개";
+  }
+
+  /* 구매 버튼 클릭 시 바로 구매하지 않고 구매 확인 팝업을 먼저 띄웁니다.
+     dimmed/comingSoon/purchasable:false/판매 종료 상품은 버튼 자체가 disabled 처리되어
+     handleBodyClick에서 이미 걸러지므로 여기서는 확인 팝업만 담당합니다. */
+  function handleBuyButtonClick(productId){
+    const product = findProductById(productId);
+    if(!product){
+      showToastMessage("존재하지 않는 상품입니다.", "error");
+      return;
+    }
+    openPurchaseConfirm(product);
+  }
+
+  function openPurchaseConfirm(product){
+    pendingPurchaseProduct = product;
+    isPurchaseConfirmOpen = true;
+    renderPurchaseConfirmModal(product);
+  }
+
+  function closePurchaseConfirm(){
+    pendingPurchaseProduct = null;
+    isPurchaseConfirmOpen = false;
+    renderPurchaseConfirmModal(null);
+  }
+
+  function confirmPendingPurchase(){
+    const product = pendingPurchaseProduct;
+    if(!product){
+      closePurchaseConfirm();
+      return;
+    }
+    closePurchaseConfirm();
+    purchase(product.id);
+  }
+
+  function renderPurchaseConfirmModal(product){
+    let modal = document.querySelector(".bm-purchase-confirm");
+
+    if(!product){
+      if(modal) modal.remove();
+      return;
+    }
+
+    if(!modal){
+      modal = document.createElement("div");
+      modal.className = "bm-purchase-confirm";
+      document.body.appendChild(modal);
+    }
+
+    const priceText = formatPurchasePrice(product);
+
+    modal.innerHTML =
+      '<div class="bm-purchase-confirm-backdrop"></div>' +
+      '<section class="bm-purchase-confirm-panel" role="dialog" aria-modal="true">' +
+        '<h2 class="bm-purchase-confirm-title">구매 확인</h2>' +
+        '<p class="bm-purchase-confirm-message">' +
+          '<strong>' + escapeHtml(product.name) + '</strong> 상품을 구매하시겠습니까?' +
+        '</p>' +
+        (priceText ? '<p class="bm-purchase-confirm-price">가격: ' + escapeHtml(priceText) + '</p>' : "") +
+        '<div class="bm-purchase-confirm-actions">' +
+          '<button type="button" class="bm-purchase-confirm-cancel">취소</button>' +
+          '<button type="button" class="bm-purchase-confirm-ok">구매</button>' +
+        '</div>' +
+      '</section>';
+
+    modal.querySelector(".bm-purchase-confirm-backdrop").addEventListener("click", closePurchaseConfirm);
+    modal.querySelector(".bm-purchase-confirm-cancel").addEventListener("click", closePurchaseConfirm);
+    modal.querySelector(".bm-purchase-confirm-ok").addEventListener("click", confirmPendingPurchase);
   }
 
   function render(){
@@ -312,6 +424,11 @@
 
     if(state.activeTab === "recommended"){
       renderRecommendedLayout();
+      return;
+    }
+
+    if(state.activeTab === "moon_charge" && state.products.length){
+      renderMoonChargeLayout();
       return;
     }
 
@@ -479,16 +596,72 @@
     );
   }
 
+  /* 달빛조각 충전 탭 전용 레이아웃입니다. 4개 상품을 가로 4카드로 배치하며,
+     구매 버튼은 기존 .bm-store-buy-btn 클래스/data-product-id를 그대로 사용해
+     공통 구매 확인 팝업 → purchaseProduct 흐름을 그대로 탑니다. */
+  function renderMoonChargeLayout(){
+    const sortedProducts = state.products.slice().sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+    els.body.innerHTML =
+      '<div class="bm-moon-charge-layout">' +
+        sortedProducts.map(renderMoonChargeCard).join("") +
+      '</div>' +
+      '<p class="bm-moon-charge-notice">' + escapeHtml(MOON_CHARGE_NOTICE) + '</p>';
+  }
+
+  function renderMoonChargeCard(product){
+    const isBusy = purchasingProductId === product.id;
+    const priceText = product.priceLabel || formatKRW(product.price);
+    const rewardAmount = Number(product.rewardAmount) || 0;
+
+    return (
+      '<article class="bm-moon-charge-card">' +
+        (product.recommendedBadge ? '<div class="bm-moon-charge-badge">' + escapeHtml(product.recommendedBadge) + '</div>' : "") +
+        '<h3 class="bm-moon-charge-title">' + escapeHtml(product.name) + '</h3>' +
+        (product.subtitle ? '<p class="bm-moon-charge-subtitle">' + escapeHtml(product.subtitle) + '</p>' : "") +
+
+        '<div class="bm-moon-charge-art" aria-hidden="true">' +
+          '<span class="bm-store-art-moon"></span>' +
+          '<span class="bm-moon-charge-amount">' + formatCount(rewardAmount) + '</span>' +
+        '</div>' +
+
+        (product.description ? '<p class="bm-moon-charge-desc">' + escapeHtml(product.description) + '</p>' : "") +
+        (product.unitPriceLabel ? '<p class="bm-moon-charge-unit">' + escapeHtml(product.unitPriceLabel) + '</p>' : "") +
+
+        '<button type="button" class="bm-store-buy-btn bm-moon-charge-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+          (isBusy ? " disabled" : "") + '>' +
+          '<span class="bm-store-price-icon" aria-hidden="true"></span>' +
+          '<span>' + (isBusy ? "구매 중..." : escapeHtml(priceText)) + '</span>' +
+        '</button>' +
+      '</article>'
+    );
+  }
+
   function renderProductCard(product){
     const isBusy = purchasingProductId === product.id;
     const isTestCash = product.priceType === "test_cash";
-    const secondaryText = product.limitText || product.bonusText;
+    const isDeckPack = product.rewardType === "deck_pack";
+    const isOwned = isDeckPack && !!product.deckPackId &&
+      state.ownedDeckPackIds.indexOf(product.deckPackId) !== -1;
+    const secondaryText = product.subtitle || product.limitText || product.bonusText;
     const badgeText = state.activeTab === "recommended"
       ? (product.recommendBadge || product.badge)
       : product.badge;
+    const disabled = isBusy || isOwned;
+
+    let buttonInner = '<span class="bm-store-price-icon" aria-hidden="true"></span><span>' + formatCount(product.price) + '</span>';
+    if(isTestCash){
+      buttonInner = '<span>' + (isBusy ? "구매 중..." : "테스트 구매") + '</span>';
+    } else if(isOwned){
+      buttonInner = '<span>보유 중</span>';
+    } else if(isBusy){
+      buttonInner = '<span class="bm-store-price-icon" aria-hidden="true"></span><span>구매 중...</span>';
+    }
+
     return (
-      '<article class="bm-store-product">' +
+      '<article class="bm-store-product' + (isOwned ? " is-owned" : "") + '">' +
         (badgeText ? '<div class="bm-store-badge">' + escapeHtml(badgeText) + '</div>' : "") +
+        (isOwned ? '<div class="bm-store-owned-flag">보유 중</div>' : "") +
         '<div class="bm-store-product-art" aria-hidden="true">' +
           (product.icon
             ? '<span class="bm-store-art-icon">' + escapeHtml(product.icon) + '</span>'
@@ -498,13 +671,12 @@
           '<h3>' + escapeHtml(product.name) + '</h3>' +
           (secondaryText ? '<p class="bm-store-limit-text">' + escapeHtml(secondaryText) + '</p>' : "") +
           (product.description ? '<p>' + escapeHtml(product.description) + '</p>' : "") +
+          (product.contentSummary ? '<p class="bm-store-content-summary">' + escapeHtml(product.contentSummary) + '</p>' : "") +
           (isTestCash ? '<p>' + escapeHtml(formatKRW(product.price)) + '</p>' : "") +
         '</div>' +
         '<button type="button" class="bm-store-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
-          (isBusy ? " disabled" : "") + '>' +
-          (isTestCash
-            ? '<span>' + (isBusy ? "구매 중..." : "테스트 구매") + '</span>'
-            : '<span class="bm-store-price-icon" aria-hidden="true"></span><span>' + (isBusy ? "구매 중..." : formatCount(product.price)) + '</span>') +
+          (disabled ? " disabled" : "") + '>' +
+          buttonInner +
         '</button>' +
       '</article>'
     );
@@ -531,6 +703,8 @@
   });
 
   window.addEventListener("viberun:mailbox-changed", () => {
-    if(els && els.overlay.classList.contains("show")) refreshOwnedSkins();
+    if(!els || !els.overlay.classList.contains("show")) return;
+    refreshOwnedSkins();
+    refreshOwnedDeckPacks();
   });
 })();

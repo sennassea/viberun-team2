@@ -72,10 +72,27 @@ const BM_PACKAGE_PRODUCTS = [
   { id: "growth_package", name: "성장 패키지", price: 2980, rewardId: "dummy_growth_package", category: "package", description: "성장에 필요한 물품이 담긴 패키지입니다." },
   { id: "rare_package", name: "희귀 장신 패키지", price: 6500, rewardId: "dummy_rare_package", category: "package", description: "희귀한 장신구가 담긴 패키지입니다." },
   { id: "spring_blessing_box", name: "봄날의 축복 상자", price: 2400, rewardId: "dummy_spring_blessing_box", category: "package", description: "계절 한정 축복 상자입니다." },
-  { id: "order_pack_summon_charm", name: "소환 부적 팩", price: 1000, rewardId: "dummy_summon_charm_pack", category: "order_pack", description: "소환을 바꾸는 주문 부적" },
-  { id: "order_pack_soul_charm", name: "영혼 부적 팩", price: 2000, rewardId: "dummy_soul_charm_pack", category: "order_pack", description: "영혼을 모으는 주문 부적" },
-  { id: "order_pack_divine_charm", name: "신력 부적 팩", price: 3000, rewardId: "dummy_divine_charm_pack", category: "order_pack", description: "강력한 인연 소환 주문 부적" },
-  { id: "order_pack_legend_support", name: "전설 보조 팩", price: 10000, rewardId: "dummy_legend_support_pack", category: "order_pack", description: "전설 등급 신력 확정 소환" }
+];
+
+/* 주문 덱 BM 임시 구현: 한풀이 덱 / 굿판 덱 확장덱 구매 검증 테이블입니다.
+   실제 게임 콘텐츠 풀 필터링은 이 단계에서 구현하지 않으며, 계정 소유권(ownedDeckPackIds)만 저장합니다. */
+const BM_DECK_PACK_PRODUCTS = [
+  {
+    id: "deck_pack_hanpuri",
+    name: "한풀이 덱",
+    deckPackId: "hanpuri",
+    unlockKeyword: "한풀이 덱",
+    price: 1200,
+    category: "deck_pack"
+  },
+  {
+    id: "deck_pack_gutpan",
+    name: "굿판 덱",
+    deckPackId: "gutpan",
+    unlockKeyword: "굿판 덱",
+    price: 1200,
+    category: "deck_pack"
+  }
 ];
 
 /* 스킨 탭 캐릭터 스킨 구매 서버 검증 테이블입니다. 달빛서약☆마법무녀만 saleStartAt/saleEndAt
@@ -132,12 +149,10 @@ function resolveProfileIconBySkinId(skinId) {
 /* 달빛조각 충전(테스트 구매) 검증 테이블입니다. 실제 결제 검증 없이 rewardAmount만큼
    wallet.moonShards를 증가시키며, 차감/잔액 확인은 하지 않습니다. */
 const BM_MOON_CHARGE_PRODUCTS = [
-  { id: "moon_charge_60", name: "달빛조각 60", price: 1200, rewardAmount: 60 },
-  { id: "moon_charge_300", name: "달빛조각 300", price: 5900, rewardAmount: 300 },
-  { id: "moon_charge_980", name: "달빛조각 980", price: 19000, rewardAmount: 980 },
-  { id: "moon_charge_1980", name: "달빛조각 1,980", price: 37000, rewardAmount: 1980 },
-  { id: "moon_charge_3280", name: "달빛조각 3,280", price: 59000, rewardAmount: 3280 },
-  { id: "moon_charge_6480", name: "달빛조각 6,480", price: 119000, rewardAmount: 6480 }
+  { id: "moon_charge_100", name: "달빛조각 100개", price: 1200, rewardAmount: 100 },
+  { id: "moon_charge_500", name: "달빛조각 500개", price: 5500, rewardAmount: 500 },
+  { id: "moon_charge_1200", name: "달빛조각 1,200개", price: 12000, rewardAmount: 1200 },
+  { id: "moon_charge_3000", name: "달빛조각 3,000개", price: 27000, rewardAmount: 3000 }
 ];
 
 /* 월영의 약속(30일 출석 상품) 검증 테이블입니다. 구매는 test_cash이며,
@@ -217,6 +232,14 @@ function buildDefaultCharacterSkins() {
   };
 }
 
+/* 주문 덱 BM 임시 구현: 계정이 보유 중인 확장덱 ID 목록입니다.
+   이번 단계에서는 저장만 하며, script.js의 실제 콘텐츠 풀 필터링에는 아직 사용하지 않습니다. */
+function buildDefaultDeckPackUnlocks() {
+  return {
+    ownedDeckPackIds: []
+  };
+}
+
 /* 계정 프로필(닉네임) 기본값입니다. accountId와 nickname은 별도로 관리하며,
    nickname은 추후 랭킹 표시에만 노출됩니다. */
 function buildDefaultProfile() {
@@ -271,7 +294,8 @@ function ensureAccount(accountId) {
       dummyInventory: [],
       monthlyPass: buildDefaultMonthlyPass(),
       characterSkins: buildDefaultCharacterSkins(),
-      profile: buildDefaultProfile()
+      profile: buildDefaultProfile(),
+      deckPackUnlocks: buildDefaultDeckPackUnlocks()
     });
   }
 
@@ -287,6 +311,12 @@ function ensureAccount(accountId) {
   }
   if (!("equippedSkinId" in account.characterSkins)) {
     account.characterSkins.equippedSkinId = null;
+  }
+  if (!account.deckPackUnlocks) {
+    account.deckPackUnlocks = buildDefaultDeckPackUnlocks();
+  }
+  if (!Array.isArray(account.deckPackUnlocks.ownedDeckPackIds)) {
+    account.deckPackUnlocks.ownedDeckPackIds = [];
   }
   if (!account.profile) {
     account.profile = buildDefaultProfile();
@@ -418,6 +448,19 @@ function applyMailRewards(account, mail) {
       const skinId = String(reward.skinId || "");
       if (skinId && !account.characterSkins.ownedSkinIds.includes(skinId)) {
         account.characterSkins.ownedSkinIds.push(skinId);
+      }
+    } else if (reward.type === "deck_pack") {
+      /* 주문 덱 BM 임시 구현: 선물함 수령 시에만 계정 소유권을 저장합니다. */
+      if (!account.deckPackUnlocks) {
+        account.deckPackUnlocks = buildDefaultDeckPackUnlocks();
+      }
+      if (!Array.isArray(account.deckPackUnlocks.ownedDeckPackIds)) {
+        account.deckPackUnlocks.ownedDeckPackIds = [];
+      }
+
+      const deckPackId = String(reward.deckPackId || "");
+      if (deckPackId && !account.deckPackUnlocks.ownedDeckPackIds.includes(deckPackId)) {
+        account.deckPackUnlocks.ownedDeckPackIds.push(deckPackId);
       }
     }
   });
@@ -641,6 +684,130 @@ function handleBMPackagePurchase(req, res, productId) {
     product,
     mail,
     wallet: account.wallet
+  });
+}
+
+/* 주문 덱 BM 임시 구현: 한풀이 덱 / 굿판 덱 구매입니다. 달빛조각을 즉시 차감하지만,
+   실제 소유권 부여는 하지 않고 선물함 구매 메일만 생성합니다.
+   실제 지급(ownedDeckPackIds 저장)은 선물함에서 "수령하기"를 눌렀을 때만 이뤄집니다. */
+function handleBMDeckPackPurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+
+  if (!accountId) {
+    sendJson(res, 401, {
+      ok: false,
+      code: "NOT_LOGGED_IN",
+      message: "로그인이 필요합니다."
+    });
+    return;
+  }
+
+  const product = BM_DECK_PACK_PRODUCTS.find((item) => item.id === productId);
+
+  if (!product) {
+    sendJson(res, 404, {
+      ok: false,
+      code: "UNKNOWN_PRODUCT",
+      message: "존재하지 않는 주문 덱 상품입니다."
+    });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  if (account.deckPackUnlocks.ownedDeckPackIds.includes(product.deckPackId)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "DECK_PACK_ALREADY_OWNED",
+      message: "이미 보유 중인 주문 덱입니다.",
+      wallet: account.wallet,
+      deckPackUnlocks: account.deckPackUnlocks
+    });
+    return;
+  }
+
+  const hasUnclaimedDeckPackMail = account.mailbox.some(
+    (mail) => mail.productId === product.id && mail.status === "PURCHASED_UNCLAIMED"
+  );
+
+  if (hasUnclaimedDeckPackMail) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "DECK_PACK_UNCLAIMED_MAIL_EXISTS",
+      message: "선물함에 아직 수령하지 않은 주문 덱이 있습니다.",
+      wallet: account.wallet,
+      deckPackUnlocks: account.deckPackUnlocks
+    });
+    return;
+  }
+
+  const currentMoonShards = Number(account.wallet.moonShards) || 0;
+  if (currentMoonShards < product.price) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "INSUFFICIENT_MOON_SHARDS",
+      message: "달빛조각이 부족합니다.",
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  account.wallet.moonShards = currentMoonShards - product.price;
+
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productCategory: "deck_pack",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "moon_shard",
+    paidAmount: product.price,
+    rewards: [
+      {
+        type: "deck_pack",
+        deckPackId: product.deckPackId,
+        unlockKeyword: product.unlockKeyword,
+        productId: product.id,
+        name: product.name
+      }
+    ]
+  };
+
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    mail,
+    wallet: account.wallet,
+    deckPackUnlocks: account.deckPackUnlocks
+  });
+}
+
+/* 주문 덱 BM 임시 구현: 계정이 보유 중인 확장덱 ID 목록 조회입니다. */
+function handleBMDeckPackUnlocks(req, res) {
+  const accountId = resolveAccountId(req);
+
+  if (!accountId) {
+    sendJson(res, 401, {
+      ok: false,
+      code: "NOT_LOGGED_IN",
+      message: "로그인이 필요합니다."
+    });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  sendJson(res, 200, {
+    ok: true,
+    deckPackUnlocks: account.deckPackUnlocks || buildDefaultDeckPackUnlocks()
   });
 }
 
@@ -1214,6 +1381,17 @@ const server = http.createServer((req, res) => {
   const bmPackagePurchaseMatch = pathname.match(/^\/bm-store\/package\/([^/]+)\/purchase$/);
   if (method === "POST" && bmPackagePurchaseMatch) {
     readRequestBody(req).then(() => handleBMPackagePurchase(req, res, decodeURIComponent(bmPackagePurchaseMatch[1])));
+    return;
+  }
+
+  const bmDeckPackPurchaseMatch = pathname.match(/^\/bm-store\/deck-pack\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmDeckPackPurchaseMatch) {
+    readRequestBody(req).then(() => handleBMDeckPackPurchase(req, res, decodeURIComponent(bmDeckPackPurchaseMatch[1])));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/bm-store/deck-pack/unlocks") {
+    handleBMDeckPackUnlocks(req, res);
     return;
   }
 
