@@ -271,19 +271,11 @@ function startStage(stageIdx){
 }
 
 /* ── 여정 열기/닫기 ────────────────────────────────────────────────────── */
-function isActiveBattleForMapView(){
-  return !!(
-    typeof S !== "undefined" && S &&
-    !S.over &&
-    !S.encounterCleared &&
-    Array.isArray(S.enemies) &&
-    S.enemies.some(enemy => enemy && enemy.hp > 0)
-  );
-}
-
 function openMap(){
   if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
-  if(!isActiveBattleForMapView() && typeof clearBattleBackground === "function") clearBattleBackground();
+  /* 여정 오버레이는 반투명이라 뒤에 마지막 노드의 최종 화면이 비쳐야 한다.
+     배경을 여기서 미리 지우면 오버레이가 빈 화면 위로 뜨게 되므로,
+     실제로 다음 스테이지에 진입할 때(startStage)만 배경을 갱신/제거한다. */
   let ov = document.getElementById("mapOverlay");
   if(!ov){ ov = buildOverlay(); document.getElementById("game").appendChild(ov); }
   const isStartMap = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
@@ -339,8 +331,8 @@ function buildOverlay(){
       </div>
       <div class="map-footer" id="mapFooter"></div>
     </div>`;
-  div.addEventListener("click", e => { if(e.target === div) closeMap(); });
-  div.querySelector("#mapClose").addEventListener("click", closeMap);
+  div.addEventListener("click", e => { if(e.target === div && !window.MAP_STATE.proceedMode) closeMap(); });
+  div.querySelector("#mapClose").addEventListener("click", () => { if(!window.MAP_STATE.proceedMode) closeMap(); });
   setupDragScroll(
     div.querySelector("#mapCanvasWrap"),
     div.querySelector("#mapCanvas")
@@ -500,6 +492,10 @@ function renderCanvas(currentNodeId){
 
   svg.innerHTML = paths + floorLbls + nodes + pin;
   svg.setAttribute("viewBox", getViewBox());
+
+  // 닫기 버튼: 다음 노드를 반드시 선택해야 하는 상태에서는 숨김
+  const closeBtn = document.getElementById("mapClose");
+  if(closeBtn) closeBtn.style.display = window.MAP_STATE.proceedMode ? "none" : "";
 
   // 푸터 업데이트
   const footer = document.getElementById("mapFooter");

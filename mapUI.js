@@ -374,6 +374,10 @@ function renderCanvas(currentNodeId) {
   svg.innerHTML = svgPaths + svgNodes + svgPin;
   svg.setAttribute("viewBox", getViewBox());
 
+  /* ── 닫기 버튼: 다음 노드를 반드시 선택해야 하는 상태에서는 숨김 ── */
+  const closeBtn = document.getElementById("mapClose");
+  if (closeBtn) closeBtn.style.display = window.MAP_STATE.proceedMode ? "none" : "";
+
   /* ── 현재 위치 배지 ── */
   const floorBadge = document.getElementById("mapCurrentFloor");
   if (floorBadge) {
@@ -493,8 +497,8 @@ function buildOverlay() {
     </div>`;
 
   /* ── 이벤트 바인딩 ── */
-  div.addEventListener("click", e => { if (e.target === div) closeMap(); });
-  div.querySelector("#mapClose").addEventListener("click", closeMap);
+  div.addEventListener("click", e => { if (e.target === div && !window.MAP_STATE.proceedMode) closeMap(); });
+  div.querySelector("#mapClose").addEventListener("click", () => { if (!window.MAP_STATE.proceedMode) closeMap(); });
 
   /* 덱 확인: 기존 덱뷰어 버튼 트리거 */
   div.querySelector("#dMapDeckBtn").addEventListener("click", () => {
