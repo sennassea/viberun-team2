@@ -43,7 +43,7 @@
     if(event) event.stopPropagation();
 
     if(window.VIBERUN_BM_STORE_UI && typeof window.VIBERUN_BM_STORE_UI.open === "function"){
-      window.VIBERUN_BM_STORE_UI.open();
+      window.VIBERUN_BM_STORE_UI.open("recommended");
     } else if(typeof toast === "function") {
       toast("월영당을 불러오지 못했습니다.", "error");
     } else if(typeof window.showToast === "function") {

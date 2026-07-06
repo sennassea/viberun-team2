@@ -184,7 +184,7 @@
         ? result.characterSkins.ownedSkinIds.slice()
         : [];
       state.ownedSkinIds = ownedSkinIds;
-      if(state.activeTab === "package") renderProducts();
+      if(state.activeTab === "package" || state.activeTab === "recommended") renderProducts();
     }).catch(error => {
       console.warn("[BMStoreUI] 보유 스킨 조회 중 오류가 발생했습니다.", error);
     });
@@ -202,7 +202,7 @@
         ? result.deckPackUnlocks.ownedDeckPackIds.slice()
         : [];
       state.ownedDeckPackIds = ownedDeckPackIds;
-      if(state.activeTab === "order_pack") renderProducts();
+      if(state.activeTab === "order_pack" || state.activeTab === "recommended") renderProducts();
     }).catch(error => {
       console.warn("[BMStoreUI] 보유 확장덱 조회 중 오류가 발생했습니다.", error);
     });
@@ -416,6 +416,7 @@
 
   function renderProducts(){
     if(!els) return;
+    els.body.className = "bm-store-body bm-store-body--" + state.activeTab;
     const knownTabs = ["package", "order_pack", "moon_charge", "recommended"];
     if(knownTabs.indexOf(state.activeTab) === -1){
       els.body.innerHTML = '<div class="bm-store-empty">해당 탭은 준비 중입니다.</div>';
@@ -517,27 +518,28 @@
     );
   }
 
-  /* 추천 탭 전용 레이아웃입니다. 좌측에 월영의 약속 대형 카드, 우측 상단에 혼꽃 설화편 딤드 배너,
-     우측 하단에 진언 스킨/캐릭터 스킨 딤드 패널 + 확장팩 준비 중 영역을 배치합니다.
+  /* 추천 탭 전용 레이아웃입니다. 좌측에 월영의 약속 대형 카드, 우측 상단에 한정 스킨 실구매 카드,
+     우측 하단에 프리미엄 스킨/한풀이 덱/달빛조각 3,000개 실구매 카드를 배치합니다.
      패키지/주문 팩/충전 탭의 기존 그리드 렌더링에는 영향을 주지 않습니다. */
   function renderRecommendedLayout(){
     const products = state.products || [];
     const monthlyPass = products.find(product => product.layoutType === "monthly_pass_main");
-    const storyDlc = products.find(product => product.layoutType === "story_dlc_banner");
-    const mantraSkin = products.find(product => product.layoutType === "mantra_skin_panel");
-    const characterSkin = products.find(product => product.layoutType === "character_skin_panel");
+    const topBanner = products.find(product => product.recommendedSlot === "top_banner");
+    const bottomLeft = products.find(product => product.recommendedSlot === "bottom_left");
+    const bottomMiddle = products.find(product => product.recommendedSlot === "bottom_middle");
+    const bottomRight = products.find(product => product.recommendedSlot === "bottom_right");
 
     els.body.innerHTML =
       '<div class="bm-recommended-layout">' +
         (monthlyPass ? renderMonthlyPassCard(monthlyPass) : "") +
         '<div class="bm-recommended-right">' +
           '<div class="bm-recommended-top">' +
-            (storyDlc ? renderStoryDlcCard(storyDlc) : "") +
+            (topBanner ? renderRecommendedWideProductCard(topBanner) : "") +
           '</div>' +
           '<div class="bm-recommended-bottom">' +
-            (mantraSkin ? renderSkinPanelCard(mantraSkin, "진언 스킨") : "") +
-            (characterSkin ? renderSkinPanelCard(characterSkin, "캐릭터 스킨") : "") +
-            renderExpansionPlaceholder() +
+            (bottomLeft ? renderRecommendedSmallProductCard(bottomLeft) : "") +
+            (bottomMiddle ? renderRecommendedSmallProductCard(bottomMiddle) : "") +
+            (bottomRight ? renderRecommendedSmallProductCard(bottomRight) : "") +
           '</div>' +
         '</div>' +
       '</div>';
@@ -596,6 +598,81 @@
     );
   }
 
+  /* 추천 탭 우측 상단 대형 실구매 카드입니다(한정 스킨). 딤드 없이 실제 구매 버튼을
+     연결하며, 이미 보유한 스킨이면 보유 중 처리로 재구매를 막습니다. */
+  function renderRecommendedWideProductCard(product){
+    const isBusy = purchasingProductId === product.id;
+    const isOwnedSkin = product.rewardType === "character_skin" &&
+      product.skinId &&
+      state.ownedSkinIds.indexOf(product.skinId) !== -1;
+
+    const disabled = isBusy || isOwnedSkin;
+
+    return (
+      '<article class="bm-product-card bm-recommended-wide-card' + (isOwnedSkin ? ' is-owned' : '') + '">' +
+        (isOwnedSkin ? '<div class="bm-store-owned-flag">보유 중</div>' : '') +
+        '<div class="bm-recommended-wide-art">' +
+          (product.previewImage
+            ? '<img src="' + escapeHtml(product.previewImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+            : '<span class="bm-store-art-icon">' + escapeHtml(product.icon || "✦") + '</span>') +
+        '</div>' +
+        '<div class="bm-recommended-wide-copy">' +
+          '<div class="bm-story-dlc-badge">' + escapeHtml(product.gradeLabel || product.badge || "추천") + '</div>' +
+          '<h3>' + escapeHtml(product.name) + '</h3>' +
+          (product.skinTypeName ? '<p>' + escapeHtml(product.skinTypeName) + '</p>' : '') +
+          (product.description ? '<p>' + escapeHtml(product.description) + '</p>' : '') +
+        '</div>' +
+        '<button type="button" class="bm-store-buy-btn bm-recommended-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+          (disabled ? ' disabled' : '') + '>' +
+          (isOwnedSkin
+            ? '<span>보유 중</span>'
+            : '<span class="bm-store-price-icon" aria-hidden="true"></span><span>' + formatCount(product.price) + '</span>') +
+        '</button>' +
+      '</article>'
+    );
+  }
+
+  /* 추천 탭 우측 하단 소형 실구매 카드입니다(프리미엄 스킨/한풀이 덱/달빛조각 3,000개).
+     rewardType별로 보유 상태와 가격 표시를 분기하며, 딤드는 사용하지 않습니다. */
+  function renderRecommendedSmallProductCard(product){
+    const isBusy = purchasingProductId === product.id;
+    const isCharacterSkin = product.rewardType === "character_skin";
+    const isDeckPack = product.rewardType === "deck_pack";
+
+    const isOwned =
+      (isCharacterSkin && !!product.skinId && state.ownedSkinIds.indexOf(product.skinId) !== -1) ||
+      (isDeckPack && !!product.deckPackId && state.ownedDeckPackIds.indexOf(product.deckPackId) !== -1);
+
+    const disabled = isBusy || isOwned;
+
+    let priceText;
+    if(product.priceType === "test_cash"){
+      priceText = '<span>' + escapeHtml(product.priceLabel || formatKRW(product.price)) + '</span>';
+    } else {
+      priceText = '<span class="bm-store-price-icon" aria-hidden="true"></span><span>' + formatCount(product.price) + '</span>';
+    }
+
+    return (
+      '<article class="bm-product-card bm-recommended-small-card' + (isOwned ? ' is-owned' : '') + '">' +
+        (isOwned ? '<div class="bm-store-owned-flag">보유 중</div>' : '') +
+        '<div class="bm-recommended-small-art' + (isCharacterSkin && product.profileIcon ? ' bm-recommended-small-art--profile' : '') + '">' +
+          (isCharacterSkin && product.profileIcon
+            ? '<img src="' + escapeHtml(product.profileIcon) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+            : product.previewImage
+              ? '<img src="' + escapeHtml(product.previewImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+              : '<span class="bm-store-art-icon">' + escapeHtml(product.icon || "✦") + '</span>') +
+        '</div>' +
+        '<h3>' + escapeHtml(product.name) + '</h3>' +
+        (product.subtitle || product.skinTypeName
+          ? '<p>' + escapeHtml(product.subtitle || product.skinTypeName) + '</p>' : '') +
+        '<button type="button" class="bm-store-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+          (disabled ? ' disabled' : '') + '>' +
+          (isOwned ? '<span>보유 중</span>' : priceText) +
+        '</button>' +
+      '</article>'
+    );
+  }
+
   /* 달빛조각 충전 탭 전용 레이아웃입니다. 4개 상품을 가로 4카드로 배치하며,
      구매 버튼은 기존 .bm-store-buy-btn 클래스/data-product-id를 그대로 사용해
      공통 구매 확인 팝업 → purchaseProduct 흐름을 그대로 탑니다. */
@@ -618,15 +695,11 @@
       '<article class="bm-moon-charge-card">' +
         (product.recommendedBadge ? '<div class="bm-moon-charge-badge">' + escapeHtml(product.recommendedBadge) + '</div>' : "") +
         '<h3 class="bm-moon-charge-title">' + escapeHtml(product.name) + '</h3>' +
-        (product.subtitle ? '<p class="bm-moon-charge-subtitle">' + escapeHtml(product.subtitle) + '</p>' : "") +
 
         '<div class="bm-moon-charge-art" aria-hidden="true">' +
           '<span class="bm-store-art-moon"></span>' +
           '<span class="bm-moon-charge-amount">' + formatCount(rewardAmount) + '</span>' +
         '</div>' +
-
-        (product.description ? '<p class="bm-moon-charge-desc">' + escapeHtml(product.description) + '</p>' : "") +
-        (product.unitPriceLabel ? '<p class="bm-moon-charge-unit">' + escapeHtml(product.unitPriceLabel) + '</p>' : "") +
 
         '<button type="button" class="bm-store-buy-btn bm-moon-charge-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
           (isBusy ? " disabled" : "") + '>' +
