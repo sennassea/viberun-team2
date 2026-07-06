@@ -40,7 +40,14 @@ async function endTurn(){
   LIFE.reduceLethargy(S.player, 1);
 
   ensureCardInstanceZones();
-  S.hand.forEach((key, index) => discardCard(key, { source:"turnEnd", instance:S.handInstances && S.handInstances[index] }));
+  S.hand.forEach((key, index) => {
+    const instance = S.handInstances && S.handInstances[index];
+    if(instance && instance.runtime && instance.runtime.temporaryCopy && instance.runtime.exhaustOnTurnEnd){
+      if(Array.isArray(S.exhaust)) S.exhaust.push(key);
+      return;
+    }
+    discardCard(key, { source:"turnEnd", instance });
+  });
   S.hand = [];
   S.handInstances = [];
   S.handLockTokens = [];
@@ -117,6 +124,9 @@ async function endTurn(){
   S.exhaustedSpellCountThisTurn = 0;
   S.spellTypesPlayedThisTurn = {};
   S.handCostOverrides = [];
+  S.blockGainMultiplierThisTurn = 1;
+  S.bellStrikePurifyBonusThisTurn = 0;
+  S.nextHighCostCardCostDown = null;
   resetBlessingTurnFlags();
   const anxietyPenalty  = (S.player.anxiety||0)  > 0 ? 1 : 0;
   const lethargyPenalty = (S.player.lethargy||0) > 0 ? 1 : 0;
