@@ -677,8 +677,11 @@
   function isEnemyTooltipHit(target, cbEl) {
     if (!target || !cbEl || !cbEl.contains(target)) return false;
     if (target.closest(".enemy-status-icons,.enemy-status-icon")) return false;
-    var hitEl = target.closest(".avatar,.intent,.combatant-info");
-    return !!(hitEl && cbEl.contains(hitEl));
+    if (target.closest(".avatar,.intent")) return true;
+    /* .combatant-info은 min-height로 인해 실제 표시 내용(체력바/상태 배지)보다
+       아래쪽에 빈 여백이 생길 수 있어, 컨테이너 자신이 타깃일 때(=빈 여백)는 제외한다 */
+    var infoEl = cbEl.querySelector(".combatant-info");
+    return !!(infoEl && infoEl.contains(target) && target !== infoEl);
   }
 
   field.addEventListener("mouseover", function (e) {
@@ -1075,17 +1078,14 @@
 
     var cardLeft  = cRect.left  - gRect.left;
     var cardRight = cRect.right - gRect.left;
-    var boundsLeft   = boundsRect.left   - gRect.left;
     var boundsRight  = boundsRect.right  - gRect.left;
-    var boundsTop    = boundsRect.top    - gRect.top;
-    var boundsBottom = boundsRect.bottom - gRect.top;
 
     /* 서브카드 뒤에는 설명 툴팁(#battle-tooltip, max-width:26cqw)이 이어붙기 때문에
        서브카드 자신만 오른쪽에 들어가는지가 아니라, 툴팁 최대 너비까지 합쳐서
        들어가는지로 뒤집힘을 판단해야 4번째 열처럼 서브카드만 겨우 들어가는
        위치에서 툴팁이 잘리지 않는다. */
     var TOOLTIP_MAX_WIDTH_RATIO = 0.26;
-    var reservedForTooltip = pRect.width + pad + gRect.width * TOOLTIP_MAX_WIDTH_RATIO;
+    var reservedForTooltip = pRect.width + pad + boundsRect.width * TOOLTIP_MAX_WIDTH_RATIO;
 
     var flippedLeft = false;
     var tx = cardRight + pad;
@@ -1093,10 +1093,13 @@
       tx = cardLeft - pRect.width - pad;
       flippedLeft = true;
     }
-    tx = Math.max(boundsLeft + pad, Math.min(boundsRight - pRect.width - pad, tx));
+    /* 뒤집힌 뒤에도 모달 안에 억지로 욱여넣으면 카드들과 겹치므로, 최종 위치는
+       모달 경계가 아니라 화면(game) 전체 기준으로만 클램프해 모달 밖으로
+       삐져나가는 것을 허용한다. */
+    tx = Math.max(pad, Math.min(gRect.width - pRect.width - pad, tx));
 
     var ty = cRect.top - gRect.top; /* 메인 카드와 윗면 정렬 */
-    ty = Math.max(boundsTop + pad, Math.min(boundsBottom - pRect.height - pad, ty));
+    ty = Math.max(pad, Math.min(gRect.height - pRect.height - pad, ty));
 
     subCardPreview.style.left = tx + "px";
     subCardPreview.style.top = ty + "px";
@@ -1155,8 +1158,11 @@
       ty = (cRect.top - gRect.top);
     }
 
-    tx = Math.max(boundsLeft + pad, Math.min(boundsRight  - tipRect.width  - pad, tx));
-    ty = Math.max(boundsTop + pad,  Math.min(boundsBottom - tipRect.height - pad, ty));
+    /* 뒤집힘/방향은 모달 경계 기준으로 판단하되, 최종 위치는 모달이 아니라 화면(game)
+       전체 기준으로만 클램프한다. 모달 안에 억지로 욱여넣으면 카드/서브카드와
+       겹치게 되므로, 그럴 땐 모달 밖으로 삐져나가는 것을 허용한다. */
+    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
 
     tooltip.style.left = tx + "px";
     tooltip.style.top  = ty + "px";
