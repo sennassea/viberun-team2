@@ -2,6 +2,7 @@
 
 (function () {
   const SELECTOR = "[data-tooltip], [data-global-tooltip], [data-tooltip-title]";
+  const SKIN_OPTION_SELECTOR = ".menu-profile-popup .menu-profile-option";
   const GAP = 10;
   let tooltipEl = null;
   let activeAnchor = null;
@@ -28,7 +29,7 @@
 
   function findAnchor(target) {
     if (!target || typeof target.closest !== "function") return null;
-    const anchor = target.closest(SELECTOR);
+    const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR);
     if (!anchor || anchor.dataset.tooltipDisabled === "true") return null;
     return anchor;
   }
@@ -36,8 +37,13 @@
   function getTooltipData(anchor) {
     const title = anchor.dataset.tooltipTitle || "";
     const body = anchor.dataset.tooltip || anchor.dataset.globalTooltip || "";
-    if (!title && !body) return null;
-    return { title, body };
+    if (title || body) return { title, body };
+
+    if (anchor.classList && anchor.classList.contains("menu-profile-option") && anchor.closest(".menu-profile-popup")) {
+      return { title: "프로필", body: "보유 스킨에 따라 프로필 사진을 변경할 수 있습니다." };
+    }
+
+    return null;
   }
 
   function buildHtml(data) {
@@ -50,18 +56,40 @@
     return title + body;
   }
 
+  function getOpenProfileSkinPopup(anchor) {
+    let popup = null;
+    if (anchor.classList && anchor.classList.contains("menu-profile-avatar-btn")) {
+      const profileRoot = anchor.closest(".menu-profile");
+      popup = profileRoot ? profileRoot.querySelector(".menu-profile-popup") : null;
+    } else {
+      popup = anchor.closest(".menu-profile-popup");
+    }
+    if (!popup || popup.hidden) return null;
+    return popup;
+  }
+
   function positionTooltip(anchor) {
     const tip = ensureTooltip();
-    const anchorRect = anchor.getBoundingClientRect();
     const tipRect = tip.getBoundingClientRect();
     const vw = window.innerWidth || document.documentElement.clientWidth;
     const vh = window.innerHeight || document.documentElement.clientHeight;
 
-    let left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
-    let top = anchorRect.bottom + GAP;
+    const openPopup = getOpenProfileSkinPopup(anchor);
+    let left;
+    let top;
 
-    if (top + tipRect.height > vh - GAP) {
-      top = anchorRect.top - tipRect.height - GAP;
+    if (openPopup) {
+      const popupRect = openPopup.getBoundingClientRect();
+      left = popupRect.right + GAP;
+      top = popupRect.top + (popupRect.height - tipRect.height) / 2;
+    } else {
+      const anchorRect = anchor.getBoundingClientRect();
+      left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
+      top = anchorRect.bottom + GAP;
+
+      if (top + tipRect.height > vh - GAP) {
+        top = anchorRect.top - tipRect.height - GAP;
+      }
     }
 
     left = Math.max(GAP, Math.min(left, vw - tipRect.width - GAP));
@@ -71,9 +99,16 @@
     tip.style.top = top + "px";
   }
 
+  function suppressNativeTooltip(anchor) {
+    if (anchor.hasAttribute("title")) {
+      anchor.removeAttribute("title");
+    }
+  }
+
   function show(anchor) {
     const data = getTooltipData(anchor);
     if (!data) return;
+    suppressNativeTooltip(anchor);
     window.clearTimeout(hideTimer);
     activeAnchor = anchor;
     const tip = ensureTooltip();
@@ -122,6 +157,14 @@
   });
 
   document.addEventListener("pointerdown", event => {
+    const avatarBtn = event.target && typeof event.target.closest === "function"
+      ? event.target.closest(".menu-profile-avatar-btn")
+      : null;
+    if (avatarBtn) {
+      hide();
+      return;
+    }
+
     const anchor = findAnchor(event.target);
     if (anchor) show(anchor);
     else hide();
@@ -130,6 +173,20 @@
   document.addEventListener("scroll", refresh, true);
   window.addEventListener("resize", refresh);
   window.addEventListener("blur", hide);
+
+  function applyStartMenuProfileTooltips() {
+    const avatarBtn = document.querySelector(".menu-profile-avatar-btn");
+    if (avatarBtn) {
+      avatarBtn.dataset.tooltipTitle = "프로필";
+      avatarBtn.dataset.tooltip = "보유 스킨에 따라 프로필 사진을 변경할 수 있습니다.";
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyStartMenuProfileTooltips);
+  } else {
+    applyStartMenuProfileTooltips();
+  }
 
   window.GlobalTooltip = {
     hide,
