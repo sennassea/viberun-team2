@@ -3788,9 +3788,45 @@ function refreshPotionTooltipPosition(){
   if(window.refreshItemSlotTooltipPosition) window.refreshItemSlotTooltipPosition();
 }
 
+function ensurePotionActionPanel(){
+  let panel = document.querySelector("#potionActionPanel");
+  if(panel) return panel;
+  panel = document.createElement("div");
+  panel.id = "potionActionPanel";
+  document.querySelector("#game").appendChild(panel);
+  document.addEventListener("click", hidePotionActionPanel);
+  return panel;
+}
+
+function updatePotionActionPanelVisibility(){
+  const panel = document.querySelector("#potionActionPanel");
+  if(!panel) return;
+  const useBtn = document.querySelector("#potionUseButton");
+  const discardBtn = document.querySelector("#potionDiscardButton");
+  const visible = !!((useBtn && useBtn.classList.contains("show")) || (discardBtn && discardBtn.classList.contains("show")));
+  panel.classList.toggle("show", visible);
+}
+
+function positionPotionActionPanel(slot){
+  const panel = ensurePotionActionPanel();
+  const game = document.querySelector("#game");
+  if(!slot || !game) return;
+  const anchorRect = slot.getBoundingClientRect();
+  const gameRect = game.getBoundingClientRect();
+  panel.style.left = (anchorRect.right - gameRect.left + 14) + "px";
+  panel.style.top = (anchorRect.top - gameRect.top) + "px";
+  panel.style.height = anchorRect.height + "px";
+}
+
+function hidePotionActionPanel(){
+  hidePotionUseButton();
+  hidePotionDiscardButton();
+}
+
 function ensurePotionUseButton(){
   let btn = document.querySelector("#potionUseButton");
   if(btn) return btn;
+  const panel = ensurePotionActionPanel();
   btn = document.createElement("button");
   btn.id = "potionUseButton";
   btn.type = "button";
@@ -3802,24 +3838,19 @@ function ensurePotionUseButton(){
     const index = Number(btn.dataset.potionIndex);
     useSelfPotion(index);
   });
-  document.querySelector("#game").appendChild(btn);
-  document.addEventListener("click", hidePotionUseButton);
+  panel.appendChild(btn);
   return btn;
 }
 
 function showPotionUseButton(index, slot){
   const btn = ensurePotionUseButton();
   const anchor = slot || document.querySelector('#sidePotionSlots [data-potion-index="'+index+'"]');
-  const game = document.querySelector("#game");
-  if(!anchor || !game) return;
-  const anchorRect = anchor.getBoundingClientRect();
-  const gameRect = game.getBoundingClientRect();
+  if(!anchor) return;
   btn.dataset.potionIndex = String(index);
   btn.disabled = false;
-  btn.style.left = (anchorRect.right - gameRect.left + 6) + "px";
-  btn.style.top = (anchorRect.top - gameRect.top) + "px";
-  btn.style.height = anchorRect.height + "px";
   btn.classList.add("show");
+  positionPotionActionPanel(anchor);
+  updatePotionActionPanelVisibility();
 }
 
 function hidePotionUseButton(){
@@ -3829,6 +3860,7 @@ function hidePotionUseButton(){
   btn.classList.remove("show");
   btn.dataset.potionIndex = "";
   btn.disabled = false;
+  updatePotionActionPanelVisibility();
   if(wasShown) refreshPotionTooltipPosition();
 }
 
@@ -3981,6 +4013,7 @@ function applySelfPotionEffect(potion, context={}){
 function ensurePotionDiscardButton(){
   let btn = document.querySelector("#potionDiscardButton");
   if(btn) return btn;
+  const panel = ensurePotionActionPanel();
   btn = document.createElement("button");
   btn.id = "potionDiscardButton";
   btn.type = "button";
@@ -3990,28 +4023,17 @@ function ensurePotionDiscardButton(){
     const index = Number(btn.dataset.potionIndex);
     discardPotion(index);
   });
-  btn.addEventListener("mouseleave", () => hidePotionDiscardButton());
-  document.querySelector("#game").appendChild(btn);
-  document.addEventListener("click", hidePotionDiscardButton);
+  panel.appendChild(btn);
   return btn;
 }
 
 function showPotionDiscardButton(index, slot){
   const btn = ensurePotionDiscardButton();
-  const game = document.querySelector("#game");
-  if(!slot || !game) return;
-  const anchorRect = slot.getBoundingClientRect();
-  const gameRect = game.getBoundingClientRect();
-  const useBtn = document.querySelector("#potionUseButton");
-  let leftEdge = anchorRect.right;
-  if(useBtn && useBtn.classList.contains("show") && Number(useBtn.dataset.potionIndex) === index){
-    leftEdge = useBtn.getBoundingClientRect().right;
-  }
+  if(!slot) return;
   btn.dataset.potionIndex = String(index);
-  btn.style.left = (leftEdge - gameRect.left + 6) + "px";
-  btn.style.top = (anchorRect.top - gameRect.top) + "px";
-  btn.style.height = anchorRect.height + "px";
   btn.classList.add("show");
+  positionPotionActionPanel(slot);
+  updatePotionActionPanelVisibility();
 }
 
 function hidePotionDiscardButton(){
@@ -4020,6 +4042,7 @@ function hidePotionDiscardButton(){
   const wasShown = btn.classList.contains("show");
   btn.classList.remove("show");
   btn.dataset.potionIndex = "";
+  updatePotionActionPanelVisibility();
   if(wasShown) refreshPotionTooltipPosition();
 }
 

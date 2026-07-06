@@ -412,9 +412,11 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 #sidePotionSlots .side-item-slot.empty{background:transparent url("assets/ui/potion_slot.png") center/100% 100% no-repeat;}
 #sidePotionSlots .side-empty-potion-icon{width:2.45cqh; height:2.45cqh; display:block; background:url("assets/ui/resource_icons/potion.png") center/contain no-repeat; filter:grayscale(1) saturate(0) opacity(.58); transform:translateY(.05cqh);}
 .side-item-slot.potion-dragging{opacity:.45;transform:scale(.94);}
-#potionUseButton{position:absolute;z-index:30;display:none;align-items:center;justify-content:center;padding:0 1.1cqh;border-radius:.9cqh;border:.2cqh solid #d9b879;background:linear-gradient(180deg,#fff7e9,#f4d8a8);color:var(--c-ink);font:inherit;font-size:1.25cqh;font-weight:900;box-shadow:0 .45cqh 1cqh rgba(65,45,25,.18);cursor:pointer;}
+#potionActionPanel{position:absolute;z-index:30;display:none;align-items:center;gap:.5cqh;padding:.4cqh;border-radius:1.05cqh;border:.16cqh solid rgba(180,150,102,.5);background:rgba(255,250,240,.97);box-shadow:0 .45cqh 1.2cqh rgba(65,45,25,.22);}
+#potionActionPanel.show{display:flex;}
+#potionUseButton{display:none;align-items:center;justify-content:center;height:100%;padding:0 1.1cqh;border-radius:.7cqh;border:.2cqh solid #d9b879;background:linear-gradient(180deg,#fff7e9,#f4d8a8);color:var(--c-ink);font:inherit;font-size:1.25cqh;font-weight:900;cursor:pointer;}
 #potionUseButton.show{display:flex;}
-#potionDiscardButton{position:absolute;z-index:30;display:none;align-items:center;justify-content:center;padding:0 1.1cqh;border-radius:.9cqh;border:.2cqh solid #c98d8d;background:linear-gradient(180deg,#fff0f0,#f4c9c9);color:var(--c-ink);font:inherit;font-size:1.15cqh;font-weight:900;box-shadow:0 .45cqh 1cqh rgba(65,45,25,.18);cursor:pointer;}
+#potionDiscardButton{display:none;align-items:center;justify-content:center;height:100%;padding:0 1.1cqh;border-radius:.7cqh;border:.2cqh solid #c98d8d;background:linear-gradient(180deg,#fff0f0,#f4c9c9);color:var(--c-ink);font:inherit;font-size:1.15cqh;font-weight:900;cursor:pointer;}
 #potionDiscardButton.show{display:flex;}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-1cqw)}75%{transform:translateX(1cqw)}}
 
