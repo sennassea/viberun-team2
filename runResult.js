@@ -622,10 +622,6 @@ function renderRunSummary(snapshot, onFinish){
     { icon:"🧪", label:"사용한 약병 수",      value:snapshot.usedPotionCount, unit:"개" }
   ];
 
-  const temporaryNotice = scoreBreakdown.isTemporary
-    ? '<div class="rr-score-notice">현재 점수와 달빛조각은 실제 기록을 찾지 못해 임시 계산값으로 표시됩니다. 실제 지급은 아직 진행되지 않습니다.</div>'
-    : '<div class="rr-score-notice">점수는 실제 런 기록 기준입니다.</div>';
-
   const canClaimMoon = canClaimAct1MoonReward(snapshot, scoreBreakdown, moonReward);
   const claimButtonLabel = getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward);
 
@@ -655,7 +651,6 @@ function renderRunSummary(snapshot, onFinish){
         ).join("") +
       '</div>' +
       moonClaimBoxHtml +
-      temporaryNotice +
       '<button type="button" class="rr-summary-next" id="rrSummaryNext">다음</button>' +
     '</div>';
 
@@ -733,9 +728,6 @@ function renderRunDetail(snapshot, onFinish){
         '<span>최종 ' + scoreBreakdown.total + '점</span>' +
         '<strong>' + escapeRrHtml(moonClaimText) + '</strong>' +
       '</div>' +
-      (scoreBreakdown.isTemporary
-        ? '<div class="rr-score-notice">현재는 실제 기록을 찾지 못해 임시 계산값으로 표시됩니다. 추후 지급 연동 예정입니다.</div>'
-        : '<div class="rr-score-notice">점수는 실제 런 기록 기준입니다.</div>') +
     '</div>';
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
@@ -1165,9 +1157,9 @@ function ensureRrStyles(){
     "@keyframes rrShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-.6cqw);}75%{transform:translateX(.6cqw);}}" +
 
     /* 전투 요약 화면 (기획서 §4-1, §10-1) — 캐릭터 없이 중앙 패널로 표시한다 */
-    ".rr-summary-panel{position:absolute;left:50%;top:13%;bottom:6%;transform:translateX(-50%);" +
+    ".rr-summary-panel{position:absolute;left:50%;top:16%;bottom:1.5%;transform:translateX(-50%);" +
       "width:56%;min-width:44cqh;z-index:1;display:flex;flex-direction:column;align-items:center;" +
-      "padding:5.4cqh 3.4cqw 3cqh;border-radius:1.8cqh;" +
+      "padding:4.4cqh 3.4cqw 2.4cqh;border-radius:1.8cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
     ".rr-summary-titlebar{position:absolute;top:-3.6cqh;left:50%;transform:translateX(-50%);" +
@@ -1175,8 +1167,8 @@ function ensureRrStyles(){
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.22cqh solid #e8c874;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
     ".rr-summary-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
-    ".rr-summary-rows{flex:1;width:100%;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:1.2cqh;}" +
-    ".rr-summary-row{display:flex;align-items:center;gap:1.2cqw;padding:.9cqh 0;" +
+    ".rr-summary-rows{flex:1;width:100%;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:.8cqh;}" +
+    ".rr-summary-row{display:flex;align-items:center;gap:1.2cqw;padding:.65cqh 0;" +
       "border-bottom:.14cqh dashed rgba(160,120,70,.4);}" +
     ".rr-summary-row:last-child{border-bottom:none;}" +
     ".rr-summary-row-icon{flex:0 0 auto;width:4.6cqh;text-align:center;font-size:3cqh;line-height:1;}" +
@@ -1185,15 +1177,15 @@ function ensureRrStyles(){
     ".rr-summary-row-value{flex:0 0 auto;display:flex;align-items:baseline;gap:.35cqw;justify-content:flex-end;min-width:7cqw;}" +
     ".rr-summary-row-value strong{font-size:2.6cqh;font-weight:900;color:#a5322a;}" +
     ".rr-summary-row-value span{font-size:1.3cqh;font-weight:800;color:#6b5236;}" +
-    ".rr-summary-next{margin-top:2.2cqh;width:64%;padding:1.5cqh 0;border:.2cqh solid #e8c874;border-radius:2.6cqh;" +
+    ".rr-summary-next{margin-top:1.4cqh;width:64%;padding:1.35cqh 0;border:.2cqh solid #e8c874;border-radius:2.6cqh;" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);color:#fbe9c8;font-size:2.1cqh;font-weight:900;" +
       "letter-spacing:.15cqh;cursor:pointer;box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.4);}" +
     ".rr-summary-next:hover{filter:brightness(1.08);}" +
 
     /* 전투 상세 화면 (기획서 §4-2, §10-2) — 요약 화면과 동일하게 캐릭터 없이 중앙 패널로 표시한다 */
-    ".rr-detail-panel{position:absolute;left:50%;top:11%;bottom:4%;transform:translateX(-50%);" +
+    ".rr-detail-panel{position:absolute;left:50%;top:14%;bottom:0.8%;transform:translateX(-50%);" +
       "width:82%;min-width:60cqh;max-width:98cqh;z-index:1;display:flex;flex-direction:column;" +
-      "padding:4.2cqh 3cqw 2.4cqh;border-radius:1.8cqh;gap:1.6cqh;" +
+      "padding:3.6cqh 3cqw 1.8cqh;border-radius:1.8cqh;gap:1.1cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
     ".rr-detail-titlebar{position:absolute;top:-2.4cqh;left:50%;transform:translateX(-50%);" +
@@ -1203,10 +1195,10 @@ function ensureRrStyles(){
     ".rr-detail-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
     ".rr-detail-section{display:flex;flex-direction:column;gap:.7cqh;min-height:0;}" +
     ".rr-detail-section-title{text-align:center;font-size:1.5cqh;font-weight:800;color:#8a6a3c;letter-spacing:.05cqh;}" +
-    ".rr-detail-grid{flex:1;min-height:0;display:grid;grid-template-columns:30% 1fr;gap:1.4cqh 1.4cqw;}" +
-    ".rr-detail-stack{display:flex;flex-direction:column;gap:1.4cqh;min-height:0;}" +
+    ".rr-detail-grid{flex:1;min-height:0;display:grid;grid-template-columns:30% 1fr;gap:1cqh 1.2cqw;}" +
+    ".rr-detail-stack{display:flex;flex-direction:column;gap:1cqh;min-height:0;}" +
     ".rr-detail-stack .rr-detail-tile,.rr-detail-stack .rr-detail-section--tight{flex:1;min-height:0;}" +
-    ".rr-detail-tile{display:flex;align-items:center;gap:1cqw;padding:1.2cqh 1.2cqw;border-radius:1.2cqh;margin:0;" +
+    ".rr-detail-tile{display:flex;align-items:center;gap:1cqw;padding:.95cqh 1.1cqw;border-radius:1.2cqh;margin:0;" +
       "border:.16cqh solid rgba(150,110,60,.5);background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,.1));" +
       "font:inherit;text-align:left;cursor:default;}" +
     "button.rr-detail-tile--button{cursor:pointer;}" +
@@ -1217,7 +1209,7 @@ function ensureRrStyles(){
     ".rr-detail-tile-value{font-size:2cqh;font-weight:900;color:#4a3524;}" +
     ".rr-detail-section--tight{border-radius:1.2cqh;border:.16cqh solid rgba(150,110,60,.4);" +
       "background:rgba(255,255,255,.22);padding:.9cqh 1cqw;}" +
-    ".rr-detail-finish{width:100%;padding:1.4cqh 0;border:.2cqh solid #e8c874;border-radius:2.6cqh;" +
+    ".rr-detail-finish{width:100%;padding:1.25cqh 0;border:.2cqh solid #e8c874;border-radius:2.6cqh;" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);color:#fbe9c8;font-size:1.9cqh;font-weight:900;" +
       "letter-spacing:.1cqh;cursor:pointer;box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.4);}" +
     ".rr-detail-finish:hover{filter:brightness(1.08);}" +
@@ -1313,8 +1305,8 @@ function ensureRrStyles(){
       ".rr-badge{top:-3.4cqh;}" +
       ".rr-choice-panel{right:7%;left:7%;width:auto;top:auto;bottom:5%;height:48%;padding-top:3.2cqh;}" +
       ".rr-choice-cards{flex-direction:column;gap:1cqh;}" +
-      ".rr-summary-panel{left:5%;right:5%;width:auto;transform:none;top:4%;bottom:4%;min-width:0;}" +
-      ".rr-detail-panel{left:4%;right:4%;width:auto;transform:none;top:3%;bottom:3%;min-width:0;padding:3.6cqh 2.4cqw 2cqh;}" +
+      ".rr-summary-panel{left:5%;right:5%;width:auto;transform:none;top:6%;bottom:1.5%;min-width:0;}" +
+      ".rr-detail-panel{left:4%;right:4%;width:auto;transform:none;top:5%;bottom:1%;min-width:0;padding:3.2cqh 2.4cqw 1.6cqh;}" +
       ".rr-detail-grid{grid-template-columns:1fr;}" +
     "}";
   document.head.appendChild(style);
