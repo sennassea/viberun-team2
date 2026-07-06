@@ -110,7 +110,7 @@ function renderBattleProgressHud(){
   const currentFloor = (typeof nodeFloorIdx === "function" && typeof getCurrentNodeId === "function")
     ? nodeFloorIdx(getCurrentNodeId())
     : 1;
-  const stageLabel = currentFloor > 0 ? currentFloor + "스테이지" : "1스테이지";
+  const stageLabel = currentFloor > 0 ? currentFloor + "구역" : "1구역";
   if(region) region.innerHTML = '<span class="progress-icon">🏥</span><span>' + themeLabel + '</span>';
   if(floor){
     floor.style.display = "";
