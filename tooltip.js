@@ -448,6 +448,11 @@
   tooltip.id = "battle-tooltip";
   game.appendChild(tooltip);
 
+  /* ── 서브카드(카드 사용 시 생성되는 카드) 미리보기 요소 ─────────────────── */
+  var subCardPreview = document.createElement("div");
+  subCardPreview.id = "battle-subcard-preview";
+  game.appendChild(subCardPreview);
+
   /* ── 스타일 주입 ──────────────────────────────────────────────────────── */
   var styleEl = document.createElement("style");
   styleEl.id = "battle-tooltip-style";
@@ -457,7 +462,7 @@
 
     /* 툴팁 컨테이너 */
     "#battle-tooltip{" +
-      "position:absolute;z-index:80;pointer-events:none;display:none;" +
+      "position:absolute;z-index:100000;pointer-events:none;display:none;" +
       "min-width:18cqw;max-width:26cqw;" +
       "background:rgba(14,22,38,.91);backdrop-filter:blur(5px);" +
       "border:.2cqh solid rgba(100,140,200,.4);border-radius:1.4cqh;" +
@@ -483,7 +488,24 @@
     ".btt-sep{border:none;border-top:.18cqh solid rgba(255,255,255,.14);margin:.35cqh 0}" +
 
     /* 효과 없음 */
-    ".btt-empty{font-size:1.4cqh;color:rgba(180,200,225,.5);text-align:center;padding:.4cqh 0}";
+    ".btt-empty{font-size:1.4cqh;color:rgba(180,200,225,.5);text-align:center;padding:.4cqh 0}" +
+
+    /* 서브카드 미리보기 (메인 카드의 약 2/3 크기) */
+    "#battle-subcard-preview{position:absolute;z-index:100001;pointer-events:none;display:none;}" +
+    "#battle-subcard-preview.show{display:block;}" +
+    ".bsp-face{position:relative;width:100%;aspect-ratio:2/3;border-radius:1cqh;overflow:hidden;" +
+      "box-shadow:0 .6cqh 2cqh rgba(0,0,0,.5);background:#f5efe4;}" +
+    ".bsp-face .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;" +
+      "overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);}" +
+    ".bsp-face .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;}" +
+    ".bsp-face .card-frame-layer{position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:fill;}" +
+    ".bsp-face .card-text-layer{position:absolute;inset:0;z-index:3;font-weight:900;color:#10243f;}" +
+    ".bsp-face .card-cost-text{position:absolute;left:6.2%;top:2.4%;width:18.8%;height:13.9%;" +
+      "display:grid;place-items:center;font-size:1.6cqh;line-height:1;}" +
+    ".bsp-face .card-name-text{position:absolute;left:12%;right:8%;top:5.9%;height:10%;" +
+      "display:grid;place-items:center;text-align:center;font-size:1cqh;line-height:1.05;overflow:hidden;}" +
+    ".bsp-face .card-desc-text{position:absolute;left:8%;right:8%;top:77.8%;bottom:7.4%;" +
+      "text-align:center;font-size:.85cqh;line-height:1.2;overflow:hidden;white-space:pre-line;}";
 
   document.head.appendChild(styleEl);
 
@@ -980,30 +1002,119 @@
     hideItemSlotTooltip();
   });
 
-  function buildCardTermHtml(descText) {
-    var rows = CARD_TERM_INFO
-      .filter(function (t) { return t.test(descText); })
-      .map(function (t) {
-        var desc = typeof t.desc === "function" ? t.desc(descText) : t.desc;
-        return makeRow(t.icon, t.name, desc, null);
+  function buildCardTermHtml(descText, extraDescText) {
+    var seenNames = {};
+    var rows = [];
+    [descText, extraDescText].forEach(function (text) {
+      if (!text) return;
+      CARD_TERM_INFO.forEach(function (t) {
+        if (!t || seenNames[t.name]) return;
+        var matched = false;
+        try { matched = t.test(text); } catch (e) { matched = false; }
+        if (!matched) return;
+        seenNames[t.name] = true;
+        var desc = typeof t.desc === "function" ? t.desc(text) : t.desc;
+        rows.push(makeRow(t.icon, t.name, desc, null));
       });
+    });
     return rows.join("");
   }
 
+  /* ── 카드 DOM 요소 → CARD_DB 데이터 매칭 (모든 카드 UI가 공통으로
+     cardFaceHtml()을 사용해 .card-name-text를 렌더링하므로 이름 기준으로 매칭) ── */
+  function findCardDbEntryByCardName(name) {
+    if (!name || typeof CARD_DB !== "object" || !CARD_DB) return null;
+    var foundKey = Object.keys(CARD_DB).find(function (k) {
+      return CARD_DB[k] && CARD_DB[k].name === name;
+    });
+    return foundKey ? CARD_DB[foundKey] : null;
+  }
+
+  function getCardDbEntryFromCardEl(cardEl) {
+    var nameEl = cardEl.querySelector(".card-name-text");
+    var name = nameEl ? nameEl.textContent.trim() : "";
+    return findCardDbEntryByCardName(name);
+  }
+
+  /* ── 서브카드(카드 효과로 생성되는 카드) 탐지 ────────────────────────────
+     fx 항목 중 t가 "createCard"로 시작하고 key가 있는 항목을 범용으로 찾는다.
+     (createCardToHand 외 향후 유사 타입이 추가되어도 하드코딩 없이 대응) */
+  function getSubCardEntry(cardEntry) {
+    if (!cardEntry || !Array.isArray(cardEntry.fx) || typeof CARD_DB !== "object" || !CARD_DB) return null;
+    var fxItem = cardEntry.fx.find(function (f) {
+      return f && typeof f.t === "string" && /^createCard/i.test(f.t) && f.key;
+    });
+    if (!fxItem) return null;
+    return CARD_DB[fxItem.key] || null;
+  }
+
+  /* 서브카드는 메인 카드보다 살짝 작게(85%) 표시 */
+  var SUBCARD_SCALE = 0.85;
+
+  /* ── 서브카드 미리보기 표시/숨김/위치 ───────────────────────────────────── */
+  /* 메인 카드 상단과 같은 줄에 정렬되고, 카드 오른쪽에 붙되 화면 밖으로
+     나가면 왼쪽으로 뒤집힌다. 반환값은 뒤이어 툴팁을 이어붙이는 데 쓰인다. */
+  function positionSubCardPreview(cardEl) {
+    var gRect = game.getBoundingClientRect();
+    var cRect = cardEl.getBoundingClientRect();
+    var pad = 8;
+
+    subCardPreview.style.width = (cRect.width * SUBCARD_SCALE) + "px";
+    var pRect = subCardPreview.getBoundingClientRect();
+
+    var cardLeft  = cRect.left  - gRect.left;
+    var cardRight = cRect.right - gRect.left;
+
+    var flippedLeft = false;
+    var tx = cardRight + pad;
+    if (tx + pRect.width > gRect.width - pad) {
+      tx = cardLeft - pRect.width - pad;
+      flippedLeft = true;
+    }
+    tx = Math.max(pad, Math.min(gRect.width - pRect.width - pad, tx));
+
+    var ty = cRect.top - gRect.top; /* 메인 카드와 윗면 정렬 */
+    ty = Math.max(pad, Math.min(gRect.height - pRect.height - pad, ty));
+
+    subCardPreview.style.left = tx + "px";
+    subCardPreview.style.top = ty + "px";
+
+    return { left: tx, right: tx + pRect.width, flippedLeft: flippedLeft };
+  }
+
+  function showSubCardPreview(cardEl, subCardEntry) {
+    if (typeof cardFaceHtml !== "function") return null;
+    subCardPreview.innerHTML = '<div class="bsp-face">' + cardFaceHtml(subCardEntry) + '</div>';
+    subCardPreview.classList.add("show");
+    return positionSubCardPreview(cardEl);
+  }
+
+  function hideSubCardPreview() {
+    subCardPreview.classList.remove("show");
+  }
+
   /* ── 주문 툴팁 위치 ───────────────────────────────────────────────────── */
-  /* 주문이 화면 오른쪽 반에 있으면 툴팁을 왼쪽에, 왼쪽 반이면 오른쪽에 */
-  function positionCardTooltip(cardEl) {
+  /* 서브카드가 없으면: 카드가 화면 오른쪽 반이면 툴팁을 왼쪽에, 왼쪽 반이면 오른쪽에.
+     서브카드가 있으면: "메인 카드 - 서브카드 - 툴팁" 순서로 겹치지 않게 서브카드
+     바로 옆(서브카드가 뒤집혔으면 반대쪽)에 이어붙인다.                        */
+  function positionCardTooltip(cardEl, subCardRect) {
     var gRect   = game.getBoundingClientRect();
     var cRect   = cardEl.getBoundingClientRect();
     var tipRect = tooltip.getBoundingClientRect();
     var pad = 8;
 
-    var cardMidX = (cRect.left + cRect.right) / 2;
-    var gameMidX = gRect.left + gRect.width / 2;
-
-    var tx = cardMidX > gameMidX
-      ? (cRect.left  - gRect.left) - tipRect.width - pad
-      : (cRect.right - gRect.left) + pad;
+    var tx;
+    if (subCardRect) {
+      tx = subCardRect.flippedLeft
+        ? subCardRect.left - tipRect.width - pad
+        : subCardRect.right + pad;
+    } else {
+      var cardMidX = (cRect.left + cRect.right) / 2;
+      var gameMidX = gRect.left + gRect.width / 2;
+      tx = cardMidX > gameMidX
+        ? (cRect.left  - gRect.left) - tipRect.width - pad
+        : (cRect.right - gRect.left) + pad;
+    }
 
     var ty = (cRect.top - gRect.top);
 
@@ -1022,10 +1133,15 @@
     var descEl = cardEl.querySelector(".desc, .card-desc-text");
     if (!descEl) return;
 
-    var html = buildCardTermHtml(descEl.textContent.trim());
-    if (!html) {
-      /* 설명할 용어가 없는 주문은 상태만 추적하고 툴팁 미표시 */
+    var cardEntry = getCardDbEntryFromCardEl(cardEl);
+    var subCardEntry = getSubCardEntry(cardEntry);
+
+    var html = buildCardTermHtml(descEl.textContent.trim(), subCardEntry ? subCardEntry.desc : null);
+
+    if (!html && !subCardEntry) {
+      /* 설명할 용어도, 서브카드도 없는 주문은 상태만 추적하고 툴팁 미표시 */
       cardActiveEl = cardEl;
+      hideSubCardPreview();
       return;
     }
 
@@ -1037,15 +1153,24 @@
     activeMenuEl = null;
     activeDockEl = null;
     cardActiveEl = cardEl;
-    tooltip.innerHTML = html;
-    tooltip.classList.add("tt-show");
-    positionCardTooltip(cardEl);
+
+    var subCardRect = subCardEntry ? showSubCardPreview(cardEl, subCardEntry) : null;
+    if (!subCardEntry) hideSubCardPreview();
+
+    if (html) {
+      tooltip.innerHTML = html;
+      tooltip.classList.add("tt-show");
+      positionCardTooltip(cardEl, subCardRect);
+    } else {
+      tooltip.classList.remove("tt-show");
+    }
   }
 
   /* ── 주문 툴팁 숨김 ───────────────────────────────────────────────────── */
   function hideCardTooltip() {
     cardActiveEl = null;
     tooltip.classList.remove("tt-show");
+    hideSubCardPreview();
   }
 
   /* ── 손패 주문 이벤트 위임 ────────────────────────────────────────────── */
@@ -1058,19 +1183,22 @@
 
   handEl.addEventListener("mouseleave", hideCardTooltip);
 
-  /* ── 덱 뷰어 주문 이벤트 위임 ────────────────────────────────────────── */
-  /* 덱 뷰어는 동적으로 열리므로 game 레벨에서 위임 처리                  */
-  /* 대상: 덱 보유 주문 / 뽑을 주문 / 버린 주문 탭의 .deck-viewer-card    */
+  /* ── 덱 뷰어 / 카드 선택(보상·제거) 주문 이벤트 위임 ─────────────────── */
+  /* 이 UI들은 모두 동적으로 열리므로 game 레벨에서 위임 처리             */
+  /* 대상: 덱 보유 주문/뽑을 주문/버린 주문 탭의 .deck-viewer-card,       */
+  /* 신령의 은혜·전투 보상 등 "카드 N장 중 1장 선택" 팝업의 .reward-card */
+  var DECK_OR_REWARD_CARD_SELECTOR = ".deck-viewer-card,.reward-card";
+
   game.addEventListener("mouseover", function (e) {
-    var dvCard = e.target.closest(".deck-viewer-card");
+    var dvCard = e.target.closest(DECK_OR_REWARD_CARD_SELECTOR);
     if (!dvCard) return;
     if (dvCard === cardActiveEl) return;
     showCardTooltip(dvCard);
   });
 
   game.addEventListener("mouseout", function (e) {
-    if (!cardActiveEl || !cardActiveEl.classList.contains("deck-viewer-card")) return;
-    var dvCard = e.target.closest(".deck-viewer-card");
+    if (!cardActiveEl || !cardActiveEl.matches || !cardActiveEl.matches(DECK_OR_REWARD_CARD_SELECTOR)) return;
+    var dvCard = e.target.closest(DECK_OR_REWARD_CARD_SELECTOR);
     if (!dvCard) return;
     var to = e.relatedTarget;
     if (to && dvCard.contains(to)) return; /* 주문 내부 이동 시 무시 */
@@ -1313,7 +1441,7 @@
 
   var TOP_MENU_INFO = [
     { cls: "ui-map-button",      name: "지도", desc: "현재 진행 경로를 확인합니다." },
-    { cls: "ui-codex-button",    name: "도감", desc: "카드와 정보를 확인합니다." },
+    { cls: "ui-codex-button",    name: "주문", desc: "카드와 정보를 확인합니다." },
     { cls: "ui-bag-button",      name: "가방", desc: "보유 중인 법구와 약병을 확인합니다." },
     { cls: "ui-settings-button", name: "설정", desc: "게임 설정을 변경합니다." },
     { cls: "ui-menu-button",     name: "메뉴", desc: "게임 메뉴를 엽니다." }

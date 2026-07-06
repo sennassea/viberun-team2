@@ -4,6 +4,7 @@
   const SELECTOR = "[data-tooltip], [data-global-tooltip], [data-tooltip-title]";
   const SKIN_OPTION_SELECTOR = ".menu-profile-popup .menu-profile-option";
   const SPIRIT_PATH_CARD_PREVIEW_SELECTOR = ".spirit-path-preview-item";
+  const RANDOM_ITEM_RESULT_CARD_SELECTOR = ".random-item-result-card";
   const GAP = 10;
   let tooltipEl = null;
   let activeAnchor = null;
@@ -30,7 +31,7 @@
 
   function findAnchor(target) {
     if (!target || typeof target.closest !== "function") return null;
-    const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR);
+    const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR) || target.closest(RANDOM_ITEM_RESULT_CARD_SELECTOR);
     if (!anchor || anchor.dataset.tooltipDisabled === "true") return null;
     return anchor;
   }
@@ -39,6 +40,35 @@
     if (!name || typeof CARD_DB !== "object" || !CARD_DB) return null;
     const key = Object.keys(CARD_DB).find(k => CARD_DB[k] && CARD_DB[k].name === name);
     return key ? CARD_DB[key] : null;
+  }
+
+  function getRelicOrPotionDbEntryByName(name) {
+    if (!name) return null;
+    const relicDb = typeof RELIC_DB !== "undefined" && Array.isArray(RELIC_DB) ? RELIC_DB : null;
+    const potionDb = typeof POTION_DB !== "undefined" && Array.isArray(POTION_DB) ? POTION_DB : null;
+    const relic = relicDb && relicDb.find(item => item && item.name === name);
+    if (relic) return relic;
+    return potionDb && potionDb.find(item => item && item.name === name) || null;
+  }
+
+  function getRandomItemResultCardData(anchor) {
+    const nameEl = anchor.querySelector(".random-item-result-name");
+    const name = nameEl ? nameEl.textContent.trim() : "";
+    if (!name) return null;
+
+    const card = getCardDbEntryByName(name);
+    if (card) {
+      const icon = card.emoji ? card.emoji + " " : "";
+      return { title: icon + card.name, body: card.desc || "" };
+    }
+
+    const item = getRelicOrPotionDbEntryByName(name);
+    if (item) {
+      const icon = item.emoji ? item.emoji + " " : "";
+      return { title: icon + item.name, body: item.desc || "" };
+    }
+
+    return null;
   }
 
   function getTooltipData(anchor) {
@@ -59,6 +89,10 @@
       if (!card) return null;
       const icon = card.emoji ? card.emoji + " " : "";
       return { title: icon + (card.name || ""), body: card.desc || "" };
+    }
+
+    if (anchor.classList && anchor.classList.contains("random-item-result-card")) {
+      return getRandomItemResultCardData(anchor);
     }
 
     return null;
@@ -99,6 +133,9 @@
     const leftSideTarget = !openPopup && !monthlyPassCard && anchor.closest
       ? anchor.closest(LEFT_SIDE_SELECTOR)
       : null;
+    const randomItemResultCard = !openPopup && !monthlyPassCard && !leftSideTarget && anchor.closest
+      ? anchor.closest(".random-item-result-card")
+      : null;
     let left;
     let top;
 
@@ -114,6 +151,13 @@
       const targetRect = leftSideTarget.getBoundingClientRect();
       left = targetRect.left - tipRect.width - GAP;
       top = targetRect.top + (targetRect.height - tipRect.height) / 2;
+    } else if (randomItemResultCard) {
+      const cardRect = randomItemResultCard.getBoundingClientRect();
+      left = cardRect.right + GAP;
+      if (left + tipRect.width > vw - GAP) {
+        left = cardRect.left - tipRect.width - GAP;
+      }
+      top = cardRect.top + (cardRect.height - tipRect.height) / 2;
     } else {
       const anchorRect = anchor.getBoundingClientRect();
       left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
