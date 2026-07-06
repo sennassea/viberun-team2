@@ -240,7 +240,19 @@
 <script src="PotionData.js" defer></script>
 <script src="cardData.js" defer></script>
 <script src="eventData.js" defer></script>
-<script src="script.js" defer></script>
+<!-- 전투 씬(구 script.js)은 기능별로 분리되어 있으며, 서로 참조하므로 이 순서를 유지해야 합니다 -->
+<script src="battleInit.js" defer></script>
+<script src="battleRunState.js" defer></script>
+<script src="relicSystem.js" defer></script>
+<script src="monsterAI.js" defer></script>
+<script src="statusEffectSystem.js" defer></script>
+<script src="cardPlaySystem.js" defer></script>
+<script src="battleRewards.js" defer></script>
+<script src="turnCycle.js" defer></script>
+<script src="battleRender.js" defer></script>
+<script src="potionBattleUI.js" defer></script>
+<script src="battleDragDrop.js" defer></script>
+<script src="battleFeedback.js" defer></script>
 <script src="runRecord.js" defer></script>
 <script src="authService.js" defer></script>
 <script src="loginModal.js" defer></script>
