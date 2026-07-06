@@ -662,15 +662,33 @@ function applyEventCardDuplicate(effect){
   eventState.resultDetails.push({ kind: "positive", text: "의식 복제: " + (card ? card.name : key) });
 }
 
+/* eventData.js의 attr 표기(예: "동요")는 CARD_DB의 실제 덱 속성 문자열과 다를 수 있어
+   여기서 실제 덱 속성으로 정규화한다. */
+function normalizeEventCardAttr(attr){
+  const aliases = {
+    "동요": "회상 덱",
+    "회상": "회상 덱",
+    "결계": "결계 덱",
+    "성불": "성불 표식 덱",
+    "성불 표식": "성불 표식 덱",
+    "한풀이": "한풀이 덱",
+    "굿판": "굿판 덱"
+  };
+  return aliases[attr] || attr;
+}
+
 function buildTaggedCardPool(attr){
   if(typeof CARD_DB === "undefined") return [];
+  const normalizedAttr = normalizeEventCardAttr(attr);
   return Object.keys(CARD_DB).filter(k => {
     const card = CARD_DB[k];
-    return card &&
-      (card.attr === attr || (attr && card.attr && card.attr.includes(attr))) &&
-      !card.excludeFromRewards &&
-      !card.generatedOnly &&
-      !["starter", "status"].includes(card.rarity);
+    if(!card || card.excludeFromRewards || card.generatedOnly) return false;
+    if(["starter", "status"].includes(card.rarity)) return false;
+    const cardAttr = card.attr || "";
+    return cardAttr === normalizedAttr ||
+      cardAttr === attr ||
+      cardAttr.includes(normalizedAttr) ||
+      (attr && cardAttr.includes(attr));
   });
 }
 

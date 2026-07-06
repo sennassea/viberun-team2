@@ -334,12 +334,12 @@ function chooseSbStarterCardToRemove(){
     return null;
   }
   if(typeof window.OPEN_DECK_VIEWER_CARD_PICK !== "function"){
-    console.warn("[StartBlessing] 덱 뷰어 선택 모드를 찾지 못해 기본 카드 1장을 무작위로 제거합니다.");
-    removeSbRandomStarterCard();
-    return null;
+    console.error("[StartBlessing] 카드 선택 제거 UI를 찾을 수 없습니다.");
+    if(typeof toast === "function") toast("카드 선택 제거 UI를 불러올 수 없습니다.");
+    return Promise.resolve(null);
   }
   return window.OPEN_DECK_VIEWER_CARD_PICK({
-    title: "제거할 기본 카드 선택",
+    title: "제거할 카드 선택",
     confirmText: "제거",
     isSelectable: key => !!(CARD_DB[key] && (CARD_DB[key].rarity === "starter" || CARD_DB[key].rarity === "basic")),
     disabledText: "기본 카드만 제거할 수 있습니다.",
@@ -370,10 +370,9 @@ function chooseSbCardRewardByRarity(rarity, options = {}){
     return null;
   }
   if(typeof window.OPEN_CARD_REWARD_PICK !== "function"){
-    console.warn("[StartBlessing] 정화 보상 UI를 찾지 못해 무작위 " + rarity + " 카드 1장을 지급합니다.");
-    addSbRandomCardByRarity(rarity);
-    if(typeof options.afterChoose === "function") options.afterChoose();
-    return null;
+    console.error("[StartBlessing] 카드 선택 보상 UI를 찾을 수 없습니다.", rarity);
+    if(typeof toast === "function") toast("카드 선택 보상 UI를 불러올 수 없습니다.");
+    return Promise.resolve(null);
   }
   return window.OPEN_CARD_REWARD_PICK({
     keys,
