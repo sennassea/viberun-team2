@@ -46,6 +46,16 @@
 
         if(response.ok) return Object.assign({ ok: true }, body);
 
+        if(response.status === 404){
+          return {
+            ok: false,
+            status: 404,
+            code: "RANKING_API_NOT_READY",
+            message: "랭킹 서버가 준비되지 않았습니다.",
+            body
+          };
+        }
+
         return {
           ok: false,
           status: response.status,
