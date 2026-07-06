@@ -196,6 +196,18 @@
       monthlyPassCard.dataset.tooltipTitle = "월영의 약속";
       monthlyPassCard.dataset.tooltip = "매일 보상을 확인하고 받을 수 있는 월간 보상 영역입니다.";
     }
+
+    const codexBtn = document.querySelector(".start-codex-button");
+    if (codexBtn) {
+      codexBtn.dataset.tooltipTitle = "도감";
+      codexBtn.dataset.tooltip = "게임 내 모든 주문, 법구, 약병 정보를 확인할 수 있습니다.";
+    }
+
+    const recordBtn = document.querySelector(".start-record-button");
+    if (recordBtn) {
+      recordBtn.dataset.tooltipTitle = "기록";
+      recordBtn.dataset.tooltip = "플레이 기록과 진행 내역을 확인할 수 있습니다.";
+    }
   }
 
   if (document.readyState === "loading") {
