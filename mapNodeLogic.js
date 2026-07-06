@@ -192,12 +192,13 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
     const isRestOnlyFloor = fi === ACT1_TOTAL_FLOORS;
     /* 14층: 다음 층(15층)이 항상 휴식이므로, 휴식 연속 출현 방지를 위해 이 층은 휴식 후보에서 제외 */
     const isFloorBeforeFinalRest = fi === ACT1_TOTAL_FLOORS - 1;
-    /* 10층: 보물 노드 전용층으로 강제 지정 (랜덤 배치 제외, 우회 불가하도록 노드 1개만 생성) */
+    /* 10층: 보물 노드 전용층으로 강제 지정 (확률 테이블 미사용, 노드 2~3개 중 하나를 선택) */
     const isTreasureOnlyFloor = fi === 10;
 
     let types;
     if (isTreasureOnlyFloor) {
-      types = ["treasure"];
+      const nodeCount = act1RandInt(2, 3);
+      types = Array(nodeCount).fill("treasure");
     } else if (isRestOnlyFloor) {
       const nodeCount = act1RandInt(1, 2);
       types = Array(nodeCount).fill("rest");
