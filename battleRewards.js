@@ -15,7 +15,6 @@ function nodeClear(){
     grantBattleGoldReward();
     return endGame("win");
   }
-  if(nodeType==="elite") grantRelic(S.battleVictoryRelicSource || "elite");             // 엘리트 → 유물 추가 (기획서 §10)
   openBattleVictoryReward();
 }
 
@@ -301,29 +300,6 @@ function skipRewardCard(){
   proceedToMap();
 }
 
-function grantRelic(source = "elite"){
-  if(!S.relics) S.relics = [];
-  // 이벤트 전투는 source를 "event"로 넘겨 일반 엘리트 법구 풀을 건드리지 않는다.
-  const pool = typeof window.getRelicCandidatesBySource === "function"
-    ? window.getRelicCandidatesBySource(source)
-    : RELIC_DB.filter(item => Array.isArray(item.obtainFrom) && item.obtainFrom.includes(source));
-  const list = (pool.length ? pool : RELIC_DB).filter(item => item && item.category !== "blessingRelic" && item.source !== "startBlessing");
-  const relic = list[Math.floor(Math.random()*list.length)];
-  if(!relic) return;
-  S.relics.push(relic);
-  toast("법구 획득: "+relic.emoji+" "+relic.name);
-  renderHud();
-  if(typeof window.OPEN_RANDOM_ITEM_RESULT_POPUP === "function"){
-    window.OPEN_RANDOM_ITEM_RESULT_POPUP({
-      title: "법구 획득",
-      items: [{
-        type: "relic", action: "gain", key: relic.id, name: relic.name,
-        icon: relic.iconImage || relic.icon || relic.emoji || "🏺"
-      }]
-    });
-  }
-}
-
 function ensureBattleVictoryOverlay(){
   let ov = document.querySelector("#battleVictoryOverlay");
   if(ov) return ov;
@@ -389,7 +365,9 @@ function getBattleVictoryRewards(){
   if(!S.victoryRewards){
     S.victoryRewards = createBattleVictoryBaseRewards();
     if(!S.battleSuppressOptionalRewards){
-      const relicReward = buildBattleVictoryOptionalReward("relic", BATTLE_VICTORY_RELIC_CHANCE);
+      const isEliteStage = S && S.battleNodeType === "elite";
+      const relicChance = isEliteStage ? 1 : BATTLE_VICTORY_RELIC_CHANCE;             // 엘리트 → 유물 확정 지급 (기획서 §10)
+      const relicReward = buildBattleVictoryOptionalReward("relic", relicChance);
       const potionReward = buildBattleVictoryOptionalReward("potion", getBattleVictoryPotionChance());
       if(relicReward) S.victoryRewards.push(relicReward);
       if(potionReward) S.victoryRewards.push(potionReward);
@@ -402,8 +380,9 @@ function buildBattleVictoryOptionalReward(type, chance){
   if(Math.random() >= chance) return null;
   if(type === "relic"){
     const isEliteStage = S && S.battleNodeType === "elite";
+    const relicSource = isEliteStage ? (S.battleVictoryRelicSource || "elite") : "battle";
     const relicCandidates = typeof window.getRelicCandidatesBySource === "function"
-      ? window.getRelicCandidatesBySource(isEliteStage ? "elite" : "battle")
+      ? window.getRelicCandidatesBySource(relicSource)
       : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
     const relic = pickBattleVictoryCandidate(relicCandidates);
     if(!relic) return null;
