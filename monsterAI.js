@@ -388,7 +388,10 @@ function getMonsterIntentRawDamage(enemy, move){
   if(move.statusCardDamage){
     const statusIds = move.statusCardDamage.statusCards || move.statusCardDamage.statusCard;
     const count = Math.min(move.statusCardDamage.maxCount || 99, countAnyStatusCards(statusIds));
-    damage += count * (move.statusCardDamage.per || 1);
+    const bonus = count * (move.statusCardDamage.per || 1);
+    damage += Number.isFinite(move.statusCardDamage.maxBonus)
+      ? Math.min(move.statusCardDamage.maxBonus, bonus)
+      : bonus;
   }
   if(move.summonDamage){
     damage += countLivingSummons(move.summonDamage.group) * (move.summonDamage.per || 1);
@@ -661,4 +664,3 @@ if(typeof window !== "undefined"){
   window.getMonsterDefendValue = getMonsterDefendValue;
   window.getMonsterIntentStatusCardKey = getMonsterIntentStatusCardKey;
 }
-
