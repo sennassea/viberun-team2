@@ -50,8 +50,10 @@
 
   function generateTutorialMap(){
     const originalMapGenerator = window.ACT1_MAP_GENERATE;
+    let generatedStages = null;
     window.ACT1_MAP_GENERATE = function tutorialMapGenerate(setMapData){
       const tutorialMapData = createTutorialMapData();
+      generatedStages = tutorialMapData.stages;
       setMapData(
         tutorialMapData.floors,
         tutorialMapData.paths,
@@ -63,6 +65,10 @@
 
     try {
       generateMap();
+      /* battleInit.js가 전투 시작 시 window.ACT1_MAP_STAGES[stageIdx]로 스테이지 타입/패키지를
+         참조하므로, 실제 ACT1 맵 생성(mapNodeLogic.js)과 동일하게 이 전역도 갱신해야
+         튜토리얼 전투가 이전 ACT1 스테이지 데이터로 잘못 연결되지 않는다. */
+      if(generatedStages) window.ACT1_MAP_STAGES = generatedStages;
     } finally {
       window.ACT1_MAP_GENERATE = originalMapGenerator;
     }
