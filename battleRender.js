@@ -345,27 +345,31 @@ const INTENT_STATUS_CARD_ICON = {
   intrusive_accident: "💭"
 };
 
+// life-ui.css의 .intent 배경(--c-panel, 거의 흰색)이 밝은 배경에서 잘 안 보여서 인라인으로 덮어씌움
+// 숫자가 검정 글씨라 너무 어두운 배경은 피하고, 이모지가 있어 완전 흰색도 피한 밝은 톤
+const INTENT_BUBBLE_BG_STYLE = 'style="background:rgba(214,226,250,.93)"';
+
 function intentBubble(m, enemy){
   // 머리 위 의도 표시: 기본은 이모지만, 공격/결계(defend)만 예외로 이모지+수치. 디버프가 겹치면 디버프 이모지 + 공격/결계 이모지 + 숫자 순서.
   if(m.t==="attack"){
     const statusCardKey = getMonsterIntentStatusCardKey(m);
     const debuffIcon = statusCardKey && INTENT_STATUS_CARD_ICON[statusCardKey] ? INTENT_STATUS_CARD_ICON[statusCardKey] : '';
     const preview = previewMonsterFinalDamage(enemy, m);
-    return '<div class="intent atk">'+debuffIcon+'💢 '+preview.finalDamage+((enemy && enemy.weak>0)?'↓':'')+'</div>';
+    return '<div class="intent atk" '+INTENT_BUBBLE_BG_STYLE+'>'+debuffIcon+'💢 '+preview.finalDamage+((enemy && enemy.weak>0)?'↓':'')+'</div>';
   }
   if(m.t==="defend"){
     const target = getPlannedMonsterSupportTarget(enemy, m);
     const value = getMonsterDefendValue(enemy, m, target);
-    return '<div class="intent def">🛡️ '+value+'</div>';
+    return '<div class="intent def" '+INTENT_BUBBLE_BG_STYLE+'>🛡️ '+value+'</div>';
   }
-  if(m.t==="summon")     return '<div class="intent deb">🚪</div>';
-  if(m.t==="drawPenalty") return '<div class="intent deb">💭</div>';
-  if(m.t==="lock")       return '<div class="intent deb">🔒</div>';
-  if(m.t==="exam")       return '<div class="intent deb">📝</div>';
-  if(m.role==="anxiety") return '<div class="intent deb">💭</div>';
-  if(m.role==="counter") return '<div class="intent deb">🌫️</div>';
-  if(m.role==="fracture") return '<div class="intent deb">💔</div>';
-  return '<div class="intent deb">🌀</div>';
+  if(m.t==="summon")     return '<div class="intent deb" '+INTENT_BUBBLE_BG_STYLE+'>🚪</div>';
+  if(m.t==="drawPenalty") return '<div class="intent deb" '+INTENT_BUBBLE_BG_STYLE+'>💭</div>';
+  if(m.t==="lock")       return '<div class="intent deb" '+INTENT_BUBBLE_BG_STYLE+'>🔒</div>';
+  if(m.t==="exam")       return '<div class="intent deb" '+INTENT_BUBBLE_BG_STYLE+'>📝</div>';
+  if(m.role==="anxiety") return '<div class="intent deb" '+INTENT_BUBBLE_BG_STYLE+'>💭</div>';
+  if(m.role==="counter") return '<div class="intent deb" '+INTENT_BUBBLE_BG_STYLE+'>🌫️</div>';
+  if(m.role==="fracture") return '<div class="intent deb" '+INTENT_BUBBLE_BG_STYLE+'>💔</div>';
+  return '<div class="intent deb" '+INTENT_BUBBLE_BG_STYLE+'>🌀</div>';
 }
 function renderHand(){
   const h = $("#hand");
