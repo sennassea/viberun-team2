@@ -62,14 +62,14 @@
 
   const EMPTY_TEXT = {
     all: "보유 중인 주문이 없습니다.",
-    hand: "손에 든 주문이 없습니다.",
+    hand: "손패가 없습니다.",
     discard: "버린 주문이 없습니다.",
     exhaust: "소멸된 주문이 없습니다.",
   };
 
   const TABS = [
     { id: "all", label: "전체 주문", getCards: () => getDeck() },
-    { id: "hand", label: "손에 든 주문", getCards: () => getHand() },
+    { id: "hand", label: "손패", getCards: () => getHandPool() },
     { id: "discard", label: "버린 주문", getCards: () => getDiscard() },
     { id: "exhaust", label: "소멸된 주문", getCards: () => getExhaust() },
   ];
@@ -127,8 +127,9 @@
     return typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
   }
 
-  function getHand(){
-    return typeof S === "undefined" || !S ? [] : [...S.hand];
+  function getHandPool(){
+    if(typeof S === "undefined" || !S) return [];
+    return [...(S.hand || []), ...(S.draw || [])];
   }
 
   function getDiscard(){
@@ -252,7 +253,7 @@
         handlePickCard(cardEl);
         return;
       }
-      openCardDetail(cardEl.dataset.cardKey);
+      openCardDetail(cardEl.dataset.cardKey, cardEl.dataset.cardIndex);
     });
     overlay.querySelector(".card-detail-backdrop").addEventListener("click", event => {
       const upgrade = event.target.closest("[data-card-detail-upgrade]");
@@ -617,9 +618,12 @@
     mode.resolve(selectedPickKey);
   }
 
-  function openCardDetail(key){
+  function openCardDetail(key, indexHint){
     if(!els) return;
-    const index = detailEntries.findIndex(entry => entry.key === key);
+    const hinted = Number(indexHint);
+    const index = Number.isInteger(hinted) && detailEntries[hinted] && detailEntries[hinted].key === key
+      ? hinted
+      : detailEntries.findIndex(entry => entry.key === key);
     if(index < 0) return;
     if(detailEntries[index].locked) return;
 
@@ -674,6 +678,7 @@
     const entries = sortEntries(filterEntries(buildCardEntries(cards, tab.id), tab.id), tab.id);
     detailEntries = entries;
     const visibleCount = entries.reduce((total, entry) => total + entry.count, 0);
+    const speciesCount = new Set(entries.map(entry => entry.key)).size;
 
     els.tabs.forEach(button => {
       const selected = button.dataset.tab === tab.id;
@@ -684,7 +689,7 @@
     els.sortDirection.value = sortState[tab.id].direction;
     els.filterType.value = filterState[tab.id].type;
     els.search.value = searchState[tab.id];
-    els.summary.textContent = tab.label + " " + visibleCount + "장 / " + entries.length + "종류";
+    els.summary.textContent = tab.label + " " + visibleCount + "장 / " + speciesCount + "종류";
     els.grid.innerHTML = entries.length
       ? entries.map(deckCardHtml).join("")
       : '<div class="deck-viewer-empty">표시할 주문이 없습니다.</div>';
@@ -807,17 +812,11 @@
       }).filter(Boolean);
     }
 
-    const entriesByKey = {};
-    cards.forEach((key, index) => {
+    return cards.map((key, index) => {
       const card = getCard(key);
-      if(!card) return;
-      if(!entriesByKey[key]){
-        entriesByKey[key] = { key, count: 0, card, order: index, kind: "card" };
-      }
-      entriesByKey[key].count += 1;
-      entriesByKey[key].order = index;
-    });
-    return Object.keys(entriesByKey).map(key => entriesByKey[key]);
+      if(!card) return null;
+      return { key, count: 1, card, order: index, kind: "card" };
+    }).filter(Boolean);
   }
 
   function filterEntries(entries, tabId){
@@ -911,10 +910,10 @@
     localStorage.setItem(CODEX_KEY, JSON.stringify([...encountered]));
   }
 
-  function deckCardHtml(entry){
+  function deckCardHtml(entry, index){
     if(entry.kind && entry.kind !== "card"){
       const item = entry.item || {};
-      return '<button type="button" class="deck-viewer-card codex-item-card" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="1">' +
+      return '<button type="button" class="deck-viewer-card codex-item-card" data-card-key="' + escapeAttr(entry.key) + '" data-card-index="' + index + '" data-card-count="1">' +
         '<div class="deck-viewer-count">x1</div>' +
         '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
         '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
@@ -923,11 +922,11 @@
     }
     const card = entry.card;
     if(entry.locked){
-      return '<button type="button" class="deck-viewer-card codex-locked cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" aria-label="잠긴 주문">' +
+      return '<button type="button" class="deck-viewer-card codex-locked cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-index="' + index + '" aria-label="잠긴 주문">' +
         '<img class="codex-locked-image" src="assets/ui_buttons/codex_unknown_card.png" alt="" aria-hidden="true">' +
       '</button>';
     }
-    return '<button type="button" class="deck-viewer-card card-frame-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="' + entry.count + '">' +
+    return '<button type="button" class="deck-viewer-card card-frame-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-index="' + index + '" data-card-count="' + entry.count + '">' +
       '<div class="deck-viewer-count">x' + entry.count + '</div>' +
       cardFaceHtml(card) +
     '</button>';
