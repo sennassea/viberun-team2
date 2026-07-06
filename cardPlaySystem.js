@@ -582,17 +582,23 @@ window.getRewardRarityWeights = getRewardRarityWeights;
 window.pickRarityFromWeights = pickRarityFromWeights;
 window.pickRewardItemByRarity = pickRewardItemByRarity;
 
+const HAND_DISCARD_TRACKED_SOURCES = ["turnEnd", "cardEffectDiscard", "potionDiscardChoice"];
+
 function discardCard(key, options={}){
   const card = CARD_DB[key];
   if(!card) return;
   ensureCardInstanceZones();
   const instance = options.instance || createCardInstance(key);
+  const trackAsHandDiscard = HAND_DISCARD_TRACKED_SOURCES.includes(options.source);
   if(options.source === "turnEnd") applyHanpuriGrowth(instance, 1, { source:"turnEndDiscard", cardKey:key });
   const sr = LIFE.resolveStatusCardDiscard(card, S.player, options);
   if(sr.handled){
     if(sr.damageAmount) applyDamageWithFeedback(S.player, sr.damageAmount, 0);
     if(sr.message) toast(sr.message);
-    if(sr.discard) pushDiscardCard(key, instance);
+    if(sr.discard){
+      pushDiscardCard(key, instance);
+      if(trackAsHandDiscard) S.lastHandDiscardedCard = { key, instance };
+    }
     return;
   }
   if(card.exhaust){
@@ -605,6 +611,7 @@ function discardCard(key, options={}){
     return;
   }
   pushDiscardCard(key, instance);
+  if(trackAsHandDiscard) S.lastHandDiscardedCard = { key, instance };
 }
 
 function addStatusCardToDiscard(cardKey, count=1){
@@ -643,6 +650,14 @@ async function playCard(handIndex, targetEnemy){
     toast("금 간 신통패: 한 턴에 주문은 최대 3장까지만 사용할 수 있습니다.");
     return false;
   }
+  if(S.nextHighCostCardCostDown){
+    const pending = S.nextHighCostCardCostDown;
+    const currentCost = getHandCardCost(handIndex, key);
+    if(currentCost >= pending.minCost){
+      setHandCardCostOverride(handIndex, Math.max(pending.minResultCost, currentCost - pending.amount));
+      S.nextHighCostCardCostDown = null;
+    }
+  }
   const cardCost = getHandCardCost(handIndex, key);
   if(S.energy < cardCost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
@@ -658,20 +673,26 @@ async function playCard(handIndex, targetEnemy){
   if(card.type === "attack") applyRelicTrigger("onFirstPurifySpellEachBattle", relicCardContext);
   if(key === "bell_strike") applyRelicTrigger("onBellStrikePurify", relicCardContext);
   const relicDamageBonus = relicCardContext.bonusDamage || 0;
+  // 귀문부(nextAttackDouble)는 이 주문 1장이 처리되는 동안에만 유효해야 하며,
+  // 광역 공격에서 첫 대상에게만 소모되지 않도록 카드 단위로 한 번만 캡처해 모든 피해 계산에 동일 배율을 적용한다.
+  const cardAttackMultiplier = (card.type === "attack") ? (S.nextAttackMultiplier || null) : null;
+  if(cardAttackMultiplier) S.nextAttackMultiplier = null;
+  const applyCardAttackMultiplier = amount => cardAttackMultiplier ? Math.floor(amount * cardAttackMultiplier) : amount;
 
   for(const e of card.fx){
     switch(e.t){
       case "damage": {
         const gutpanBonus = e.gutpanBonus ? getBlessingCount(e.gutpanBonus) : 0;
-        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus + gutpanBonus, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+        const bellBonus = key === "bell_strike" ? (S.bellStrikePurifyBonusThisTurn || 0) : 0;
+        applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus + gutpanBonus + bellBonus, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       }
       case "bonusLowHpDamage":
         if(targetEnemy && targetEnemy.hp>0 && targetEnemy.hp<=Math.ceil(targetEnemy.maxHp/2))
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+          applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(e.v, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       case "damageAll":
-        livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus, en), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" })); break;
+        livingEnemies().forEach(en => applyDamageWithFeedback(en, applyCardAttackMultiplier(getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus, en)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" })); break;
       case "applyWeakAll":
         livingEnemies().forEach(en => addStatus(en, "agitation", e.v)); break;
       case "applyFracture":
@@ -698,12 +719,12 @@ async function playCard(handIndex, targetEnemy){
       case "block":
         gainPlayerBlock(getGrowthAdjustedValue(cardInstance, e)); break;
       case "damageByBlockRatio":
-        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.player.block || 0) * e.v), targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }); break;
+        applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(Math.floor((S.player.block || 0) * e.v), targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }); break;
       case "damageByBlockRatioConsume": {
         const currentBlock = Number.isFinite(S.player.block) ? Math.max(0, S.player.block) : 0;
         const ratio = Number.isFinite(e.v) ? e.v : 0;
         const damage = Math.floor(currentBlock * ratio);
-        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(damage, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(damage, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         const consumeRatio = Number.isFinite(e.consumeRatio) ? e.consumeRatio : 1;
         const consumed = Math.ceil(currentBlock * consumeRatio);
         S.player.block = Math.max(0, currentBlock - consumed);
@@ -713,17 +734,17 @@ async function playCard(handIndex, targetEnemy){
         break;
       }
       case "damageByBlockGainedThisTurn":
-        applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(Math.floor((S.blockGainedThisTurn || 0) * e.v), targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }); break;
+        applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(Math.floor((S.blockGainedThisTurn || 0) * e.v), targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }); break;
       case "damageByWeak": {
         const weak = targetEnemy ? Math.max(0, targetEnemy.weak || 0) : 0;
         const amount = Math.floor((e.base || 0) + weak * (e.per || 0));
-        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(amount, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       }
       case "damageByRecollection": {
         const recollection = targetEnemy ? Math.max(0, getStatus(targetEnemy, "recollection")) : 0;
         const amount = Math.floor((e.base || 0) + recollection * (e.per || 0));
-        if(targetEnemy) applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+        if(targetEnemy) applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(amount, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       }
       case "consumeAllAgitationDamage": {
@@ -731,7 +752,7 @@ async function playCard(handIndex, targetEnemy){
           const agitation = Math.max(0, getStatus(targetEnemy, "agitation"));
           const amount = Math.floor((e.base || 0) + agitation * (e.per || 0));
           setStatus(targetEnemy, "agitation", 0);
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+          applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(amount, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         }
         break;
       }
@@ -743,12 +764,12 @@ async function playCard(handIndex, targetEnemy){
         break;
       case "ifAgitationAtLeastDamageAll":
         if(targetEnemy && getStatus(targetEnemy, "agitation") >= (e.threshold || 0)){
-          livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }));
+          livingEnemies().forEach(en => applyDamageWithFeedback(en, applyCardAttackMultiplier(getPlayerAttackDamage(e.v || 0, en)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }));
         }
         break;
       case "ifRecollectionAtLeastDamageAll":
         if(targetEnemy && getStatus(targetEnemy, "recollection") >= (e.threshold || 0)){
-          livingEnemies().forEach(en => applyDamageWithFeedback(en, getPlayerAttackDamage(e.v || 0, en), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }));
+          livingEnemies().forEach(en => applyDamageWithFeedback(en, applyCardAttackMultiplier(getPlayerAttackDamage(e.v || 0, en)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" }));
         }
         break;
       case "ifRecollectionAtLeastApplyRecollectionAll":
@@ -758,7 +779,7 @@ async function playCard(handIndex, targetEnemy){
         break;
       case "ifHanpuriRecoveredDamage":
         if(S.hanpuriRecoveredThisTurn && targetEnemy){
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v || 0, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+          applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(e.v || 0, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         }
         break;
       case "transferAgitationOnKill": {
@@ -831,7 +852,7 @@ async function playCard(handIndex, targetEnemy){
         break;
       case "ifMarkedDamage":
         if(targetEnemy && getStatus(targetEnemy, "mark") > 0)
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(e.v, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+          applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(e.v, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
       case "consumeAllMarksDamage":
         if(targetEnemy){
@@ -839,7 +860,7 @@ async function playCard(handIndex, targetEnemy){
           const amount = (e.base || 0) + relicDamageBonus + marks * (e.per || 0);
           setStatus(targetEnemy, "mark", 0);
           applyRelicTrigger("onMarksConsumed", { target:targetEnemy, consumed:marks });
-          applyDamageWithFeedback(targetEnemy, getPlayerAttackDamage(amount, targetEnemy), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
+          applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(amount, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         }
         break;
       case "removeWeak":
@@ -855,6 +876,21 @@ async function playCard(handIndex, targetEnemy){
   if(Array.isArray(S.handLockTokens)) S.handLockTokens.splice(handIndex, 1);
   if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.splice(handIndex, 1);
   discardCard(key, { source:"played", instance:cardInstance });
+  if(S.nextCardTemporaryCopy && !card.unplayable && card.rarity !== "status"){
+    const pending = S.nextCardTemporaryCopy;
+    S.nextCardTemporaryCopy = null;
+    const beforeLen = S.hand.length;
+    createCardToHand(key, pending.count || 1);
+    for(let i = beforeLen; i < S.hand.length; i++){
+      const copyInstance = S.handInstances[i];
+      if(copyInstance){
+        copyInstance.runtime = copyInstance.runtime || {};
+        copyInstance.runtime.temporaryCopy = true;
+        copyInstance.runtime.exhaustOnTurnEnd = !!pending.exhaustAtTurnEnd;
+      }
+      if(pending.keepOriginalCost) setHandCardCostOverride(i, card.cost || 0);
+    }
+  }
   if(S.hand.length === 0) applyRelicTrigger("onHandEmpty", { source:"playCard" });
   S.cardsPlayedThisTurn = (S.cardsPlayedThisTurn || 0) + 1;
   if(key === "bell_strike") S.bellStrikeUsedThisTurn = true;

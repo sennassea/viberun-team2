@@ -257,6 +257,12 @@ function newGame(options={}){
     hanpuriRecoveredThisTurn: false,
     bellStrikeUsedThisTurn: false,
     pendingCardChoice: false,
+    nextTurnDrawBonus: 0,
+    blockGainMultiplierThisTurn: 1,
+    bellStrikePurifyBonusThisTurn: 0,
+    nextHighCostCardCostDown: null,
+    nextCardTemporaryCopy: null,
+    lastHandDiscardedCard: null,
   };
 
   // 패키지 몬스터 전체 동시 배치 (기획서 §8-3)
