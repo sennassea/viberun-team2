@@ -406,6 +406,7 @@
       ".deck-viewer-card.card-frame-card{min-height:25cqh;}" +
       ".card-detail-card.card-frame-card{height:45cqh;}" +
       ".deck-viewer-card.card-frame-card .card-art-layer,.card-detail-card.card-frame-card .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);pointer-events:none;}" +
+      ".deck-viewer-card.cost-status .card-art-layer,.card-detail-card.cost-status .card-art-layer{background:radial-gradient(circle at 50% 32%,#3a1c28,#160a10);}" +
       ".deck-viewer-card.card-frame-card .card-art-layer img,.card-detail-card.card-frame-card .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none;}" +
       ".deck-viewer-card.card-frame-card .card-frame-layer,.card-detail-card.card-frame-card .card-frame-layer{position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:fill;pointer-events:none;}" +
       ".deck-viewer-card.card-frame-card .card-text-layer,.card-detail-card.card-frame-card .card-text-layer{position:absolute;inset:0;z-index:3;pointer-events:none;font-weight:900;color:#10243f;}" +
