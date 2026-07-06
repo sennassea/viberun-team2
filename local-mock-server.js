@@ -90,7 +90,9 @@ const BM_CHARACTER_SKIN_PRODUCTS = [
     saleStartAt: "2026-07-06T00:00:00+09:00",
     saleEndAt: "2026-08-20T00:00:00+09:00",
     category: "character_skin",
-    profileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png"
+    profileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
+    battleProfileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
+    battleStandingImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png"
   },
   {
     id: "skin_premium_wolyeong_academy_transfer",
@@ -99,7 +101,9 @@ const BM_CHARACTER_SKIN_PRODUCTS = [
     grade: "premium",
     price: 1000,
     category: "character_skin",
-    profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png"
+    profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+    battleProfileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+    battleStandingImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png"
   },
   {
     id: "skin_common_prayer_robe",
@@ -108,7 +112,9 @@ const BM_CHARACTER_SKIN_PRODUCTS = [
     grade: "common",
     price: 700,
     category: "character_skin",
-    profileIcon: "assets/profile/profile_common_prayer_robe.png"
+    profileIcon: "assets/profile/profile_common_prayer_robe.png",
+    battleProfileIcon: "assets/profile/profile_common_prayer_robe.png",
+    battleStandingImage: "assets/skins/skin_common_prayer_robe.png"
   }
 ];
 
@@ -939,7 +945,13 @@ function handleProfileCharacterSkinsGet(req, res) {
   }
 
   const account = ensureAccount(accountId);
-  const equippedSkinId = account.characterSkins.equippedSkinId || null;
+  let equippedSkinId = account.characterSkins.equippedSkinId || null;
+
+  /* equippedSkinId가 ownedSkinIds에 없는 비정상 상태라면 기본 외형으로 되돌립니다. */
+  if (equippedSkinId && !account.characterSkins.ownedSkinIds.includes(equippedSkinId)) {
+    equippedSkinId = null;
+    account.characterSkins.equippedSkinId = null;
+  }
 
   sendJson(res, 200, {
     ok: true,

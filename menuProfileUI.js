@@ -248,8 +248,15 @@
     });
   }
 
+  /* 전투화면이 진입 시점에 동기적으로 참조하는 현재 적용 스킨 ID입니다.
+     menuProfileUI가 이미 캐시해 둔 값을 그대로 돌려주며, 새 네트워크 요청은 하지 않습니다. */
+  function getEquippedSkinId(){
+    return (cachedState && cachedState.profile) ? (cachedState.profile.equippedSkinId || null) : null;
+  }
+
   window.VIBERUN_MENU_PROFILE_UI = {
-    refresh
+    refresh,
+    getEquippedSkinId
   };
 
   window.addEventListener("viberun:auth-changed", refresh);

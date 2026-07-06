@@ -121,6 +121,9 @@
       profileSortOrder: 1,
       profileLabel: "달빛서약☆마법무녀",
 
+      battleProfileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
+      battleStandingImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png",
+
       purchasable: true,
       dimmed: false
     },
@@ -145,6 +148,9 @@
       profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
       profileSortOrder: 2,
       profileLabel: "월영학당 전학생",
+
+      battleProfileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+      battleStandingImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
 
       purchasable: true,
       dimmed: false
@@ -171,10 +177,18 @@
       profileSortOrder: 3,
       profileLabel: "백성의 기도복",
 
+      battleProfileIcon: "assets/profile/profile_common_prayer_robe.png",
+      battleStandingImage: "assets/skins/skin_common_prayer_robe.png",
+
       purchasable: true,
       dimmed: false
     }
   ];
+
+  /* 전투화면 좌상단 프로필 아이콘 / 기본 전투 스탠딩의 기본값입니다.
+     equippedSkinId가 없거나 매핑에 실패했을 때 이 값으로 fallback합니다. */
+  const DEFAULT_PROFILE_ICON = "assets/profile/profile_default.png";
+  const DEFAULT_BATTLE_STANDING_IMAGE = "assets/characters/player-temp-cutout.png";
 
   /* 주문 팩 탭 상품 4종입니다. 패키지 탭과 동일한 카드 UI/구매 로직을 그대로 재사용하며,
      보상은 실제 플레이에 영향을 주지 않는 더미 아이템(dummyRewardId)만 지급합니다. */
@@ -443,6 +457,15 @@
     },
     findCharacterSkinProduct(productId){
       return clone(CHARACTER_SKIN_PRODUCTS.find(product => product.id === productId) || null);
+    },
+    getCharacterSkinBySkinId(skinId){
+      return clone(CHARACTER_SKIN_PRODUCTS.find(product => product.skinId === skinId) || null);
+    },
+    getDefaultProfileIcon(){
+      return DEFAULT_PROFILE_ICON;
+    },
+    getDefaultBattleStandingImage(){
+      return DEFAULT_BATTLE_STANDING_IMAGE;
     },
     getOrderPackProducts(){
       return clone(ORDER_PACK_PRODUCTS);
