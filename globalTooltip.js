@@ -12,6 +12,10 @@
      추천 탭의 다른 카드에는 툴팁을 붙이지 않는다. 주문 팩(.bm-store-product)은
      덱 프리뷰 패널 전용 로직(하단)에서 별도로 처리하므로 여기 포함하지 않는다 */
   const BM_SKIN_CARD_SELECTOR = ".bm-store-skin-card, .bm-recommended-wide-card, .bm-recommended-small-card";
+  /* 전투 요약(여정 요약) / 전투 상세(여정 상세) 화면 대상 */
+  const RUN_SUMMARY_ROW_SELECTOR = ".rr-summary-row";
+  const RUN_SCORE_BREAKDOWN_ITEM_SELECTOR = ".rr-score-breakdown-grid > div";
+  const RUN_ITEM_CARD_SELECTOR = ".rr-item-card";
   const GAP = 10;
   let tooltipEl = null;
   let activeAnchor = null;
@@ -40,7 +44,8 @@
     if (!target || typeof target.closest !== "function") return null;
     const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR) ||
       target.closest(RANDOM_ITEM_RESULT_CARD_SELECTOR) || target.closest(SHOP_PRODUCT_SELECTOR) || target.closest(SHOP_DETAIL_SELECTOR) ||
-      target.closest(BM_SKIN_CARD_SELECTOR);
+      target.closest(BM_SKIN_CARD_SELECTOR) || target.closest(RUN_SUMMARY_ROW_SELECTOR) ||
+      target.closest(RUN_SCORE_BREAKDOWN_ITEM_SELECTOR) || target.closest(RUN_ITEM_CARD_SELECTOR);
     if (!anchor || anchor.dataset.tooltipDisabled === "true") return null;
     return anchor;
   }
@@ -61,7 +66,7 @@
   }
 
   function getItemDataByDisplayedName(anchor) {
-    const nameEl = anchor.querySelector(".random-item-result-name, .card-name-text, .shop-product-name, .shop-detail-name");
+    const nameEl = anchor.querySelector(".random-item-result-name, .card-name-text, .shop-product-name, .shop-detail-name, .rr-item-card-name");
     const name = nameEl ? nameEl.textContent.trim() : "";
     if (!name) return null;
 
@@ -121,6 +126,56 @@
     };
   }
 
+  /* 전투 요약("여정 요약") 화면 각 행 설명. ACT1_점수_달빛조각_통합기획서_v4.0 §1 기준 */
+  const RUN_SUMMARY_TOOLTIPS = [
+    { match: "최종 여정 점수", title: "최종 여정 점수",
+      body: "구역 진행, ACT1 완주, 몬스터 처치, 전투 수행, 보스 종료 상태, 여정 행동 점수를 모두 합산한 이번 여정의 최종 점수입니다." },
+    { match: "달빛조각", title: "달빛조각",
+      body: "최종 여정 점수 구간에 따라 지급되는 달빛 조각 개수입니다. 평균적인 완주 기준 약 55개이며, 점수가 높을수록 더 많은 조각을 받습니다." },
+    { match: "진행한 구역 수", title: "진행한 구역 수",
+      body: "이번 여정에서 밟은 구역(노드) 수입니다. 일반 전투·엘리트·이벤트·상점·휴식/신당·보물 등을 모두 포함합니다." },
+    { match: "클리어 보스 수", title: "클리어 보스 수",
+      body: "처치한 ACT1 보스 수입니다. 보스 처치는 +150점으로 가장 큰 전투 성취 점수입니다." },
+    { match: "클리어 노멀 수", title: "클리어 노멀 수",
+      body: "클리어한 일반 전투 수입니다. 일반 전투 클리어 시 +25점의 기본 진행 점수를 얻습니다." },
+    { match: "클리어 엘리트 수", title: "클리어 엘리트 수",
+      body: "클리어한 엘리트 전투 수입니다. 위험한 경로를 선택한 만큼 +65점의 더 높은 점수가 반영됩니다." },
+    { match: "수집한 법구 수", title: "수집한 법구 수",
+      body: "이번 여정에서 획득한 법구의 총 개수입니다." },
+    { match: "사용한 약병 수", title: "사용한 약병 수",
+      body: "이번 여정에서 사용한 약병의 총 개수입니다." }
+  ];
+
+  /* 전투 상세("여정 상세") 화면의 "여정 점수 상세" 6개 항목 설명. 같은 기획서 §2 기준 */
+  const RUN_SCORE_BREAKDOWN_TOOLTIPS = {
+    "구역 진행": { title: "구역 진행",
+      body: "일반 전투(+25), 엘리트(+65), 이벤트(+15), 상점(+5), 휴식/신당(+10), 보물/특수 노드(+20) 등 방문한 구역에서 얻는 점수의 합입니다." },
+    "ACT1 완주": { title: "ACT1 완주",
+      body: "여정을 끝까지 완주하면 지급되는 +100점의 완료 보상 점수입니다." },
+    "몬스터 처치": { title: "몬스터 처치",
+      body: "일반 적(+3), 강화 적(+6), 엘리트 개체(+15), 보스(+40) 처치 점수입니다. 전투별 상한이 있어 몬스터 수가 많다고 무조건 유리하지는 않습니다." },
+    "전투 수행": { title: "전투 수행",
+      body: "무피해 클리어(+12), 최대 정신력 10% 이하 피해(+7), 25% 이하 피해(+3) 등 안정적인 전투에 주어지는 점수입니다. (ACT1 전체 최대 +100점)" },
+    "보스 종료 상태": { title: "보스 종료 상태",
+      body: "보스 처치 시 남은 정신력에 따라 주어지는 점수입니다. 75% 이상 +25 / 50~74% +15 / 25~49% +8점 (각 1회 한정)" },
+    "여정 행동": { title: "여정 행동",
+      body: "진언 강화(+3, 최대 +12), 진언 제거(+4, 최대 +8), 고위험 이벤트 성공(+15, 최대 +30) 등 여정 중 선택한 행동에 대한 점수입니다." }
+  };
+
+  function getRunSummaryRowData(anchor) {
+    const labelEl = anchor.querySelector(".rr-summary-row-label");
+    const label = labelEl ? labelEl.textContent.trim() : "";
+    if (!label) return null;
+    const entry = RUN_SUMMARY_TOOLTIPS.find(item => label.indexOf(item.match) === 0);
+    return entry ? { title: entry.title, body: entry.body } : null;
+  }
+
+  function getRunScoreBreakdownItemData(anchor) {
+    const labelEl = anchor.querySelector("span");
+    const label = labelEl ? labelEl.textContent.trim() : "";
+    return RUN_SCORE_BREAKDOWN_TOOLTIPS[label] || null;
+  }
+
   function getTooltipData(anchor) {
     const title = anchor.dataset.tooltipTitle || "";
     const body = anchor.dataset.tooltip || anchor.dataset.globalTooltip || "";
@@ -156,6 +211,19 @@
 
     if (anchor.id === "shopDetail" && !anchor.querySelector(".shop-detail-card-preview")) {
       return getItemDataByDisplayedName(anchor);
+    }
+
+    if (anchor.classList && anchor.classList.contains("rr-summary-row")) {
+      return getRunSummaryRowData(anchor);
+    }
+
+    if (anchor.classList && anchor.classList.contains("rr-item-card")) {
+      return getItemDataByDisplayedName(anchor);
+    }
+
+    if (anchor.parentElement && anchor.parentElement.classList &&
+      anchor.parentElement.classList.contains("rr-score-breakdown-grid")) {
+      return getRunScoreBreakdownItemData(anchor);
     }
 
     return null;
