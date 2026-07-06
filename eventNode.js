@@ -529,7 +529,7 @@ function applyEventEffect(effect){
     case "gold": return applyEventGold(effect.value);
     case "goldOrSpiritPenalty": return applyEventGoldOrSpiritPenalty(effect);
     case "relicRandom": return applyEventRelicGrant(null, "");
-    case "relicRare": return applyEventRelicGrant("rare", "Rare ");
+    case "relicRare": return applyEventRelicGrant("rare", "유일 ");
     case "addStatusCard": return applyEventAddStatusCard(effect);
     case "cardRemove": return applyEventCardRemove(effect);
     case "cardDuplicate": return applyEventCardDuplicate(effect);
