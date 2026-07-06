@@ -50,12 +50,11 @@
     return data && typeof data.getTabs === "function" ? data.getTabs() : [];
   }
 
+  /* 추천 탭은 tab: "recommended"로 태그된 상품(월영의 약속 + 딤드 미리보기 상품)만 노출합니다.
+     패키지/주문 팩/충전 탭에 있는 recommended 플래그 상품은 이 탭에 섞이지 않습니다. */
   function getProductsForTab(tabId){
     const service = window.VIBERUN_BM_STORE_SERVICE;
     if(!service) return [];
-    if(tabId === "recommended" && typeof service.getRecommendedProducts === "function"){
-      return service.getRecommendedProducts();
-    }
     if(typeof service.getProductsByTab === "function") return service.getProductsByTab(tabId);
     if(tabId === "package" && typeof service.getPackageProducts === "function"){
       return service.getPackageProducts();
@@ -178,8 +177,15 @@
 
   function handleBodyClick(event){
     const button = event.target.closest(".bm-store-buy-btn");
-    if(!button || button.disabled) return;
-    purchase(button.dataset.productId);
+    if(button){
+      if(!button.disabled) purchase(button.dataset.productId);
+      return;
+    }
+
+    const dimmedCard = event.target.closest(".bm-product-card.is-dimmed");
+    if(dimmedCard){
+      showToastMessage(dimmedCard.dataset.disabledReason || "준비 중입니다.", "info");
+    }
   }
 
   function purchase(productId){
@@ -269,6 +275,11 @@
       return;
     }
 
+    if(state.activeTab === "recommended"){
+      renderRecommendedLayout();
+      return;
+    }
+
     if(!state.products.length){
       const emptyTextByTab = {
         order_pack: "판매 중인 주문 팩이 없습니다.",
@@ -296,6 +307,85 @@
       '<div class="bm-store-package-grid bm-store-product-grid--' + escapeHtml(state.activeTab) + '">' +
         state.products.map(renderProductCard).join("") +
       '</div>' + notice;
+  }
+
+  /* 추천 탭 전용 레이아웃입니다. 좌측에 월영의 약속 대형 카드, 우측 상단에 혼꽃 설화편 딤드 배너,
+     우측 하단에 진언 스킨/캐릭터 스킨 딤드 패널 + 확장팩 준비 중 영역을 배치합니다.
+     패키지/주문 팩/충전 탭의 기존 그리드 렌더링에는 영향을 주지 않습니다. */
+  function renderRecommendedLayout(){
+    const products = state.products || [];
+    const monthlyPass = products.find(product => product.layoutType === "monthly_pass_main");
+    const storyDlc = products.find(product => product.layoutType === "story_dlc_banner");
+    const mantraSkin = products.find(product => product.layoutType === "mantra_skin_panel");
+    const characterSkin = products.find(product => product.layoutType === "character_skin_panel");
+
+    els.body.innerHTML =
+      '<div class="bm-recommended-layout">' +
+        (monthlyPass ? renderMonthlyPassCard(monthlyPass) : "") +
+        '<div class="bm-recommended-right">' +
+          '<div class="bm-recommended-top">' +
+            (storyDlc ? renderStoryDlcCard(storyDlc) : "") +
+          '</div>' +
+          '<div class="bm-recommended-bottom">' +
+            (mantraSkin ? renderSkinPanelCard(mantraSkin, "진언 스킨") : "") +
+            (characterSkin ? renderSkinPanelCard(characterSkin, "캐릭터 스킨") : "") +
+            renderExpansionPlaceholder() +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderMonthlyPassCard(product){
+    const isBusy = purchasingProductId === product.id;
+    const detailLines = Array.isArray(product.detailLines) ? product.detailLines : [];
+    return (
+      '<article class="bm-product-card bm-monthly-pass-card">' +
+        (product.recommendBadge ? '<div class="bm-store-badge">' + escapeHtml(product.recommendBadge) + '</div>' : "") +
+        '<div class="bm-monthly-pass-art" aria-hidden="true"><span class="bm-store-art-icon">' + escapeHtml(product.icon || "🌙") + '</span></div>' +
+        '<div class="bm-monthly-pass-copy">' +
+          '<h3>' + escapeHtml(product.name) + '</h3>' +
+          '<ul class="bm-monthly-pass-detail">' +
+            detailLines.map(line => '<li>' + escapeHtml(line) + '</li>').join("") +
+          '</ul>' +
+        '</div>' +
+        '<button type="button" class="bm-store-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+          (isBusy ? " disabled" : "") + '>' +
+          '<span>' + (isBusy ? "구매 중..." : escapeHtml(product.priceLabel || formatKRW(product.price))) + '</span>' +
+        '</button>' +
+      '</article>'
+    );
+  }
+
+  function renderStoryDlcCard(product){
+    return (
+      '<article class="bm-product-card bm-story-dlc-card is-dimmed" data-disabled-reason="' +
+        escapeHtml(product.disabledReason || "준비 중입니다.") + '">' +
+        '<div class="bm-story-dlc-badge">신규 스토리 DLC</div>' +
+        '<h3>' + escapeHtml(product.name) + '</h3>' +
+        (product.subtitle ? '<p>' + escapeHtml(product.subtitle) + '</p>' : "") +
+        (product.priceLabel ? '<div class="bm-story-dlc-price">' + escapeHtml(product.priceLabel) + '</div>' : "") +
+      '</article>'
+    );
+  }
+
+  function renderSkinPanelCard(product, fallbackTitle){
+    return (
+      '<article class="bm-product-card bm-skin-panel-card is-dimmed" data-disabled-reason="' +
+        escapeHtml(product.disabledReason || "준비 중입니다.") + '">' +
+        '<h3>' + escapeHtml(product.name || fallbackTitle) + '</h3>' +
+        (product.priceLabel ? '<p>' + escapeHtml(product.priceLabel) + '</p>' : "") +
+      '</article>'
+    );
+  }
+
+  /* 주문 확장팩 영역입니다. 실제 상품 연결이 없어 항상 준비 중으로 표시합니다. */
+  function renderExpansionPlaceholder(){
+    return (
+      '<article class="bm-product-card bm-expansion-placeholder is-dimmed" data-disabled-reason="준비 중입니다.">' +
+        '<h3>확장팩 1종</h3>' +
+        '<p>🌙 1,200 달빛 조각</p>' +
+      '</article>'
+    );
   }
 
   function renderProductCard(product){

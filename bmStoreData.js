@@ -148,6 +148,104 @@
     }
   ];
 
+  /* 추천 탭 최상단/좌측 메인 상품인 월영의 약속(30일 출석 상품)입니다.
+     구매는 test_cash(테스트 결제)이며, 즉시 지급/매일 지급 모두 선물함 수령 시에만 이뤄집니다. */
+  const MONTHLY_PASS_PRODUCTS = [
+    {
+      id: "monthly_moon_promise",
+      tab: "recommended",
+      name: "월영의 약속",
+      subtitle: "30일 출석 상품",
+
+      priceType: "test_cash",
+      price: 5900,
+      priceLabel: "₩5,900",
+
+      rewardType: "monthly_pass",
+
+      immediateRewardType: "moon_shard",
+      immediateRewardAmount: 100,
+
+      dailyRewardType: "moon_shard",
+      dailyRewardAmount: 15,
+
+      durationDays: 30,
+      totalRewardAmount: 550,
+
+      description: "30일 동안 매일 달빛조각을 받을 수 있습니다.",
+      limitText: "즉시 100개 + 매일 15개 × 30일",
+      detailLines: [
+        "즉시 100 달빛 조각",
+        "매일 15 × 30일",
+        "총 550 달빛 조각"
+      ],
+
+      icon: "🌙",
+      imageKey: "monthly_moon_promise",
+
+      recommended: true,
+      recommendOrder: 1,
+      recommendBadge: "30일 출석 상품",
+
+      layoutType: "monthly_pass_main",
+      purchasable: true,
+      dimmed: false
+    }
+  ];
+
+  /* 추천 탭 전용 딤드 노출 상품입니다. 혼꽃 설화편/진언 스킨/캐릭터 스킨은 영역만 만들고
+     실제 구매는 막습니다(dimmed/comingSoon/purchasable:false). 다른 탭/구매 로직과 연결하지 않습니다. */
+  const RECOMMENDED_PREVIEW_PRODUCTS = [
+    {
+      id: "story_dlc_red_pond_sisters",
+      tab: "recommended",
+      name: "혼꽃 설화편 I",
+      subtitle: "붉은 연못의 자매",
+      priceType: "test_cash",
+      price: 9900,
+      priceLabel: "₩9,900",
+      rewardType: "story_dlc",
+      description: "신규 스토리 DLC",
+      recommended: true,
+      recommendOrder: 2,
+      layoutType: "story_dlc_banner",
+      purchasable: false,
+      dimmed: true,
+      comingSoon: true,
+      disabledReason: "준비 중입니다."
+    },
+    {
+      id: "mantra_skin_preview",
+      tab: "recommended",
+      name: "진언 스킨",
+      subtitle: "카드 외형 테마",
+      priceLabel: "일반 300 / 프리미엄 500",
+      rewardType: "mantra_skin",
+      recommended: true,
+      recommendOrder: 3,
+      layoutType: "mantra_skin_panel",
+      purchasable: false,
+      dimmed: true,
+      comingSoon: true,
+      disabledReason: "준비 중입니다."
+    },
+    {
+      id: "character_skin_preview",
+      tab: "recommended",
+      name: "캐릭터 스킨",
+      subtitle: "외형 변경",
+      priceLabel: "일반 700 / 프리미엄 1,000 / 한정 1,500",
+      rewardType: "character_skin",
+      recommended: true,
+      recommendOrder: 4,
+      layoutType: "character_skin_panel",
+      purchasable: false,
+      dimmed: true,
+      comingSoon: true,
+      disabledReason: "준비 중입니다."
+    }
+  ];
+
   /* 달빛조각 충전 탭 상품 6종입니다. 실제 결제는 하지 않는 테스트 구매이며,
      달빛조각 차감 없이 rewardAmount만큼 wallet.moonShards를 증가시킵니다. */
   const MOON_CHARGE_PRODUCTS = [
@@ -228,7 +326,12 @@
   }
 
   function allProducts(){
-    return PACKAGE_PRODUCTS.concat(ORDER_PACK_PRODUCTS, MOON_CHARGE_PRODUCTS);
+    return MONTHLY_PASS_PRODUCTS.concat(
+      RECOMMENDED_PREVIEW_PRODUCTS,
+      PACKAGE_PRODUCTS,
+      ORDER_PACK_PRODUCTS,
+      MOON_CHARGE_PRODUCTS
+    );
   }
 
   window.VIBERUN_BM_STORE_DATA = {
@@ -258,6 +361,12 @@
     },
     findMoonChargeProduct(productId){
       return clone(MOON_CHARGE_PRODUCTS.find(product => product.id === productId) || null);
+    },
+    getMonthlyPassProducts(){
+      return clone(MONTHLY_PASS_PRODUCTS);
+    },
+    findMonthlyPassProduct(productId){
+      return clone(MONTHLY_PASS_PRODUCTS.find(product => product.id === productId) || null);
     },
     getRecommendedProducts(){
       return clone(

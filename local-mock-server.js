@@ -79,6 +79,31 @@ const BM_MOON_CHARGE_PRODUCTS = [
   { id: "moon_charge_6480", name: "달빛조각 6,480", price: 119000, rewardAmount: 6480 }
 ];
 
+/* 월영의 약속(30일 출석 상품) 검증 테이블입니다. 구매는 test_cash이며,
+   즉시/매일 지급 모두 선물함 구매 메일 수령 시점에만 이뤄집니다. */
+const BM_MONTHLY_PASS_PRODUCTS = [
+  {
+    id: "monthly_moon_promise",
+    name: "월영의 약속",
+    price: 5900,
+    durationDays: 30,
+    immediateRewardAmount: 100,
+    dailyRewardAmount: 15
+  }
+];
+
+function buildDefaultMonthlyPass() {
+  return {
+    active: false,
+    startedAt: null,
+    expiresAt: null,
+    lastClaimDate: null,
+    claimedDays: 0,
+    durationDays: 30,
+    dailyRewardAmount: 15
+  };
+}
+
 function buildDefaultMailbox() {
   return [
     {
@@ -97,10 +122,16 @@ function ensureAccount(accountId) {
     accounts.set(accountId, {
       mailbox: buildDefaultMailbox(),
       wallet: { moonShards: INITIAL_MOCK_MOON_SHARDS },
-      dummyInventory: []
+      dummyInventory: [],
+      monthlyPass: buildDefaultMonthlyPass()
     });
   }
-  return accounts.get(accountId);
+
+  const account = accounts.get(accountId);
+  if (!account.monthlyPass) {
+    account.monthlyPass = buildDefaultMonthlyPass();
+  }
+  return account;
 }
 
 function registerAccessToken(accountId, accessToken) {
@@ -196,6 +227,23 @@ function applyMailRewards(account, mail) {
         category: mail.productCategory || "package",
         obtainedAt: Date.now()
       });
+    } else if (reward.type === "monthly_pass") {
+      const now = Date.now();
+      const durationDays = Math.max(1, Number(reward.durationDays) || 30);
+      const dailyRewardAmount = Math.max(0, Number(reward.dailyRewardAmount) || 15);
+      const immediateRewardAmount = Math.max(0, Number(reward.immediateRewardAmount) || 100);
+
+      account.monthlyPass = {
+        active: true,
+        startedAt: now,
+        expiresAt: now + durationDays * 24 * 60 * 60 * 1000,
+        lastClaimDate: null,
+        claimedDays: 0,
+        durationDays,
+        dailyRewardAmount
+      };
+
+      account.wallet.moonShards = (Number(account.wallet.moonShards) || 0) + immediateRewardAmount;
     }
   });
 }
@@ -465,6 +513,84 @@ function handleBMMoonChargePurchase(req, res, productId) {
   });
 }
 
+/* 월영의 약속(30일 출석 상품) 구매입니다. 결제는 test_cash이며 즉시 지급하지 않고,
+   기존 청약철회 정책을 유지하기 위해 선물함 구매 메일만 생성합니다.
+   실제 활성화/즉시 100 지급은 선물함에서 수령할 때만 이뤄집니다. */
+function handleBMMonthlyPassPurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_MONTHLY_PASS_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, code: "UNKNOWN_PRODUCT", message: "존재하지 않는 상품입니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const now = Date.now();
+  const pass = account.monthlyPass || buildDefaultMonthlyPass();
+
+  if (pass.active && Number(pass.expiresAt) > now) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "MONTHLY_PASS_ALREADY_ACTIVE",
+      message: "이미 월영의 약속이 활성화되어 있습니다."
+    });
+    return;
+  }
+
+  const hasUnclaimedMonthlyPassMail = account.mailbox.some(
+    (mail) => mail.productId === product.id && mail.status === "PURCHASED_UNCLAIMED"
+  );
+
+  if (hasUnclaimedMonthlyPassMail) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "MONTHLY_PASS_UNCLAIMED_MAIL_EXISTS",
+      message: "선물함에 아직 수령하지 않은 월영의 약속이 있습니다."
+    });
+    return;
+  }
+
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productCategory: "monthly_pass",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "test_cash",
+    paidAmount: product.price,
+    rewards: [
+      {
+        type: "monthly_pass",
+        productId: product.id,
+        durationDays: product.durationDays,
+        immediateRewardAmount: product.immediateRewardAmount,
+        dailyRewardAmount: product.dailyRewardAmount
+      }
+    ]
+  };
+
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    mail,
+    wallet: account.wallet,
+    monthlyPass: account.monthlyPass
+  });
+}
+
 /* 청약철회입니다. 수령 전 구매 메일이며 7일 이내인 경우에만 허용하고,
    moon_shard로 결제한 상품은 paidAmount만큼 wallet을 환급합니다. */
 function handleMailboxRefund(req, res, mailId) {
@@ -595,6 +721,12 @@ const server = http.createServer((req, res) => {
   const bmMoonChargePurchaseMatch = pathname.match(/^\/bm-store\/moon-charge\/([^/]+)\/purchase$/);
   if (method === "POST" && bmMoonChargePurchaseMatch) {
     readRequestBody(req).then(() => handleBMMoonChargePurchase(req, res, decodeURIComponent(bmMoonChargePurchaseMatch[1])));
+    return;
+  }
+
+  const bmMonthlyPassPurchaseMatch = pathname.match(/^\/bm-store\/monthly-pass\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmMonthlyPassPurchaseMatch) {
+    readRequestBody(req).then(() => handleBMMonthlyPassPurchase(req, res, decodeURIComponent(bmMonthlyPassPurchaseMatch[1])));
     return;
   }
 

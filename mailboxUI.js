@@ -252,6 +252,7 @@
     const amount = Number(reward.amount) || 0;
     if(reward.type === "moon_shard") return "🌙 " + amount;
     if(reward.type === "dummy_item") return "테스트용 더미 아이템";
+    if(reward.type === "monthly_pass") return "월영의 약속 활성화";
     return String(reward.type || "") + " " + amount;
   }
 

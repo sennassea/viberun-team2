@@ -378,6 +378,205 @@
   min-width:0;
   justify-self:center;
 }
+/* -------------------------------------------------------------------------
+   추천 탭 전용 레이아웃
+   - 좌측: 월영의 약속 대형 카드 / 우측 상단: 혼꽃 설화편 딤드 배너
+   - 우측 하단: 진언 스킨 딤드 / 캐릭터 스킨 딤드 / 확장팩 준비 중 영역
+   ------------------------------------------------------------------------- */
+.bm-recommended-layout{
+  display:grid;
+  grid-template-columns:1fr 1.85fr;
+  gap:1.4cqh 1.2cqw;
+  height:100%;
+  min-height:56cqh;
+}
+.bm-product-card{
+  position:relative;
+  min-width:0;
+  border:.2cqh solid rgba(166,111,47,.42);
+  border-radius:.75cqh;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.44), transparent 38%),
+    linear-gradient(180deg,rgba(255,248,234,.78),rgba(235,210,170,.72));
+  box-shadow:inset 0 0 0 .12cqh rgba(255,255,255,.48), 0 .35cqh .8cqh rgba(89,55,27,.12);
+  overflow:hidden;
+}
+.bm-monthly-pass-card{
+  min-height:44cqh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:1.1cqh;
+  padding:1.6cqh 1.2cqw;
+  text-align:center;
+}
+.bm-monthly-pass-art{
+  width:100%;
+  min-height:16cqh;
+  display:grid;
+  place-items:center;
+  border:.2cqh solid rgba(176,125,29,.36);
+  border-radius:.7cqh;
+  background:
+    radial-gradient(circle at 70% 20%, rgba(255,255,255,.65), transparent 20%),
+    radial-gradient(circle at 30% 78%, rgba(242,157,137,.28), transparent 24%),
+    linear-gradient(160deg,#dceef0,#e9cf9e 58%,#8cb8bf);
+}
+.bm-monthly-pass-art .bm-store-art-icon{
+  font-size:8cqh;
+}
+.bm-monthly-pass-copy{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.7cqh;
+}
+.bm-monthly-pass-copy h3{
+  margin:0;
+  color:#4a2c1b;
+  font-size:2.5cqh;
+  font-weight:900;
+  word-break:keep-all;
+}
+.bm-monthly-pass-detail{
+  margin:0;
+  padding:0;
+  list-style:none;
+  display:flex;
+  flex-direction:column;
+  gap:.4cqh;
+}
+.bm-monthly-pass-detail li{
+  color:#69462d;
+  font-size:1.65cqh;
+  font-weight:800;
+}
+.bm-recommended-right{
+  display:grid;
+  grid-template-rows:1fr .9fr;
+  gap:1.2cqh;
+  min-height:0;
+}
+.bm-recommended-top{
+  min-height:0;
+}
+.bm-recommended-bottom{
+  display:grid;
+  grid-template-columns:1fr 1fr .72fr;
+  gap:1.2cqh;
+  min-height:0;
+}
+.bm-story-dlc-card{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:.6cqh;
+  padding:1.4cqh 1.4cqw;
+}
+.bm-story-dlc-badge{
+  align-self:flex-start;
+  padding:.2cqh .8cqw;
+  border-radius:.5cqh;
+  background:rgba(75,35,20,.72);
+  color:#ffe8b8;
+  font-size:1.4cqh;
+  font-weight:900;
+}
+.bm-story-dlc-card h3{
+  margin:0;
+  color:#4a2c1b;
+  font-size:2.3cqh;
+  font-weight:900;
+  word-break:keep-all;
+}
+.bm-story-dlc-card p{
+  margin:0;
+  color:#69462d;
+  font-size:1.55cqh;
+  font-weight:800;
+}
+.bm-story-dlc-price{
+  color:#a3402b;
+  font-size:1.9cqh;
+  font-weight:900;
+}
+.bm-skin-panel-card{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:.55cqh;
+  padding:1cqh .8cqw;
+  text-align:center;
+}
+.bm-skin-panel-card h3{
+  margin:0;
+  color:#4a2c1b;
+  font-size:2cqh;
+  font-weight:900;
+}
+.bm-skin-panel-card p{
+  margin:0;
+  color:#69462d;
+  font-size:1.4cqh;
+  font-weight:800;
+  word-break:keep-all;
+}
+.bm-expansion-placeholder{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:.55cqh;
+  padding:1cqh .6cqw;
+  text-align:center;
+}
+.bm-expansion-placeholder h3{
+  margin:0;
+  color:#4a2c1b;
+  font-size:1.85cqh;
+  font-weight:900;
+}
+.bm-expansion-placeholder p{
+  margin:0;
+  color:#69462d;
+  font-size:1.35cqh;
+  font-weight:800;
+}
+.bm-product-card.is-dimmed{
+  cursor:pointer;
+  filter:grayscale(.8);
+  opacity:.6;
+}
+.bm-product-card.is-dimmed::after{
+  content:"준비 중";
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(30,22,16,.45);
+  color:#fff3d0;
+  font-weight:900;
+  font-size:2.2cqh;
+  text-shadow:0 .2cqh .4cqh rgba(0,0,0,.5);
+}
+
+@media (max-width:720px){
+  .bm-recommended-layout{
+    grid-template-columns:1fr;
+  }
+  .bm-monthly-pass-card{
+    min-height:0;
+  }
+  .bm-recommended-bottom{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
 .bm-store-recommend-notice{
   margin:0 0 .8cqh;
   color:#6b4c31;
