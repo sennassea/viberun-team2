@@ -390,7 +390,8 @@ function renderPrayerCardPreviews(){
   const restCard  = prayerOverlayEl.querySelector('.prayer-card[data-choice="rest"]');
   if(restExtra && typeof S !== "undefined" && S && S.player){
     const p          = S.player;
-    const healAmount = Math.max(0, Math.round(p.maxHp * PRAYER_REST_HEAL_RATIO));
+    const restHealRatio = (typeof hasRelic === "function" && hasRelic("mugwort_bundle")) ? 0.35 : PRAYER_REST_HEAL_RATIO;
+    const healAmount = Math.max(0, Math.round(p.maxHp * restHealRatio));
     const isFull     = p.hp >= p.maxHp;
     restExtra.className = "prayer-card-extra prayer-card-preview" + (isFull ? " full" : "");
     restExtra.textContent = isFull
@@ -408,7 +409,7 @@ function renderPrayerCardPreviews(){
   const cleanseExtra = prayerOverlayEl.querySelector('[data-extra="cleanse"]');
   const cleanseCard  = prayerOverlayEl.querySelector('.prayer-card[data-choice="cleanse"]');
   if(cleanseExtra){
-    const cost         = getCardRemoveCost();
+    const cost         = (typeof hasRelic === "function" && hasRelic("empty_spirit_tablet") && typeof S !== "undefined" && S && (S.cleanseCount || 0) === 0) ? 0 : getCardRemoveCost();
     const currentGold  = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
     const notEnough    = currentGold < cost;
     cleanseExtra.className = "prayer-card-extra prayer-card-pill" + (notEnough ? " insufficient" : "");
