@@ -94,6 +94,9 @@ function injectRewardStyles(){
     .victory-next.active{background:#fff;color:var(--c-ink);cursor:pointer;opacity:1;box-shadow:0 .45cqh 1cqh rgba(40,70,120,.15);}
     .victory-confirm-modal{position:absolute;inset:0;z-index:230;display:none;place-items:center;background:rgba(10,20,40,.18);}
     .victory-confirm-modal.show{display:flex;align-items:center;justify-content:center;gap:1cqw;}
+    .victory-leave-confirm-modal{position:absolute;inset:0;z-index:232;display:none;place-items:center;background:rgba(10,20,40,.42);}
+    .victory-leave-confirm-modal.show{display:flex;align-items:center;justify-content:center;}
+    .victory-leave-confirm-modal .victory-confirm-box{width:min(34cqw,48cqh);}
     .victory-confirm-modal.replace-mode{background:rgba(10,20,40,.42);backdrop-filter:blur(.35cqh);}
     .victory-confirm-modal.replace-mode .victory-confirm-box{display:none;}
     .victory-confirm-box{width:min(28cqw,42cqh);padding:2cqh 2cqw;border-radius:1.4cqh;background:#fff;border:.25cqh solid var(--c-panel-line);box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.32);text-align:center;}

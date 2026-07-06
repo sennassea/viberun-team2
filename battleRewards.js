@@ -338,9 +338,21 @@ function ensureBattleVictoryOverlay(){
         '</div>' +
       '</div>' +
       '<div class="victory-potion-replace-panel" aria-hidden="true"></div>' +
+    '</div>' +
+    '<div class="victory-leave-confirm-modal" aria-hidden="true">' +
+      '<div class="victory-confirm-box">' +
+        '<div class="victory-confirm-title">아직 받지 않은 보상이 있습니다</div>' +
+        '<div class="victory-confirm-desc">수령하지 않은 보상은 여정을 떠나면 사라집니다.<br>그래도 여정을 떠나시겠습니까?</div>' +
+        '<div class="victory-confirm-actions">' +
+          '<button type="button" class="victory-leave-confirm-go">이동</button>' +
+          '<button type="button" class="victory-leave-confirm-cancel">취소</button>' +
+        '</div>' +
+      '</div>' +
     '</div>';
   document.querySelector("#game").appendChild(ov);
   ov.querySelector(".victory-next").addEventListener("click", onBattleVictoryNextClick);
+  ov.querySelector(".victory-leave-confirm-go").addEventListener("click", onBattleVictoryLeaveConfirmed);
+  ov.querySelector(".victory-leave-confirm-cancel").addEventListener("click", closeBattleVictoryLeaveConfirm);
   return ov;
 }
 
@@ -679,16 +691,38 @@ function updateBattleVictoryNextButton(ov){
   if(!ov) return;
   const btn = ov.querySelector(".victory-next");
   if(!btn) return;
-  const ready = areBattleVictoryRewardsDone();
-  btn.classList.toggle("active", ready);
-  btn.setAttribute("aria-disabled", ready ? "false" : "true");
+  btn.classList.add("active");
+  btn.setAttribute("aria-disabled", "false");
 }
 
 function onBattleVictoryNextClick(){
   if(!areBattleVictoryRewardsDone()){
-    toast("모든 보상을 확인해주세요.");
+    openBattleVictoryLeaveConfirm();
     return;
   }
+  S.rewardOpen = false; S.busy = false;
+  closeRewardOverlay();
+  proceedToMap();
+}
+
+function openBattleVictoryLeaveConfirm(){
+  const ov = document.querySelector("#battleVictoryOverlay");
+  const modal = ov && ov.querySelector(".victory-leave-confirm-modal");
+  if(!modal) return;
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeBattleVictoryLeaveConfirm(){
+  const ov = document.querySelector("#battleVictoryOverlay");
+  const modal = ov && ov.querySelector(".victory-leave-confirm-modal");
+  if(!modal) return;
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function onBattleVictoryLeaveConfirmed(){
+  closeBattleVictoryLeaveConfirm();
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
   proceedToMap();
