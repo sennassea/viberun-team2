@@ -196,6 +196,26 @@
   </div>
 </div>
 
+<!-- 닉네임 변경 모달: 메인화면/전투화면 프로필 공통 사용 -->
+<div class="nickname-modal" hidden>
+  <div class="nickname-modal-backdrop"></div>
+
+  <section class="nickname-modal-panel" role="dialog" aria-modal="true" aria-labelledby="nicknameModalTitle">
+    <h2 id="nicknameModalTitle" class="nickname-modal-title">닉네임 변경</h2>
+
+    <p class="nickname-modal-desc">닉네임은 2~8글자까지 설정할 수 있습니다.</p>
+
+    <input type="text" class="nickname-modal-input" maxlength="16" autocomplete="off" placeholder="닉네임 입력">
+
+    <p class="nickname-modal-error" hidden></p>
+
+    <div class="nickname-modal-actions">
+      <button type="button" class="nickname-modal-cancel">취소</button>
+      <button type="button" class="nickname-modal-confirm">변경</button>
+    </div>
+  </section>
+</div>
+
 <!-- 모바일 세로 안내 -->
 <div id="rotate"><div><div class="ico">📱</div><p>기기를 가로로 돌려주세요</p></div></div>
 
@@ -223,6 +243,7 @@
 <script src="walletService.js" defer></script>
 <script src="bmStoreData.js" defer></script>
 <script src="bmStoreService.js" defer></script>
+<script src="nicknameUI.js" defer></script>
 <script src="bmStoreUI.js" defer></script>
 <script src="mailboxUI.js" defer></script>
 <script src="walletUI.js" defer></script>

@@ -67,6 +67,18 @@
   font-weight:900;
   color:var(--c-ink, #2b3b54);
   white-space:nowrap;
+  cursor:pointer;
+}
+.menu-profile-name:hover{
+  text-decoration:underline;
+}
+
+/* 전투화면 좌상단 프로필 닉네임(#hudName)도 동일하게 클릭 가능 표시를 합니다. */
+.hud-name-clickable{
+  cursor:pointer;
+}
+.hud-name-clickable:hover{
+  text-decoration:underline;
 }
 
 .menu-profile-popup{
@@ -129,4 +141,103 @@
 @media (max-width: 480px){
   .menu-profile-info{display:none;}
   .menu-profile-popup{min-width:60vw;}
+}
+
+/* =========================================================================
+   Nickname Modal (메인/전투 공통)
+   ========================================================================= */
+.nickname-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.nickname-modal[hidden]{display:none;}
+
+.nickname-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(20, 14, 10, .48);
+}
+
+.nickname-modal-panel{
+  position:relative;
+  width:min(42cqh, 86vw);
+  padding:2.4cqh;
+  border:.25cqh solid rgba(184, 130, 61, .82);
+  border-radius:1.2cqh;
+  background:rgba(255, 246, 224, .97);
+  box-shadow:0 1cqh 2cqh rgba(41, 23, 10, .34);
+  color:#4d2f1d;
+  text-align:center;
+}
+
+.nickname-modal-title{
+  margin:0 0 1cqh;
+  font-family:var(--font-title, inherit);
+  font-size:2.6cqh;
+  font-weight:900;
+}
+
+.nickname-modal-desc{
+  margin:0 0 1.4cqh;
+  font-size:1.45cqh;
+  color:#6b4a2e;
+}
+
+.nickname-modal-input{
+  width:100%;
+  height:4.6cqh;
+  padding:0 1.2cqh;
+  border:.18cqh solid rgba(151, 100, 44, .6);
+  border-radius:.75cqh;
+  background:#fffaf0;
+  color:#3d2516;
+  font:inherit;
+  font-size:1.8cqh;
+  font-weight:800;
+  text-align:center;
+  box-sizing:border-box;
+}
+
+.nickname-modal-error{
+  min-height:2.2cqh;
+  margin:1cqh 0 0;
+  color:#a5362c;
+  font-size:1.35cqh;
+  font-weight:800;
+}
+
+.nickname-modal-actions{
+  display:flex;
+  gap:1cqh;
+  margin-top:1.5cqh;
+}
+
+.nickname-modal-actions button{
+  flex:1;
+  height:4.2cqh;
+  border:0;
+  border-radius:.75cqh;
+  font:inherit;
+  font-size:1.6cqh;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.nickname-modal-cancel{
+  background:#d8c3a0;
+  color:#4d2f1d;
+}
+
+.nickname-modal-confirm{
+  background:#2f6f6a;
+  color:#fff8dc;
+}
+
+.nickname-modal-actions button:disabled{
+  opacity:.65;
+  cursor:default;
 }

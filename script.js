@@ -3541,7 +3541,7 @@ function renderAll(){ renderHud(); renderEffects(); renderIntents(); renderField
 function renderHud(){
   normalizeRunResources();
   renderHudPortrait();
-  $("#hudName").textContent     = S.player.name;
+  renderHudName();
   $("#hudTitle").textContent    = S.player.title || "";
   $("#hudHp").textContent       = S.player.hp+"/"+S.player.maxHp;
   $("#hudHpFill").style.width   = Math.max(0, Math.min(100, (S.player.hp/S.player.maxHp)*100))+"%";
@@ -3576,6 +3576,50 @@ function renderHudPortrait(){
   }
   if(imgEl.getAttribute("src") !== iconSrc) imgEl.src = iconSrc;
 }
+
+/* 전투화면 좌상단 닉네임(#hudName) 표시 전용입니다. 닉네임 변경은 표시 텍스트만 바꾸며,
+   S.player.name(전투 상태)는 건드리지 않습니다. */
+function renderHudName(){
+  const nameEl = $("#hudName");
+  if(!nameEl) return;
+
+  bindHudNicknameClick(nameEl);
+
+  const nickname = (window.VIBERUN_NICKNAME_UI && typeof window.VIBERUN_NICKNAME_UI.getCachedNickname === "function")
+    ? window.VIBERUN_NICKNAME_UI.getCachedNickname()
+    : null;
+  nameEl.textContent = nickname || S.player.name;
+}
+
+function bindHudNicknameClick(nameEl){
+  if(!nameEl || nameEl.dataset.nicknameBound) return;
+
+  nameEl.dataset.nicknameBound = "true";
+  nameEl.classList.add("hud-name-clickable");
+  nameEl.setAttribute("role", "button");
+  nameEl.setAttribute("tabindex", "0");
+  nameEl.title = "닉네임 변경";
+
+  const openNicknameUI = () => {
+    if(window.VIBERUN_NICKNAME_UI && typeof window.VIBERUN_NICKNAME_UI.open === "function"){
+      window.VIBERUN_NICKNAME_UI.open();
+    }
+  };
+
+  nameEl.addEventListener("click", openNicknameUI);
+  nameEl.addEventListener("keydown", event => {
+    if(event.key === "Enter" || event.key === " "){
+      event.preventDefault();
+      openNicknameUI();
+    }
+  });
+}
+
+window.addEventListener("viberun:profile-nickname-changed", event => {
+  const nickname = event.detail && event.detail.nickname;
+  const nameEl = document.getElementById("hudName");
+  if(nameEl && nickname) nameEl.textContent = nickname;
+});
 
 function renderBattleProgressHud(){
   const region = document.querySelector(".progress-region");

@@ -427,6 +427,19 @@
     });
   }
 
+  /* 닉네임 변경 UI(nicknameUI.js) 전용 조회/변경 함수입니다. 스킨/장착 로직에는 관여하지 않습니다. */
+  function fetchProfileStatus(){
+    return requestJson("/profile/status", { method: "GET" });
+  }
+
+  function updateProfileNickname(nickname){
+    return requestJson("/profile/nickname", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname })
+    });
+  }
+
   function fetchDummyInventory(){
     return requestJson("/bm-store/dummy-inventory", { method: "GET" }).then(result => {
       if(result && result.ok && Array.isArray(result.dummyInventory)){
@@ -453,6 +466,8 @@
     claimMonthlyPassDailyReward,
     fetchCharacterSkinProfileState,
     equipCharacterSkinProfile,
+    fetchProfileStatus,
+    updateProfileNickname,
     fetchDummyInventory,
     getCachedDummyInventory(){
       return cachedDummyInventory.slice();
