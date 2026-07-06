@@ -117,6 +117,7 @@ function injectRewardStyles(){
     .victory-potion-replace-slot{width:100%;min-height:5.2cqh;padding:.75cqh .8cqw;border-radius:.9cqh;border:.2cqh solid #d6e6f5;background:linear-gradient(180deg,#fbfcff,#eef4fb);display:flex;align-items:center;gap:.7cqw;color:var(--c-ink);font:inherit;cursor:pointer;text-align:left;}
     .victory-potion-replace-slot.selected{border-color:#5d9f78;background:linear-gradient(180deg,#eef9f3,#dcefe6);box-shadow:0 0 0 .2cqh rgba(93,159,120,.18) inset;}
     .victory-potion-replace-icon{flex:0 0 3.2cqh;width:3.2cqh;height:3.2cqh;border-radius:.8cqh;display:grid;place-items:center;background:#fff;border:.16cqh solid var(--c-panel-line);font-size:1.65cqh;font-weight:900;color:var(--c-blue-deep);}
+    .victory-potion-replace-icon img{width:100%;height:100%;object-fit:contain;display:block;}
     .victory-potion-replace-name{font-size:1.35cqh;font-weight:900;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
     .victory-potion-replace-detail{display:none;margin-top:1cqh;padding:1cqh .9cqw;border-radius:.9cqh;border:.18cqh solid #d6e6f5;background:#f7fafc;}
     .victory-potion-replace-detail.show{display:block;}

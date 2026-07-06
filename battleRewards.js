@@ -435,7 +435,8 @@ function buildBattleVictoryOptionalReward(type, chance){
     const potion = pickRewardItemByRarity(potionDb, { context:rewardContext });
     if(!potion) return null;
     return {
-      id:"potion", itemId:potion.id, name:potion.name, icon:potion.emoji || potion.icon || "藥",
+      id:"potion", itemId:potion.id, name:potion.name, icon:potion.iconImage || potion.icon || potion.emoji || "藥",
+      iconImage:potion.iconImage || "",
       value:potion.name, doneText:"선택 완료", desc:potion.desc || "임시 약병 보상입니다."
     };
   }
@@ -565,7 +566,7 @@ function openBattleVictoryPotionReplacePanel(host){
     slot.type = "button";
     slot.className = "victory-potion-replace-slot";
     slot.innerHTML =
-      '<span class="victory-potion-replace-icon">' + (potion.emoji || potion.icon || "藥") + '</span>' +
+      '<span class="victory-potion-replace-icon">' + resourceIconHtml(potion.iconImage || potion.icon || potion.emoji || "藥") + '</span>' +
       '<span class="victory-potion-replace-name"></span>';
     slot.querySelector(".victory-potion-replace-name").textContent = potion.name || ("약병 " + (index + 1));
     slot.addEventListener("click", () => {

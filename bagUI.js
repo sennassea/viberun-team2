@@ -48,6 +48,11 @@
     return relic.iconImage || relic.icon || relic.emoji || "🏺";
   }
 
+  function getBagPotionIcon(potion) {
+    if (!potion) return "🧪";
+    return potion.iconImage || potion.icon || potion.emoji || "🧪";
+  }
+
   /* ── 스타일 주입 ────────────────────────────────────────────────────── */
   function ensureStyles() {
     if (document.getElementById("bagUIStyles")) return;
@@ -79,7 +84,8 @@
       ".bag-relic-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
       ".bag-relic-card.empty:hover{border-color:var(--bg-beige-deep);}" +
       ".bag-relic-icon{font-size:3cqh;line-height:1;flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;}" +
-      ".bag-potion-icon img,.bag-detail-name img{width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.22em;}" +
+      ".bag-detail-name img{width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.22em;}" +
+      ".bag-potion-card .bag-potion-icon img{width:2.6em;height:2.6em;object-fit:contain;display:block;}" +
       ".bag-relic-icon img{width:100%;height:100%;object-fit:contain;display:block;}" +
       ".bag-relic-name{font-size:1.15cqh;font-weight:800;text-align:center;}" +
       ".bag-empty-msg{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--bg-ink-soft);font-size:1.4cqh;font-weight:700;}" +
@@ -233,7 +239,7 @@
       html +=
         '<button type="button" class="bag-potion-card' + (i === selectedPotionIdx ? " selected" : "") + '" data-potion-idx="' + i + '">' +
           '<span class="bag-potion-num">' + (i + 1) + '</span>' +
-          '<div class="bag-potion-icon">' + bagItemIconHtml(potion.emoji || "🧪") + '</div>' +
+          '<div class="bag-potion-icon">' + bagItemIconHtml(getBagPotionIcon(potion)) + '</div>' +
           '<div class="bag-potion-name">' + escapeHtml(potion.name || "") + '</div>' +
         '</button>';
     }
@@ -248,7 +254,7 @@
     if (selectedPotionIdx !== null && potions[selectedPotionIdx]) {
       const potion = potions[selectedPotionIdx];
       els.potionDetail.innerHTML =
-        '<div class="bag-detail-name">' + bagItemIconHtml(potion.emoji || "🧪") + ' ' + escapeHtml(potion.name || "") + '</div>' +
+        '<div class="bag-detail-name">' + bagItemIconHtml(getBagPotionIcon(potion)) + ' ' + escapeHtml(potion.name || "") + '</div>' +
         '<div class="bag-detail-desc">' + colorizeRarityLabels(escapeHtml(potion.desc || potion.effectText || potion.valueText || "")) + '</div>';
     } else {
       els.potionDetail.innerHTML = '<div class="bag-detail-placeholder">약병을 선택하면 효과를 확인할 수 있어요.</div>';

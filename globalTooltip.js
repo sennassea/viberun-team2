@@ -491,7 +491,7 @@
     );
   }
 
-  /* 법구/약병 타일: 실제 아이콘 에셋(법구는 RELIC_ICON_PATHS, 약병은 assets/potion_icons/<이름>.png)을
+  /* 법구/약병 타일: 실제 아이콘 에셋(법구는 RELIC_ICON_PATHS, 약병은 POTION_ICON_PATHS/iconImage)을
      쓰고, 이미지가 없거나 로드에 실패하면 이모지로 자연스럽게 대체된다(이모지를 항상 배경에 깔고
      이미지가 로드되면 위에 덮는 방식) */
   function buildDeckItemTile(item, iconSrc) {
@@ -541,7 +541,7 @@
         relics.map(relic => buildDeckItemTile(relic, typeof RELIC_ICON_PATHS === "object" && RELIC_ICON_PATHS ? RELIC_ICON_PATHS[relic.id] : "")).join(""),
         "bm-purchase-deck-grid--items") +
       buildDeckSectionHtml("포함 약병 (" + potions.length + ")",
-        potions.map(potion => buildDeckItemTile(potion, potion.name ? "assets/potion_icons/" + encodeURIComponent(potion.name) + ".png" : "")).join(""),
+        potions.map(potion => buildDeckItemTile(potion, potion.iconImage || (typeof POTION_ICON_PATHS === "object" && POTION_ICON_PATHS ? POTION_ICON_PATHS[potion.id] : "") || "")).join(""),
         "bm-purchase-deck-grid--items");
 
     return '<div class="bm-purchase-deck-preview"><div class="bm-purchase-deck-scroll">' + sections + "</div></div>";

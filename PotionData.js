@@ -40,5 +40,44 @@ var POTION_DB = [
   { id:"goblin_panacea_bottle", dataId:"IT030", name:"도깨비 만병", emoji:"🧪", type:"fillEmptyPotionSlots", effect:"fillEmptyPotionSlots", value:2, target:"player", rarity:"rare", price:90, shopPrice:90, dropWeight:0, obtainFrom:[], implemented:true, desc:"사용 후 빈 약병 슬롯을 최대 2칸까지 일반 또는 희귀 약병으로 채웁니다.", fx:[{ t:"fillEmptyPotionSlots", maxSlots:2, rarityWeights:{ common:75, uncommon:25 }, allowRare:false, excludeSelf:true, noDuplicateInSameUse:true, removeSelfFirst:true }] }
 ];
 
+const POTION_ICON_PATHS = {
+  cheongsim_pill: "assets/potion_icons/cheongsim_pill.png",
+  focus_talisman: "assets/potion_icons/focus_talisman.png",
+  protective_talisman: "assets/potion_icons/protective_talisman.png",
+  five_direction_water: "assets/potion_icons/five_direction_water.png",
+  lotus_incense: "assets/potion_icons/lotus_incense.png",
+  unsaid_letter: "assets/potion_icons/unsaid_letter.png",
+  warding_salt: "assets/potion_icons/warding_salt.png",
+  salpuri_ash: "assets/potion_icons/salpuri_ash.png",
+  cracked_mirror_water: "assets/potion_icons/cracked_mirror_water.png",
+  candlewax_seal_liquid: "assets/potion_icons/candlewax_seal_liquid.png",
+  memory_dew: "assets/potion_icons/memory_dew.png",
+  clear_rice_water: "assets/potion_icons/clear_rice_water.png",
+  peach_spring_water: "assets/potion_icons/peach_spring_water.png",
+  dawn_spring_water: "assets/potion_icons/dawn_spring_water.png",
+  sealing_ink: "assets/potion_icons/sealing_ink.png",
+  sutra_ash_water: "assets/potion_icons/sutra_ash_water.png",
+  blank_talisman: "assets/potion_icons/blank_talisman.png",
+  white_salt_line: "assets/potion_icons/white_salt_line.png",
+  small_bell_liquor: "assets/potion_icons/small_bell_liquor.png",
+  spirit_eye_water: "assets/potion_icons/spirit_eye_water.png",
+  samsin_water: "assets/potion_icons/samsin_water.png",
+  white_tiger_water: "assets/potion_icons/white_tiger_water.png",
+  goblin_mirror_water: "assets/potion_icons/goblin_mirror_water.png",
+  diamond_water: "assets/potion_icons/diamond_water.png",
+  soul_return_water: "assets/potion_icons/soul_return_water.png",
+  grudge_ink: "assets/potion_icons/grudge_ink.png",
+  divine_excitation_liquor: "assets/potion_icons/divine_excitation_liquor.png",
+  ghost_gate_talisman: "assets/potion_icons/ghost_gate_talisman.png",
+  manshin_call: "assets/potion_icons/manshin_call.png",
+  goblin_panacea_bottle: "assets/potion_icons/goblin_panacea_bottle.png"
+};
+
+POTION_DB.forEach(item => {
+  if (!item || !POTION_ICON_PATHS[item.id]) return;
+  item.iconImage = POTION_ICON_PATHS[item.id];
+});
+
 window.POTION_SLOT_LIMIT = POTION_SLOT_LIMIT;
+window.POTION_ICON_PATHS = POTION_ICON_PATHS;
 window.POTION_DB = POTION_DB;

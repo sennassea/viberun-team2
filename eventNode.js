@@ -445,12 +445,20 @@ function eventPotionPickHtml(){
   );
 }
 
+function eventPotionArtHtml(potion){
+  const icon = potion.iconImage || potion.icon || potion.emoji || "🧪";
+  if(typeof icon === "string" && icon.indexOf("assets/") === 0){
+    return '<img src="' + escapeEventHtml(icon) + '" alt="" aria-hidden="true">';
+  }
+  return escapeEventHtml(icon);
+}
+
 function eventPotionHtml(potion){
   if(!potion) return "";
   const selected = eventState.potionSelected === potion.id ? " selected" : "";
   return (
     '<button type="button" class="event-card' + selected + '" data-potion-id="' + escapeEventHtml(potion.id) + '">' +
-      '<div class="event-card-art">' + escapeEventHtml(potion.emoji || "🧪") + '</div>' +
+      '<div class="event-card-art">' + eventPotionArtHtml(potion) + '</div>' +
       '<div class="event-card-name">' + escapeEventHtml(potion.name) + '</div>' +
       '<div class="event-card-desc">' + colorizeRarityLabels(escapeEventHtml(potion.desc || "")) + '</div>' +
     '</button>'

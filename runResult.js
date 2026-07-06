@@ -705,7 +705,7 @@ function renderRunDetail(snapshot, onFinish){
     : '<div class="rr-empty-text">없음</div>';
 
   const potionTrackHtml = snapshot.usedPotions.length
-    ? snapshot.usedPotions.map(potion => rrItemCardHtml(potion.emoji, potion.name, potion.count)).join("")
+    ? snapshot.usedPotions.map(potion => rrItemCardHtml(potion.iconImage || potion.emoji, potion.name, potion.count)).join("")
     : '<div class="rr-empty-text">없음</div>';
 
   const scoreBreakdown = getAct1ScoreBreakdown(snapshot);
@@ -985,7 +985,7 @@ function summarizeRrPotions(list){
   list.forEach(potion => {
     if(!potion || !potion.id) return;
     if(!byId[potion.id]){
-      byId[potion.id] = { id: potion.id, name: potion.name, emoji: potion.emoji, count: 0 };
+      byId[potion.id] = { id: potion.id, name: potion.name, emoji: potion.emoji, iconImage: potion.iconImage || "", count: 0 };
       order.push(byId[potion.id]);
     }
     byId[potion.id].count += 1;
