@@ -1006,4 +1006,3 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
   }
   return result;
 }
-
