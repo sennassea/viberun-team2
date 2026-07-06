@@ -5,6 +5,9 @@
   const SKIN_OPTION_SELECTOR = ".menu-profile-popup .menu-profile-option";
   const SPIRIT_PATH_CARD_PREVIEW_SELECTOR = ".spirit-path-preview-item";
   const RANDOM_ITEM_RESULT_CARD_SELECTOR = ".random-item-result-card";
+  /* 상점 상품 카드(주문 카드형은 tooltip.js가 별도 처리하므로 제외) */
+  const SHOP_PRODUCT_SELECTOR = ".shop-product:not(.shop-product-card-frame)";
+  const SHOP_DETAIL_SELECTOR = "#shopDetail";
   const GAP = 10;
   let tooltipEl = null;
   let activeAnchor = null;
@@ -31,7 +34,8 @@
 
   function findAnchor(target) {
     if (!target || typeof target.closest !== "function") return null;
-    const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR) || target.closest(RANDOM_ITEM_RESULT_CARD_SELECTOR);
+    const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR) ||
+      target.closest(RANDOM_ITEM_RESULT_CARD_SELECTOR) || target.closest(SHOP_PRODUCT_SELECTOR) || target.closest(SHOP_DETAIL_SELECTOR);
     if (!anchor || anchor.dataset.tooltipDisabled === "true") return null;
     return anchor;
   }
@@ -51,8 +55,8 @@
     return potionDb && potionDb.find(item => item && item.name === name) || null;
   }
 
-  function getRandomItemResultCardData(anchor) {
-    const nameEl = anchor.querySelector(".random-item-result-name, .card-name-text");
+  function getItemDataByDisplayedName(anchor) {
+    const nameEl = anchor.querySelector(".random-item-result-name, .card-name-text, .shop-product-name, .shop-detail-name");
     const name = nameEl ? nameEl.textContent.trim() : "";
     if (!name) return null;
 
@@ -92,7 +96,15 @@
     }
 
     if (anchor.classList && anchor.classList.contains("random-item-result-card")) {
-      return getRandomItemResultCardData(anchor);
+      return getItemDataByDisplayedName(anchor);
+    }
+
+    if (anchor.classList && anchor.classList.contains("shop-product")) {
+      return getItemDataByDisplayedName(anchor);
+    }
+
+    if (anchor.id === "shopDetail" && !anchor.querySelector(".shop-detail-card-preview")) {
+      return getItemDataByDisplayedName(anchor);
     }
 
     return null;
