@@ -9,6 +9,7 @@
 (function(){
   const READY_MESSAGE = "해당 탭은 준비 중입니다.";
   const PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 수령할 수 있습니다.";
+  const SKIN_PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 스킨을 수령할 수 있습니다.";
   const MOON_CHARGE_SUCCESS_MESSAGE = "테스트 구매가 완료되었습니다. 선물함에서 달빛조각을 수령할 수 있습니다.";
   const MOON_CHARGE_NOTICE = "테스트 구매입니다. 실제 결제가 발생하지 않습니다.";
   const RECOMMENDED_NOTICE = "운영자가 추천하는 특별 상품입니다.";
@@ -225,6 +226,11 @@
         return;
       }
 
+      if(product && product.rewardType === "character_skin"){
+        showToastMessage(SKIN_PURCHASE_SUCCESS_MESSAGE, "success");
+        return;
+      }
+
       showToastMessage(PURCHASE_SUCCESS_MESSAGE, "success");
     }).catch(error => {
       console.warn("[BMStoreUI] 패키지 구매 중 오류가 발생했습니다.", error);
@@ -286,12 +292,21 @@
       const emptyTextByTab = {
         order_pack: "판매 중인 주문 팩이 없습니다.",
         moon_charge: "판매 중인 충전 상품이 없습니다.",
-        recommended: "현재 추천 상품이 없습니다."
+        recommended: "현재 추천 상품이 없습니다.",
+        package: "판매 중인 스킨이 없습니다."
       };
       const emptyText = emptyTextByTab[state.activeTab] || "판매 중인 패키지가 없습니다.";
       els.body.innerHTML = (state.activeTab === "recommended"
         ? '<p class="bm-store-recommend-notice">' + escapeHtml(RECOMMENDED_NOTICE) + '</p>'
         : "") + '<div class="bm-store-empty">' + emptyText + '</div>';
+      return;
+    }
+
+    if(state.activeTab === "package"){
+      els.body.innerHTML =
+        '<div class="bm-store-skin-grid">' +
+          state.products.map(renderSkinProductCard).join("") +
+        '</div>';
       return;
     }
 
@@ -309,6 +324,44 @@
       '<div class="bm-store-package-grid bm-store-product-grid--' + escapeHtml(state.activeTab) + '">' +
         state.products.map(renderProductCard).join("") +
       '</div>' + notice;
+  }
+
+  function isSkinSaleEnded(product){
+    if(!product.saleEndAt) return false;
+    const saleEndAt = Date.parse(product.saleEndAt);
+    return Number.isFinite(saleEndAt) && Date.now() >= saleEndAt;
+  }
+
+  /* 스킨 탭 전용 카드 렌더러입니다. 3개 카드가 가로로 크게 배치되며,
+     한정 스킨은 saleEndAt이 지나면 "판매 종료"로 구매 버튼을 비활성화합니다. */
+  function renderSkinProductCard(product){
+    const isBusy = purchasingProductId === product.id;
+    const saleEnded = isSkinSaleEnded(product);
+    const disabled = isBusy || saleEnded || product.purchasable === false;
+
+    return (
+      '<article class="bm-store-skin-card bm-store-skin-card--' + escapeHtml(product.grade || "common") + '">' +
+        '<div class="bm-store-skin-title">' + escapeHtml(product.name) + '</div>' +
+        '<div class="bm-store-skin-badge">' + escapeHtml(product.gradeLabel || product.badge || "") + '</div>' +
+
+        '<div class="bm-store-skin-art" aria-hidden="true">' +
+          (product.previewImage
+            ? '<img src="' + escapeHtml(product.previewImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+            : '<span class="bm-store-art-moon"></span><span class="bm-store-art-box">✦</span>') +
+        '</div>' +
+
+        '<div class="bm-store-skin-description">' +
+          '<p>' + escapeHtml(product.skinTypeName || "") + '</p>' +
+          '<p>' + escapeHtml(product.description || "") + '</p>' +
+        '</div>' +
+
+        '<button type="button" class="bm-store-buy-btn bm-store-skin-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+          (disabled ? " disabled" : "") + '>' +
+          '<span class="bm-store-price-icon" aria-hidden="true"></span>' +
+          '<span>' + (saleEnded ? "판매 종료" : (isBusy ? "구매 중..." : formatCount(product.price))) + '</span>' +
+        '</button>' +
+      '</article>'
+    );
   }
 
   /* 추천 탭 전용 레이아웃입니다. 좌측에 월영의 약속 대형 카드, 우측 상단에 혼꽃 설화편 딤드 배너,

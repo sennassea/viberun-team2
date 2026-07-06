@@ -78,6 +78,37 @@ const BM_PACKAGE_PRODUCTS = [
   { id: "order_pack_legend_support", name: "전설 보조 팩", price: 10000, rewardId: "dummy_legend_support_pack", category: "order_pack", description: "전설 등급 신력 확정 소환" }
 ];
 
+/* 스킨 탭 캐릭터 스킨 구매 서버 검증 테이블입니다. 달빛서약☆마법무녀만 saleStartAt/saleEndAt
+   기간 제한이 있으며, saleEndAt은 exclusive로 처리합니다(해당 시각부터 판매 종료). */
+const BM_CHARACTER_SKIN_PRODUCTS = [
+  {
+    id: "skin_limited_moonlight_vow_magic_maiden",
+    name: "달빛서약☆마법무녀",
+    skinId: "moonlight_vow_magic_maiden",
+    grade: "limited",
+    price: 1500,
+    saleStartAt: "2026-07-06T00:00:00+09:00",
+    saleEndAt: "2026-08-20T00:00:00+09:00",
+    category: "character_skin"
+  },
+  {
+    id: "skin_premium_wolyeong_academy_transfer",
+    name: "월영학당 전학생",
+    skinId: "wolyeong_academy_transfer",
+    grade: "premium",
+    price: 1000,
+    category: "character_skin"
+  },
+  {
+    id: "skin_common_prayer_robe",
+    name: "백성의 기도복",
+    skinId: "common_prayer_robe",
+    grade: "common",
+    price: 700,
+    category: "character_skin"
+  }
+];
+
 /* 달빛조각 충전(테스트 구매) 검증 테이블입니다. 실제 결제 검증 없이 rewardAmount만큼
    wallet.moonShards를 증가시키며, 차감/잔액 확인은 하지 않습니다. */
 const BM_MOON_CHARGE_PRODUCTS = [
@@ -159,19 +190,30 @@ function buildDefaultMailbox() {
   ];
 }
 
+function buildDefaultCharacterSkins() {
+  return {
+    ownedSkinIds: [],
+    equippedSkinId: null
+  };
+}
+
 function ensureAccount(accountId) {
   if (!accounts.has(accountId)) {
     accounts.set(accountId, {
       mailbox: buildDefaultMailbox(),
       wallet: { moonShards: INITIAL_MOCK_MOON_SHARDS },
       dummyInventory: [],
-      monthlyPass: buildDefaultMonthlyPass()
+      monthlyPass: buildDefaultMonthlyPass(),
+      characterSkins: buildDefaultCharacterSkins()
     });
   }
 
   const account = accounts.get(accountId);
   if (!account.monthlyPass) {
     account.monthlyPass = buildDefaultMonthlyPass();
+  }
+  if (!account.characterSkins) {
+    account.characterSkins = buildDefaultCharacterSkins();
   }
   return account;
 }
@@ -286,6 +328,15 @@ function applyMailRewards(account, mail) {
       };
 
       account.wallet.moonShards = (Number(account.wallet.moonShards) || 0) + immediateRewardAmount;
+    } else if (reward.type === "character_skin") {
+      if (!account.characterSkins) {
+        account.characterSkins = buildDefaultCharacterSkins();
+      }
+
+      const skinId = String(reward.skinId || "");
+      if (skinId && !account.characterSkins.ownedSkinIds.includes(skinId)) {
+        account.characterSkins.ownedSkinIds.push(skinId);
+      }
     }
   });
 }
@@ -508,6 +559,104 @@ function handleBMPackagePurchase(req, res, productId) {
     product,
     mail,
     wallet: account.wallet
+  });
+}
+
+/* 캐릭터 스킨 구매입니다. 패키지 구매와 동일하게 달빛조각을 즉시 차감하지만,
+   보유 처리는 하지 않고 선물함 구매 메일만 생성합니다. 한정 스킨은 saleStartAt/saleEndAt
+   기간을 벗어나면 구매를 막습니다(saleEndAt은 exclusive). */
+function handleBMCharacterSkinPurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_CHARACTER_SKIN_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, code: "UNKNOWN_PRODUCT", message: "존재하지 않는 스킨 상품입니다." });
+    return;
+  }
+
+  const now = Date.now();
+
+  if (product.saleStartAt && now < Date.parse(product.saleStartAt)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_SALE_NOT_STARTED",
+      message: "아직 판매가 시작되지 않은 스킨입니다."
+    });
+    return;
+  }
+
+  if (product.saleEndAt && now >= Date.parse(product.saleEndAt)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_SALE_ENDED",
+      message: "판매 기간이 종료된 스킨입니다."
+    });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  if (account.characterSkins.ownedSkinIds.includes(product.skinId)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_ALREADY_OWNED",
+      message: "이미 보유 중인 스킨입니다.",
+      wallet: account.wallet,
+      characterSkins: account.characterSkins
+    });
+    return;
+  }
+
+  const currentMoonShards = Number(account.wallet.moonShards) || 0;
+  if (currentMoonShards < product.price) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "INSUFFICIENT_MOON_SHARDS",
+      message: "달빛조각이 부족합니다.",
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  account.wallet.moonShards = currentMoonShards - product.price;
+
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productCategory: "character_skin",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "moon_shard",
+    paidAmount: product.price,
+    rewards: [
+      {
+        type: "character_skin",
+        skinId: product.skinId,
+        grade: product.grade,
+        productId: product.id,
+        name: product.name
+      }
+    ]
+  };
+
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    mail,
+    wallet: account.wallet,
+    characterSkins: account.characterSkins
   });
 }
 
@@ -833,6 +982,12 @@ const server = http.createServer((req, res) => {
   const bmPackagePurchaseMatch = pathname.match(/^\/bm-store\/package\/([^/]+)\/purchase$/);
   if (method === "POST" && bmPackagePurchaseMatch) {
     readRequestBody(req).then(() => handleBMPackagePurchase(req, res, decodeURIComponent(bmPackagePurchaseMatch[1])));
+    return;
+  }
+
+  const bmCharacterSkinPurchaseMatch = pathname.match(/^\/bm-store\/character-skin\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmCharacterSkinPurchaseMatch) {
+    readRequestBody(req).then(() => handleBMCharacterSkinPurchase(req, res, decodeURIComponent(bmCharacterSkinPurchaseMatch[1])));
     return;
   }
 

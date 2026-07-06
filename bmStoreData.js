@@ -16,7 +16,7 @@
     },
     {
       id: "package",
-      label: "패키지",
+      label: "스킨",
       enabled: true,
       readyMessage: ""
     },
@@ -34,6 +34,8 @@
     }
   ];
 
+  /* 기존 패키지 상품입니다. 스킨 탭 1차 구현으로 더 이상 노출하지 않지만,
+     추후 복원 가능성을 위해 데이터는 삭제하지 않고 주석 처리합니다.
   const PACKAGE_PRODUCTS = [
     {
       id: "starter_pack",
@@ -85,6 +87,80 @@
       recommended: true,
       recommendOrder: 20,
       recommendBadge: "20% OFF"
+    }
+  ];
+  */
+
+  /* 스킨 탭 캐릭터 스킨 상품 3종입니다. 배치 순서는 한정 → 프리미엄 → 일반이며,
+     달빛서약☆마법무녀만 45일 한정 판매 기간(saleStartAt/saleEndAt)이 적용됩니다.
+     스킨은 구매 즉시 지급되지 않고 선물함 수령 시에만 보유 처리됩니다. */
+  const CHARACTER_SKIN_PRODUCTS = [
+    {
+      id: "skin_limited_moonlight_vow_magic_maiden",
+      tab: "package",
+      name: "달빛서약☆마법무녀",
+      skinTypeName: "마법소녀 스킨",
+      grade: "limited",
+      gradeLabel: "한정",
+      priceType: "moon_shard",
+      price: 1500,
+      rewardType: "character_skin",
+      skinId: "moonlight_vow_magic_maiden",
+
+      description: "달빛 아래 맺은 서약을 품은 한정 마법무녀 의상입니다. 판매 기간: 2026.07.06 ~ 2026.08.19 23:59",
+      saleStartAt: "2026-07-06T00:00:00+09:00",
+      saleEndAt: "2026-08-20T00:00:00+09:00",
+      salePeriodText: "판매 기간: 2026.07.06 ~ 2026.08.19 23:59",
+
+      badge: "한정",
+      sortOrder: 1,
+      imageKey: "skin_limited_moonlight_vow_magic_maiden",
+      previewImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png",
+
+      purchasable: true,
+      dimmed: false
+    },
+    {
+      id: "skin_premium_wolyeong_academy_transfer",
+      tab: "package",
+      name: "월영학당 전학생",
+      skinTypeName: "교복 스킨",
+      grade: "premium",
+      gradeLabel: "프리미엄",
+      priceType: "moon_shard",
+      price: 1000,
+      rewardType: "character_skin",
+      skinId: "wolyeong_academy_transfer",
+
+      description: "월영학당에 새로 찾아온 전학생 의상입니다.",
+      badge: "프리미엄",
+      sortOrder: 2,
+      imageKey: "skin_premium_wolyeong_academy_transfer",
+      previewImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
+
+      purchasable: true,
+      dimmed: false
+    },
+    {
+      id: "skin_common_prayer_robe",
+      tab: "package",
+      name: "백성의 기도복",
+      skinTypeName: "수녀복 스킨",
+      grade: "common",
+      gradeLabel: "일반",
+      priceType: "moon_shard",
+      price: 700,
+      rewardType: "character_skin",
+      skinId: "common_prayer_robe",
+
+      description: "백성을 위해 조용히 기도하는 소박한 의상입니다.",
+      badge: "일반",
+      sortOrder: 3,
+      imageKey: "skin_common_prayer_robe",
+      previewImage: "assets/skins/skin_common_prayer_robe.png",
+
+      purchasable: true,
+      dimmed: false
     }
   ];
 
@@ -328,7 +404,7 @@
   function allProducts(){
     return MONTHLY_PASS_PRODUCTS.concat(
       RECOMMENDED_PREVIEW_PRODUCTS,
-      PACKAGE_PRODUCTS,
+      CHARACTER_SKIN_PRODUCTS,
       ORDER_PACK_PRODUCTS,
       MOON_CHARGE_PRODUCTS
     );
@@ -345,10 +421,16 @@
       return clone(allProducts().find(product => product.id === productId) || null);
     },
     getPackageProducts(){
-      return clone(PACKAGE_PRODUCTS);
+      return clone(CHARACTER_SKIN_PRODUCTS);
     },
     findPackageProduct(productId){
-      return clone(PACKAGE_PRODUCTS.find(product => product.id === productId) || null);
+      return clone(CHARACTER_SKIN_PRODUCTS.find(product => product.id === productId) || null);
+    },
+    getCharacterSkinProducts(){
+      return clone(CHARACTER_SKIN_PRODUCTS);
+    },
+    findCharacterSkinProduct(productId){
+      return clone(CHARACTER_SKIN_PRODUCTS.find(product => product.id === productId) || null);
     },
     getOrderPackProducts(){
       return clone(ORDER_PACK_PRODUCTS);
