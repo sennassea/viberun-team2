@@ -254,7 +254,10 @@
       if (left < GAP) {
         left = cardRect.right + GAP;
       }
-      top = cardRect.top + (cardRect.height - tipRect.height) / 2;
+      /* 이 카드는 화면 하단부에 있어 아래쪽 여백보다 위쪽 여백이 훨씬 넓다.
+         카드 중앙/상단에 맞추면 큰 프리뷰 이미지가 아래로 한참 밀려나가 보이므로,
+         카드 아래쪽 라인에 맞춰 옆으로 붙이고 위쪽으로 펼쳐지게 한다 */
+      top = cardRect.bottom - tipRect.height;
     } else {
       const anchorRect = anchor.getBoundingClientRect();
       left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
@@ -413,34 +416,15 @@
   applyBmStoreWalletTooltip();
 
   /* ══════════════════════════════════════════════════════════════════════
-     월영당 덱 포함 카드 프리뷰 패널 (주문 팩 탭 + 추천 탭의 한풀이 덱 소형 카드)
-     - .bm-store-product(주문 팩 카드) / .bm-recommended-small-card(추천 탭 한풀이 덱)
-       hover/click 시 패널을 띄운다. 두 selector가 겹치는 소형 카드 중 deck_pack이
-       아닌 상품(스킨/충전 등)은 findDeckPackProduct가 null을 반환해 조용히 무시된다.
-     - 한풀이 덱은 카드 오른쪽, 굿판 덱은 카드 왼쪽에 고정 배치한다.
-     - 클릭으로 열면 pinned 상태가 되어 바깥 클릭 또는 다른 상품 hover 전까지 유지된다.
-     - CARD_DB는 읽기 전용으로만 참조하며 수정하지 않는다.
+     월영당 주문 팩(덱) 구매 확인 팝업 – 덱 구성 미리보기
+     - bmStoreUI.js가 만드는 .bm-purchase-confirm-panel이 생성될 때, 표시된 상품명이
+       deck_pack 상품과 일치하면 팝업 맨 위에 "포함 주문/법구/약병" 목록을 주입한다.
+     - 각 항목은 data-tooltip-title/data-tooltip을 부여해 기존 전역 툴팁 로직을 그대로
+       재사용한다(새 hover 로직 불필요).
+     - CARD_DB/RELIC_MASTER_DB/POTION_DB는 읽기 전용으로만 참조하며 수정하지 않는다.
+     - bmStoreUI.js는 구매 확인 팝업을 열 때마다 새 DOM을 만들므로, 패널 인스턴스마다
+       1회만 검사/주입되도록 dataset 마커로 중복 실행(우리 자신의 삽입이 다시 관찰되는 것)을 막는다.
      ══════════════════════════════════════════════════════════════════════ */
-  const DECK_PREVIEW_CARD_SELECTOR = ".bm-store-product, .bm-recommended-small-card";
-  let deckPreviewEl = null;
-  let deckPreviewAnchor = null;
-  let deckPreviewPinned = false;
-  let deckHideTimer = null;
-
-  function ensureDeckPreview() {
-    if (deckPreviewEl) return deckPreviewEl;
-    deckPreviewEl = document.createElement("div");
-    deckPreviewEl.id = "bmDeckPreviewPanel";
-    deckPreviewEl.className = "bm-deck-preview-panel";
-    document.body.appendChild(deckPreviewEl);
-    return deckPreviewEl;
-  }
-
-  function findDeckPackProduct(card) {
-    const product = findBmStoreProductById(getBmCardProductId(card));
-    return product && product.rewardType === "deck_pack" ? product : null;
-  }
-
   function getDeckCards(unlockKeyword) {
     if (!unlockKeyword || typeof CARD_DB !== "object" || !CARD_DB) return [];
     return Object.keys(CARD_DB)
@@ -448,9 +432,35 @@
       .filter(card => card && card.attr === unlockKeyword);
   }
 
+  /* RELIC_MASTER_DB의 deck 필드는 "한풀이"/"굿판"처럼 접미사 "덱" 없이 저장돼 있어
+     상품의 unlockKeyword("한풀이 덱"/"굿판 덱")와 그대로 비교하면 항상 매칭에 실패한다.
+     끝의 "덱"을 떼어낸 기준 이름으로 비교한다 */
+  function getDeckRelics(unlockKeyword) {
+    const baseName = (unlockKeyword || "").replace(/\s*덱\s*$/, "").trim();
+    if (!baseName || typeof RELIC_MASTER_DB === "undefined" || !Array.isArray(RELIC_MASTER_DB)) return [];
+    return RELIC_MASTER_DB.filter(relic => relic && relic.deck === baseName);
+  }
+
+  function getDeckPotions(deckId) {
+    if (!deckId || typeof POTION_DB === "undefined" || !Array.isArray(POTION_DB)) return [];
+    return POTION_DB.filter(potion => potion && potion.deckId === deckId);
+  }
+
+  function findDeckPackProductByName(name) {
+    if (!name) return null;
+    const service = window.VIBERUN_BM_STORE_SERVICE;
+    if (!service || typeof service.getProductsByTab !== "function") return null;
+    const tabs = ["order_pack", "recommended"];
+    for (let i = 0; i < tabs.length; i++) {
+      const products = service.getProductsByTab(tabs[i]) || [];
+      const found = products.find(p => p && p.rewardType === "deck_pack" && p.name === name);
+      if (found) return found;
+    }
+    return null;
+  }
+
   /* deckViewer.js의 카드 프레임 경로 규칙(assets/card_frames/card-frame-{type}-{rarity}.png)을
-     그대로 참고해 실제 카드 에셋(프레임 + 원화/이모지)으로 미니 카드를 렌더링한다.
-     CARD_DB는 읽기 전용으로만 참조한다 */
+     그대로 참고해 실제 카드 에셋(프레임 + 원화/이모지)으로 미니 카드를 렌더링한다 */
   function getDeckCardFramePath(card) {
     if (card && card.type === "status") return "assets/card_frames/card-frame-status.png";
     const type = card && ["attack", "defense", "skill"].includes(card.type) ? card.type : "skill";
@@ -458,16 +468,18 @@
     return "assets/card_frames/card-frame-" + type + "-" + rarity + ".png";
   }
 
-  /* 카드 프레임 PNG 위에 비용/이름/설명 텍스트를 겹쳐 그린다. 위치(%)는 deckViewer.js의
-     card-cost-text/card-name-text/card-desc-text와 동일한 비율이며, 폰트 크기는
-     시각 영역 자체를 기준 컨테이너로 잡아(container-type:size) 카드 크기와 무관하게
-     항상 같은 비율로 보이도록 한다 */
-  function buildDeckPreviewCardHtml(card) {
+  /* 카드 프레임 PNG 위에 비용/이름/설명을 전부 겹쳐 그린다. 설명이 길어 원래 카드 비율
+     그대로는 하단 설명 영역이 너무 좁아 잘렸으므로, 설명 영역 자체를 훨씬 크게 잡고(카드
+     높이의 절반 가까이) 그 뒤에 반투명 크림색 판을 깔아 원화 위에서도 잘 읽히게 했다.
+     카드 자체도 2열로 키워 절대 크기를 키웠다. hover 시엔 동일한 이름/설명이 전역
+     툴팁으로도 한 번 더 뜬다 */
+  function buildDeckCardTile(card) {
     const visualHtml = card.art
       ? '<img class="bm-deck-preview-card-art" src="' + escapeHtml(card.art) + '" alt="" onerror="this.remove()">'
       : '<span class="bm-deck-preview-card-emoji">' + escapeHtml(card.emoji || "🃏") + "</span>";
+    const tooltipTitle = escapeHtml((card.name || "") + (card.emoji ? " " + card.emoji : ""));
     return (
-      '<div class="bm-deck-preview-card">' +
+      '<div class="bm-deck-preview-card" data-tooltip-title="' + tooltipTitle + '" data-tooltip="' + escapeHtml(card.desc || "") + '">' +
         '<div class="bm-deck-preview-card-visual">' +
           visualHtml +
           '<img class="bm-deck-preview-card-frame" src="' + escapeHtml(getDeckCardFramePath(card)) + '" alt="" onerror="this.style.display=&quot;none&quot;">' +
@@ -479,98 +491,84 @@
     );
   }
 
-  function buildDeckPreviewHtml(product, cards) {
-    const title = '<div class="bm-deck-preview-title">' + escapeHtml(product.name) + "</div>";
-    const desc = product.description
-      ? '<div class="bm-deck-preview-desc">' + escapeHtml(product.description) + "</div>"
+  /* 법구/약병 타일: 실제 아이콘 에셋(법구는 RELIC_ICON_PATHS, 약병은 assets/potion_icons/<이름>.png)을
+     쓰고, 이미지가 없거나 로드에 실패하면 이모지로 자연스럽게 대체된다(이모지를 항상 배경에 깔고
+     이미지가 로드되면 위에 덮는 방식) */
+  function buildDeckItemTile(item, iconSrc) {
+    const imgHtml = iconSrc
+      ? '<img class="bm-deck-preview-item-icon" src="' + escapeHtml(iconSrc) + '" alt="" onerror="this.remove()">'
       : "";
-    if (!cards.length) {
-      return title + desc + '<div class="bm-deck-preview-empty">포함 카드 정보를 불러올 수 없습니다.</div>';
-    }
-    const grid = '<div class="bm-deck-preview-grid">' +
-      cards.map(buildDeckPreviewCardHtml).join("") +
-      "</div>";
-    return title + desc + grid;
+    const tooltipTitle = escapeHtml((item.name || "") + (item.emoji ? " " + item.emoji : ""));
+    return (
+      '<div class="bm-deck-preview-item" data-tooltip-title="' + tooltipTitle + '" data-tooltip="' + escapeHtml(item.desc || "") + '">' +
+        '<div class="bm-deck-preview-item-visual">' +
+          '<span class="bm-deck-preview-item-emoji">' + escapeHtml(item.emoji || "❔") + "</span>" +
+          imgHtml +
+        "</div>" +
+        '<span class="bm-deck-preview-item-name">' + escapeHtml(item.name || "") + "</span>" +
+      "</div>"
+    );
   }
 
-  function positionDeckPreview(card, side) {
-    const panel = ensureDeckPreview();
-    const cardRect = card.getBoundingClientRect();
-    const panelRect = panel.getBoundingClientRect();
-    const vw = window.innerWidth || document.documentElement.clientWidth;
-    const vh = window.innerHeight || document.documentElement.clientHeight;
-
-    let left = side === "left" ? cardRect.left - panelRect.width - GAP : cardRect.right + GAP;
-    if (side === "right" && left + panelRect.width > vw - GAP) left = cardRect.left - panelRect.width - GAP;
-    if (side === "left" && left < GAP) left = cardRect.right + GAP;
-
-    let top = cardRect.top + (cardRect.height - panelRect.height) / 2;
-    left = Math.max(GAP, Math.min(left, vw - panelRect.width - GAP));
-    top = Math.max(GAP, Math.min(top, vh - panelRect.height - GAP));
-
-    panel.style.left = left + "px";
-    panel.style.top = top + "px";
+  function buildDeckSectionHtml(labelText, tilesHtml, gridModifier) {
+    if (!tilesHtml) return "";
+    return (
+      '<div class="bm-purchase-deck-section">' +
+        '<div class="bm-purchase-deck-section-title">' + escapeHtml(labelText) + "</div>" +
+        '<div class="bm-purchase-deck-grid ' + gridModifier + '">' + tilesHtml + "</div>" +
+      "</div>"
+    );
   }
 
-  function showDeckPreview(card) {
-    const product = findDeckPackProduct(card);
-    if (!product) return;
+  function buildDeckCompositionHtml(product) {
     const cards = getDeckCards(product.unlockKeyword);
-    const panel = ensureDeckPreview();
-    panel.innerHTML = buildDeckPreviewHtml(product, cards);
-    panel.classList.add("is-show");
-    deckPreviewAnchor = card;
-    positionDeckPreview(card, product.deckPackId === "gutpan" ? "left" : "right");
-  }
+    const relics = getDeckRelics(product.unlockKeyword);
+    const potions = getDeckPotions(product.deckPackId);
 
-  function hideDeckPreview() {
-    deckPreviewAnchor = null;
-    deckPreviewPinned = false;
-    if (deckPreviewEl) deckPreviewEl.classList.remove("is-show");
-  }
-
-  function scheduleHideDeckPreview() {
-    if (deckPreviewPinned) return;
-    window.clearTimeout(deckHideTimer);
-    deckHideTimer = window.setTimeout(hideDeckPreview, 80);
-  }
-
-  document.addEventListener("pointerover", event => {
-    const card = event.target && typeof event.target.closest === "function"
-      ? event.target.closest(DECK_PREVIEW_CARD_SELECTOR)
-      : null;
-    if (!card) return;
-    window.clearTimeout(deckHideTimer);
-    deckPreviewPinned = false;
-    if (card === deckPreviewAnchor && deckPreviewEl && deckPreviewEl.classList.contains("is-show")) return;
-    showDeckPreview(card);
-  });
-
-  document.addEventListener("pointerout", event => {
-    if (!deckPreviewAnchor) return;
-    const card = event.target && typeof event.target.closest === "function"
-      ? event.target.closest(DECK_PREVIEW_CARD_SELECTOR)
-      : null;
-    if (!card || card !== deckPreviewAnchor) return;
-    const next = event.relatedTarget;
-    if (next && deckPreviewAnchor.contains(next)) return;
-    if (next && deckPreviewEl && deckPreviewEl.contains(next)) return;
-    scheduleHideDeckPreview();
-  });
-
-  document.addEventListener("pointerdown", event => {
-    const card = event.target && typeof event.target.closest === "function"
-      ? event.target.closest(DECK_PREVIEW_CARD_SELECTOR)
-      : null;
-    if (card) {
-      if (event.target.closest(".bm-store-buy-btn")) { hideDeckPreview(); return; }
-      showDeckPreview(card);
-      deckPreviewPinned = true;
-      return;
+    if (!cards.length && !relics.length && !potions.length) {
+      return (
+        '<div class="bm-purchase-deck-preview">' +
+          '<div class="bm-purchase-deck-scroll">' +
+            '<div class="bm-deck-preview-empty">포함 구성 정보를 불러올 수 없습니다.</div>' +
+          "</div>" +
+        "</div>"
+      );
     }
-    if (deckPreviewEl && deckPreviewEl.contains(event.target)) return;
-    hideDeckPreview();
-  }, true);
+
+    const sections =
+      buildDeckSectionHtml("포함 주문 (" + cards.length + ")", cards.map(buildDeckCardTile).join(""), "bm-purchase-deck-grid--cards") +
+      buildDeckSectionHtml("포함 법구 (" + relics.length + ")",
+        relics.map(relic => buildDeckItemTile(relic, typeof RELIC_ICON_PATHS === "object" && RELIC_ICON_PATHS ? RELIC_ICON_PATHS[relic.id] : "")).join(""),
+        "bm-purchase-deck-grid--items") +
+      buildDeckSectionHtml("포함 약병 (" + potions.length + ")",
+        potions.map(potion => buildDeckItemTile(potion, potion.name ? "assets/potion_icons/" + encodeURIComponent(potion.name) + ".png" : "")).join(""),
+        "bm-purchase-deck-grid--items");
+
+    return '<div class="bm-purchase-deck-preview"><div class="bm-purchase-deck-scroll">' + sections + "</div></div>";
+  }
+
+  function tryInjectDeckPreview() {
+    const panel = document.querySelector(".bm-purchase-confirm-panel");
+    if (!panel || panel.dataset.deckPreviewChecked === "true") return;
+    panel.dataset.deckPreviewChecked = "true";
+
+    const nameEl = panel.querySelector(".bm-purchase-confirm-message strong");
+    const name = nameEl ? nameEl.textContent.trim() : "";
+    const product = findDeckPackProductByName(name);
+    if (!product) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = buildDeckCompositionHtml(product);
+    const titleEl = panel.querySelector(".bm-purchase-confirm-title");
+    if (titleEl) panel.insertBefore(wrapper.firstChild, titleEl);
+    else panel.insertBefore(wrapper.firstChild, panel.firstChild);
+    /* bmStore.css의 기본 팝업 폭(min(70cqw,44cqh,92vw))은 카드 목록이 들어가기엔 좁아
+       전용 클래스로 이 팝업만 더 넓게 늘린다 */
+    panel.classList.add("bm-has-deck-preview");
+  }
+
+  new MutationObserver(tryInjectDeckPreview)
+    .observe(document.body, { childList: true, subtree: true });
 
   window.GlobalTooltip = {
     hide,
