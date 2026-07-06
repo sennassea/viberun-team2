@@ -72,7 +72,33 @@
       }
     }
 
+    bindNicknameClick();
+
     return true;
+  }
+
+  /* 닉네임 클릭 시 메인/전투 공통 닉네임 변경 모달을 엽니다. 스킨 적용 로직과는 무관합니다. */
+  function bindNicknameClick(){
+    if(!nameEl || nameEl.dataset.nicknameBound) return;
+
+    nameEl.dataset.nicknameBound = "true";
+    nameEl.setAttribute("role", "button");
+    nameEl.setAttribute("tabindex", "0");
+    nameEl.title = "닉네임 변경";
+
+    const openNicknameUI = () => {
+      if(window.VIBERUN_NICKNAME_UI && typeof window.VIBERUN_NICKNAME_UI.open === "function"){
+        window.VIBERUN_NICKNAME_UI.open();
+      }
+    };
+
+    nameEl.addEventListener("click", openNicknameUI);
+    nameEl.addEventListener("keydown", event => {
+      if(event.key === "Enter" || event.key === " "){
+        event.preventDefault();
+        openNicknameUI();
+      }
+    });
   }
 
   function setVisible(visible){
@@ -261,6 +287,11 @@
 
   window.addEventListener("viberun:auth-changed", refresh);
   window.addEventListener("viberun:mailbox-changed", refresh);
+  window.addEventListener("viberun:profile-nickname-changed", event => {
+    const nickname = event.detail && event.detail.nickname;
+    if(!ensureElements() || !nickname) return;
+    nameEl.textContent = nickname;
+  });
 
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", refresh);

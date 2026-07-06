@@ -217,6 +217,52 @@ function buildDefaultCharacterSkins() {
   };
 }
 
+/* 계정 프로필(닉네임) 기본값입니다. accountId와 nickname은 별도로 관리하며,
+   nickname은 추후 랭킹 표시에만 노출됩니다. */
+function buildDefaultProfile() {
+  return {
+    nickname: DEFAULT_DISPLAY_NAME,
+    nicknameChangedAt: null
+  };
+}
+
+const NICKNAME_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+function countNicknameLength(nickname) {
+  return Array.from(String(nickname || "").trim()).length;
+}
+
+function sanitizeNickname(rawNickname) {
+  return String(rawNickname || "").trim().replace(/\s+/g, " ");
+}
+
+/* 닉네임 중복 검사는 하지 않으며, 길이만 검증합니다. */
+function validateNickname(rawNickname) {
+  const nickname = sanitizeNickname(rawNickname);
+  const length = countNicknameLength(nickname);
+
+  if (length < 2) {
+    return { ok: false, code: "NICKNAME_TOO_SHORT", message: "닉네임은 최소 2글자 이상이어야 합니다." };
+  }
+  if (length > 8) {
+    return { ok: false, code: "NICKNAME_TOO_LONG", message: "닉네임은 최대 8글자까지 가능합니다." };
+  }
+  return { ok: true, nickname };
+}
+
+function buildProfileResponse(account) {
+  const now = Date.now();
+  const changedAt = Number(account.profile.nicknameChangedAt) || null;
+  const nextNicknameChangeAt = changedAt ? changedAt + NICKNAME_CHANGE_COOLDOWN_MS : null;
+
+  return {
+    nickname: account.profile.nickname || DEFAULT_DISPLAY_NAME,
+    nicknameChangedAt: changedAt,
+    nextNicknameChangeAt,
+    canChangeNickname: !nextNicknameChangeAt || now >= nextNicknameChangeAt
+  };
+}
+
 function ensureAccount(accountId) {
   if (!accounts.has(accountId)) {
     accounts.set(accountId, {
@@ -224,7 +270,8 @@ function ensureAccount(accountId) {
       wallet: { moonShards: INITIAL_MOCK_MOON_SHARDS },
       dummyInventory: [],
       monthlyPass: buildDefaultMonthlyPass(),
-      characterSkins: buildDefaultCharacterSkins()
+      characterSkins: buildDefaultCharacterSkins(),
+      profile: buildDefaultProfile()
     });
   }
 
@@ -240,6 +287,15 @@ function ensureAccount(accountId) {
   }
   if (!("equippedSkinId" in account.characterSkins)) {
     account.characterSkins.equippedSkinId = null;
+  }
+  if (!account.profile) {
+    account.profile = buildDefaultProfile();
+  }
+  if (!account.profile.nickname) {
+    account.profile.nickname = DEFAULT_DISPLAY_NAME;
+  }
+  if (!("nicknameChangedAt" in account.profile)) {
+    account.profile.nicknameChangedAt = null;
   }
   return account;
 }
@@ -956,7 +1012,7 @@ function handleProfileCharacterSkinsGet(req, res) {
   sendJson(res, 200, {
     ok: true,
     profile: {
-      displayName: DEFAULT_DISPLAY_NAME,
+      displayName: account.profile.nickname || DEFAULT_DISPLAY_NAME,
       equippedSkinId,
       currentProfileIcon: resolveProfileIconBySkinId(equippedSkinId)
     },
@@ -997,11 +1053,88 @@ function handleProfileCharacterSkinsEquip(req, res, body) {
     ok: true,
     message: "스킨이 적용되었습니다.",
     profile: {
-      displayName: DEFAULT_DISPLAY_NAME,
+      displayName: account.profile.nickname || DEFAULT_DISPLAY_NAME,
       equippedSkinId: skinId,
       currentProfileIcon: resolveProfileIconBySkinId(skinId)
     },
     characterSkins: account.characterSkins
+  });
+}
+
+/* ------------------------------------------------------------------------
+   /profile/status, /profile/nickname - 닉네임 조회/변경
+   - accountId와 nickname은 서버 내부에서 별도로 관리하며, 닉네임 중복은 허용합니다.
+   - 추후 랭킹 시스템에는 nickname만 노출하고, 내부 식별은 accountId로 합니다.
+   ------------------------------------------------------------------------ */
+function handleProfileStatus(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  sendJson(res, 200, { ok: true, profile: buildProfileResponse(account) });
+}
+
+function handleProfileNicknameChange(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_REQUEST", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const validation = validateNickname(payload.nickname);
+
+  if (!validation.ok) {
+    sendJson(res, 400, validation);
+    return;
+  }
+
+  const nextNickname = validation.nickname;
+  const currentNickname = account.profile.nickname || DEFAULT_DISPLAY_NAME;
+
+  /* 같은 닉네임 재입력은 변경으로 처리하지 않으며, 쿨다운을 소비하지 않습니다. */
+  if (nextNickname === currentNickname) {
+    sendJson(res, 200, {
+      ok: true,
+      message: "현재 사용 중인 닉네임입니다.",
+      profile: buildProfileResponse(account)
+    });
+    return;
+  }
+
+  const now = Date.now();
+  const changedAt = Number(account.profile.nicknameChangedAt) || null;
+  const nextNicknameChangeAt = changedAt ? changedAt + NICKNAME_CHANGE_COOLDOWN_MS : null;
+
+  if (nextNicknameChangeAt && now < nextNicknameChangeAt) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "NICKNAME_CHANGE_COOLDOWN",
+      message: "닉네임은 1일에 한 번만 변경할 수 있습니다.",
+      nextNicknameChangeAt,
+      profile: buildProfileResponse(account)
+    });
+    return;
+  }
+
+  account.profile.nickname = nextNickname;
+  account.profile.nicknameChangedAt = now;
+
+  sendJson(res, 200, {
+    ok: true,
+    message: "닉네임이 변경되었습니다.",
+    profile: buildProfileResponse(account)
   });
 }
 
@@ -1131,6 +1264,16 @@ const server = http.createServer((req, res) => {
 
   if (method === "POST" && pathname === "/profile/character-skins/equip") {
     readRequestBody(req).then((body) => handleProfileCharacterSkinsEquip(req, res, body));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/profile/status") {
+    handleProfileStatus(req, res);
+    return;
+  }
+
+  if (method === "POST" && pathname === "/profile/nickname") {
+    readRequestBody(req).then((body) => handleProfileNicknameChange(req, res, body));
     return;
   }
 
