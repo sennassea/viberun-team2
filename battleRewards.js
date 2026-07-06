@@ -136,9 +136,23 @@ function randomItemResultIconHtml(icon, name){
 }
 
 function randomItemResultCardHtml(item){
+  const actionText = item.action === "remove" ? "제거됨" : "획득";
+
+  /* 주문(카드) 결과는 카드 선택 화면과 동일한 실제 카드 프레임 이미지로 표시 */
+  if(item.type === "card"){
+    const card = (typeof CARD_DB !== "undefined") ? CARD_DB[item.key] : null;
+    if(card && typeof cardFaceHtml === "function"){
+      return (
+        '<div class="random-item-result-card random-item-result-card-frame ' + escapeHtml(item.action || "gain") + '">' +
+          '<div class="random-item-result-card-face card-frame-card">' + cardFaceHtml(card) + '</div>' +
+          '<div class="random-item-result-tag">' + escapeHtml(actionText) + '</div>' +
+        '</div>'
+      );
+    }
+  }
+
   const icon = item.icon || (item.type === "relic" ? "🏺" : item.type === "potion" ? "🧪" : "?");
   const name = item.name || "";
-  const actionText = item.action === "remove" ? "제거됨" : "획득";
   return (
     '<div class="random-item-result-card ' + escapeHtml(item.action || "gain") + '">' +
       '<div class="random-item-result-icon">' + randomItemResultIconHtml(icon, name) + '</div>' +
@@ -195,6 +209,15 @@ function ensureRandomItemResultPopupStyle(){
       'font-size:1.1cqh;font-weight:900;color:#8a5c2b;text-align:center;' +
     '}' +
     '#randomItemResultPopup .random-item-result-card.remove .random-item-result-tag{color:#a3402f;}' +
+    /* 주문(카드) 결과: 실제 카드 프레임 이미지 표시용
+       (일반 아이콘 박스보다 카드 자체가 훨씬 커야 카드 프레임 글자 크기와
+       비율이 맞아 이름/비용 텍스트가 겹치지 않는다 — 정화 보상 카드와 동일한 스케일) */
+    '#randomItemResultPopup .random-item-result-card.random-item-result-card-frame{' +
+      'width:21cqh;min-height:0;padding:0;border:0;background:transparent;box-shadow:none;' +
+    '}' +
+    '#randomItemResultPopup .random-item-result-card-face{' +
+      'position:relative;width:100%;box-shadow:0 .45cqh 1.2cqh rgba(65,45,25,.16);' +
+    '}' +
     '#randomItemResultPopup .random-item-result-ok{' +
       'margin-top:.8cqh;min-width:12cqw;padding:1.1cqh 2.4cqw;border-radius:999px;' +
       'border:.18cqh solid rgba(132,91,45,.55);background:linear-gradient(180deg,#f8dfa6,#c8913d);' +

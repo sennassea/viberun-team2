@@ -52,7 +52,7 @@
   }
 
   function getRandomItemResultCardData(anchor) {
-    const nameEl = anchor.querySelector(".random-item-result-name");
+    const nameEl = anchor.querySelector(".random-item-result-name, .card-name-text");
     const name = nameEl ? nameEl.textContent.trim() : "";
     if (!name) return null;
 
