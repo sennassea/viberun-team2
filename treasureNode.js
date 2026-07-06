@@ -341,12 +341,13 @@ function ensureTreasureStyles(){
         "url(\"assets/node_background/treasure.jpg\");background-size:cover,cover;background-position:center,center;background-repeat:no-repeat,no-repeat;}" +
     ".treasure-overlay.show{display:block;}" +
     ".treasure-stage{position:absolute;inset:0;}" +
-    ".treasure-hint{position:absolute;top:14cqh;left:50%;transform:translateX(-50%);z-index:2;" +
+    /* 상자가 제단 받침대 위가 아니라 배경 계단 앞 바닥(제단과 같은 높이)에 오도록 배치했으므로, 힌트 문구는 그 아래 계단 쪽에 배치한다 */
+    ".treasure-hint{position:absolute;top:84cqh;left:50%;transform:translateX(-50%);z-index:2;" +
       "font-size:1.9cqh;font-weight:900;color:#fdf6e3;text-shadow:0 .2cqh .4cqh rgba(0,0,0,.6);" +
       "background:rgba(30,20,10,.4);padding:.7cqh 1.6cqw;border-radius:1cqh;border:.14cqh solid rgba(200,170,110,.4);white-space:nowrap;}" +
-    /* 상자 맨 아래가 화면 아래에서부터 세로길이의 1/3 지점에 오도록 하단 기준으로 고정 배치 */
-    ".treasure-chest-btn{position:absolute;left:50%;top:66.666cqh;transform:translate(-50%,-100%);" +
-      "border:0;background:transparent;padding:0;cursor:pointer;width:min(68cqw,84cqh);}" +
+    /* 상자 맨 아래가 화면 세로길이의 70% 지점(위에서부터)에 오도록 배치 */
+    ".treasure-chest-btn{position:absolute;left:50%;top:70cqh;transform:translate(-50%,-100%);" +
+      "border:0;background:transparent;padding:0;cursor:pointer;width:min(90cqw,45cqh);}" +
     ".treasure-chest-btn:disabled{cursor:default;}" +
     ".treasure-chest-img{width:100%;height:auto;display:block;filter:drop-shadow(0 1cqh 2.2cqh rgba(0,0,0,.5));transition:transform .15s ease;}" +
     ".treasure-chest-btn:not(:disabled):hover .treasure-chest-img{transform:translateY(-.4cqh) scale(1.02);}" +
@@ -368,6 +369,6 @@ function ensureTreasureStyles(){
       "font:inherit;border:.2cqh solid rgba(178,140,80,.5);}" +
     ".treasure-relic-skip{background:rgba(255,251,240,.9);color:#6b4a20;}" +
     ".treasure-relic-take{background:linear-gradient(180deg,#7fbf8a,#4f9c62);color:#fff;border-color:#3f7c4e;}" +
-    "@media (max-width:900px){.treasure-chest-btn{width:min(46cqw,84cqh);}.treasure-relic-box{width:min(80cqw,60cqh);}}";
+    "@media (max-width:900px){.treasure-chest-btn{width:min(80cqw,45cqh);}.treasure-relic-box{width:min(80cqw,60cqh);}}";
   document.head.appendChild(style);
 }
