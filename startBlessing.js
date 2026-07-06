@@ -228,10 +228,11 @@ function applySbBlessing(blessing){
   if(!run || typeof CARD_DB === "undefined") return;
 
   switch(blessing.effect){
-    case "gainRandomRelicLoseHp":
-      addSbRandomRelic();
+    case "gainRandomRelicLoseHp": {
+      const relic = addSbRandomRelic();
       run.player.hp = Math.max(1, (run.player.hp || 1) - 12);
-      break;
+      return openSbRandomResultPopup([sbPopupRelicItem(relic, "gain")], "법구 획득");
+    }
     case "chooseRareCardAddStatus":
       return chooseSbCardRewardByRarity("rare", {
         title: "정화 보상",
@@ -243,32 +244,43 @@ function applySbBlessing(blessing){
       run.player.maxHp = Math.max(1, (run.player.maxHp || 1) - 8);
       run.player.hp = Math.max(1, Math.min(run.player.hp || 1, run.player.maxHp));
       break;
-    case "gainPotionsFirstBattleAnxiety":
-      addSbRandomPotion(2);
+    case "gainPotionsFirstBattleAnxiety": {
+      const potions = addSbRandomPotion(2);
       setSbBattleEffect("firstBattleAnxiety", { used:false, value:1 });
-      break;
-    case "gainRandomRelicLoseAllGold":
-      addSbRandomRelic();
+      return openSbRandomResultPopup(potions.map(p => sbPopupPotionItem(p, "gain")), "약병 획득");
+    }
+    case "gainRandomRelicLoseAllGold": {
+      const relic = addSbRandomRelic();
       run.gold = 0;
-      break;
+      return openSbRandomResultPopup([sbPopupRelicItem(relic, "gain")], "법구 획득");
+    }
     case "chooseRemoveStarterCard":
       return chooseSbStarterCardToRemove();
-    case "randomRemoveStarterGainCommon":
-      removeSbRandomStarterCard();
-      addSbRandomCardByRarity("common");
-      break;
-    case "removeTwoCardsLoseAllGold":
-      removeSbRandomCards(2);
+    case "randomRemoveStarterGainCommon": {
+      const removedKey = removeSbRandomStarterCard();
+      const gainedKey = addSbRandomCardByRarity("common");
+      return openSbRandomResultPopup(
+        [sbPopupCardItem(removedKey, "remove"), sbPopupCardItem(gainedKey, "gain")],
+        "주문 변경"
+      );
+    }
+    case "removeTwoCardsLoseAllGold": {
+      const removedKeys = removeSbRandomCards(2);
       run.gold = 0;
-      break;
+      return openSbRandomResultPopup(
+        removedKeys.map(key => sbPopupCardItem(key, "remove")),
+        "주문 제거"
+      );
+    }
     case "chooseCommonCard":
       return chooseSbCardRewardByRarity("common", {
         title: "정화 보상",
         desc: "Common 카드 3장 중 1장을 선택해 덱에 추가하세요."
       });
-    case "gainRandomCommonCostDownRun":
-      addSbDiscountedCommonCard();
-      break;
+    case "gainRandomCommonCostDownRun": {
+      const gainedKey = addSbDiscountedCommonCard();
+      return openSbRandomResultPopup([sbPopupCardItem(gainedKey, "gain")], "주문 획득");
+    }
     case "nextThreeNormalFirstEnemyHpOne":
       setSbBattleEffect("nextThreeNormalFirstEnemyHpOne", { remaining:3 });
       break;
@@ -282,9 +294,10 @@ function applySbBlessing(blessing){
     case "gainGold":
       run.gold = (run.gold || 0) + (blessing.value || 80);
       break;
-    case "gainRandomPotion":
-      addSbRandomPotion(1);
-      break;
+    case "gainRandomPotion": {
+      const potions = addSbRandomPotion(1);
+      return openSbRandomResultPopup(potions.map(p => sbPopupPotionItem(p, "gain")), "약병 획득");
+    }
   }
 }
 
@@ -318,13 +331,16 @@ function removeSbRandomStarterCard(){
 
 function removeSbRandomCards(count){
   const run = getSbRunState();
-  if(!run) return;
+  if(!run) return [];
   const nextDeck = [...run.deck];
+  const removedKeys = [];
   for(let i = 0; i < count && nextDeck.length > 0; i++){
     const index = Math.floor(Math.random() * nextDeck.length);
-    nextDeck.splice(index, 1);
+    const removed = nextDeck.splice(index, 1)[0];
+    if(removed) removedKeys.push(removed);
   }
   sbSetDeck(nextDeck);
+  return removedKeys;
 }
 
 function chooseSbStarterCardToRemove(){
@@ -457,13 +473,56 @@ function addSbRandomRelic(){
 
 function addSbRandomPotion(count){
   const run = getSbRunState();
-  if(!run || typeof POTION_DB === "undefined" || !Array.isArray(POTION_DB)) return;
+  if(!run || typeof POTION_DB === "undefined" || !Array.isArray(POTION_DB)) return [];
   if(!Array.isArray(run.potions)) run.potions = [];
   const limit = typeof POTION_SLOT_LIMIT === "number" ? POTION_SLOT_LIMIT : 3;
+  const added = [];
   for(let i = 0; i < count && run.potions.length < limit; i++){
     const potion = pickSbRandom(POTION_DB);
-    if(potion) run.potions.push({ ...potion });
+    if(potion){
+      const cloned = { ...potion };
+      run.potions.push(cloned);
+      added.push(cloned);
+    }
   }
+  return added;
+}
+
+/* ── 무작위 결과 팝업 연결 (선택 획득/선택 제거에는 사용하지 않는다) ─────── */
+function sbPopupCardItem(key, action){
+  if(!key) return null;
+  const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
+  return {
+    type: "card", action, key,
+    name: card ? card.name : key,
+    icon: card && (card.art || card.emoji)
+  };
+}
+
+function sbPopupRelicItem(relic, action){
+  if(!relic) return null;
+  return {
+    type: "relic", action, key: relic.id, name: relic.name,
+    icon: relic.iconImage || relic.icon || relic.emoji || "🏺"
+  };
+}
+
+function sbPopupPotionItem(potion, action){
+  if(!potion) return null;
+  return {
+    type: "potion", action, key: potion.id, name: potion.name,
+    icon: potion.iconImage || potion.icon || potion.emoji || "🧪"
+  };
+}
+
+function openSbRandomResultPopup(items, title){
+  const safeItems = (items || []).filter(Boolean);
+  if(!safeItems.length) return Promise.resolve();
+  if(typeof window.OPEN_RANDOM_ITEM_RESULT_POPUP !== "function") return Promise.resolve();
+  return window.OPEN_RANDOM_ITEM_RESULT_POPUP({
+    title: title || "결과 확인",
+    items: safeItems
+  });
 }
 
 function setSbBattleEffect(type, data){

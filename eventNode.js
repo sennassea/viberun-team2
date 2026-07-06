@@ -615,19 +615,29 @@ function applyEventRelicGrant(rarityFilter, labelPrefix){
     kind: "positive",
     text: labelPrefix + "법구 획득: " + (relic.emoji || "🏺") + " " + relic.name
   });
+  openEventRandomResultPopup(
+    [eventPopupRelicItem(relic, "gain")],
+    labelPrefix + "법구 획득"
+  );
 }
 
 function applyEventAddStatusCard(effect){
   const candidates = Array.isArray(effect.candidates) ? effect.candidates.filter(Boolean) : [];
   if(!candidates.length) return;
   const count = effect.count || 1;
+  const addedKeys = [];
   for(let i = 0; i < count; i++){
     const key = candidates[Math.floor(Math.random() * candidates.length)];
     if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"eventStatus", addToDiscard:false });
     else if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
     eventState.resultDetails.push({ kind: "negative", text: "상태 의식 추가: " + (card ? card.name : key) });
+    addedKeys.push(key);
   }
+  openEventRandomResultPopup(
+    addedKeys.map(key => eventPopupCardItem(key, "gain")),
+    "상태 의식 추가"
+  );
 }
 
 /* 덱에서 무작위 주문을 count장 삭제한다. 덱이 1장 이하로 남을 정도로는
@@ -638,13 +648,19 @@ function applyEventCardRemove(effect){
     return;
   }
   const count = Math.min(effect.count || 1, STARTER_DECK.length - 1);
+  const removedKeys = [];
   for(let i = 0; i < count && STARTER_DECK.length > 1; i++){
     const idx = Math.floor(Math.random() * STARTER_DECK.length);
     const key = STARTER_DECK[idx];
     STARTER_DECK.splice(idx, 1);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
     eventState.resultDetails.push({ kind: "neutral", text: "의식 삭제: " + (card ? card.name : key) });
+    removedKeys.push(key);
   }
+  openEventRandomResultPopup(
+    removedKeys.map(key => eventPopupCardItem(key, "remove")),
+    "주문 제거"
+  );
 }
 
 function applyEventCardDuplicate(effect){
@@ -660,6 +676,47 @@ function applyEventCardDuplicate(effect){
   else STARTER_DECK.push(key);
   const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
   eventState.resultDetails.push({ kind: "positive", text: "의식 복제: " + (card ? card.name : key) });
+  openEventRandomResultPopup(
+    [eventPopupCardItem(key, "gain")],
+    "주문 복제"
+  );
+}
+
+/* ── 무작위 결과 팝업 연결 (선택 획득/선택 제거 UI에는 사용하지 않는다) ─── */
+function eventPopupCardItem(key, action){
+  if(!key) return null;
+  const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
+  return {
+    type: "card", action, key,
+    name: card ? card.name : key,
+    icon: card && (card.art || card.emoji)
+  };
+}
+
+function eventPopupRelicItem(relic, action){
+  if(!relic) return null;
+  return {
+    type: "relic", action, key: relic.id, name: relic.name,
+    icon: relic.iconImage || relic.icon || relic.emoji || "🏺"
+  };
+}
+
+function eventPopupPotionItem(potion, action){
+  if(!potion) return null;
+  return {
+    type: "potion", action, key: potion.id, name: potion.name,
+    icon: potion.iconImage || potion.icon || potion.emoji || "🧪"
+  };
+}
+
+function openEventRandomResultPopup(items, title){
+  const safeItems = (items || []).filter(Boolean);
+  if(!safeItems.length) return;
+  if(typeof window.OPEN_RANDOM_ITEM_RESULT_POPUP !== "function") return;
+  window.OPEN_RANDOM_ITEM_RESULT_POPUP({
+    title: title || "결과 확인",
+    items: safeItems
+  });
 }
 
 /* eventData.js의 attr 표기(예: "동요")는 CARD_DB의 실제 덱 속성 문자열과 다를 수 있어
@@ -753,6 +810,10 @@ function grantEventPotion(potion){
   }
   S.potions.push(potion);
   eventState.resultDetails.push({ kind: "positive", text: "약병 획득: " + (potion.emoji || "🧪") + " " + potion.name });
+  openEventRandomResultPopup(
+    [eventPopupPotionItem(potion, "gain")],
+    "약병 획득"
+  );
   return true;
 }
 
