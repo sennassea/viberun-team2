@@ -176,7 +176,7 @@ function eventShellHtml(){
       '<div class="event-topbar-spacer"></div>' +
       '<div class="event-menu" aria-label="이벤트 중 공통 메뉴">' +
         '<button type="button" class="event-menu-btn ui-asset-button ui-map-button" id="eventMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
-        '<button type="button" class="event-menu-btn ui-asset-button ui-codex-button" id="eventDeckBtn"><span class="ico">📖</span><span>보유 의식</span></button>' +
+        '<button type="button" class="event-menu-btn ui-asset-button ui-codex-button" id="eventDeckBtn"><span class="ico">📖</span><span>보유 주문</span></button>' +
         '<button type="button" class="event-menu-btn ui-asset-button ui-bag-button" id="eventBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
         '<button type="button" class="event-menu-btn ui-asset-button ui-settings-button" id="eventSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
@@ -248,7 +248,7 @@ function restoreEventMapOverrides(){
 function openEventDeckPreview(){
   const deckBtn = document.getElementById("deckViewerButton");
   if(deckBtn){ deckBtn.click(); return; }
-  if(typeof toast === "function") toast("보유 의식 확인 기능을 불러올 수 없습니다.");
+  if(typeof toast === "function") toast("보유 주문 확인 기능을 불러올 수 없습니다.");
 }
 
 function openEventBagPreview(){
@@ -394,8 +394,8 @@ function eventCardPickHtml(){
   const cards = (eventState.cardCandidates || []).map(eventCardHtml).join("");
   return (
     '<div class="event-panel event-panel-cardpick">' +
-      '<div class="event-title">의식 보상</div>' +
-      '<div class="event-guide">추가할 의식 1장을 선택하세요.</div>' +
+      '<div class="event-title">주문 보상</div>' +
+      '<div class="event-guide">추가할 주문 1장을 선택하세요.</div>' +
       '<div class="event-cards">' + cards + '</div>' +
       '<div class="event-actions">' +
         '<button type="button" class="event-btn event-btn-skip" id="eventCardSkip">건너뛰기</button>' +
@@ -657,12 +657,12 @@ function applyEventAddStatusCard(effect){
     if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"eventStatus", addToDiscard:false });
     else if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
-    eventState.resultDetails.push({ kind: "negative", text: "상태 의식 추가: " + (card ? card.name : key) });
+    eventState.resultDetails.push({ kind: "negative", text: "상태 주문 추가: " + (card ? card.name : key) });
     addedKeys.push(key);
   }
   openEventRandomResultPopup(
     addedKeys.map(key => eventPopupCardItem(key, "gain")),
-    "상태 의식 추가"
+    "상태 주문 추가"
   );
 }
 
@@ -670,7 +670,7 @@ function applyEventAddStatusCard(effect){
    삭제하지 않는다 (전투 진행 불가 방지). */
 function applyEventCardRemove(effect){
   if(typeof STARTER_DECK === "undefined" || STARTER_DECK.length <= 1){
-    eventState.resultDetails.push({ kind: "neutral", text: "덱이 너무 적어 의식을 삭제하지 못했습니다." });
+    eventState.resultDetails.push({ kind: "neutral", text: "덱이 너무 적어 주문을 삭제하지 못했습니다." });
     return;
   }
   const count = Math.min(effect.count || 1, STARTER_DECK.length - 1);
@@ -680,7 +680,7 @@ function applyEventCardRemove(effect){
     const key = STARTER_DECK[idx];
     STARTER_DECK.splice(idx, 1);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
-    eventState.resultDetails.push({ kind: "neutral", text: "의식 삭제: " + (card ? card.name : key) });
+    eventState.resultDetails.push({ kind: "neutral", text: "주문 삭제: " + (card ? card.name : key) });
     removedKeys.push(key);
   }
   openEventRandomResultPopup(
@@ -701,7 +701,7 @@ function applyEventCardDuplicate(effect){
   if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"eventDuplicate", addToDiscard:false });
   else STARTER_DECK.push(key);
   const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
-  eventState.resultDetails.push({ kind: "positive", text: "의식 복제: " + (card ? card.name : key) });
+  eventState.resultDetails.push({ kind: "positive", text: "주문 복제: " + (card ? card.name : key) });
   openEventRandomResultPopup(
     [eventPopupCardItem(key, "gain")],
     "주문 복제"
@@ -950,13 +950,13 @@ function confirmEventCard(){
         }
       }
     }
-    if(typeof toast === "function") toast(card.name + " 의식을 덱에 추가했습니다.");
+    if(typeof toast === "function") toast(card.name + " 주문을 덱에 추가했습니다.");
   }
   finishEventNode();
 }
 
 function skipEventCard(){
-  if(typeof toast === "function") toast("의식 보상을 건너뛰었습니다.");
+  if(typeof toast === "function") toast("주문 보상을 건너뛰었습니다.");
   finishEventNode();
 }
 
