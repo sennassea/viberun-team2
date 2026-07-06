@@ -3,6 +3,7 @@
 (function () {
   const SELECTOR = "[data-tooltip], [data-global-tooltip], [data-tooltip-title]";
   const SKIN_OPTION_SELECTOR = ".menu-profile-popup .menu-profile-option";
+  const SPIRIT_PATH_CARD_PREVIEW_SELECTOR = ".spirit-path-preview-item";
   const GAP = 10;
   let tooltipEl = null;
   let activeAnchor = null;
@@ -29,9 +30,15 @@
 
   function findAnchor(target) {
     if (!target || typeof target.closest !== "function") return null;
-    const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR);
+    const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR);
     if (!anchor || anchor.dataset.tooltipDisabled === "true") return null;
     return anchor;
+  }
+
+  function getCardDbEntryByName(name) {
+    if (!name || typeof CARD_DB !== "object" || !CARD_DB) return null;
+    const key = Object.keys(CARD_DB).find(k => CARD_DB[k] && CARD_DB[k].name === name);
+    return key ? CARD_DB[key] : null;
   }
 
   function getTooltipData(anchor) {
@@ -41,6 +48,17 @@
 
     if (anchor.classList && anchor.classList.contains("menu-profile-option") && anchor.closest(".menu-profile-popup")) {
       return { title: "프로필", body: "보유 스킨에 따라 프로필 사진을 변경할 수 있습니다." };
+    }
+
+    if (anchor.classList && anchor.classList.contains("spirit-path-preview-item")) {
+      if (!anchor.dataset.spiritPathCardName) {
+        const rawName = anchor.getAttribute("title");
+        if (rawName) anchor.dataset.spiritPathCardName = rawName;
+      }
+      const card = getCardDbEntryByName(anchor.dataset.spiritPathCardName);
+      if (!card) return null;
+      const icon = card.emoji ? card.emoji + " " : "";
+      return { title: icon + (card.name || ""), body: card.desc || "" };
     }
 
     return null;
