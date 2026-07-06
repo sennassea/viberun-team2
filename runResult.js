@@ -41,8 +41,8 @@ const NPC_DONGJASEUNG = {
    에셋이 없으므로 emoji로 임시 대체한다. mapNodeLogic.js의 ACT1_NODE_INFO와
    동일한 emoji를 사용해 기존 여정 화면과 시각적으로 통일한다. */
 const RR_NODE_TYPE_INFO = {
-  start: { emoji: "🚪", label: "시작", iconImage: "assets/map_icons/start.png" },
-  lobby: { emoji: "🚪", label: "시작", iconImage: "assets/map_icons/start.png" },
+  start: { emoji: "🚪", label: "신령의 은혜", iconImage: "assets/map_icons/start.png" },
+  lobby: { emoji: "🚪", label: "신령의 은혜", iconImage: "assets/map_icons/start.png" },
   enemy: { emoji: "👺", label: "노멀", iconImage: "assets/map_icons/enemy.png" },
   elite: { emoji: "👹", label: "엘리트", iconImage: "assets/map_icons/elite.png" },
   boss:  { emoji: "💀", label: "보스", iconImage: "assets/map_icons/boss.png" },
@@ -220,7 +220,7 @@ function canClaimAct1MoonReward(snapshot, scoreBreakdown, moonReward){
 }
 
 function getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward){
-  if(!snapshot || snapshot.result !== "win") return "미완주";
+  if(!snapshot || snapshot.result !== "win") return "없음";
   if(scoreBreakdown && scoreBreakdown.isTemporary) return "실제 점수 연결 필요";
   if(!moonReward || rrToSafeNumber(moonReward.moonShards, 0) <= 0) return "수령 보상 없음";
   if(snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimed) return "수령 완료";
@@ -627,10 +627,9 @@ function renderRunSummary(snapshot, onFinish){
 
   const moonClaimBoxHtml =
     '<div class="rr-moon-claim-box' + (isClaimed ? " is-claimed" : "") + '">' +
-      '<div class="rr-moon-claim-text">' +
-        '<strong>🌙 ' + rrToSafeNumber(moonReward.moonShards, 0) + '개</strong>' +
-        '<span>' + (isClaimed ? "수령 완료" : "점수 구간 보상") + '</span>' +
-      '</div>' +
+      '<div class="rr-moon-claim-icon">🌙</div>' +
+      '<div class="rr-moon-claim-label">' + (isClaimed ? "수령 완료" : "점수 보상") + '</div>' +
+      '<div class="rr-moon-claim-count">' + rrToSafeNumber(moonReward.moonShards, 0) + '개</div>' +
       '<button type="button" class="rr-moon-claim-btn" id="rrMoonClaimBtn" ' +
         (canClaimMoon ? "" : "disabled") +
       '>' + escapeRrHtml(claimButtonLabel) + '</button>' +
@@ -823,7 +822,7 @@ function rrRouteNodeHtml(node){
   return '<div class="rr-route-node">' +
     '<div class="rr-route-node-icon">' + rrRouteIconHtml(info) + '</div>' +
     '<div class="rr-route-node-label">' + escapeRrHtml(info.label) + '</div>' +
-    (score > 0 ? '<div class="rr-route-node-score">+' + score + '</div>' : '') +
+    '<div class="rr-route-node-score">+' + score + '</div>' +
   '</div>';
 }
 
@@ -1183,9 +1182,9 @@ function ensureRrStyles(){
     ".rr-summary-next:hover{filter:brightness(1.08);}" +
 
     /* 전투 상세 화면 (기획서 §4-2, §10-2) — 요약 화면과 동일하게 캐릭터 없이 중앙 패널로 표시한다 */
-    ".rr-detail-panel{position:absolute;left:50%;top:14%;bottom:0.8%;transform:translateX(-50%);" +
+    ".rr-detail-panel{position:absolute;left:50%;top:13%;bottom:0.4%;transform:translateX(-50%);" +
       "width:82%;min-width:60cqh;max-width:98cqh;z-index:1;display:flex;flex-direction:column;" +
-      "padding:3.6cqh 3cqw 1.8cqh;border-radius:1.8cqh;gap:1.1cqh;" +
+      "padding:4.6cqh 3cqw 1.8cqh;border-radius:1.8cqh;gap:1.1cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
     ".rr-detail-titlebar{position:absolute;top:-2.4cqh;left:50%;transform:translateX(-50%);" +
@@ -1277,17 +1276,17 @@ function ensureRrStyles(){
 
     ".rr-score-reward-line strong{color:#a5322a;}" +
 
-    ".rr-moon-claim-box{width:100%;display:flex;align-items:center;justify-content:space-between;gap:1cqw;" +
+    ".rr-moon-claim-box{width:100%;display:flex;align-items:center;gap:.9cqw;" +
       "margin:1cqh 0;padding:1cqh 1.2cqw;border-radius:1.2cqh;" +
       "background:rgba(255,248,230,.82);border:.16cqh solid rgba(203,154,76,.58);}" +
 
     ".rr-moon-claim-box.is-claimed{opacity:.82;}" +
 
-    ".rr-moon-claim-text{display:flex;flex-direction:column;gap:.25cqh;color:#174b76;font-weight:900;}" +
+    ".rr-moon-claim-icon{flex:0 0 auto;font-size:2.1cqh;line-height:1;}" +
 
-    ".rr-moon-claim-text strong{font-size:2.1cqh;color:#0e4e83;}" +
+    ".rr-moon-claim-label{flex:1;min-width:0;font-size:1.5cqh;font-weight:900;color:#7a6142;}" +
 
-    ".rr-moon-claim-text span{font-size:1.2cqh;color:#7a6142;}" +
+    ".rr-moon-claim-count{flex:0 0 auto;font-size:2.1cqh;font-weight:900;color:#0e4e83;}" +
 
     ".rr-moon-claim-btn{min-width:12cqw;padding:.9cqh 1.4cqw;border-radius:1.1cqh;" +
       "border:.18cqh solid rgba(207,157,75,.8);background:linear-gradient(180deg,#fff8df,#ecd49b);" +
@@ -1306,7 +1305,7 @@ function ensureRrStyles(){
       ".rr-choice-panel{right:7%;left:7%;width:auto;top:auto;bottom:5%;height:48%;padding-top:3.2cqh;}" +
       ".rr-choice-cards{flex-direction:column;gap:1cqh;}" +
       ".rr-summary-panel{left:5%;right:5%;width:auto;transform:none;top:6%;bottom:1.5%;min-width:0;}" +
-      ".rr-detail-panel{left:4%;right:4%;width:auto;transform:none;top:5%;bottom:1%;min-width:0;padding:3.2cqh 2.4cqw 1.6cqh;}" +
+      ".rr-detail-panel{left:4%;right:4%;width:auto;transform:none;top:5%;bottom:0.6%;min-width:0;padding:4cqh 2.4cqw 1.6cqh;}" +
       ".rr-detail-grid{grid-template-columns:1fr;}" +
     "}";
   document.head.appendChild(style);
