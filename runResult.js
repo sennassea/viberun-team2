@@ -648,7 +648,7 @@ function rrRouteNodeHtml(node){
   return '<div class="rr-route-node">' +
     '<div class="rr-route-node-icon">' + rrRouteIconHtml(info) + '</div>' +
     '<div class="rr-route-node-label">' + escapeRrHtml(info.label) + '</div>' +
-    (score > 0 ? '<div class="rr-route-node-score">+' + score + '</div>' : '') +
+    '<div class="rr-route-node-score">+' + score + '</div>' +
   '</div>';
 }
 
