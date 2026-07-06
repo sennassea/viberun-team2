@@ -88,6 +88,29 @@ function chooseCardFromCandidates(options={}){
   });
 }
 
+/* 손패/버림더미 등에서 카드 1장을 선택해 버리거나 되찾는 전투 중 효과들이
+   기존 보유 카드 UI(deckViewer.js)를 공용으로 재사용하기 위한 래퍼.
+   반환값은 선택된 카드의 uid(문자열) 또는 취소 시 null. */
+function chooseHandCardUidViaDeckViewer(options={}){
+  const candidates = options.candidates || [];
+  if(!candidates.length) return Promise.resolve(null);
+  if(typeof window.OPEN_DECK_VIEWER_CARD_PICK !== "function"){
+    return chooseCardFromCandidates(options).then(picked => picked ? picked.uid : null);
+  }
+  if(S) S.pendingCardChoice = true;
+  updateEndBtn();
+  return window.OPEN_DECK_VIEWER_CARD_PICK({
+    title: options.title || "카드 선택",
+    helpText: options.desc || "",
+    confirmText: options.confirmText || "선택 완료",
+    candidates
+  }).then(uid => {
+    if(S) S.pendingCardChoice = false;
+    updateEndBtn();
+    return uid || null;
+  });
+}
+
 function autoSelectTarget(){
   const alive = livingEnemies();
   if(!alive.length){ S.selectedId = null; return; }
@@ -296,13 +319,13 @@ async function recoverGrownHanpuriFromDiscard(options={}){
   ensureCardInstanceZones();
   const candidates = getGrownHanpuriDiscardCandidates();
   if(!candidates.length || S.hand.length >= 10) return false;
-  const picked = await chooseCardFromCandidates({
+  const uid = await chooseHandCardUidViaDeckViewer({
     title: options.costZero ? "한을 풀다" : "되새기는 밤",
     desc: "버림 더미에서 가져올 한풀이 주문을 선택하세요.",
     candidates
   });
-  if(!picked) return false;
-  const idx = S.discardInstances.findIndex(instance => instance && instance.uid === picked.uid);
+  if(!uid) return false;
+  const idx = S.discardInstances.findIndex(instance => instance && instance.uid === uid);
   if(idx < 0) return false;
   const key = S.discard.splice(idx, 1)[0];
   const instance = S.discardInstances.splice(idx, 1)[0];
@@ -330,13 +353,13 @@ async function discardOtherHanpuriAndGrow(currentCardUid){
   ensureCardInstanceZones();
   const candidates = getOtherHanpuriHandCandidates(currentCardUid);
   if(!candidates.length) return -1;
-  const picked = await chooseCardFromCandidates({
+  const uid = await chooseHandCardUidViaDeckViewer({
     title: "놓지 못한 손",
     desc: "버릴 한풀이 주문을 선택하세요.",
     candidates
   });
-  if(!picked) return -1;
-  const idx = S.handInstances.findIndex(instance => instance && instance.uid === picked.uid);
+  if(!uid) return -1;
+  const idx = S.handInstances.findIndex(instance => instance && instance.uid === uid);
   if(idx < 0) return -1;
   const key = S.hand.splice(idx, 1)[0];
   const instance = S.handInstances.splice(idx, 1)[0];
@@ -365,13 +388,13 @@ async function discardHandUnlessBellUsed(count=1, currentCardUid){
   for(let i=0;i<amount;i++){
     const candidates = getOtherHandCandidates(currentCardUid);
     if(!candidates.length) break;
-    const picked = await chooseCardFromCandidates({
+    const uid = await chooseHandCardUidViaDeckViewer({
       title: "발맞춤",
       desc: "버릴 손패 1장을 선택하세요.",
       candidates
     });
-    if(!picked) break;
-    const idx = S.handInstances.findIndex(instance => instance && instance.uid === picked.uid);
+    if(!uid) break;
+    const idx = S.handInstances.findIndex(instance => instance && instance.uid === uid);
     if(idx < 0) break;
     const key = S.hand.splice(idx, 1)[0];
     const instance = S.handInstances.splice(idx, 1)[0];
