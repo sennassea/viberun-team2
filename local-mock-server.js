@@ -295,11 +295,15 @@ function ensureAccount(accountId) {
       monthlyPass: buildDefaultMonthlyPass(),
       characterSkins: buildDefaultCharacterSkins(),
       profile: buildDefaultProfile(),
-      deckPackUnlocks: buildDefaultDeckPackUnlocks()
+      deckPackUnlocks: buildDefaultDeckPackUnlocks(),
+      claimedRunRewards: {}
     });
   }
 
   const account = accounts.get(accountId);
+  if (!account.claimedRunRewards) {
+    account.claimedRunRewards = {};
+  }
   if (!account.monthlyPass) {
     account.monthlyPass = buildDefaultMonthlyPass();
   }
@@ -606,6 +610,107 @@ function handleWalletCheat(req, res, body) {
   }
 
   sendJson(res, 200, { ok: true, wallet: account.wallet });
+}
+
+/* ------------------------------------------------------------------------
+   /run-result/act1/moon-reward Mock 핸들러
+   - ACT1 완주 점수 구간에 따른 달빛조각을 계정 wallet.moonShards에 실제 지급합니다.
+   - 클라이언트가 보낸 score는 참고용이며, 서버는 result/score 기준으로 직접 보상량을
+     계산합니다(실제 운영 서버에서는 런 로그 기반 검증이 추가로 필요합니다).
+   - claimKey 기준으로 계정별 중복 지급을 막습니다.
+   ------------------------------------------------------------------------ */
+function calculateAct1MoonRewardByScore(score, result) {
+  if (result !== "win") return { moonShards: 0, label: "미완주" };
+
+  const safeScore = Math.max(0, Math.floor(Number(score) || 0));
+
+  if (safeScore >= 1100) return { moonShards: 95, label: "극상위" };
+  if (safeScore >= 950) return { moonShards: 75, label: "상위권" };
+  if (safeScore >= 850) return { moonShards: 62, label: "숙련 완주" };
+  if (safeScore >= 750) return { moonShards: 55, label: "평균 완주" };
+  if (safeScore >= 650) return { moonShards: 48, label: "하위 완주" };
+  return { moonShards: 40, label: "간신히 완주" };
+}
+
+function handleAct1MoonRewardClaim(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_JSON", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const claimKey = String(payload.claimKey || "").trim();
+  const result = String(payload.result || "");
+  const score = Math.max(0, Math.floor(Number(payload.score) || 0));
+  const isTemporary = !!payload.isTemporary;
+
+  if (!claimKey) {
+    sendJson(res, 400, { ok: false, code: "MISSING_CLAIM_KEY", message: "claimKey가 없습니다." });
+    return;
+  }
+
+  if (isTemporary) {
+    sendJson(res, 400, { ok: false, code: "TEMPORARY_SCORE", message: "임시 점수로는 달빛조각을 수령할 수 없습니다." });
+    return;
+  }
+
+  if (result !== "win") {
+    sendJson(res, 400, { ok: false, code: "NOT_WIN_RUN", message: "완주한 런만 달빛조각을 수령할 수 있습니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  if (account.claimedRunRewards[claimKey]) {
+    const previous = account.claimedRunRewards[claimKey];
+    sendJson(res, 200, {
+      ok: true,
+      alreadyClaimed: true,
+      code: "ALREADY_CLAIMED",
+      reward: previous.reward,
+      score: previous.score,
+      claimedAt: previous.claimedAt,
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  const reward = calculateAct1MoonRewardByScore(score, result);
+
+  if (reward.moonShards <= 0) {
+    sendJson(res, 400, { ok: false, code: "NO_REWARD", message: "수령할 달빛조각이 없습니다.", wallet: account.wallet });
+    return;
+  }
+
+  account.wallet.moonShards =
+    Math.max(0, Math.floor(Number(account.wallet.moonShards) || 0)) + reward.moonShards;
+
+  const record = {
+    claimKey,
+    score,
+    result,
+    reward,
+    claimedAt: Date.now()
+  };
+
+  account.claimedRunRewards[claimKey] = record;
+
+  sendJson(res, 200, {
+    ok: true,
+    alreadyClaimed: false,
+    reward,
+    score,
+    claimedAt: record.claimedAt,
+    wallet: account.wallet
+  });
 }
 
 /* ------------------------------------------------------------------------
@@ -1365,6 +1470,11 @@ const server = http.createServer((req, res) => {
 
   if (method === "POST" && pathname === "/wallet/cheat") {
     readRequestBody(req).then((body) => handleWalletCheat(req, res, body));
+    return;
+  }
+
+  if (method === "POST" && pathname === "/run-result/act1/moon-reward/claim") {
+    readRequestBody(req).then((body) => handleAct1MoonRewardClaim(req, res, body));
     return;
   }
 

@@ -23,6 +23,10 @@ function getInitialSpiritPathSelection(){
   return ["barrier", "memory", "soul_mark"];
 }
 
+function createRunRewardId(){
+  return "act1-run-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+}
+
 function createFreshRunState(){
   const player = LIFE.createPlayer(PLAYER_DEF);
   player.block = 0;
@@ -42,6 +46,7 @@ function createFreshRunState(){
     // 전투 요약/상세 화면(runResult.js)에서 사용하는 이번 여정 누적 기록 (기획서 §5-1)
     runStats: {
       startedAt: Date.now(),
+      runId: createRunRewardId(),
       cleared: { enemy: 0, elite: 0, boss: 0 },
       usedPotionCount: 0,
       usedPotions: [],
@@ -65,7 +70,16 @@ function createFreshRunState(){
         cardRemove: 0,
         highRiskEventSuccess: 0
       },
-      pendingEventCombat: null
+      pendingEventCombat: null,
+
+      // ACT1 달빛조각 실제 계정 wallet 수령 상태 (전투용 S.moonShards와는 무관)
+      moonReward: {
+        claimKey: null,
+        claimed: false,
+        claimedAt: null,
+        amount: 0,
+        score: 0
+      }
     }
   };
 }
@@ -95,6 +109,7 @@ function ensureRunScoreStats(){
   if(!RUN_STATE.runStats){
     RUN_STATE.runStats = {
       startedAt: Date.now(),
+      runId: createRunRewardId(),
       cleared: { enemy: 0, elite: 0, boss: 0 },
       usedPotionCount: 0,
       usedPotions: [],
@@ -103,6 +118,18 @@ function ensureRunScoreStats(){
   }
 
   const stats = RUN_STATE.runStats;
+
+  if(!stats.runId) stats.runId = createRunRewardId();
+
+  if(!stats.moonReward){
+    stats.moonReward = {
+      claimKey: null,
+      claimed: false,
+      claimedAt: null,
+      amount: 0,
+      score: 0
+    };
+  }
 
   if(!stats.scoreBreakdown){
     stats.scoreBreakdown = {

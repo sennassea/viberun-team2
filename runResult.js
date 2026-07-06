@@ -211,6 +211,148 @@ function getAct1ScoreBreakdown(snapshot){
   };
 }
 
+function canClaimAct1MoonReward(snapshot, scoreBreakdown, moonReward){
+  if(!snapshot || snapshot.result !== "win") return false;
+  if(!scoreBreakdown || scoreBreakdown.isTemporary) return false;
+  if(!moonReward || rrToSafeNumber(moonReward.moonShards, 0) <= 0) return false;
+  if(snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimed) return false;
+  return true;
+}
+
+function getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward){
+  if(!snapshot || snapshot.result !== "win") return "미완주";
+  if(scoreBreakdown && scoreBreakdown.isTemporary) return "실제 점수 연결 필요";
+  if(!moonReward || rrToSafeNumber(moonReward.moonShards, 0) <= 0) return "수령 보상 없음";
+  if(snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimed) return "수령 완료";
+  return "달빛조각 수령";
+}
+
+function markAct1MoonRewardClaimed(snapshot, amount, score){
+  if(!snapshot) return;
+
+  const claimedAt = Date.now();
+
+  snapshot.moonRewardClaim = Object.assign({}, snapshot.moonRewardClaim || {}, {
+    claimed: true,
+    claimedAt,
+    amount: rrToSafeNumber(amount, 0),
+    score: rrToSafeNumber(score, 0)
+  });
+
+  if(snapshot.moonRewardPreview){
+    snapshot.moonRewardPreview.claimed = true;
+    snapshot.moonRewardPreview.claimedAt = claimedAt;
+  }
+
+  if(typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.runStats){
+    if(!RUN_STATE.runStats.moonReward) RUN_STATE.runStats.moonReward = {};
+
+    RUN_STATE.runStats.moonReward.claimKey =
+      snapshot.moonRewardClaim.claimKey || RUN_STATE.runStats.runId;
+
+    RUN_STATE.runStats.moonReward.claimed = true;
+    RUN_STATE.runStats.moonReward.claimedAt = claimedAt;
+    RUN_STATE.runStats.moonReward.amount = rrToSafeNumber(amount, 0);
+    RUN_STATE.runStats.moonReward.score = rrToSafeNumber(score, 0);
+  }
+}
+
+function claimAct1MoonRewardFromResult(snapshot, options){
+  const ui = options || {};
+  const scoreBreakdown = getAct1ScoreBreakdown(snapshot);
+  const moonReward = getAct1MoonReward(scoreBreakdown.total, snapshot);
+
+  if(!canClaimAct1MoonReward(snapshot, scoreBreakdown, moonReward)){
+    return Promise.resolve({
+      ok: false,
+      code: "NOT_CLAIMABLE",
+      message: "현재 상태에서는 달빛조각을 수령할 수 없습니다."
+    });
+  }
+
+  const service = window.VIBERUN_RUN_REWARD;
+  if(!service || typeof service.claimAct1MoonReward !== "function"){
+    return Promise.resolve({
+      ok: false,
+      code: "SERVICE_MISSING",
+      message: "달빛조각 수령 서비스가 연결되지 않았습니다."
+    });
+  }
+
+  const claimKey =
+    (snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimKey) ||
+    snapshot.runId ||
+    ("act1-run-" + Date.now());
+
+  if(ui.button){
+    ui.button.disabled = true;
+    ui.button.textContent = "수령 중...";
+  }
+
+  return service.claimAct1MoonReward({
+    claimKey,
+    result: snapshot.result,
+    score: scoreBreakdown.total,
+    scoreBreakdown,
+    isTemporary: !!scoreBreakdown.isTemporary
+  }).then(result => {
+    if(result && result.ok){
+      const paidAmount = rrToSafeNumber(result.reward && result.reward.moonShards, moonReward.moonShards);
+      markAct1MoonRewardClaimed(snapshot, paidAmount, scoreBreakdown.total);
+
+      if(typeof toast === "function"){
+        toast("달빛조각 " + paidAmount + "개를 수령했습니다.");
+      }
+
+      return result;
+    }
+
+    if(result && result.code === "ALREADY_CLAIMED"){
+      const paidAmount = rrToSafeNumber(result.reward && result.reward.moonShards, moonReward.moonShards);
+      markAct1MoonRewardClaimed(snapshot, paidAmount, scoreBreakdown.total);
+
+      if(typeof toast === "function"){
+        toast("이미 수령한 달빛조각 보상입니다.");
+      }
+
+      return result;
+    }
+
+    if(ui.button){
+      ui.button.disabled = false;
+      ui.button.textContent = getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward);
+    }
+
+    if(typeof toast === "function"){
+      toast((result && result.message) || "달빛조각 수령에 실패했습니다.");
+    }
+
+    return result || {
+      ok: false,
+      code: "UNKNOWN_ERROR",
+      message: "달빛조각 수령에 실패했습니다."
+    };
+  }).catch(error => {
+    console.warn("[runResult] 달빛조각 수령 중 오류", error);
+
+    if(ui.button){
+      ui.button.disabled = false;
+      ui.button.textContent = getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward);
+    }
+
+    if(typeof toast === "function"){
+      toast("달빛조각 수령 중 오류가 발생했습니다.");
+    }
+
+    return {
+      ok: false,
+      code: "CLAIM_ERROR",
+      error,
+      message: "달빛조각 수령 중 오류가 발생했습니다."
+    };
+  });
+}
+
 function getAct1MoonReward(score, snapshot){
   const scoreData = getAct1ScoreData();
 
@@ -467,10 +609,11 @@ function renderRunSummary(snapshot, onFinish){
 
   const scoreBreakdown = getAct1ScoreBreakdown(snapshot);
   const moonReward = getAct1MoonReward(scoreBreakdown.total, snapshot);
+  const isClaimed = !!(snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimed);
 
   const rows = [
     { icon:"🏆", label:"최종 여정 점수",      value:scoreBreakdown.total,   unit:"점" },
-    { icon:"🌙", label:"달빛조각 지급 예정",  value:moonReward.moonShards,  unit:"개" },
+    { icon:"🌙", label:isClaimed ? "달빛조각 수령 완료" : "달빛조각 수령 가능",  value:moonReward.moonShards,  unit:"개" },
     { icon:"🗼", label:"진행한 구역 수", value:snapshot.highestFloor, unit:"층" },
     { icon:"💀", label:"클리어 보스 수",     value:snapshot.cleared.boss,  unit:"개" },
     { icon:"👺", label:"클리어 노멀 수",      value:snapshot.cleared.enemy, unit:"개" },
@@ -481,7 +624,21 @@ function renderRunSummary(snapshot, onFinish){
 
   const temporaryNotice = scoreBreakdown.isTemporary
     ? '<div class="rr-score-notice">현재 점수와 달빛조각은 실제 기록을 찾지 못해 임시 계산값으로 표시됩니다. 실제 지급은 아직 진행되지 않습니다.</div>'
-    : '<div class="rr-score-notice">점수는 실제 런 기록 기준입니다. 달빛조각은 아직 지급 예정 표시이며 실제 지갑에는 반영되지 않습니다.</div>';
+    : '<div class="rr-score-notice">점수는 실제 런 기록 기준입니다.</div>';
+
+  const canClaimMoon = canClaimAct1MoonReward(snapshot, scoreBreakdown, moonReward);
+  const claimButtonLabel = getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward);
+
+  const moonClaimBoxHtml =
+    '<div class="rr-moon-claim-box' + (isClaimed ? " is-claimed" : "") + '">' +
+      '<div class="rr-moon-claim-text">' +
+        '<strong>🌙 ' + rrToSafeNumber(moonReward.moonShards, 0) + '개</strong>' +
+        '<span>' + (isClaimed ? "수령 완료" : "점수 구간 보상") + '</span>' +
+      '</div>' +
+      '<button type="button" class="rr-moon-claim-btn" id="rrMoonClaimBtn" ' +
+        (canClaimMoon ? "" : "disabled") +
+      '>' + escapeRrHtml(claimButtonLabel) + '</button>' +
+    '</div>';
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
@@ -497,6 +654,7 @@ function renderRunSummary(snapshot, onFinish){
           '</div>'
         ).join("") +
       '</div>' +
+      moonClaimBoxHtml +
       temporaryNotice +
       '<button type="button" class="rr-summary-next" id="rrSummaryNext">다음</button>' +
     '</div>';
@@ -504,6 +662,26 @@ function renderRunSummary(snapshot, onFinish){
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
   document.body.classList.add("result-ui-open");
+
+  const claimButton = panelSlot.querySelector("#rrMoonClaimBtn");
+  if(claimButton){
+    claimButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+
+      claimAct1MoonRewardFromResult(snapshot, { button: claimButton }).then(() => {
+        const refreshedBreakdown = getAct1ScoreBreakdown(snapshot);
+        const refreshedReward = getAct1MoonReward(refreshedBreakdown.total, snapshot);
+
+        claimButton.textContent = getAct1MoonClaimButtonLabel(snapshot, refreshedBreakdown, refreshedReward);
+        claimButton.disabled = !canClaimAct1MoonReward(snapshot, refreshedBreakdown, refreshedReward);
+
+        const box = panelSlot.querySelector(".rr-moon-claim-box");
+        if(box && snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimed){
+          box.classList.add("is-claimed");
+        }
+      });
+    });
+  }
 
   panelSlot.querySelector("#rrSummaryNext").addEventListener("click", (event) => {
     event.stopPropagation();
@@ -536,6 +714,9 @@ function renderRunDetail(snapshot, onFinish){
 
   const scoreBreakdown = getAct1ScoreBreakdown(snapshot);
   const moonReward = getAct1MoonReward(scoreBreakdown.total, snapshot);
+  const moonClaimText = snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimed
+    ? "🌙 " + moonReward.moonShards + "개 수령 완료"
+    : "🌙 " + moonReward.moonShards + "개 수령 가능";
 
   const scoreDetailHtml =
     '<div class="rr-score-breakdown">' +
@@ -550,11 +731,11 @@ function renderRunDetail(snapshot, onFinish){
       '</div>' +
       '<div class="rr-score-reward-line">' +
         '<span>최종 ' + scoreBreakdown.total + '점</span>' +
-        '<strong>🌙 ' + moonReward.moonShards + '개 지급 예정</strong>' +
+        '<strong>' + escapeRrHtml(moonClaimText) + '</strong>' +
       '</div>' +
       (scoreBreakdown.isTemporary
         ? '<div class="rr-score-notice">현재는 실제 기록을 찾지 못해 임시 계산값으로 표시됩니다. 추후 지급 연동 예정입니다.</div>'
-        : '<div class="rr-score-notice">점수는 실제 런 기록 기준입니다. 달빛조각은 아직 지급 예정 표시이며 실제 지갑에는 반영되지 않습니다.</div>') +
+        : '<div class="rr-score-notice">점수는 실제 런 기록 기준입니다.</div>') +
     '</div>';
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
@@ -754,8 +935,19 @@ function buildRunResultSnapshot(result){
     highestFloor = Math.max(0, nodeFloorIdx(getCurrentNodeId()));
   }
 
+  const runId = stats.runId || ("act1-run-fallback-" + (stats.startedAt || Date.now()));
+  const existingMoonReward = stats.moonReward || {};
+
   const snapshot = {
     result,
+    runId,
+    moonRewardClaim: {
+      claimKey: existingMoonReward.claimKey || runId,
+      claimed: !!existingMoonReward.claimed,
+      claimedAt: existingMoonReward.claimedAt || null,
+      amount: rrToSafeNumber(existingMoonReward.amount, 0),
+      score: rrToSafeNumber(existingMoonReward.score, 0)
+    },
     highestFloor,
     cleared: {
       enemy: cleared.enemy || 0,
@@ -785,7 +977,11 @@ function buildRunResultSnapshot(result){
 
   snapshot.scoreBreakdown = scoreBreakdown;
   snapshot.totalScore = scoreBreakdown.total;
-  snapshot.moonRewardPreview = moonReward;
+  snapshot.moonRewardPreview = Object.assign({}, moonReward, {
+    claimKey: snapshot.moonRewardClaim.claimKey,
+    claimed: snapshot.moonRewardClaim.claimed,
+    claimedAt: snapshot.moonRewardClaim.claimedAt
+  });
 
   return snapshot;
 }
@@ -1067,6 +1263,27 @@ function ensureRrStyles(){
       "font-size:1.45cqh;font-weight:900;color:#4a3524;}" +
 
     ".rr-score-reward-line strong{color:#a5322a;}" +
+
+    ".rr-moon-claim-box{width:100%;display:flex;align-items:center;justify-content:space-between;gap:1cqw;" +
+      "margin:1cqh 0;padding:1cqh 1.2cqw;border-radius:1.2cqh;" +
+      "background:rgba(255,248,230,.82);border:.16cqh solid rgba(203,154,76,.58);}" +
+
+    ".rr-moon-claim-box.is-claimed{opacity:.82;}" +
+
+    ".rr-moon-claim-text{display:flex;flex-direction:column;gap:.25cqh;color:#174b76;font-weight:900;}" +
+
+    ".rr-moon-claim-text strong{font-size:2.1cqh;color:#0e4e83;}" +
+
+    ".rr-moon-claim-text span{font-size:1.2cqh;color:#7a6142;}" +
+
+    ".rr-moon-claim-btn{min-width:12cqw;padding:.9cqh 1.4cqw;border-radius:1.1cqh;" +
+      "border:.18cqh solid rgba(207,157,75,.8);background:linear-gradient(180deg,#fff8df,#ecd49b);" +
+      "color:#0e4e83;font-size:1.45cqh;font-weight:900;cursor:pointer;" +
+      "box-shadow:0 .35cqh .8cqh rgba(0,0,0,.2);}" +
+
+    ".rr-moon-claim-btn:hover:not(:disabled){filter:brightness(1.05);}" +
+
+    ".rr-moon-claim-btn:disabled{cursor:not-allowed;opacity:.55;filter:grayscale(.25);}" +
 
     "@media (max-width:900px){" +
       ".rr-frame{width:94%;height:84%;}" +
