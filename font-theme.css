@@ -6,50 +6,22 @@
    ========================================================================= */
 
 @font-face {
-  font-family: 'GyeongbokgungSumunjangTitle';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleL.woff2') format('woff2');
-  font-weight: 300;
-  font-display: swap;
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
 }
 
 @font-face {
-  font-family: 'GyeongbokgungSumunjangTitle';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleM.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GyeongbokgungSumunjangTitle';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleB.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GyeongbokgungSumunjangBodyText';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyL.woff2') format('woff2');
-  font-weight: 300;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GyeongbokgungSumunjangBodyText';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyM.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GyeongbokgungSumunjangBodyText';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyB.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
 }
 
 :root {
-  --font-title: 'GyeongbokgungSumunjangTitle', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
-  --font-body: 'GyeongbokgungSumunjangBodyText', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  --font-title: 'Paperozi', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'Paperozi', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
 }
 
 /* 게임 전체 기본 본문 폰트 */
@@ -167,5 +139,5 @@ textarea,
 .rr-detail-content,
 .btt-desc {
   font-family: var(--font-body) !important;
-  font-weight: 500;
+  font-weight: 400;
 }

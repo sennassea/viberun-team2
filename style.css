@@ -1,15 +1,15 @@
 @font-face {
-  font-family: 'GyeongbokgungSumunjangTitle';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleB.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
 }
 
 @font-face {
-  font-family: 'GyeongbokgungSumunjangBodyText';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyM.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
 }
 
 ﻿/* =========================================================================
@@ -24,8 +24,8 @@
   --c-red:#e3574e; --c-red-deep:#a82e2e;
   --c-green:#4bb07a; --c-hp:#e24b4a; --c-hp-bg:#7a2a2a;
   --r:1.4cqh;
-  --font-title:'GyeongbokgungSumunjangTitle',"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
-  --font-body:'GyeongbokgungSumunjangBodyText',"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  --font-title:'Paperozi',"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  --font-body:'Paperozi',"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
 }
 *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
 html,body{height:100%; background:#0c1422; overflow:hidden;
