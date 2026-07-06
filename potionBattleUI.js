@@ -1,6 +1,6 @@
 "use strict";
 function canUsePotionNow(){
-  return !!(S && !S.busy && !S.over && !S.rewardOpen && !S.encounterCleared);
+  return !!(S && !S.busy && !S.over && !S.rewardOpen && !S.encounterCleared && !S.pendingCardChoice);
 }
 
 function isSelfUsePotion(item){
@@ -88,12 +88,12 @@ function ensurePotionUseButton(){
   btn.id = "potionUseButton";
   btn.type = "button";
   btn.textContent = "사용";
-  btn.addEventListener("click", ev => {
+  btn.addEventListener("click", async ev => {
     ev.stopPropagation();
     if(btn.disabled) return;
     btn.disabled = true;
     const index = Number(btn.dataset.potionIndex);
-    if(!useSelfPotion(index)) btn.disabled = false;
+    if(!(await useSelfPotion(index))) btn.disabled = false;
   });
   panel.appendChild(btn);
   return btn;
@@ -140,7 +140,7 @@ function getPotionFxList(potion){
 }
 
 function potionFxTargetsEnemy(fx){
-  return !!(fx && ["attackSingle","applyMark","applyWeak","applyRecollection","applyFracture"].includes(fx.t));
+  return !!(fx && ["attackSingle","applyMark","applyWeak","applyRecollection","applyFracture","removeEnemyBlock"].includes(fx.t));
 }
 
 function potionFxTargetsAnyEnemy(fx){
@@ -161,7 +161,22 @@ function isSupportedPotionFx(fx){
     "applyMarkAll",
     "attackSingle",
     "attackAll",
-    "nextAttackDouble"
+    "nextAttackDouble",
+    "removePlayerStatus",
+    "drawThenDiscardChoice",
+    "nextHighCostCardCostDown",
+    "exhaustStatusCardFromHandOrDraw",
+    "nextTurnDraw",
+    "removeEnemyBlock",
+    "createBellStrike",
+    "cleanseAllPlayerDebuffs",
+    "discardAnyThenDrawSameCount",
+    "blockGainMultiplierThisTurn",
+    "recoverHandDiscard",
+    "discardDrawTriggerGrowth",
+    "bellStrikePurifyBonusThisTurn",
+    "createTemporaryCopy",
+    "fillEmptyPotionSlots"
   ].includes(fx.t));
 }
 
@@ -176,17 +191,60 @@ function canExecutePotionFx(potion, context={}){
   });
 }
 
-function executePotionFx(potion, context={}){
+async function executePotionFx(potion, context={}){
   const fxList = getPotionFxList(potion);
   if(!canExecutePotionFx(potion, context)) return false;
   for(const fx of fxList){
     if(!isSupportedPotionFx(fx)) return false;
-    if(executeSinglePotionFx(fx, context) === false) return false;
+    const result = await executeSinglePotionFx(fx, context);
+    if(result === false) return false;
   }
   return true;
 }
 
-function executeSinglePotionFx(fx, context={}){
+function getStatusCardHandCandidates(){
+  ensureCardInstanceZones();
+  return S.hand.map((key, index) => {
+    const card = CARD_DB[key];
+    const instance = S.handInstances && S.handInstances[index];
+    if(!card || !instance) return null;
+    if(card.rarity !== "status" && card.type !== "status") return null;
+    return { key, index, instance, uid:instance.uid, zone:"hand" };
+  }).filter(Boolean);
+}
+
+function getAnyHandCandidates(){
+  ensureCardInstanceZones();
+  return S.hand.map((key, index) => {
+    const card = CARD_DB[key];
+    const instance = S.handInstances && S.handInstances[index];
+    if(!card || !instance) return null;
+    return { key, index, instance, uid:instance.uid, zone:"hand", cost:getHandCardCost(index, key) };
+  }).filter(Boolean);
+}
+
+function removeHandCardByUid(uid){
+  ensureCardInstanceZones();
+  const idx = S.handInstances.findIndex(instance => instance && instance.uid === uid);
+  if(idx < 0) return null;
+  const key = S.hand.splice(idx, 1)[0];
+  const instance = S.handInstances.splice(idx, 1)[0];
+  if(Array.isArray(S.handLockTokens)) S.handLockTokens.splice(idx, 1);
+  if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.splice(idx, 1);
+  return { key, instance };
+}
+
+function getFillPotionSlotCandidates(selfPotion, fx){
+  const db = Array.isArray(window.POTION_DB) ? window.POTION_DB : [];
+  return db.filter(item => {
+    if(!item || !item.implemented) return false;
+    if(fx.excludeSelf && selfPotion && item.id === selfPotion.id) return false;
+    if(fx.allowRare === false && item.rarity === "rare") return false;
+    return true;
+  });
+}
+
+async function executeSinglePotionFx(fx, context={}){
   const amount = Number.isFinite(fx.v) ? fx.v : 0;
   const targetEnemy = context.targetEnemy;
   switch(fx.t){
@@ -244,18 +302,208 @@ function executeSinglePotionFx(fx, context={}){
       S.nextAttackMultiplier = amount || 2;
       toast("다음 공격 정화량 증가");
       return true;
+    case "removePlayerStatus": {
+      const value = amount || 1;
+      if(fx.status === "anxiety") LIFE.reduceAnxiety(S.player, value);
+      else if(fx.status === "lethargy") LIFE.reduceLethargy(S.player, value);
+      return true;
+    }
+    case "cleanseAllPlayerDebuffs": {
+      LIFE.reduceWeak(S.player, S.player.weak || 0);
+      LIFE.reduceFracture(S.player, S.player.fracture || 0);
+      LIFE.reduceAnxiety(S.player, S.player.anxiety || 0);
+      LIFE.reduceLethargy(S.player, S.player.lethargy || 0);
+      toast("해로운 상태 정화");
+      return true;
+    }
+    case "nextTurnDraw":
+      S.nextTurnDrawBonus = (S.nextTurnDrawBonus || 0) + amount;
+      toast("다음 턴 주문 뽑기 +"+amount);
+      return true;
+    case "nextHighCostCardCostDown":
+      S.nextHighCostCardCostDown = {
+        minCost: Number.isFinite(fx.minCost) ? fx.minCost : 2,
+        amount: amount || 1,
+        minResultCost: Number.isFinite(fx.minResultCost) ? fx.minResultCost : 0
+      };
+      toast("다음 고비용 주문 비용 감소 예약");
+      return true;
+    case "removeEnemyBlock": {
+      if(!targetEnemy) return false;
+      const before = targetEnemy.block || 0;
+      if(before <= 0){
+        toast("제거할 결계가 없습니다.");
+        return false;
+      }
+      const removed = Math.min(before, amount);
+      targetEnemy.block = Math.max(0, before - amount);
+      spawnFloat('[data-id="'+targetEnemy.id+'"]', '-'+removed, 'blk');
+      return true;
+    }
+    case "createBellStrike":
+      createCardToHand("bell_strike", amount || 1);
+      return true;
+    case "bellStrikePurifyBonusThisTurn":
+      S.bellStrikePurifyBonusThisTurn = (S.bellStrikePurifyBonusThisTurn || 0) + amount;
+      toast("이번 턴 방울치기 정화량 증가");
+      return true;
+    case "blockGainMultiplierThisTurn":
+      S.blockGainMultiplierThisTurn = Math.max(S.blockGainMultiplierThisTurn || 1, amount || 1);
+      toast("이번 턴 결계 획득량 증가");
+      return true;
+    case "createTemporaryCopy":
+      S.nextCardTemporaryCopy = {
+        count: fx.count || 1,
+        keepOriginalCost: fx.keepOriginalCost !== false,
+        exhaustAtTurnEnd: fx.exhaustAtTurnEnd !== false
+      };
+      toast("다음 주문 사용 시 임시 복사본 생성 예약");
+      return true;
+    case "exhaustStatusCardFromHandOrDraw": {
+      const candidates = getStatusCardHandCandidates();
+      if(!candidates.length){
+        drawCards(fx.drawIfNone || 1, { source:"potion" });
+        return true;
+      }
+      const picked = await chooseCardFromCandidates({
+        title: context.potion?.name || "경문 잿물",
+        desc: "소멸할 상태 주문을 선택하세요.",
+        candidates
+      });
+      if(!picked) return false;
+      const removed = removeHandCardByUid(picked.uid);
+      if(!removed) return false;
+      if(Array.isArray(S.exhaust)) S.exhaust.push(removed.key);
+      toast((CARD_DB[removed.key]?.name || removed.key) + " 소멸");
+      return true;
+    }
+    case "drawThenDiscardChoice": {
+      drawCards(fx.draw || 0, { source:"potion" });
+      const candidates = getAnyHandCandidates();
+      if(!candidates.length) return true;
+      const picked = await chooseCardFromCandidates({
+        title: context.potion?.name || "새벽 샘물",
+        desc: "버릴 손패 1장을 선택하세요.",
+        candidates
+      });
+      if(!picked) return false;
+      const removed = removeHandCardByUid(picked.uid);
+      if(!removed) return false;
+      discardCard(removed.key, { source:"potionDiscardChoice", instance:removed.instance });
+      return true;
+    }
+    case "discardDrawTriggerGrowth": {
+      const candidates = getAnyHandCandidates();
+      if(!candidates.length){
+        toast("버릴 손패가 없습니다.");
+        return false;
+      }
+      const picked = await chooseCardFromCandidates({
+        title: context.potion?.name || "응어리 먹물",
+        desc: "버릴 손패 1장을 선택하세요.",
+        candidates
+      });
+      if(!picked) return false;
+      const removed = removeHandCardByUid(picked.uid);
+      if(!removed) return false;
+      const removedCard = CARD_DB[removed.key];
+      if(removedCard && removedCard.attr === "한풀이 덱"){
+        applyHanpuriGrowth(removed.instance, fx.growthTrigger || 1, { source:"potion", cardKey:removed.key });
+      }
+      discardCard(removed.key, { source:"potionDiscardChoice", instance:removed.instance });
+      drawCards(fx.draw || 0, { source:"potion" });
+      return true;
+    }
+    case "discardAnyThenDrawSameCount": {
+      const candidates = getAnyHandCandidates();
+      if(!candidates.length){
+        toast("버릴 손패가 없습니다.");
+        return false;
+      }
+      const picked = await chooseCardsMultiFromCandidates({
+        title: context.potion?.name || "도깨비 거울물",
+        desc: "버릴 주문을 원하는 만큼 선택한 뒤 확인을 누르세요.",
+        candidates
+      });
+      if(!picked || !picked.length) return false;
+      let discardedCount = 0;
+      picked.forEach(item => {
+        const removed = removeHandCardByUid(item.uid);
+        if(!removed) return;
+        discardCard(removed.key, { source:"potionDiscardChoice", instance:removed.instance });
+        discardedCount += 1;
+      });
+      if(discardedCount > 0) drawCards(discardedCount, { source:"potion" });
+      return discardedCount > 0;
+    }
+    case "recoverHandDiscard": {
+      const rec = S.lastHandDiscardedCard;
+      if(!rec){
+        toast("회수할 주문이 없습니다.");
+        return false;
+      }
+      if(S.hand.length >= 10){
+        toast("손패가 가득 차 있습니다.");
+        return false;
+      }
+      ensureCardInstanceZones();
+      const idx = S.discardInstances.findIndex(inst => inst && inst.uid === rec.instance.uid);
+      if(idx < 0){
+        S.lastHandDiscardedCard = null;
+        toast("회수할 주문을 찾을 수 없습니다.");
+        return false;
+      }
+      const recKey = S.discard.splice(idx, 1)[0];
+      const recInstance = S.discardInstances.splice(idx, 1)[0];
+      S.hand.push(recKey);
+      S.handInstances.push(recInstance);
+      if(Array.isArray(S.handLockTokens)) S.handLockTokens.push(createHandLockToken());
+      if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.push(null);
+      const baseCost = CARD_DB[recKey] ? (CARD_DB[recKey].cost || 0) : 0;
+      const minResultCost = Number.isFinite(fx.minResultCost) ? fx.minResultCost : 0;
+      setHandCardCostOverride(S.hand.length - 1, Math.max(minResultCost, baseCost - (fx.costReduce || 1)));
+      S.lastHandDiscardedCard = null;
+      toast((CARD_DB[recKey]?.name || recKey) + " 회수");
+      return true;
+    }
+    case "fillEmptyPotionSlots": {
+      const limit = typeof window.POTION_SLOT_LIMIT === "number" ? window.POTION_SLOT_LIMIT : 3;
+      const currentCount = Array.isArray(S.potions) ? S.potions.length : 0;
+      const afterSelfRemoved = fx.removeSelfFirst ? Math.max(0, currentCount - 1) : currentCount;
+      let emptySlots = Math.max(0, limit - afterSelfRemoved);
+      emptySlots = Math.min(emptySlots, fx.maxSlots || 2);
+      if(emptySlots <= 0) return true;
+      const pool = getFillPotionSlotCandidates(context.potion, fx);
+      if(!pool.length) return true;
+      const usedIds = new Set();
+      let filled = 0;
+      for(let i = 0; i < emptySlots; i++){
+        let candidatePool = pool;
+        if(fx.noDuplicateInSameUse){
+          candidatePool = pool.filter(p => !usedIds.has(p.id));
+          if(!candidatePool.length) break;
+        }
+        const picked = pickRewardItemByRarity(candidatePool, { rarityWeights: fx.rarityWeights });
+        if(!picked) break;
+        usedIds.add(picked.id);
+        S.potions.push({ ...picked });
+        filled += 1;
+      }
+      if(filled > 0) toast("빈 약병 슬롯을 채웠습니다.");
+      return true;
+    }
     default:
       console.warn("[Potion FX] Unsupported FX:", fx);
       return false;
   }
 }
 
-function useSelfPotion(index){
+async function useSelfPotion(index){
   if(!canUsePotionNow()) return false;
   if(!Array.isArray(S.potions)) return false;
   const potion = S.potions[index];
   if(!potion || !isSelfUsePotion(potion)) return false;
-  if(!applySelfPotionEffect(potion, { potion, potionIndex:index })) return false;
+  if(!(await applySelfPotionEffect(potion, { potion, potionIndex:index }))) return false;
   S.potions.splice(index, 1);
   recordPotionUsed(potion);
   syncRunStateFromCombat();
@@ -264,8 +512,8 @@ function useSelfPotion(index){
   return true;
 }
 
-function applySelfPotionEffect(potion, context={}){
-  return executePotionFx(potion, context);
+async function applySelfPotionEffect(potion, context={}){
+  return await executePotionFx(potion, context);
 }
 
 function ensurePotionDiscardButton(){
@@ -307,6 +555,7 @@ function hidePotionDiscardButton(){
 let pendingDiscardPotion = null;
 
 function discardPotion(index){
+  if(S && S.pendingCardChoice) return;
   if(!Array.isArray(S.potions)) return;
   const potion = S.potions[index];
   if(!potion){
@@ -430,12 +679,12 @@ function dropPotionDrag(x, y){
   endPotionDrag();
 }
 
-function useTargetPotion(index, targetEnemy){
+async function useTargetPotion(index, targetEnemy){
   if(!canUsePotionNow()) return false;
   if(!Array.isArray(S.potions)) return false;
   const potion = S.potions[index];
   if(!potion || !isAttackPotion(potion)) return false;
-  if(!executePotionFx(potion, { potion, potionIndex:index, targetEnemy })) return false;
+  if(!(await executePotionFx(potion, { potion, potionIndex:index, targetEnemy }))) return false;
   S.potions.splice(index, 1);
   recordPotionUsed(potion);
   syncRunStateFromCombat();
@@ -470,6 +719,74 @@ function endPotionDrag(){
   document.querySelectorAll(".targetable,.hovered").forEach(enemyEl => enemyEl.classList.remove("targetable","hovered"));
   if(potionDragState && potionDragState.slot) potionDragState.slot.classList.remove("potion-dragging");
   potionDragState = null;
+}
+
+/* 도깨비 거울물(discardAnyThenDrawSameCount) 전용 다중 선택 팝업.
+   기존 chooseCardFromCandidates()는 단일 선택만 지원하므로, 최소 범위로
+   potionBattleUI.js 내부에만 별도 다중 선택 UI를 둔다. */
+function chooseCardsMultiFromCandidates(options={}){
+  const candidates = options.candidates || [];
+  if(!candidates.length) return Promise.resolve([]);
+  if(S) S.pendingCardChoice = true;
+  updateEndBtn();
+  let ov = document.querySelector("#battleCardMultiChoiceOverlay");
+  if(!ov){
+    ov = document.createElement("div");
+    ov.id = "battleCardMultiChoiceOverlay";
+    ov.innerHTML =
+      '<div class="battle-card-choice-panel">' +
+        '<h2></h2>' +
+        '<p></p>' +
+        '<div class="battle-card-choice-cards"></div>' +
+        '<div class="battle-card-multi-choice-actions">' +
+          '<button type="button" class="battle-card-choice-cancel">취소</button>' +
+          '<button type="button" class="battle-card-multi-choice-confirm">확인</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(ov);
+  }
+  const title = ov.querySelector("h2");
+  const desc = ov.querySelector("p");
+  const wrap = ov.querySelector(".battle-card-choice-cards");
+  title.textContent = options.title || "카드 선택";
+  desc.textContent = options.desc || "";
+  wrap.innerHTML = "";
+  ov.classList.add("show");
+  const selected = new Set();
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = picked => {
+      if(settled) return;
+      settled = true;
+      ov.classList.remove("show");
+      wrap.innerHTML = "";
+      if(S) S.pendingCardChoice = false;
+      updateEndBtn();
+      resolve(picked || []);
+    };
+    candidates.forEach((item, choiceIndex) => {
+      const card = CARD_DB[item.key];
+      if(!card) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "battle-card-choice-card reward-card card-frame-card cost-"+card.type;
+      button.innerHTML = cardFaceHtml({ ...card, cost:item.cost ?? card.cost });
+      button.addEventListener("click", () => {
+        if(selected.has(choiceIndex)){
+          selected.delete(choiceIndex);
+          button.classList.remove("selected");
+        } else {
+          selected.add(choiceIndex);
+          button.classList.add("selected");
+        }
+      });
+      wrap.appendChild(button);
+    });
+    const cancel = ov.querySelector(".battle-card-choice-cancel");
+    cancel.onclick = () => finish([]);
+    const confirm = ov.querySelector(".battle-card-multi-choice-confirm");
+    confirm.onclick = () => finish(candidates.filter((_, idx) => selected.has(idx)));
+  });
 }
 
 function normalizeRunResources(){

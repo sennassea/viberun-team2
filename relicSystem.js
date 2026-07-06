@@ -113,7 +113,8 @@ function getPlayerAttackDamage(rawDamage, targetEnemy){
 }
 
 function gainPlayerBlock(value){
-  const requested = Math.max(0, value || 0);
+  const multiplier = (S && S.blockGainMultiplierThisTurn) || 1;
+  const requested = Math.max(0, Math.floor((value || 0) * multiplier));
   const before = S && S.player ? (S.player.block || 0) : 0;
   LIFE.addBlock(S.player, requested);
   const gained = Math.max(0, (S.player.block || 0) - before);
