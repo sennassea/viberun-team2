@@ -195,6 +195,7 @@ function updateStartScreenMode(options={}){
   updateStartMailboxVisibility(mailbox);
   refreshStartWalletUI();
   refreshStartMonthlyPassUI();
+  refreshStartMenuProfileUI();
   setStartMenuVisible(settings, true);
 }
 
@@ -215,6 +216,12 @@ function refreshStartWalletUI(){
 function refreshStartMonthlyPassUI(){
   if(window.VIBERUN_MONTHLY_PASS_UI && typeof window.VIBERUN_MONTHLY_PASS_UI.refresh === "function"){
     window.VIBERUN_MONTHLY_PASS_UI.refresh();
+  }
+}
+
+function refreshStartMenuProfileUI(){
+  if(window.VIBERUN_MENU_PROFILE_UI && typeof window.VIBERUN_MENU_PROFILE_UI.refresh === "function"){
+    window.VIBERUN_MENU_PROFILE_UI.refresh();
   }
 }
 
@@ -301,6 +308,7 @@ window.addEventListener("viberun:auth-changed", () => {
   updateStartMailboxVisibility();
   refreshStartWalletUI();
   refreshStartMonthlyPassUI();
+  refreshStartMenuProfileUI();
   if(window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.refreshBadge === "function"){
     window.VIBERUN_MAILBOX_UI.refreshBadge();
   }

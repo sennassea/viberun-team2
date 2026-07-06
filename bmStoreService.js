@@ -413,6 +413,20 @@
     });
   }
 
+  /* 메인메뉴 좌상단 프로필 UI 전용 조회/적용 함수입니다.
+     구매/보유 로직에는 관여하지 않고 equippedSkinId 조회·저장만 담당합니다. */
+  function fetchCharacterSkinProfileState(){
+    return requestJson("/profile/character-skins", { method: "GET" });
+  }
+
+  function equipCharacterSkinProfile(skinId){
+    return requestJson("/profile/character-skins/equip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skinId: skinId ?? null })
+    });
+  }
+
   function fetchDummyInventory(){
     return requestJson("/bm-store/dummy-inventory", { method: "GET" }).then(result => {
       if(result && result.ok && Array.isArray(result.dummyInventory)){
@@ -437,6 +451,8 @@
     purchaseProduct,
     fetchMonthlyPassStatus,
     claimMonthlyPassDailyReward,
+    fetchCharacterSkinProfileState,
+    equipCharacterSkinProfile,
     fetchDummyInventory,
     getCachedDummyInventory(){
       return cachedDummyInventory.slice();

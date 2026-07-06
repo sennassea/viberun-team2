@@ -89,7 +89,8 @@ const BM_CHARACTER_SKIN_PRODUCTS = [
     price: 1500,
     saleStartAt: "2026-07-06T00:00:00+09:00",
     saleEndAt: "2026-08-20T00:00:00+09:00",
-    category: "character_skin"
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png"
   },
   {
     id: "skin_premium_wolyeong_academy_transfer",
@@ -97,7 +98,8 @@ const BM_CHARACTER_SKIN_PRODUCTS = [
     skinId: "wolyeong_academy_transfer",
     grade: "premium",
     price: 1000,
-    category: "character_skin"
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png"
   },
   {
     id: "skin_common_prayer_robe",
@@ -105,9 +107,21 @@ const BM_CHARACTER_SKIN_PRODUCTS = [
     skinId: "common_prayer_robe",
     grade: "common",
     price: 700,
-    category: "character_skin"
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_common_prayer_robe.png"
   }
 ];
+
+/* 메인메뉴 프로필 UI 전용 상수입니다. 기본 프로필은 상품 데이터가 아니므로
+   구매 검증 테이블과 별도로 여기서만 관리합니다. */
+const DEFAULT_PROFILE_ICON = "assets/profile/profile_default.png";
+const DEFAULT_DISPLAY_NAME = "빛솔이";
+
+function resolveProfileIconBySkinId(skinId) {
+  if (!skinId) return DEFAULT_PROFILE_ICON;
+  const product = BM_CHARACTER_SKIN_PRODUCTS.find((item) => item.skinId === skinId);
+  return (product && product.profileIcon) || DEFAULT_PROFILE_ICON;
+}
 
 /* 달빛조각 충전(테스트 구매) 검증 테이블입니다. 실제 결제 검증 없이 rewardAmount만큼
    wallet.moonShards를 증가시키며, 차감/잔액 확인은 하지 않습니다. */
@@ -214,6 +228,12 @@ function ensureAccount(accountId) {
   }
   if (!account.characterSkins) {
     account.characterSkins = buildDefaultCharacterSkins();
+  }
+  if (!Array.isArray(account.characterSkins.ownedSkinIds)) {
+    account.characterSkins.ownedSkinIds = [];
+  }
+  if (!("equippedSkinId" in account.characterSkins)) {
+    account.characterSkins.equippedSkinId = null;
   }
   return account;
 }
@@ -907,6 +927,73 @@ function handleMailboxRefund(req, res, mailId) {
 }
 
 /* ------------------------------------------------------------------------
+   메인메뉴 프로필 아이콘 (캐릭터 스킨 적용) Mock 핸들러
+   - 실소유 여부는 characterSkins.ownedSkinIds만 기준으로 판단합니다.
+   - 전투/카드/보상/상점 로직에는 관여하지 않고 equippedSkinId만 저장합니다.
+   ------------------------------------------------------------------------ */
+function handleProfileCharacterSkinsGet(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const equippedSkinId = account.characterSkins.equippedSkinId || null;
+
+  sendJson(res, 200, {
+    ok: true,
+    profile: {
+      displayName: DEFAULT_DISPLAY_NAME,
+      equippedSkinId,
+      currentProfileIcon: resolveProfileIconBySkinId(equippedSkinId)
+    },
+    characterSkins: account.characterSkins
+  });
+}
+
+function handleProfileCharacterSkinsEquip(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_REQUEST", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const skinId = payload.skinId === undefined ? null : payload.skinId;
+  const account = ensureAccount(accountId);
+
+  if (skinId !== null && !account.characterSkins.ownedSkinIds.includes(skinId)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_NOT_OWNED",
+      message: "보유하지 않은 스킨입니다."
+    });
+    return;
+  }
+
+  account.characterSkins.equippedSkinId = skinId;
+
+  sendJson(res, 200, {
+    ok: true,
+    message: "스킨이 적용되었습니다.",
+    profile: {
+      displayName: DEFAULT_DISPLAY_NAME,
+      equippedSkinId: skinId,
+      currentProfileIcon: resolveProfileIconBySkinId(skinId)
+    },
+    characterSkins: account.characterSkins
+  });
+}
+
+/* ------------------------------------------------------------------------
    정적 파일 서빙 (index.html 및 프로젝트 루트 리소스)
    ------------------------------------------------------------------------ */
 function serveStaticFile(res, pathname) {
@@ -1022,6 +1109,16 @@ const server = http.createServer((req, res) => {
   const refundMatch = pathname.match(/^\/mailbox\/([^/]+)\/refund$/);
   if (method === "POST" && refundMatch) {
     handleMailboxRefund(req, res, decodeURIComponent(refundMatch[1]));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/profile/character-skins") {
+    handleProfileCharacterSkinsGet(req, res);
+    return;
+  }
+
+  if (method === "POST" && pathname === "/profile/character-skins/equip") {
+    readRequestBody(req).then((body) => handleProfileCharacterSkinsEquip(req, res, body));
     return;
   }
 

@@ -117,6 +117,10 @@
       imageKey: "skin_limited_moonlight_vow_magic_maiden",
       previewImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png",
 
+      profileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
+      profileSortOrder: 1,
+      profileLabel: "달빛서약☆마법무녀",
+
       purchasable: true,
       dimmed: false
     },
@@ -138,6 +142,10 @@
       imageKey: "skin_premium_wolyeong_academy_transfer",
       previewImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
 
+      profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+      profileSortOrder: 2,
+      profileLabel: "월영학당 전학생",
+
       purchasable: true,
       dimmed: false
     },
@@ -158,6 +166,10 @@
       sortOrder: 3,
       imageKey: "skin_common_prayer_robe",
       previewImage: "assets/skins/skin_common_prayer_robe.png",
+
+      profileIcon: "assets/profile/profile_common_prayer_robe.png",
+      profileSortOrder: 3,
+      profileLabel: "백성의 기도복",
 
       purchasable: true,
       dimmed: false
