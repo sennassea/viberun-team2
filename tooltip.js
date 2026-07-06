@@ -493,7 +493,8 @@
     "#battle-subcard-preview{position:absolute;z-index:100001;pointer-events:none;display:none;}" +
     "#battle-subcard-preview.show{display:block;}" +
     ".bsp-face{position:relative;width:100%;aspect-ratio:2/3;border-radius:1cqh;overflow:hidden;" +
-      "box-shadow:0 .6cqh 2cqh rgba(0,0,0,.5);background:#f5efe4;}" +
+      "border:.22cqh solid rgba(255,220,120,.9);" +
+      "box-shadow:0 .6cqh 2cqh rgba(0,0,0,.5),0 0 0 .3cqh rgba(255,220,120,.35);background:#f5efe4;}" +
     ".bsp-face .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;" +
       "overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);}" +
     ".bsp-face .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;}" +
@@ -1051,11 +1052,21 @@
   /* 서브카드는 메인 카드보다 살짝 작게(85%) 표시 */
   var SUBCARD_SCALE = 0.85;
 
+  /* 도감/카드상세처럼 화면보다 좁은 모달 안에서 카드를 볼 때는 game 전체가 아니라
+     그 모달 패널을 기준으로 겹침/뒤집힘을 판단해야 한다. 해당 모달이 없으면(전투 손패 등)
+     기존처럼 game 전체를 기준으로 삼는다. */
+  function getPreviewBoundsRect(cardEl) {
+    var panel = cardEl.closest && cardEl.closest(".deck-viewer-panel, .card-detail-panel");
+    return (panel || game).getBoundingClientRect();
+  }
+
   /* ── 서브카드 미리보기 표시/숨김/위치 ───────────────────────────────────── */
-  /* 메인 카드 상단과 같은 줄에 정렬되고, 카드 오른쪽에 붙되 화면 밖으로
-     나가면 왼쪽으로 뒤집힌다. 반환값은 뒤이어 툴팁을 이어붙이는 데 쓰인다. */
+  /* 메인 카드 상단과 같은 줄에 정렬되고, 카드 오른쪽에 붙되 (모달이면 모달 기준,
+     아니면 화면 기준) 공간 밖으로 나가면 왼쪽으로 뒤집힌다.
+     반환값은 뒤이어 툴팁을 이어붙이는 데 쓰인다. */
   function positionSubCardPreview(cardEl) {
     var gRect = game.getBoundingClientRect();
+    var boundsRect = getPreviewBoundsRect(cardEl);
     var cRect = cardEl.getBoundingClientRect();
     var pad = 8;
 
@@ -1064,17 +1075,28 @@
 
     var cardLeft  = cRect.left  - gRect.left;
     var cardRight = cRect.right - gRect.left;
+    var boundsLeft   = boundsRect.left   - gRect.left;
+    var boundsRight  = boundsRect.right  - gRect.left;
+    var boundsTop    = boundsRect.top    - gRect.top;
+    var boundsBottom = boundsRect.bottom - gRect.top;
+
+    /* 서브카드 뒤에는 설명 툴팁(#battle-tooltip, max-width:26cqw)이 이어붙기 때문에
+       서브카드 자신만 오른쪽에 들어가는지가 아니라, 툴팁 최대 너비까지 합쳐서
+       들어가는지로 뒤집힘을 판단해야 4번째 열처럼 서브카드만 겨우 들어가는
+       위치에서 툴팁이 잘리지 않는다. */
+    var TOOLTIP_MAX_WIDTH_RATIO = 0.26;
+    var reservedForTooltip = pRect.width + pad + gRect.width * TOOLTIP_MAX_WIDTH_RATIO;
 
     var flippedLeft = false;
     var tx = cardRight + pad;
-    if (tx + pRect.width > gRect.width - pad) {
+    if (tx + reservedForTooltip > boundsRight - pad) {
       tx = cardLeft - pRect.width - pad;
       flippedLeft = true;
     }
-    tx = Math.max(pad, Math.min(gRect.width - pRect.width - pad, tx));
+    tx = Math.max(boundsLeft + pad, Math.min(boundsRight - pRect.width - pad, tx));
 
     var ty = cRect.top - gRect.top; /* 메인 카드와 윗면 정렬 */
-    ty = Math.max(pad, Math.min(gRect.height - pRect.height - pad, ty));
+    ty = Math.max(boundsTop + pad, Math.min(boundsBottom - pRect.height - pad, ty));
 
     subCardPreview.style.left = tx + "px";
     subCardPreview.style.top = ty + "px";
@@ -1099,9 +1121,15 @@
      바로 옆(서브카드가 뒤집혔으면 반대쪽)에 이어붙인다.                        */
   function positionCardTooltip(cardEl, subCardRect) {
     var gRect   = game.getBoundingClientRect();
+    var boundsRect = getPreviewBoundsRect(cardEl);
     var cRect   = cardEl.getBoundingClientRect();
     var tipRect = tooltip.getBoundingClientRect();
     var pad = 8;
+
+    var boundsLeft   = boundsRect.left   - gRect.left;
+    var boundsRight  = boundsRect.right  - gRect.left;
+    var boundsTop    = boundsRect.top    - gRect.top;
+    var boundsBottom = boundsRect.bottom - gRect.top;
 
     var tx, ty;
 
@@ -1110,7 +1138,7 @@
          카드 바로 아래에 표시하고, 화면 아래로 넘치면 위로 뒤집는다.          */
       tx = (cRect.left - gRect.left) + (cRect.width - tipRect.width) / 2;
       ty = (cRect.bottom - gRect.top) + pad;
-      if (ty + tipRect.height > gRect.height - pad) {
+      if (ty + tipRect.height > boundsBottom - pad) {
         ty = (cRect.top - gRect.top) - tipRect.height - pad;
       }
     } else if (subCardRect) {
@@ -1120,15 +1148,15 @@
       ty = (cRect.top - gRect.top);
     } else {
       var cardMidX = (cRect.left + cRect.right) / 2;
-      var gameMidX = gRect.left + gRect.width / 2;
-      tx = cardMidX > gameMidX
+      var boundsMidX = boundsLeft + (boundsRight - boundsLeft) / 2;
+      tx = cardMidX - gRect.left > boundsMidX
         ? (cRect.left  - gRect.left) - tipRect.width - pad
         : (cRect.right - gRect.left) + pad;
       ty = (cRect.top - gRect.top);
     }
 
-    tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
-    ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
+    tx = Math.max(boundsLeft + pad, Math.min(boundsRight  - tipRect.width  - pad, tx));
+    ty = Math.max(boundsTop + pad,  Math.min(boundsBottom - tipRect.height - pad, ty));
 
     tooltip.style.left = tx + "px";
     tooltip.style.top  = ty + "px";
