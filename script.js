@@ -3737,11 +3737,6 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
         ev.stopPropagation();
         onPotionSlotClick(item, i, slot);
       });
-      slot.addEventListener("mouseenter", () => showPotionDiscardButton(i, slot));
-      slot.addEventListener("mouseleave", ev => {
-        if(ev.relatedTarget && ev.relatedTarget.id === "potionDiscardButton") return;
-        hidePotionDiscardButton();
-      });
     }
     host.appendChild(slot);
   }
@@ -3773,12 +3768,24 @@ function isAttackPotion(item){
 
 function onPotionSlotClick(item, index, slot){
   hidePotionUseButton();
-  if(!isSelfUsePotion(item)) return;
-  if(!canUsePotionNow()){
-    toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
+  if(isSelfUsePotion(item)){
+    if(!canUsePotionNow()){
+      toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
+      return;
+    }
+    showPotionUseButton(index, slot);
+    showPotionDiscardButton(index, slot);
+    refreshPotionTooltipPosition();
     return;
   }
-  showPotionUseButton(index, slot);
+  if(isAttackPotion(item)){
+    showPotionDiscardButton(index, slot);
+    refreshPotionTooltipPosition();
+  }
+}
+
+function refreshPotionTooltipPosition(){
+  if(window.refreshItemSlotTooltipPosition) window.refreshItemSlotTooltipPosition();
 }
 
 function ensurePotionUseButton(){
@@ -3818,9 +3825,11 @@ function showPotionUseButton(index, slot){
 function hidePotionUseButton(){
   const btn = document.querySelector("#potionUseButton");
   if(!btn) return;
+  const wasShown = btn.classList.contains("show");
   btn.classList.remove("show");
   btn.dataset.potionIndex = "";
   btn.disabled = false;
+  if(wasShown) refreshPotionTooltipPosition();
 }
 
 function getPotionFxList(potion){
@@ -3983,6 +3992,7 @@ function ensurePotionDiscardButton(){
   });
   btn.addEventListener("mouseleave", () => hidePotionDiscardButton());
   document.querySelector("#game").appendChild(btn);
+  document.addEventListener("click", hidePotionDiscardButton);
   return btn;
 }
 
@@ -3992,17 +4002,25 @@ function showPotionDiscardButton(index, slot){
   if(!slot || !game) return;
   const anchorRect = slot.getBoundingClientRect();
   const gameRect = game.getBoundingClientRect();
+  const useBtn = document.querySelector("#potionUseButton");
+  let leftEdge = anchorRect.right;
+  if(useBtn && useBtn.classList.contains("show") && Number(useBtn.dataset.potionIndex) === index){
+    leftEdge = useBtn.getBoundingClientRect().right;
+  }
   btn.dataset.potionIndex = String(index);
-  btn.style.left = (anchorRect.right - gameRect.left + 6) + "px";
-  btn.style.top = (anchorRect.top - gameRect.top + anchorRect.height + 4) + "px";
+  btn.style.left = (leftEdge - gameRect.left + 6) + "px";
+  btn.style.top = (anchorRect.top - gameRect.top) + "px";
+  btn.style.height = anchorRect.height + "px";
   btn.classList.add("show");
 }
 
 function hidePotionDiscardButton(){
   const btn = document.querySelector("#potionDiscardButton");
   if(!btn) return;
+  const wasShown = btn.classList.contains("show");
   btn.classList.remove("show");
   btn.dataset.potionIndex = "";
+  if(wasShown) refreshPotionTooltipPosition();
 }
 
 function discardPotion(index){
@@ -4024,6 +4042,7 @@ function attachPotionDrag(slot, item, index){
   slot.addEventListener("pointerdown", down);
   function down(ev){
     hidePotionUseButton();
+    hidePotionDiscardButton();
     if(!canUsePotionNow()){
       toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
       return;

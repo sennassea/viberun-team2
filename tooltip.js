@@ -855,7 +855,21 @@
       ? (isRelic ? S.relics : S.potions)
       : null;
     var item = Array.isArray(list) ? list[index] : null;
-    return { item: item, type: isRelic ? "relic" : "potion" };
+    return { item: item, type: isRelic ? "relic" : "potion", index: index };
+  }
+
+  /* 약병 슬롯 클릭 시 뜨는 사용/버리기 버튼이 열려 있으면 그 버튼들의 최상단 y좌표를 반환.
+     열린 버튼이 없으면 null (약병 tooltip이 버튼을 가리지 않도록 위치 조정에 사용) */
+  function getOpenPotionActionButtonsTop(index) {
+    if (index == null || index < 0) return null;
+    var tops = [];
+    ["potionUseButton", "potionDiscardButton"].forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (btn && btn.classList.contains("show") && Number(btn.dataset.potionIndex) === index) {
+        tops.push(btn.getBoundingClientRect().top);
+      }
+    });
+    return tops.length ? Math.min.apply(Math, tops) : null;
   }
 
   function getMasterItemData(type, id) {
@@ -906,7 +920,10 @@
     var ty;
     if (info && info.type === "potion") {
       tx = (sRect.right - gRect.left) + 16;
-      ty = (sRect.top - gRect.top) + (sRect.height - tipRect.height) * 0.5;
+      var actionTop = getOpenPotionActionButtonsTop(info.index);
+      ty = actionTop !== null
+        ? (actionTop - gRect.top) - tipRect.height - pad
+        : (sRect.top - gRect.top) + (sRect.height - tipRect.height) * 0.5;
     } else {
       tx = (sRect.left - gRect.left) + (sRect.width - tipRect.width) * 0.5;
       ty = (sRect.bottom - gRect.top) + pad;
@@ -941,6 +958,12 @@
     activeItemSlotEl = null;
     tooltip.classList.remove("tt-show");
   }
+
+  /* 약병 사용/버리기 버튼이 열리거나 닫힐 때 script.js에서 호출.
+     현재 표시 중인 약병/법구 슬롯 툴팁이 있으면 위치만 다시 계산한다. */
+  window.refreshItemSlotTooltipPosition = function () {
+    if (activeItemSlotEl) positionItemSlotTooltip(activeItemSlotEl);
+  };
 
   game.addEventListener("mouseover", function (e) {
     var slotEl = e.target.closest("#sideRelicSlots .side-item-slot,#sidePotionSlots .side-item-slot");
