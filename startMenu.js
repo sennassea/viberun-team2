@@ -8,6 +8,20 @@ function startNewGameFromMenu(){
   /* 로그인 이력이 없으면 모달을 먼저 띄우고, 성공 후 이 함수를 다시 호출해 기존 새 게임 흐름을 보존합니다. */
   if(window.VIBERUN_AUTH && !window.VIBERUN_AUTH.requireLogin(startNewGameFromMenu)) return;
 
+  /* 신령의 길 UI(임시 구현, script.js 미수정): 덱 3종 선택 완료 후에만 기존 새 게임 흐름을 실행합니다. */
+  if(window.VIBERUN_SPIRIT_PATH_UI && typeof window.VIBERUN_SPIRIT_PATH_UI.open === "function"){
+    window.VIBERUN_SPIRIT_PATH_UI.open({
+      onComplete(){
+        startNewGameAfterSpiritPath();
+      }
+    });
+    return;
+  }
+
+  startNewGameAfterSpiritPath();
+}
+
+function startNewGameAfterSpiritPath(){
   markHasPlayedBefore();
   /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
   if(typeof window.ACT1_START_NEW_GAME === "function"){
