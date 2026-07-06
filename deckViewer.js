@@ -27,6 +27,7 @@
     all: { type: "order", direction: "desc" },
     hand: { type: "order", direction: "desc" },
     discard: { type: "order", direction: "desc" },
+    exhaust: { type: "order", direction: "desc" },
     codexCards: { type: "order", direction: "desc" },
     codexRelics: { type: "order", direction: "desc" },
     codexPotions: { type: "order", direction: "desc" },
@@ -43,6 +44,7 @@
     all: { type: "all" },
     hand: { type: "all" },
     discard: { type: "all" },
+    exhaust: { type: "all" },
     codexCards: { type: "all" },
     codexRelics: { type: "all" },
     codexPotions: { type: "all" },
@@ -52,6 +54,7 @@
     all: "",
     hand: "",
     discard: "",
+    exhaust: "",
     codexCards: "",
     codexRelics: "",
     codexPotions: "",
@@ -61,12 +64,14 @@
     all: "보유 중인 주문이 없습니다.",
     hand: "손에 든 주문이 없습니다.",
     discard: "버린 주문이 없습니다.",
+    exhaust: "소멸된 주문이 없습니다.",
   };
 
   const TABS = [
     { id: "all", label: "전체 주문", getCards: () => getDeck() },
     { id: "hand", label: "손에 든 주문", getCards: () => getHand() },
     { id: "discard", label: "버린 주문", getCards: () => getDiscard() },
+    { id: "exhaust", label: "소멸된 주문", getCards: () => getExhaust() },
   ];
 
   const CODEX_SECTIONS = [
@@ -128,6 +133,10 @@
 
   function getDiscard(){
     return typeof S === "undefined" || !S ? [] : [...S.discard];
+  }
+
+  function getExhaust(){
+    return typeof S === "undefined" || !S || !Array.isArray(S.exhaust) ? [] : [...S.exhaust];
   }
 
   function getCard(key){

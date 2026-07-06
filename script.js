@@ -860,7 +860,7 @@ function newGame(options={}){
     enemies:  [],       // 패키지 전체 몬스터 (동시 배치)
     selectedId: null,   // 현재 선택된 적 ID
     energy:   getMaxEnergy(),
-    hand: [], draw: [], discard: [],
+    hand: [], draw: [], discard: [], exhaust: [],
     busy: false, over: null, rewardOpen: false,
     relics: cloneRunArray(RUN_STATE.relics), potions: cloneRunArray(RUN_STATE.potions),
     gold: RUN_STATE.gold, moonShards: RUN_STATE.moonShards,
@@ -2339,6 +2339,7 @@ function discardCard(key, options={}){
   }
   if(card.exhaust){
     S.exhaustedSpellCountThisTurn = (S.exhaustedSpellCountThisTurn || 0) + 1;
+    if(Array.isArray(S.exhaust)) S.exhaust.push(key);
     const generated = !!(card.generatedOnly || options.generated);
     applyRelicTrigger("onCardExhaust", { cardUid:instance.uid, cardKey:key, card, generated, source:options.source || "unknown" });
     applyRelicTrigger("onExhaustCountEachTurn", { count:S.exhaustedSpellCountThisTurn });
