@@ -4,7 +4,9 @@
   const SELECTOR = "[data-tooltip], [data-global-tooltip], [data-tooltip-title]";
   const SKIN_OPTION_SELECTOR = ".menu-profile-popup .menu-profile-option";
   const SPIRIT_PATH_CARD_PREVIEW_SELECTOR = ".spirit-path-preview-item";
-  const RANDOM_ITEM_RESULT_CARD_SELECTOR = ".random-item-result-card";
+  /* 카드형 결과 항목(.random-item-result-card-frame)은 카드 앞면이 이미 이름/설명을
+     보여주므로 제외 — tooltip.js의 카드 용어 툴팁이 별도로 처리한다 */
+  const RANDOM_ITEM_RESULT_CARD_SELECTOR = ".random-item-result-card:not(.random-item-result-card-frame)";
   /* 상점 상품 카드(주문 카드형은 tooltip.js가 별도 처리하므로 제외) */
   const SHOP_PRODUCT_SELECTOR = ".shop-product:not(.shop-product-card-frame)";
   const SHOP_DETAIL_SELECTOR = "#shopDetail";
