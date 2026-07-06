@@ -4052,8 +4052,10 @@ let pendingDiscardPotion = null;
 function discardPotion(index){
   if(!Array.isArray(S.potions)) return;
   const potion = S.potions[index];
-  hidePotionDiscardButton();
-  if(!potion) return;
+  if(!potion){
+    hidePotionDiscardButton();
+    return;
+  }
   pendingDiscardPotion = potion;
   showPotionDiscardConfirm(index);
 }
