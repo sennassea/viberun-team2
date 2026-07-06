@@ -132,12 +132,10 @@ function resolveProfileIconBySkinId(skinId) {
 /* 달빛조각 충전(테스트 구매) 검증 테이블입니다. 실제 결제 검증 없이 rewardAmount만큼
    wallet.moonShards를 증가시키며, 차감/잔액 확인은 하지 않습니다. */
 const BM_MOON_CHARGE_PRODUCTS = [
-  { id: "moon_charge_60", name: "달빛조각 60", price: 1200, rewardAmount: 60 },
-  { id: "moon_charge_300", name: "달빛조각 300", price: 5900, rewardAmount: 300 },
-  { id: "moon_charge_980", name: "달빛조각 980", price: 19000, rewardAmount: 980 },
-  { id: "moon_charge_1980", name: "달빛조각 1,980", price: 37000, rewardAmount: 1980 },
-  { id: "moon_charge_3280", name: "달빛조각 3,280", price: 59000, rewardAmount: 3280 },
-  { id: "moon_charge_6480", name: "달빛조각 6,480", price: 119000, rewardAmount: 6480 }
+  { id: "moon_charge_100", name: "달빛조각 100개", price: 1200, rewardAmount: 100 },
+  { id: "moon_charge_500", name: "달빛조각 500개", price: 5500, rewardAmount: 500 },
+  { id: "moon_charge_1200", name: "달빛조각 1,200개", price: 12000, rewardAmount: 1200 },
+  { id: "moon_charge_3000", name: "달빛조각 3,000개", price: 27000, rewardAmount: 3000 }
 ];
 
 /* 월영의 약속(30일 출석 상품) 검증 테이블입니다. 구매는 test_cash이며,

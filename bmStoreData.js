@@ -348,78 +348,73 @@
     }
   ];
 
-  /* 달빛조각 충전 탭 상품 6종입니다. 실제 결제는 하지 않는 테스트 구매이며,
-     달빛조각 차감 없이 rewardAmount만큼 wallet.moonShards를 증가시킵니다. */
+  /* 달빛조각 충전 탭 상품 4종입니다. 실제 결제는 하지 않는 테스트 구매이며,
+     달빛조각 차감 없이 rewardAmount만큼 wallet.moonShards를 증가시킵니다.
+     BM 기획서의 "달빛 조각 직접 판매안" 기준(개당 단가/용도)을 따릅니다. */
   const MOON_CHARGE_PRODUCTS = [
     {
-      id: "moon_charge_60",
+      id: "moon_charge_100",
       tab: "moon_charge",
-      name: "달빛조각 60",
+      name: "달빛조각 100개",
+      subtitle: "소액 부족분 보충",
       priceType: "test_cash",
       price: 1200,
+      priceLabel: "₩1,200",
       rewardType: "moon_shard",
-      rewardAmount: 60,
-      bonusText: "+60 보너스",
-      badge: "첫 2배"
+      rewardAmount: 100,
+      unitPriceLabel: "개당 12원",
+      description: "소액 부족분 보충 / 첫 결제",
+      imageKey: "moon_charge_small",
+      sortOrder: 1,
+      recommendedBadge: "첫 결제"
     },
     {
-      id: "moon_charge_300",
+      id: "moon_charge_500",
       tab: "moon_charge",
-      name: "달빛조각 300",
+      name: "달빛조각 500개",
+      subtitle: "혼합 구매용",
       priceType: "test_cash",
-      price: 5900,
+      price: 5500,
+      priceLabel: "₩5,500",
       rewardType: "moon_shard",
-      rewardAmount: 300,
-      bonusText: "+300 보너스",
-      badge: "첫 2배",
-      recommended: true,
-      recommendOrder: 40,
-      recommendBadge: "충전 추천"
+      rewardAmount: 500,
+      unitPriceLabel: "개당 11원",
+      description: "플레이 재화와 혼합 구매",
+      imageKey: "moon_charge_medium",
+      sortOrder: 2,
+      recommendedBadge: "균형형"
     },
     {
-      id: "moon_charge_980",
+      id: "moon_charge_1200",
       tab: "moon_charge",
-      name: "달빛조각 980",
+      name: "달빛조각 1,200개",
+      subtitle: "확장덱 즉시 해금",
       priceType: "test_cash",
-      price: 19000,
+      price: 12000,
+      priceLabel: "₩12,000",
       rewardType: "moon_shard",
-      rewardAmount: 980,
-      bonusText: "+980 보너스",
-      badge: "첫 2배",
-      recommended: true,
-      recommendOrder: 50,
-      recommendBadge: "인기"
+      rewardAmount: 1200,
+      unitPriceLabel: "개당 10원",
+      description: "확장덱 1종 즉시 해금 앵커",
+      imageKey: "moon_charge_large",
+      sortOrder: 3,
+      recommendedBadge: "추천"
     },
     {
-      id: "moon_charge_1980",
+      id: "moon_charge_3000",
       tab: "moon_charge",
-      name: "달빛조각 1,980",
+      name: "달빛조각 3,000개",
+      subtitle: "복합 구매용",
       priceType: "test_cash",
-      price: 37000,
+      price: 27000,
+      priceLabel: "₩27,000",
       rewardType: "moon_shard",
-      rewardAmount: 1980,
-      bonusText: "+1,980 보너스"
-    },
-    {
-      id: "moon_charge_3280",
-      tab: "moon_charge",
-      name: "달빛조각 3,280",
-      priceType: "test_cash",
-      price: 59000,
-      rewardType: "moon_shard",
-      rewardAmount: 3280,
-      bonusText: "+3,280 보너스"
-    },
-    {
-      id: "moon_charge_6480",
-      tab: "moon_charge",
-      name: "달빛조각 6,480",
-      priceType: "test_cash",
-      price: 119000,
-      rewardType: "moon_shard",
-      rewardAmount: 6480,
-      bonusText: "+6,480 보너스",
-      badge: "첫 2배"
+      rewardAmount: 3000,
+      unitPriceLabel: "개당 9원",
+      description: "확장덱+스킨 복합 구매 코어 유저",
+      imageKey: "moon_charge_premium",
+      sortOrder: 4,
+      recommendedBadge: "최고 효율"
     }
   ];
 
@@ -474,7 +469,8 @@
       return clone(ORDER_PACK_PRODUCTS.find(product => product.id === productId) || null);
     },
     getMoonChargeProducts(){
-      return clone(MOON_CHARGE_PRODUCTS);
+      return clone(MOON_CHARGE_PRODUCTS)
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     },
     findMoonChargeProduct(productId){
       return clone(MOON_CHARGE_PRODUCTS.find(product => product.id === productId) || null);

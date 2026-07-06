@@ -394,6 +394,11 @@
       return;
     }
 
+    if(state.activeTab === "moon_charge" && state.products.length){
+      renderMoonChargeLayout();
+      return;
+    }
+
     if(!state.products.length){
       const emptyTextByTab = {
         order_pack: "판매 중인 주문 팩이 없습니다.",
@@ -554,6 +559,47 @@
       '<article class="bm-product-card bm-expansion-placeholder is-dimmed" data-disabled-reason="준비 중입니다.">' +
         '<h3>확장팩 1종</h3>' +
         '<p>🌙 1,200 달빛 조각</p>' +
+      '</article>'
+    );
+  }
+
+  /* 달빛조각 충전 탭 전용 레이아웃입니다. 4개 상품을 가로 4카드로 배치하며,
+     구매 버튼은 기존 .bm-store-buy-btn 클래스/data-product-id를 그대로 사용해
+     공통 구매 확인 팝업 → purchaseProduct 흐름을 그대로 탑니다. */
+  function renderMoonChargeLayout(){
+    const sortedProducts = state.products.slice().sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+    els.body.innerHTML =
+      '<div class="bm-moon-charge-layout">' +
+        sortedProducts.map(renderMoonChargeCard).join("") +
+      '</div>' +
+      '<p class="bm-moon-charge-notice">' + escapeHtml(MOON_CHARGE_NOTICE) + '</p>';
+  }
+
+  function renderMoonChargeCard(product){
+    const isBusy = purchasingProductId === product.id;
+    const priceText = product.priceLabel || formatKRW(product.price);
+    const rewardAmount = Number(product.rewardAmount) || 0;
+
+    return (
+      '<article class="bm-moon-charge-card">' +
+        (product.recommendedBadge ? '<div class="bm-moon-charge-badge">' + escapeHtml(product.recommendedBadge) + '</div>' : "") +
+        '<h3 class="bm-moon-charge-title">' + escapeHtml(product.name) + '</h3>' +
+        (product.subtitle ? '<p class="bm-moon-charge-subtitle">' + escapeHtml(product.subtitle) + '</p>' : "") +
+
+        '<div class="bm-moon-charge-art" aria-hidden="true">' +
+          '<span class="bm-store-art-moon"></span>' +
+          '<span class="bm-moon-charge-amount">' + formatCount(rewardAmount) + '</span>' +
+        '</div>' +
+
+        (product.description ? '<p class="bm-moon-charge-desc">' + escapeHtml(product.description) + '</p>' : "") +
+        (product.unitPriceLabel ? '<p class="bm-moon-charge-unit">' + escapeHtml(product.unitPriceLabel) + '</p>' : "") +
+
+        '<button type="button" class="bm-store-buy-btn bm-moon-charge-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+          (isBusy ? " disabled" : "") + '>' +
+          '<span class="bm-store-price-icon" aria-hidden="true"></span>' +
+          '<span>' + (isBusy ? "구매 중..." : escapeHtml(priceText)) + '</span>' +
+        '</button>' +
       '</article>'
     );
   }
