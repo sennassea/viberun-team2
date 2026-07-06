@@ -68,6 +68,8 @@
     return popup;
   }
 
+  const LEFT_SIDE_SELECTOR = ".start-mailbox-button";
+
   function positionTooltip(anchor) {
     const tip = ensureTooltip();
     const tipRect = tip.getBoundingClientRect();
@@ -76,6 +78,9 @@
 
     const openPopup = getOpenProfileSkinPopup(anchor);
     const monthlyPassCard = anchor.closest ? anchor.closest(".monthly-pass-claim-card") : null;
+    const leftSideTarget = !openPopup && !monthlyPassCard && anchor.closest
+      ? anchor.closest(LEFT_SIDE_SELECTOR)
+      : null;
     let left;
     let top;
 
@@ -87,6 +92,10 @@
       const cardRect = monthlyPassCard.getBoundingClientRect();
       left = cardRect.right + GAP;
       top = cardRect.top + (cardRect.height - tipRect.height) / 2;
+    } else if (leftSideTarget) {
+      const targetRect = leftSideTarget.getBoundingClientRect();
+      left = targetRect.left - tipRect.width - GAP;
+      top = targetRect.top + (targetRect.height - tipRect.height) / 2;
     } else {
       const anchorRect = anchor.getBoundingClientRect();
       left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
@@ -207,6 +216,18 @@
     if (recordBtn) {
       recordBtn.dataset.tooltipTitle = "기록";
       recordBtn.dataset.tooltip = "플레이 기록과 진행 내역을 확인할 수 있습니다.";
+    }
+
+    const moonWallet = document.querySelector(".start-moon-wallet");
+    if (moonWallet) {
+      moonWallet.dataset.tooltipTitle = "달빛 조각";
+      moonWallet.dataset.tooltip = "희귀 보상과 특별한 보물함을 여는 데 사용하는 유료 재화입니다.";
+    }
+
+    const mailboxBtn = document.querySelector(".start-mailbox-button");
+    if (mailboxBtn) {
+      mailboxBtn.dataset.tooltipTitle = "선물함";
+      mailboxBtn.dataset.tooltip = "지급된 보상과 선물을 확인하고 받을 수 있는 공간입니다.";
     }
   }
 
