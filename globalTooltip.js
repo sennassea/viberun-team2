@@ -75,6 +75,7 @@
     const vh = window.innerHeight || document.documentElement.clientHeight;
 
     const openPopup = getOpenProfileSkinPopup(anchor);
+    const monthlyPassCard = anchor.closest ? anchor.closest(".monthly-pass-claim-card") : null;
     let left;
     let top;
 
@@ -82,6 +83,10 @@
       const popupRect = openPopup.getBoundingClientRect();
       left = popupRect.right + GAP;
       top = popupRect.top + (popupRect.height - tipRect.height) / 2;
+    } else if (monthlyPassCard) {
+      const cardRect = monthlyPassCard.getBoundingClientRect();
+      left = cardRect.right + GAP;
+      top = cardRect.top + (cardRect.height - tipRect.height) / 2;
     } else {
       const anchorRect = anchor.getBoundingClientRect();
       left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
@@ -135,6 +140,11 @@
   }
 
   document.addEventListener("pointerover", event => {
+    const nameEl = event.target && typeof event.target.closest === "function"
+      ? event.target.closest(".menu-profile-name")
+      : null;
+    if (nameEl) suppressNativeTooltip(nameEl);
+
     const anchor = findAnchor(event.target);
     if (!anchor || anchor === activeAnchor) return;
     show(anchor);
@@ -179,6 +189,12 @@
     if (avatarBtn) {
       avatarBtn.dataset.tooltipTitle = "프로필";
       avatarBtn.dataset.tooltip = "보유 스킨에 따라 프로필 사진을 변경할 수 있습니다.";
+    }
+
+    const monthlyPassCard = document.querySelector(".monthly-pass-claim-card");
+    if (monthlyPassCard) {
+      monthlyPassCard.dataset.tooltipTitle = "월영의 약속";
+      monthlyPassCard.dataset.tooltip = "매일 보상을 확인하고 받을 수 있는 월간 보상 영역입니다.";
     }
   }
 
