@@ -34,15 +34,15 @@ const START_BLESSING_SPIRITS = (START_BLESSING_ENDING_DATA && Array.isArray(STAR
 /* ── 시작 전용 은혜 법구 15종 (엑셀 지시서 기준) ───────────────────────── */
 const START_BLESSINGS = [
   { id:"blessing_relic_01", icon:"🌒", name:"길잃은 방울",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.", effect:"gainRandomRelicLoseHp" },
-  { id:"blessing_relic_02", icon:"🃏", name:"금단의 서낭부",  spirit:"길잡이 신령", desc:"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", effect:"chooseRareCardAddStatus" },
+  { id:"blessing_relic_02", icon:"🃏", name:"금단의 서낭부",  spirit:"길잡이 신령", desc:"유일 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", effect:"chooseRareCardAddStatus" },
   { id:"blessing_relic_03", icon:"assets/ui/resource_icons/gold.png", name:"깨진 복주머니",  spirit:"길잡이 신령", desc:"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.", effect:"gainGoldLoseMaxHp" },
   { id:"blessing_relic_04", icon:"⚗️", name:"흔들리는 약향로",  spirit:"길잡이 신령", desc:"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.", effect:"gainPotionsFirstBattleAnxiety" },
   { id:"blessing_relic_05", icon:"🏺", name:"빈 복채함",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.", effect:"gainRandomRelicLoseAllGold" },
   { id:"blessing_relic_06", icon:"✂️", name:"인연 끊는 가위",  spirit:"인연 신령", desc:"기본 카드 1장을 선택하여 제거합니다.", effect:"chooseRemoveStarterCard" },
-  { id:"blessing_relic_07", icon:"🔀", name:"뒤섞인 인연패",  spirit:"인연 신령", desc:"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.", effect:"randomRemoveStarterGainCommon" },
+  { id:"blessing_relic_07", icon:"🔀", name:"뒤섞인 인연패",  spirit:"인연 신령", desc:"기본 카드 1장을 무작위로 제거하고, 무작위 일반 카드 1장을 얻습니다.", effect:"randomRemoveStarterGainCommon" },
   { id:"blessing_relic_08", icon:"🧹", name:"망각의 매듭",  spirit:"인연 신령", desc:"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.", effect:"removeTwoCardsLoseAllGold" },
-  { id:"blessing_relic_09", icon:"📜", name:"새 인연의 부적",  spirit:"인연 신령", desc:"Common 카드 3장 중 1장을 선택해 얻습니다.", effect:"chooseCommonCard" },
-  { id:"blessing_relic_10", icon:"🍃", name:"가벼운 첫 매듭", spirit:"인연 신령", desc:"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", effect:"gainRandomCommonCostDownRun" },
+  { id:"blessing_relic_09", icon:"📜", name:"새 인연의 부적",  spirit:"인연 신령", desc:"일반 카드 3장 중 1장을 선택해 얻습니다.", effect:"chooseCommonCard" },
+  { id:"blessing_relic_10", icon:"🍃", name:"가벼운 첫 매듭", spirit:"인연 신령", desc:"무작위 일반 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", effect:"gainRandomCommonCostDownRun" },
   { id:"blessing_relic_11", icon:"🕯️", name:"수호의 첫 종소리", spirit:"수호 신령", desc:"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.", effect:"nextThreeNormalFirstEnemyHpOne" },
   { id:"blessing_relic_12", icon:"🛡️", name:"첫 결계의 연꽃", spirit:"수호 신령", desc:"첫 전투 시작 시 결계 10을 얻습니다.", effect:"firstBattleBlock", value:10 },
   { id:"blessing_relic_13", icon:"💗", name:"맑은 혼의 옥패", spirit:"수호 신령", desc:"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.", effect:"gainMaxHpAndHeal", value:8 },
@@ -236,7 +236,7 @@ function applySbBlessing(blessing){
     case "chooseRareCardAddStatus":
       return chooseSbCardRewardByRarity("rare", {
         title: "정화 보상",
-        desc: "Rare 카드 3장 중 1장을 선택해 덱에 추가하세요.",
+        desc: "유일 카드 3장 중 1장을 선택해 덱에 추가하세요.",
         afterChoose: addSbRandomStatusCard
       });
     case "gainGoldLoseMaxHp":
@@ -275,7 +275,7 @@ function applySbBlessing(blessing){
     case "chooseCommonCard":
       return chooseSbCardRewardByRarity("common", {
         title: "정화 보상",
-        desc: "Common 카드 3장 중 1장을 선택해 덱에 추가하세요."
+        desc: "일반 카드 3장 중 1장을 선택해 덱에 추가하세요."
       });
     case "gainRandomCommonCostDownRun": {
       const gainedKey = addSbDiscountedCommonCard();
@@ -638,7 +638,7 @@ function sbChoiceHtml(blessing, index){
     '<button type="button" class="sb-card" data-id="' + blessing.id + '">' +
       '<div class="sb-card-icon">' + sbIconHtml(blessing.icon) + '</div>' +
       '<div class="sb-card-name">' + blessing.name + '</div>' +
-      '<div class="sb-card-desc">' + blessing.desc + '</div>' +
+      '<div class="sb-card-desc">' + colorizeRarityLabels(blessing.desc) + '</div>' +
     '</button>'
   );
 }

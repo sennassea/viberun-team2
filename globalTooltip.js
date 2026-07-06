@@ -69,7 +69,7 @@
       ? '<span class="global-tooltip-title">' + escapeHtml(data.title) + "</span>"
       : "";
     const body = data.body
-      ? '<span class="global-tooltip-body">' + escapeHtml(data.body) + "</span>"
+      ? '<span class="global-tooltip-body">' + colorizeRarityLabels(escapeHtml(data.body)) + "</span>"
       : "";
     return title + body;
   }

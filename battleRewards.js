@@ -483,7 +483,7 @@ function openBattleVictoryConfirm(id, host){
   if(!modal) return;
   modal.dataset.rewardId = id;
   modal.querySelector(".victory-confirm-title").textContent = item.name;
-  modal.querySelector(".victory-confirm-desc").textContent = item.desc || item.value || "";
+  modal.querySelector(".victory-confirm-desc").innerHTML = colorizeRarityLabels(escapeHtml(item.desc || item.value || ""));
   closeBattleVictoryPotionReplacePanel(modal);
   modal.classList.add("show");
   modal.setAttribute("aria-hidden", "false");
@@ -570,9 +570,9 @@ function renderBattleVictoryPotionReplaceDetail(panel, slots, selectedSlot, oldP
       '<button type="button" class="victory-potion-replace-cancel">취소</button>' +
     '</div>';
   detail.querySelector(".victory-potion-detail-name.old").textContent = oldPotion.name || "약병";
-  detail.querySelector(".victory-potion-detail-desc.old").textContent = oldPotion.desc || oldPotion.value || "임시 약병 효과 설명입니다.";
+  detail.querySelector(".victory-potion-detail-desc.old").innerHTML = colorizeRarityLabels(escapeHtml(oldPotion.desc || oldPotion.value || "임시 약병 효과 설명입니다."));
   detail.querySelector(".victory-potion-detail-name.new").textContent = (newPotion && newPotion.name) || "새 약병";
-  detail.querySelector(".victory-potion-detail-desc.new").textContent = (newPotion && (newPotion.desc || newPotion.value)) || "임시 약병 효과 설명입니다.";
+  detail.querySelector(".victory-potion-detail-desc.new").innerHTML = colorizeRarityLabels(escapeHtml((newPotion && (newPotion.desc || newPotion.value)) || "임시 약병 효과 설명입니다."));
   detail.querySelector(".victory-potion-replace-confirm").addEventListener("click", (ev) => {
     finishBattleVictoryPotionReplace(host, potionIndex, newPotion, ev.currentTarget);
   });
@@ -768,7 +768,7 @@ function openCardRewardPick(options = {}){
     const desc = ov.querySelector(".reward-panel p");
     const skip = ov.querySelector(".reward-skip");
     if(title) title.textContent = cardRewardPickMode.title;
-    if(desc) desc.textContent = cardRewardPickMode.desc;
+    if(desc) desc.innerHTML = colorizeRarityLabels(escapeHtml(cardRewardPickMode.desc));
     if(skip) skip.style.display = "none";
     renderRewardOverlay(keys);
   });

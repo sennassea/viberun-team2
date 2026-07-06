@@ -78,9 +78,9 @@
         {
           id: "B",
           label: "약병을 챙긴다",
-          desc: "이벤트 Common 약병 1개 70% / 정신력 -8 30%",
+          desc: "이벤트 일반 약병 1개 70% / 정신력 -8 30%",
           outcomes: [
-            { kind: "positive", icon: "potion", text: "이벤트 Common 약병 1개", chance: 70,
+            { kind: "positive", icon: "potion", text: "이벤트 일반 약병 1개", chance: 70,
               effects: [{ type: "potionRandom", source: "event", rarity: "common" }] },
             { kind: "negative", icon: "minus", text: "정신력 -8", chance: 30,
               effects: [{ type: "spirit", value: -8 }] }
@@ -264,9 +264,9 @@
         {
           id: "A",
           label: "안전한 약봉투를 고른다",
-          desc: "이벤트 Common 약병 2개 중 1개 선택",
+          desc: "이벤트 일반 약병 2개 중 1개 선택",
           outcomes: [
-            { kind: "positive", icon: "potion", text: "이벤트 Common 약병 2개 중 1개 선택", chance: 100,
+            { kind: "positive", icon: "potion", text: "이벤트 일반 약병 2개 중 1개 선택", chance: 100,
               effects: [{ type: "potionChoice", count: 2, source: "event", rarity: "common" }] }
           ]
         },
@@ -492,9 +492,9 @@
         {
           id: "A",
           label: "기록을 확인한다",
-          desc: "Rare 의식 보상 65% / 일반 전투 35%",
+          desc: "유일 의식 보상 65% / 일반 전투 35%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "Rare 의식 보상", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "유일 의식 보상", chance: 65,
               effects: [{ type: "cardRewardRare", count: 3, pick: 1 }] },
             { kind: "negative", icon: "sword", text: "일반 전투", chance: 35,
               effects: [{ type: "combat", combatType: "normal" }] }
@@ -503,9 +503,9 @@
         {
           id: "B",
           label: "봉인 물품을 가져간다",
-          desc: "Rare 이벤트 법구 1개 45% / 정신력 -25 55%",
+          desc: "유일 이벤트 법구 1개 45% / 정신력 -25 55%",
           outcomes: [
-            { kind: "positive", icon: "relic", text: "Rare 이벤트 법구 1개", chance: 45,
+            { kind: "positive", icon: "relic", text: "유일 이벤트 법구 1개", chance: 45,
               effects: [{ type: "relicRare", source: "event" }] },
             { kind: "negative", icon: "minus", text: "정신력 -25", chance: 55,
               effects: [{ type: "spirit", value: -25 }] }

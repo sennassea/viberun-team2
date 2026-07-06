@@ -318,7 +318,7 @@ function eventChoiceRowHtml(choice, idx){
       '<div class="event-choice-icon">' + icon + '</div>' +
       '<div class="event-choice-body">' +
         '<div class="event-choice-label">' + escapeEventHtml(choice.label || "") + '</div>' +
-        '<div class="event-choice-desc">' + escapeEventHtml(choice.desc || "") + '</div>' +
+        '<div class="event-choice-desc">' + colorizeRarityLabels(escapeEventHtml(choice.desc || "")) + '</div>' +
         lockHtml +
       '</div>' +
       outcomesHtml +
@@ -347,12 +347,12 @@ function eventOutcomeChipHtml(outcome){
   const kind = outcome.kind === "positive" ? "positive" : (outcome.kind === "negative" ? "negative" : "neutral");
   const symbol = kind === "positive" ? "✦" : (kind === "negative" ? "⊖" : "◇");
   const chance = typeof outcome.chance === "number" ? " (확률 " + outcome.chance + "%)" : "";
-  return '<span class="event-outcome-chip ' + kind + '">' + symbol + ' ' + escapeEventHtml(outcome.text || "") + chance + '</span>';
+  return '<span class="event-outcome-chip ' + kind + '">' + symbol + ' ' + colorizeRarityLabels(escapeEventHtml(outcome.text || "")) + chance + '</span>';
 }
 
 function eventResultHtml(){
   const rows = (eventState.resultDetails || []).map(detail =>
-    '<div class="event-result-row ' + (detail.kind || "neutral") + '">' + escapeEventHtml(detail.text) + '</div>'
+    '<div class="event-result-row ' + (detail.kind || "neutral") + '">' + colorizeRarityLabels(escapeEventHtml(detail.text)) + '</div>'
   ).join("");
   return (
     '<div class="event-panel event-panel-result">' +
@@ -401,7 +401,7 @@ function eventCardHtml(key){
       '<div class="event-card-name">' + escapeEventHtml(c.name) + '</div>' +
       '<div class="event-card-art">' + escapeEventHtml(c.emoji) + '</div>' +
       '<div class="event-card-type ' + c.type + '">' + escapeEventHtml(label) + '</div>' +
-      '<div class="event-card-desc">' + escapeEventHtml(c.desc) + '</div>' +
+      '<div class="event-card-desc">' + colorizeRarityLabels(escapeEventHtml(c.desc)) + '</div>' +
     '</button>'
   );
 }
@@ -429,7 +429,7 @@ function eventPotionHtml(potion){
     '<button type="button" class="event-card' + selected + '" data-potion-id="' + escapeEventHtml(potion.id) + '">' +
       '<div class="event-card-art">' + escapeEventHtml(potion.emoji || "🧪") + '</div>' +
       '<div class="event-card-name">' + escapeEventHtml(potion.name) + '</div>' +
-      '<div class="event-card-desc">' + escapeEventHtml(potion.desc || "") + '</div>' +
+      '<div class="event-card-desc">' + colorizeRarityLabels(escapeEventHtml(potion.desc || "")) + '</div>' +
     '</button>'
   );
 }
@@ -529,7 +529,7 @@ function applyEventEffect(effect){
     case "gold": return applyEventGold(effect.value);
     case "goldOrSpiritPenalty": return applyEventGoldOrSpiritPenalty(effect);
     case "relicRandom": return applyEventRelicGrant(null, "");
-    case "relicRare": return applyEventRelicGrant("rare", "Rare ");
+    case "relicRare": return applyEventRelicGrant("rare", "유일 ");
     case "addStatusCard": return applyEventAddStatusCard(effect);
     case "cardRemove": return applyEventCardRemove(effect);
     case "cardDuplicate": return applyEventCardDuplicate(effect);

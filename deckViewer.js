@@ -918,7 +918,7 @@
         '<div class="deck-viewer-count">x1</div>' +
         '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
         '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
-        '<div class="desc">' + escapeHtml(item.desc || "") + '</div>' +
+        '<div class="desc">' + colorizeRarityLabels(escapeHtml(item.desc || "")) + '</div>' +
       '</button>';
     }
     const card = entry.card;
@@ -942,7 +942,7 @@
           '<div class="card-detail-card codex-item-card">' +
             '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
             '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
-            '<div class="desc">' + escapeHtml(item.desc || "") + '</div>' +
+            '<div class="desc">' + colorizeRarityLabels(escapeHtml(item.desc || "")) + '</div>' +
           '</div>' +
         '</div>' +
         '<div class="card-detail-back">' +
@@ -950,7 +950,7 @@
             '<div class="card-detail-kicker">' + escapeHtml(label) + ' ' + escapeHtml(index + 1) + ' / ' + escapeHtml(total) + '</div>' +
             '<h3 id="cardDetailTitle">' + escapeHtml(item.name || "") + '</h3>' +
           '</div>' +
-          '<div class="card-detail-desc">' + escapeHtml(item.desc || "") + '</div>' +
+          '<div class="card-detail-desc">' + colorizeRarityLabels(escapeHtml(item.desc || "")) + '</div>' +
         '</div>' +
       '</div>' +
       '<button type="button" class="card-detail-nav card-detail-next" data-card-detail-nav="next" aria-label="다음 항목">›</button>';
@@ -981,7 +981,7 @@
               (isUpgrade ? '<span class="card-detail-badge upgrade">강화</span>' : '') +
             '</div>' +
           '</div>' +
-          '<div class="card-detail-desc">' + escapeHtml(card.desc) + '</div>' +
+          '<div class="card-detail-desc">' + colorizeRarityLabels(escapeHtml(card.desc)) + '</div>' +
           '<div class="card-detail-info">' +
             (isUpgrade ? '<section><h4>강화 변화</h4><p>' + escapeHtml(changeText) + '</p></section>' : '') +
             '<section><h4>주문 종류</h4><p>' + escapeHtml(getTypeDescription(card)) + '</p></section>' +
@@ -1141,7 +1141,7 @@
       '<div class="card-text-layer">' +
         '<div class="card-cost-text">' + escapeHtml(safeCard.cost ?? "") + '</div>' +
         '<div class="card-name-text">' + escapeHtml(safeCard.name || "") + '</div>' +
-        '<div class="card-desc-text">' + escapeHtml(safeCard.desc || "") + '</div>' +
+        '<div class="card-desc-text">' + colorizeRarityLabels(escapeHtml(safeCard.desc || "")) + '</div>' +
       '</div>' +
       '<div class="card-hit-layer" aria-hidden="true"></div>';
   }

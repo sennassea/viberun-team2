@@ -906,7 +906,7 @@
     var desc = getShortItemDesc(info.item, master) || (info.type === "relic"
       ? "획득한 법구입니다."
       : "전투 중 사용할 수 있는 약병입니다.");
-    return makeRow(icon, name, desc);
+    return makeRow(icon, name, colorizeRarityLabels(desc));
   }
 
   function positionItemSlotTooltip(slotEl) {
