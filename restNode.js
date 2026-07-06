@@ -86,6 +86,12 @@ function closePrayerNode(){
 
 /* 기도터를 마치고 다음 노드를 고를 수 있도록 맵으로 복귀 (주문 보상 흐름과 동일 패턴) */
 function resolvePrayerNode(){
+  if(typeof recordCompletedNodeScore === "function"){
+    recordCompletedNodeScore("rest", {
+      reason: "휴식/신당 이용"
+    });
+  }
+
   if(typeof applyRelicTrigger === "function") applyRelicTrigger("onPrayerActionComplete", { action:prayerSelected });
   closePrayerNode();
   window.MAP_STATE.proceedMode = true;
@@ -222,6 +228,14 @@ function openRestCardRemove(){
       STARTER_DECK.splice(idx, 1);
       S.gold -= cost;
       S.cleanseCount = (typeof S.cleanseCount === "number" ? S.cleanseCount : 0) + 1;
+
+      if(typeof recordJourneyActionScore === "function"){
+        recordJourneyActionScore("cardRemove", {
+          type: "rest",
+          reason: "기도터 카드 제거"
+        });
+      }
+
       if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
       if(typeof renderHud === "function") renderHud();
       if(typeof toast === "function" && card) toast(card.name + " 주문을 덱에서 제거했습니다. (" + cost + " 복채 사용)");

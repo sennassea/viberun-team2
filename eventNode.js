@@ -84,6 +84,29 @@ function closeEventOverlayOnly(){
 
 /* 이벤트 종료 → 맵으로 복귀 (기도터/상점과 동일 패턴) */
 function finishEventNode(){
+  const completedEvent = eventState && eventState.event;
+  const resultDetails = eventState && Array.isArray(eventState.resultDetails)
+    ? eventState.resultDetails
+    : [];
+
+  if(typeof recordCompletedNodeScore === "function"){
+    recordCompletedNodeScore("event", {
+      reason: "이벤트 완료"
+    });
+  }
+
+  const isHighRiskSuccess =
+    completedEvent &&
+    completedEvent.category === "high_risk_high_reward" &&
+    resultDetails.some(detail => detail && detail.kind === "positive");
+
+  if(isHighRiskSuccess && typeof recordJourneyActionScore === "function"){
+    recordJourneyActionScore("highRiskEventSuccess", {
+      type: "event",
+      reason: "고위험 이벤트 성공"
+    });
+  }
+
   restoreEventMapOverrides();
   closeEventOverlayOnly();
   eventState = null;
@@ -966,6 +989,7 @@ function skipEventPotion(){
 /* ── 전투 전환 ───────────────────────────────────────────────────────────── */
 function triggerEventCombat(combatEffect){
   const combatType = combatEffect && combatEffect.combatType;
+  const isHighRiskEvent = !!(eventState && eventState.event && eventState.event.category === "high_risk_high_reward");
   restoreEventMapOverrides();
   closeEventOverlayOnly();
   eventState = null;
@@ -1006,6 +1030,14 @@ function triggerEventCombat(combatEffect){
   d.monsters.splice(0, d.monsters.length, ...mons);
   if(pkg && typeof window.ACT1_RECORD_PACKAGE_HISTORY === "function"){
     window.ACT1_RECORD_PACKAGE_HISTORY(pkg, nodeType);
+  }
+  if(typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.runStats){
+    RUN_STATE.runStats.pendingEventCombat = {
+      stageIndex: window.MAP_STATE && Number.isFinite(window.MAP_STATE.currentStage)
+        ? window.MAP_STATE.currentStage
+        : -1,
+      highRisk: isHighRiskEvent
+    };
   }
   if(typeof newGame === "function") newGame();
   if(typeof S !== "undefined" && S){
