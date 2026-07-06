@@ -125,7 +125,12 @@
       battleStandingImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png",
 
       purchasable: true,
-      dimmed: false
+      dimmed: false,
+
+      recommended: true,
+      recommendOrder: 2,
+      layoutType: "recommended_wide",
+      recommendedSlot: "top_banner"
     },
     {
       id: "skin_premium_wolyeong_academy_transfer",
@@ -153,7 +158,12 @@
       battleStandingImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
 
       purchasable: true,
-      dimmed: false
+      dimmed: false,
+
+      recommended: true,
+      recommendOrder: 3,
+      layoutType: "recommended_small",
+      recommendedSlot: "bottom_left"
     },
     {
       id: "skin_common_prayer_robe",
@@ -210,7 +220,12 @@
       icon: "🌙",
       sortOrder: 1,
       purchasable: true,
-      dimmed: false
+      dimmed: false,
+
+      recommended: true,
+      recommendOrder: 4,
+      layoutType: "recommended_small",
+      recommendedSlot: "bottom_middle"
     },
     {
       id: "deck_pack_gutpan",
@@ -396,7 +411,12 @@
       description: "확장덱+스킨 복합 구매 코어 유저",
       imageKey: "moon_charge_premium",
       sortOrder: 4,
-      recommendedBadge: "최고 효율"
+      recommendedBadge: "최고 효율",
+
+      recommended: true,
+      recommendOrder: 5,
+      layoutType: "recommended_small",
+      recommendedSlot: "bottom_right"
     }
   ];
 
@@ -406,7 +426,6 @@
 
   function allProducts(){
     return MONTHLY_PASS_PRODUCTS.concat(
-      RECOMMENDED_PREVIEW_PRODUCTS,
       CHARACTER_SKIN_PRODUCTS,
       ORDER_PACK_PRODUCTS,
       MOON_CHARGE_PRODUCTS
@@ -418,6 +437,14 @@
       return clone(TABS);
     },
     getProductsByTab(tab){
+      if(tab === "recommended"){
+        return clone(
+          allProducts()
+            .filter(product => product.recommended === true)
+            .sort((a, b) => (Number(a.recommendOrder) || 0) - (Number(b.recommendOrder) || 0))
+        );
+      }
+
       return clone(allProducts().filter(product => product.tab === tab));
     },
     findProduct(productId){

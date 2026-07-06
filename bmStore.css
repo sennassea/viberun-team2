@@ -191,6 +191,24 @@
   padding:.4cqh .7cqw .2cqh;
   scrollbar-color:rgba(176,125,29,.6) rgba(255,247,226,.54);
 }
+.bm-store-body--recommended{
+  overflow:hidden;
+}
+.bm-store-body--moon_charge{
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  gap:.4cqh;
+}
+.bm-store-body--moon_charge .bm-moon-charge-layout{
+  flex:1;
+  height:auto;
+  min-height:0;
+}
+.bm-store-body--moon_charge .bm-moon-charge-notice{
+  flex:none;
+  margin:0;
+}
 .bm-store-package-grid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -386,14 +404,19 @@
 .bm-moon-charge-layout{
   display:grid;
   grid-template-columns:repeat(4, minmax(0, 1fr));
-  gap:1.2cqh .9cqw;
+  gap:1cqh .9cqw;
   height:100%;
+  min-height:0;
   align-items:stretch;
 }
 .bm-moon-charge-card{
   position:relative;
-  min-height:45cqh;
-  padding:1.4cqh 1cqw;
+  height:100%;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:1.2cqh 1cqw .9cqh;
   border:.22cqh solid rgba(176, 123, 58, .72);
   border-radius:1.1cqh;
   background:linear-gradient(180deg, rgba(255,248,230,.94), rgba(240,219,174,.9));
@@ -416,68 +439,43 @@
   font-weight:900;
 }
 .bm-moon-charge-title{
-  margin:2.1cqh 0 .35cqh;
-  font-size:2.36cqh;
+  margin:1.9cqh 0 .3cqh;
+  font-size:2.05cqh;
   font-weight:900;
   color:#4d2f1d;
   word-break:keep-all;
 }
-.bm-moon-charge-subtitle{
-  margin:0;
-  min-height:2.2cqh;
-  color:#6b4a2e;
-  font-size:1.5cqh;
-  font-weight:800;
-  word-break:keep-all;
-}
 .bm-moon-charge-art{
-  height:15cqh;
-  margin:1.2cqh 0;
+  width:100%;
+  height:10cqh;
+  margin:.9cqh 0;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:.6cqh;
+  gap:.5cqh;
   border-radius:1cqh;
   background:radial-gradient(circle at 50% 40%, rgba(75,105,180,.34), rgba(18,31,73,.85));
   box-shadow:inset 0 .18cqh .5cqh rgba(255,255,255,.22);
   color:#fff8dc;
 }
 .bm-moon-charge-art .bm-store-art-moon{
-  width:5.6cqh;
-  height:5.6cqh;
+  width:4.6cqh;
+  height:4.6cqh;
 }
 .bm-moon-charge-amount{
-  font-size:2.53cqh;
+  font-size:2.2cqh;
   font-weight:900;
   text-shadow:0 .2cqh .35cqh rgba(0,0,0,.35);
 }
-.bm-moon-charge-desc{
-  min-height:4.2cqh;
-  margin:.8cqh 0 .4cqh;
-  color:#5d4027;
-  font-size:1.44cqh;
-  line-height:1.35;
-  font-weight:800;
-  word-break:keep-all;
-}
-.bm-moon-charge-unit{
-  margin:.4cqh 0 1.2cqh;
-  color:#2f6f6a;
-  font-size:1.44cqh;
-  font-weight:900;
-}
 .bm-moon-charge-buy-btn{
-  position:absolute;
-  left:1.4cqh;
-  right:1.4cqh;
-  bottom:1.4cqh;
-  width:calc(100% - 2.8cqh);
+  margin-top:auto;
+  width:100%;
   min-width:0;
   justify-content:center;
 }
 .bm-moon-charge-notice{
-  margin:.9cqh 0 0;
+  margin:.6cqh 0 0;
   color:#6b4a2e;
   font-size:1.44cqh;
   font-weight:800;
@@ -488,10 +486,6 @@
 @media (max-width:720px){
   .bm-moon-charge-layout{
     grid-template-columns:repeat(2, minmax(0, 1fr));
-  }
-  .bm-moon-charge-card{
-    min-height:0;
-    padding-bottom:6.4cqh;
   }
 }
 
@@ -650,9 +644,9 @@
 .bm-recommended-layout{
   display:grid;
   grid-template-columns:1fr 1.85fr;
-  gap:1.4cqh 1.2cqw;
+  gap:1cqh 1cqw;
   height:100%;
-  min-height:56cqh;
+  min-height:0;
 }
 .bm-product-card{
   position:relative;
@@ -666,17 +660,17 @@
   overflow:hidden;
 }
 .bm-monthly-pass-card{
-  min-height:44cqh;
+  min-height:0;
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:1.1cqh;
-  padding:1.6cqh 1.2cqw;
+  gap:.7cqh;
+  padding:1.1cqh 1cqw;
   text-align:center;
 }
 .bm-monthly-pass-art{
   width:100%;
-  min-height:16cqh;
+  min-height:12cqh;
   display:grid;
   place-items:center;
   border:.2cqh solid rgba(176,125,29,.36);
@@ -687,7 +681,7 @@
     linear-gradient(160deg,#dceef0,#e9cf9e 58%,#8cb8bf);
 }
 .bm-monthly-pass-art .bm-store-art-icon{
-  font-size:9.2cqh;
+  font-size:7.2cqh;
 }
 .bm-monthly-pass-copy{
   display:flex;
@@ -698,7 +692,7 @@
 .bm-monthly-pass-copy h3{
   margin:0;
   color:#4a2c1b;
-  font-size:2.88cqh;
+  font-size:2.45cqh;
   font-weight:900;
   word-break:keep-all;
 }
@@ -708,17 +702,21 @@
   list-style:none;
   display:flex;
   flex-direction:column;
-  gap:.4cqh;
+  gap:.2cqh;
 }
 .bm-monthly-pass-detail li{
   color:#69462d;
-  font-size:1.9cqh;
+  font-size:1.55cqh;
   font-weight:800;
+}
+.bm-monthly-pass-card .bm-store-buy-btn{
+  height:4.2cqh;
+  font-size:2.05cqh;
 }
 .bm-recommended-right{
   display:grid;
-  grid-template-rows:1fr .9fr;
-  gap:1.2cqh;
+  grid-template-rows:minmax(0, 1fr) minmax(0, .76fr);
+  gap:1cqh;
   min-height:0;
 }
 .bm-recommended-top{
@@ -727,7 +725,7 @@
 .bm-recommended-bottom{
   display:grid;
   grid-template-columns:1fr 1fr .72fr;
-  gap:1.2cqh;
+  gap:1cqh;
   min-height:0;
 }
 .bm-story-dlc-card{
@@ -827,6 +825,123 @@
   font-weight:900;
   font-size:2.53cqh;
   text-shadow:0 .2cqh .4cqh rgba(0,0,0,.5);
+}
+
+.bm-recommended-wide-card{
+  height:100%;
+  display:grid;
+  grid-template-columns:34% minmax(0,1fr);
+  grid-template-rows:1fr auto;
+  gap:.8cqh 1cqw;
+  padding:1cqh 1cqw;
+}
+.bm-recommended-wide-art{
+  grid-row:1 / span 2;
+  min-height:0;
+  border-radius:.75cqh;
+  overflow:hidden;
+  background:rgba(255,255,255,.36);
+}
+.bm-recommended-wide-art img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+}
+.bm-recommended-wide-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:.35cqh;
+  padding-right:.5cqw;
+}
+.bm-recommended-wide-copy h3{
+  margin:0;
+  color:#4a2c1b;
+  font-size:2.35cqh;
+  font-weight:900;
+  word-break:keep-all;
+}
+.bm-recommended-wide-copy p{
+  margin:0;
+  color:#69462d;
+  font-size:1.35cqh;
+  line-height:1.28;
+  font-weight:800;
+  word-break:keep-all;
+}
+.bm-recommended-wide-card .bm-recommended-buy-btn{
+  justify-self:start;
+  height:4.1cqh;
+  font-size:1.95cqh;
+}
+
+.bm-recommended-small-card{
+  height:100%;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:space-between;
+  gap:.45cqh;
+  padding:1cqh .75cqw;
+  text-align:center;
+}
+.bm-recommended-small-art{
+  width:100%;
+  height:8.2cqh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:.7cqh;
+  overflow:hidden;
+  background:rgba(255,255,255,.34);
+}
+.bm-recommended-small-art img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+}
+.bm-recommended-small-art--profile img{
+  width:70%;
+  height:70%;
+  object-fit:contain;
+  object-position:center center;
+}
+.bm-recommended-small-art .bm-store-art-icon,
+.bm-recommended-small-art .bm-store-art-moon{
+  width:5.2cqh;
+  height:5.2cqh;
+  font-size:4.6cqh;
+}
+.bm-recommended-small-card h3{
+  margin:0;
+  color:#4a2c1b;
+  font-size:1.8cqh;
+  line-height:1.12;
+  font-weight:900;
+  word-break:keep-all;
+}
+.bm-recommended-small-card p{
+  margin:0;
+  color:#69462d;
+  font-size:1.22cqh;
+  line-height:1.25;
+  font-weight:800;
+  word-break:keep-all;
+}
+.bm-recommended-small-card .bm-store-buy-btn{
+  width:100%;
+  min-width:0;
+  height:3.8cqh;
+  padding:0 .4cqw;
+  font-size:1.65cqh;
+}
+.bm-recommended-small-card .bm-store-price-icon{
+  width:2.1cqh;
+  height:2.1cqh;
 }
 
 @media (max-width:720px){
