@@ -41,14 +41,15 @@ const NPC_DONGJASEUNG = {
    에셋이 없으므로 emoji로 임시 대체한다. mapNodeLogic.js의 ACT1_NODE_INFO와
    동일한 emoji를 사용해 기존 여정 화면과 시각적으로 통일한다. */
 const RR_NODE_TYPE_INFO = {
-  start: { emoji: "🚪", label: "시작" },
-  lobby: { emoji: "🚪", label: "시작" },
-  enemy: { emoji: "👺", label: "노멀" },
-  elite: { emoji: "👹", label: "엘리트" },
-  boss:  { emoji: "💀", label: "보스" },
-  event: { emoji: "❓", label: "이벤트" },
-  shop:  { emoji: "🛒", label: "상점" },
-  rest:  { emoji: "🛖", label: "휴식" }
+  start: { emoji: "🚪", label: "시작", iconImage: "assets/map_icons/start.png" },
+  lobby: { emoji: "🚪", label: "시작", iconImage: "assets/map_icons/start.png" },
+  enemy: { emoji: "👺", label: "노멀", iconImage: "assets/map_icons/enemy.png" },
+  elite: { emoji: "👹", label: "엘리트", iconImage: "assets/map_icons/elite.png" },
+  boss:  { emoji: "💀", label: "보스", iconImage: "assets/map_icons/boss.png" },
+  event: { emoji: "❓", label: "이벤트", iconImage: "assets/map_icons/event.png" },
+  shop:  { emoji: "🛒", label: "상점", iconImage: "assets/map_icons/shop.png" },
+  rest:  { emoji: "🛖", label: "휴식", iconImage: "assets/map_icons/rest.png" },
+  unknown: { emoji: "❔", label: "알 수 없음", iconImage: "" }
 };
 
 /* ── ACT1 점수 / 달빛조각 임시 계산 유틸 ──────────────────────────────────
@@ -526,7 +527,7 @@ function renderRunDetail(snapshot, onFinish){
     : '<div class="rr-empty-text">기록 없음</div>';
 
   const relicTrackHtml = snapshot.relics.length
-    ? snapshot.relics.map(relic => rrItemCardHtml(relic.emoji, relic.name)).join("")
+    ? snapshot.relics.map(relic => rrItemCardHtml(relic.iconImage || relic.emoji, relic.name)).join("")
     : '<div class="rr-empty-text">없음</div>';
 
   const potionTrackHtml = snapshot.usedPotions.length
@@ -618,24 +619,52 @@ function renderRunDetail(snapshot, onFinish){
   });
 }
 
+function rrGetRouteNodeInfo(node){
+  const type = node && node.type ? String(node.type) : "unknown";
+  const baseInfo = RR_NODE_TYPE_INFO[type] || RR_NODE_TYPE_INFO.unknown || { emoji: "❔", label: type };
+
+  return {
+    label: (node && node.label) || baseInfo.label || type,
+    iconImage: (node && node.iconImage) || baseInfo.iconImage || "",
+    emoji: (node && node.emoji) || baseInfo.emoji || "❔"
+  };
+}
+
+function rrRouteIconHtml(info){
+  const iconImage = info && typeof info.iconImage === "string" ? info.iconImage : "";
+  const emoji = info && info.emoji ? info.emoji : "❔";
+
+  if (iconImage) {
+    return '<img src="' + escapeRrHtml(iconImage) + '" alt="" aria-hidden="true" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'is-fallback\');">';
+  }
+
+  return escapeRrHtml(emoji);
+}
+
 function rrRouteNodeHtml(node){
-  const type = node && node.type ? node.type : "unknown";
-  const info = RR_NODE_TYPE_INFO[type] || { emoji: "❔", label: type };
+  const info = rrGetRouteNodeInfo(node);
   const score = getAct1NodeScore(node);
 
   return '<div class="rr-route-node">' +
-    '<div class="rr-route-node-icon">' + info.emoji + '</div>' +
+    '<div class="rr-route-node-icon">' + rrRouteIconHtml(info) + '</div>' +
     '<div class="rr-route-node-label">' + escapeRrHtml(info.label) + '</div>' +
     (score > 0 ? '<div class="rr-route-node-score">+' + score + '</div>' : '') +
   '</div>';
 }
 
-function rrItemCardHtml(emoji, name, count){
+function rrItemIconHtml(icon){
+  if (typeof icon === "string" && icon.indexOf("assets/") === 0) {
+    return '<img src="' + escapeRrHtml(icon) + '" alt="" aria-hidden="true">';
+  }
+  return escapeRrHtml(icon || "❔");
+}
+
+function rrItemCardHtml(icon, name, count){
   const badge = count > 1 ? '<div class="rr-item-card-count">x' + count + '</div>' : '';
   return '<div class="rr-item-card">' +
     badge +
-    '<div class="rr-item-card-icon">' + (emoji || "❔") + '</div>' +
-    '<div class="rr-item-card-name">' + (name || "") + '</div>' +
+    '<div class="rr-item-card-icon">' + rrItemIconHtml(icon) + '</div>' +
+    '<div class="rr-item-card-name">' + escapeRrHtml(name || "") + '</div>' +
   '</div>';
 }
 
@@ -732,7 +761,11 @@ function buildRunResultSnapshot(result){
       boss:  cleared.boss  || 0
     },
     relicCount: relics.length,
-    relics: relics.map(relic => ({ name: relic.name, emoji: relic.emoji })),
+    relics: relics.map(relic => ({
+      name: relic.name,
+      emoji: relic.emoji,
+      iconImage: relic.iconImage || relic.icon || ""
+    })),
     usedPotionCount: stats.usedPotionCount || 0,
     usedPotions: summarizeRrPotions(stats.usedPotions || []),
     deckCount: deck.length,
@@ -984,13 +1017,16 @@ function ensureRrStyles(){
     ".rr-route-node{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:.4cqh;width:7.6cqh;}" +
     ".rr-route-node-icon{width:5.6cqh;height:5.6cqh;border-radius:50%;display:grid;place-items:center;font-size:2.6cqh;" +
       "background:linear-gradient(160deg,#fff7d7,#f6e6bf);border:.16cqh solid rgba(150,110,60,.45);" +
-      "box-shadow:0 .4cqh .9cqh rgba(0,0,0,.18);}" +
+      "box-shadow:0 .4cqh .9cqh rgba(0,0,0,.18);overflow:hidden;}" +
+    ".rr-route-node-icon img{width:72%;height:72%;object-fit:contain;display:block;}" +
+    ".rr-route-node-icon.is-fallback{font-size:2.4cqh;}" +
     ".rr-route-node-label{font-size:1.15cqh;font-weight:800;color:#5a4326;text-align:center;line-height:1.2;}" +
     ".rr-route-arrow{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:2.2cqh;color:#b98a3c;font-size:1.6cqh;font-weight:900;}" +
 
     ".rr-item-viewport{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:.9cqw;}" +
     ".rr-item-card{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:.35cqh;" +
       "width:7.4cqh;}" +
+    ".rr-item-card-icon img{width:3.2cqh;height:3.2cqh;object-fit:contain;display:block;}" +
     ".rr-item-card-icon{width:5cqh;height:5cqh;border-radius:50%;display:grid;place-items:center;font-size:2.4cqh;" +
       "background:linear-gradient(160deg,#fff7d7,#f6e6bf);border:.16cqh solid rgba(150,110,60,.45);" +
       "box-shadow:0 .4cqh .9cqh rgba(0,0,0,.18);}" +
