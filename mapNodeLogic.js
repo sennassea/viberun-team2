@@ -32,6 +32,7 @@ const ACT1_NODE_INFO = {
   event: { emoji: "❓", label: "이벤트",                     isDimmed: false, hasCombat: false },
   shop:  { emoji: "🛒", label: "상점",                       isDimmed: false, hasCombat: false },
   rest:  { emoji: "🛖", label: "기도터",                     isDimmed: false, hasCombat: false },
+  treasure: { emoji: "🎁", label: "달빛 상자",                isDimmed: false, hasCombat: false },
 };
 
 /* ── 딤드 노드 툴팁 (기획서 8장) ─────────────────────────────────────── */
@@ -191,9 +192,13 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
     const isRestOnlyFloor = fi === ACT1_TOTAL_FLOORS;
     /* 14층: 다음 층(15층)이 항상 휴식이므로, 휴식 연속 출현 방지를 위해 이 층은 휴식 후보에서 제외 */
     const isFloorBeforeFinalRest = fi === ACT1_TOTAL_FLOORS - 1;
+    /* 10층: 보물 노드 전용층으로 강제 지정 (랜덤 배치 제외, 우회 불가하도록 노드 1개만 생성) */
+    const isTreasureOnlyFloor = fi === 10;
 
     let types;
-    if (isRestOnlyFloor) {
+    if (isTreasureOnlyFloor) {
+      types = ["treasure"];
+    } else if (isRestOnlyFloor) {
       const nodeCount = act1RandInt(1, 2);
       types = Array(nodeCount).fill("rest");
     } else {
