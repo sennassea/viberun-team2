@@ -234,7 +234,11 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   padding:.8cqh 1.1cqw; backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);}
 .player-info-card{position:absolute; left:0; top:0; width:24cqw; min-width:30cqh; max-width:calc(50% - 11cqw);
   height:100%; align-items:center; gap:1.15cqw;
-  padding:.8cqh 1cqw;}
+  /* 사진(.portrait)은 이제 이 컨테이너 기준으로 position:absolute 배치되어 아래 padding-left와
+     무관하게 독립적으로 위치가 정해진다. 이 padding-left는 이름/HP/재화 묶음(.player-info-body)의
+     시작 위치만 결정하며, 실측한 원형 프레임 우측 끝(카드 폭의 약 24.8%)보다 살짝만 오른쪽에 오도록
+     사진 프레임 쪽으로 더 붙인다 */
+  padding:.8cqh 1cqw .8cqh 7.7cqw;}
 .player-info-card{
   background:transparent url("assets/ui/player_info_panel_wide.png") center/100% 100% no-repeat;
   border:0;
@@ -242,30 +246,43 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   backdrop-filter:none;
 }
 .player-info-body{min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:.42cqh;}
+.player-info-card .player-info-body{
+  /* 부모(.player-info-card)의 align-items:center는 사진 프레임을 세로 중앙에 맞추기 위한 것이라
+     유지하고, 이름/HP/재화 묶음만 카드 상단에 안정적으로 붙도록 별도로 정렬한다 */
+  align-self:flex-start;
+  margin-top:.6cqh;
+}
 .portrait{width:11cqh; height:7cqh; border-radius:1.5cqh; display:grid; place-items:center;
   font-size:4.83cqh; background:linear-gradient(160deg,#fff,#dcecff);
   border:0.25cqh solid var(--c-gold); box-shadow:0 0 1cqh rgba(231,181,74,.6);}
 .player-info-card .portrait{
-  /* player_info_panel_wide.png에 그려진 금테 원형 틀은 카드 전체 대비
-     가로 약 19.8% / 세로 약 59.4% 크기이며 중심은 카드 좌측 상단에서
-     가로 약 16.2% / 세로 약 50.5% 지점입니다. 8.4cqh 정사각형으로 두면
-     실제 원형 틀보다 세로로 훨씬 길어져 사진이 위아래로 넘치므로,
-     틀 배경 이미지의 실측 비율에 맞춰 %로 크기를 지정합니다. */
+  /* 렌더링된 카드 스크린샷을 픽셀 단위로 실측한 금테 원형 프레임 위치입니다
+     (카드 전체 대비 좌측 약 5.3%, 상단 약 17.1%, 가로 약 19.5%, 세로 약 59.7%).
+     기존에는 "중심 16.2%"라는 주석을 잘못 읽어 padding-left(=좌측 시작점)에 그대로
+     적용하는 바람에 사진이 실제 프레임보다 오른쪽으로 밀려 보였습니다. flex 흐름에
+     맡기지 않고 이 컨테이너(.player-info-card, position:absolute) 기준으로 직접
+     좌표를 지정해 이름/HP/재화 영역과 완전히 독립적으로 위치를 맞춥니다. */
+  position:absolute;
+  left:5.3%;
+  top:17.1%;
   background:transparent;
   border:0;
   box-shadow:none;
-  width:19.8%;
-  height:59.4%;
+  width:19.5%;
+  height:59.7%;
   border-radius:50%;
   overflow:hidden;
 }
 .player-info-card .portrait img{
+  position:absolute;
+  inset:0;
   width:100%;
   height:100%;
   object-fit:cover;
+  object-position:center;
   display:block;
 }
-.who b{font-size:2.64cqh;} .who span{display:none;}
+.who b{font-size:2.28cqh;} .who span{display:none;}
 .hud-hp-row{display:flex; align-items:center; gap:.8cqw;
   font-size:1.78cqh; font-weight:800; color:var(--c-ink);}
 .hud-hp-label{color:var(--c-red-deep);}
