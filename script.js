@@ -3836,7 +3836,7 @@ function ensurePotionUseButton(){
     if(btn.disabled) return;
     btn.disabled = true;
     const index = Number(btn.dataset.potionIndex);
-    useSelfPotion(index);
+    if(!useSelfPotion(index)) btn.disabled = false;
   });
   panel.appendChild(btn);
   return btn;
@@ -3994,16 +3994,17 @@ function executeSinglePotionFx(fx, context={}){
 }
 
 function useSelfPotion(index){
-  if(!canUsePotionNow()) return;
-  if(!Array.isArray(S.potions)) return;
+  if(!canUsePotionNow()) return false;
+  if(!Array.isArray(S.potions)) return false;
   const potion = S.potions[index];
-  if(!potion || !isSelfUsePotion(potion)) return;
-  if(!applySelfPotionEffect(potion, { potion, potionIndex:index })) return;
+  if(!potion || !isSelfUsePotion(potion)) return false;
+  if(!applySelfPotionEffect(potion, { potion, potionIndex:index })) return false;
   S.potions.splice(index, 1);
   recordPotionUsed(potion);
   syncRunStateFromCombat();
   hidePotionUseButton();
   renderAll();
+  return true;
 }
 
 function applySelfPotionEffect(potion, context={}){
@@ -4046,12 +4047,60 @@ function hidePotionDiscardButton(){
   if(wasShown) refreshPotionTooltipPosition();
 }
 
+let pendingDiscardPotion = null;
+
 function discardPotion(index){
   if(!Array.isArray(S.potions)) return;
   const potion = S.potions[index];
   hidePotionDiscardButton();
   if(!potion) return;
-  if(!window.confirm("이 약병을 버리시겠습니까?")) return;
+  pendingDiscardPotion = potion;
+  showPotionDiscardConfirm(index);
+}
+
+function ensurePotionDiscardConfirm(){
+  let modal = document.querySelector("#potionDiscardConfirm");
+  if(modal) return modal;
+  modal = document.createElement("div");
+  modal.id = "potionDiscardConfirm";
+  modal.innerHTML =
+    '<div class="potion-discard-confirm-backdrop"></div>' +
+    '<div class="potion-discard-confirm-box">' +
+      '<p class="potion-discard-confirm-text">이 약병을 버리시겠습니까?</p>' +
+      '<div class="potion-discard-confirm-actions">' +
+        '<button type="button" class="potion-discard-confirm-cancel">취소</button>' +
+        '<button type="button" class="potion-discard-confirm-ok">버리기</button>' +
+      '</div>' +
+    '</div>';
+  modal.addEventListener("click", ev => ev.stopPropagation());
+  modal.querySelector(".potion-discard-confirm-backdrop").addEventListener("click", () => hidePotionDiscardConfirm());
+  modal.querySelector(".potion-discard-confirm-cancel").addEventListener("click", () => hidePotionDiscardConfirm());
+  modal.querySelector(".potion-discard-confirm-ok").addEventListener("click", () => {
+    const index = Number(modal.dataset.potionIndex);
+    const potion = pendingDiscardPotion;
+    hidePotionDiscardConfirm();
+    confirmDiscardPotion(index, potion);
+  });
+  document.querySelector("#game").appendChild(modal);
+  return modal;
+}
+
+function showPotionDiscardConfirm(index){
+  const modal = ensurePotionDiscardConfirm();
+  modal.dataset.potionIndex = String(index);
+  modal.classList.add("show");
+}
+
+function hidePotionDiscardConfirm(){
+  const modal = document.querySelector("#potionDiscardConfirm");
+  pendingDiscardPotion = null;
+  if(!modal) return;
+  modal.classList.remove("show");
+  modal.dataset.potionIndex = "";
+}
+
+function confirmDiscardPotion(index, potion){
+  if(!potion) return;
   if(!Array.isArray(S.potions) || S.potions[index] !== potion) return;
   S.potions.splice(index, 1);
   syncRunStateFromCombat();
