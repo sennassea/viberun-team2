@@ -170,6 +170,16 @@
     return data && typeof data.findMoonChargeProduct === "function" ? data.findMoonChargeProduct(productId) : null;
   }
 
+  function getMonthlyPassProducts(){
+    const data = getData();
+    return data && typeof data.getMonthlyPassProducts === "function" ? data.getMonthlyPassProducts() : [];
+  }
+
+  function findMonthlyPassProduct(productId){
+    const data = getData();
+    return data && typeof data.findMonthlyPassProduct === "function" ? data.findMonthlyPassProduct(productId) : null;
+  }
+
   /* 패키지/주문 팩 공통 구매 처리입니다.
      wallet 확인 → 서버 요청 → wallet 동기화 흐름은 동일하게 재사용하며, 실제 보상은
      서버가 생성한 선물함 구매 메일(result.mail)을 통해서만 지급됩니다. */
@@ -273,12 +283,74 @@
     });
   }
 
+  /* 월영의 약속(30일 출석 상품) 구매입니다. 결제는 test_cash이며, 즉시/매일 지급 모두
+     선물함 구매 메일을 통해서만 이뤄집니다(수령 시 활성화 + 즉시 100 지급). */
+  function purchaseMonthlyPass(productId){
+    const product = findMonthlyPassProduct(productId);
+
+    if(!product || product.rewardType !== "monthly_pass"){
+      return Promise.resolve({
+        ok: false,
+        code: "INVALID_MONTHLY_PASS_PRODUCT",
+        message: "월영의 약속 상품이 아닙니다."
+      });
+    }
+
+    const account = getAuthAccount();
+    if(!account){
+      return Promise.resolve({
+        ok: false,
+        code: "NOT_LOGGED_IN",
+        message: "로그인이 필요합니다."
+      });
+    }
+
+    return requestJson("/bm-store/monthly-pass/" + encodeURIComponent(productId) + "/purchase", {
+      method: "POST"
+    });
+  }
+
   /* 활성 탭과 무관하게 UI가 상품 ID만으로 구매를 요청할 수 있도록 모든 카탈로그를 조회합니다.
-     rewardType이 moon_shard면 충전 테스트 구매로, dummy_item이면 기존 패키지/주문 팩 구매로 분기합니다. */
+     딤드/준비 중 상품은 서버 요청 없이 COMING_SOON으로 막고, rewardType에 따라
+     월영의 약속/충전 테스트 구매/기존 패키지·주문 팩 구매로 분기합니다. */
   function purchaseProduct(productId){
     const product = findProduct(productId);
-    if(product && product.rewardType === "moon_shard") return purchaseMoonCharge(productId);
+
+    if(!product){
+      return Promise.resolve({
+        ok: false,
+        code: "UNKNOWN_PRODUCT",
+        message: "존재하지 않는 상품입니다."
+      });
+    }
+
+    if(product.dimmed || product.comingSoon || product.purchasable === false){
+      return Promise.resolve({
+        ok: false,
+        code: "COMING_SOON",
+        message: product.disabledReason || "준비 중입니다."
+      });
+    }
+
+    if(product.rewardType === "monthly_pass") return purchaseMonthlyPass(productId);
+    if(product.rewardType === "moon_shard") return purchaseMoonCharge(productId);
     return purchaseFromCatalog(productId, product, "/bm-store/package");
+  }
+
+  /* 메인메뉴 좌하단 월영의 약속 일일 보상 UI가 사용하는 상태 조회/수령 함수입니다.
+     계정용 wallet.moonShards만 동기화하며, 전투용 S.moonShards와는 연결하지 않습니다. */
+  function fetchMonthlyPassStatus(){
+    return requestJson("/bm-store/monthly-pass/status", { method: "GET" }).then(result => {
+      if(result && result.wallet) syncWallet(result.wallet);
+      return result;
+    });
+  }
+
+  function claimMonthlyPassDailyReward(){
+    return requestJson("/bm-store/monthly-pass/claim-daily", { method: "POST" }).then(result => {
+      if(result && result.wallet) syncWallet(result.wallet);
+      return result;
+    });
   }
 
   function fetchDummyInventory(){
@@ -298,8 +370,12 @@
     purchaseOrderPack,
     getMoonChargeProducts,
     purchaseMoonCharge,
+    getMonthlyPassProducts,
+    purchaseMonthlyPass,
     getRecommendedProducts,
     purchaseProduct,
+    fetchMonthlyPassStatus,
+    claimMonthlyPassDailyReward,
     fetchDummyInventory,
     getCachedDummyInventory(){
       return cachedDummyInventory.slice();
