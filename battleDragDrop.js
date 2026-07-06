@@ -106,7 +106,10 @@ function enemyUnder(x, y){
 }
 
 function drawAim(x1, y1, x2, y2){
-  const mx=(x1+x2)/2, my=Math.min(y1,y2)-60;
+  const dx=x2-x1, dy=y2-y1;
+  const bow=Math.min(Math.hypot(dx,dy)*0.22, 90);
+  const mx=(x1+x2)/2 + dy*(bow/(Math.hypot(dx,dy)||1));
+  const my=(y1+y2)/2 - dx*(bow/(Math.hypot(dx,dy)||1));
   $("#aim").innerHTML =
     '<svg width="100%" height="100%" style="position:absolute;inset:0">'+
     '<defs><marker id="ah" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">'+
