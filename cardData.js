@@ -29,6 +29,8 @@ const CARD_DB = {
           desc:"제단의 기운 1을 얻습니다. 이 위령 동안 매 턴 처음으로 복 주문을 사용하면 마음의 결계를 2 얻습니다.\n사용 후 소멸.", fx:[{t:"gainBlessing",key:"altarEnergy",v:1}], exhaust:true},
   last_struggle:{name:"마지막 발버둥", cost:2, type:"attack", emoji:"💥", target:"enemy", attr:"범용 보조 덱", rarity:"rare",
           desc:"모든 유령의 미련을 10만큼 정화합니다.\n사용 후 소멸.", fx:[{t:"damageAll",v:10}], exhaust:true},
+  memory_doll:{name:"기억 인형", cost:1, type:"attack", emoji:"🧸", target:"enemy", attr:"범용 보조 덱", rarity:"starter",
+          desc:"유령의 미련을 4만큼 정화합니다. 동요를 1 부여합니다.", fx:[{t:"damage",v:4},{t:"applyWeak",v:1}]},
 
   // -----------------------------------------------------------------------
   // 결계 덱
@@ -57,8 +59,6 @@ const CARD_DB = {
   // -----------------------------------------------------------------------
   // 회상 덱
   // -----------------------------------------------------------------------
-  memory_doll:{name:"기억 인형", cost:1, type:"attack", emoji:"🧸", target:"enemy", attr:"회상 덱", rarity:"starter",
-          desc:"유령의 미련을 4만큼 정화합니다. 회상을 1 부여합니다.", fx:[{t:"damage",v:4},{t:"applyRecollection",v:1}]},
   lullaby_chant:{name:"자장 염송", cost:1, type:"skill", emoji:"🎵", target:"enemy", attr:"회상 덱", rarity:"common",
           desc:"회상을 1 부여합니다. 주문을 1장 뽑습니다.", fx:[{t:"applyRecollection",v:1},{t:"draw",v:1}]},
   shaking_heart:{name:"흔들리는 마음", cost:1, type:"skill", emoji:"💓", target:"enemy", attr:"회상 덱", rarity:"common",
