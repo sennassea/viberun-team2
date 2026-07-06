@@ -133,6 +133,9 @@
     const leftSideTarget = !openPopup && !monthlyPassCard && anchor.closest
       ? anchor.closest(LEFT_SIDE_SELECTOR)
       : null;
+    const randomItemResultCard = !openPopup && !monthlyPassCard && !leftSideTarget && anchor.closest
+      ? anchor.closest(".random-item-result-card")
+      : null;
     let left;
     let top;
 
@@ -148,6 +151,13 @@
       const targetRect = leftSideTarget.getBoundingClientRect();
       left = targetRect.left - tipRect.width - GAP;
       top = targetRect.top + (targetRect.height - tipRect.height) / 2;
+    } else if (randomItemResultCard) {
+      const cardRect = randomItemResultCard.getBoundingClientRect();
+      left = cardRect.right + GAP;
+      if (left + tipRect.width > vw - GAP) {
+        left = cardRect.left - tipRect.width - GAP;
+      }
+      top = cardRect.top + (cardRect.height - tipRect.height) / 2;
     } else {
       const anchorRect = anchor.getBoundingClientRect();
       left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
