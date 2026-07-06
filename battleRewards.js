@@ -10,6 +10,11 @@ function nodeClear(){
 
   const nodeType = S.battleNodeType || "enemy";
   recordBattleClear(nodeType);
+
+  if(typeof recordBattleScoreFromCombat === "function"){
+    recordBattleScoreFromCombat(nodeType);
+  }
+
   applyRelicTrigger("battleEnd");
   if(nodeType==="boss"){
     grantBattleGoldReward();

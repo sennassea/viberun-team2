@@ -480,8 +480,8 @@ function renderRunSummary(snapshot, onFinish){
   ];
 
   const temporaryNotice = scoreBreakdown.isTemporary
-    ? '<div class="rr-score-notice">현재 점수와 달빛조각은 script.js 미연결 상태의 임시 계산값입니다. 실제 지급은 아직 진행되지 않습니다.</div>'
-    : '';
+    ? '<div class="rr-score-notice">현재 점수와 달빛조각은 실제 기록을 찾지 못해 임시 계산값으로 표시됩니다. 실제 지급은 아직 진행되지 않습니다.</div>'
+    : '<div class="rr-score-notice">점수는 실제 런 기록 기준입니다. 달빛조각은 아직 지급 예정 표시이며 실제 지갑에는 반영되지 않습니다.</div>';
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
@@ -553,8 +553,8 @@ function renderRunDetail(snapshot, onFinish){
         '<strong>🌙 ' + moonReward.moonShards + '개 지급 예정</strong>' +
       '</div>' +
       (scoreBreakdown.isTemporary
-        ? '<div class="rr-score-notice">현재는 script.js 미연결 상태의 임시 계산값입니다. 추후 지급 연동 예정입니다.</div>'
-        : '') +
+        ? '<div class="rr-score-notice">현재는 실제 기록을 찾지 못해 임시 계산값으로 표시됩니다. 추후 지급 연동 예정입니다.</div>'
+        : '<div class="rr-score-notice">점수는 실제 런 기록 기준입니다. 달빛조각은 아직 지급 예정 표시이며 실제 지갑에는 반영되지 않습니다.</div>') +
     '</div>';
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
@@ -643,7 +643,9 @@ function rrRouteIconHtml(info){
 
 function rrRouteNodeHtml(node){
   const info = rrGetRouteNodeInfo(node);
-  const score = getAct1NodeScore(node);
+  const score = Number.isFinite(Number(node && node.score))
+    ? Number(node.score)
+    : getAct1NodeScore(node);
 
   return '<div class="rr-route-node">' +
     '<div class="rr-route-node-icon">' + rrRouteIconHtml(info) + '</div>' +
@@ -770,6 +772,8 @@ function buildRunResultSnapshot(result){
     usedPotions: summarizeRrPotions(stats.usedPotions || []),
     deckCount: deck.length,
     route: Array.isArray(stats.route) ? stats.route : [],
+    nodeScores: Array.isArray(stats.nodeScores) ? stats.nodeScores : [],
+    scoreBreakdown: stats.scoreBreakdown || null,
     playTimeMs: Date.now() - (stats.startedAt || Date.now())
   };
 

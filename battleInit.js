@@ -221,6 +221,12 @@ function newGame(options={}){
       : ["barrier", "memory", "soul_mark"],
     alwaysIncludeGenericItems: true,
     battleRuntimeId: Date.now() + ":" + Math.random(),
+    scoreRuntime: {
+      startHp: player.hp,
+      startMaxHp: player.maxHp,
+      hpLoss: 0,
+      battleScoreRecorded: false
+    },
     cleanseCount: typeof RUN_STATE.cleanseCount === "number" ? RUN_STATE.cleanseCount : 0,
     turn: 1,
     // 전투 시작 효과 중복 적용 방지 플래그

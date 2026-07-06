@@ -974,7 +974,12 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
     applyConfiguredPhaseIfNeeded(target);
     applyNextPhaseIfNeeded(target);
   } else {
-    if(result.hpLoss > 0) applyRelicTrigger("onPlayerHpDamage", { hpLoss:result.hpLoss, result });
+    if(result.hpLoss > 0){
+      if(S && S.scoreRuntime){
+        S.scoreRuntime.hpLoss = (S.scoreRuntime.hpLoss || 0) + result.hpLoss;
+      }
+      applyRelicTrigger("onPlayerHpDamage", { hpLoss:result.hpLoss, result });
+    }
   }
   return result;
 }
