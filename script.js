@@ -4303,6 +4303,7 @@ function renderDock(){
   renderEnergyOrbs();
   $("#deckCount").textContent    = S.draw.length;
   $("#discardCount").textContent = S.discard.length;
+  $("#exhaustCount").textContent = (S.exhaust || []).length;
 }
 
 function renderEnergyOrbs(){

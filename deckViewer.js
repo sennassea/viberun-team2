@@ -87,6 +87,7 @@
       { el: document.querySelector("#deckViewerButton"), tab: "all" },
       { el: document.querySelector("#deckPile"), tab: "hand" },
       { el: document.querySelector("#discardPile"), tab: "discard" },
+      { el: document.querySelector("#exhaustPile"), tab: "exhaust" },
     ].filter(trigger => trigger.el);
     const codexTrigger = document.querySelector(".start-codex-button");
 
