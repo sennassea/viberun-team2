@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="wallet.css">
 <link rel="stylesheet" href="bmStore.css">
 <link rel="stylesheet" href="monthlyPass.css">
+<link rel="stylesheet" href="menuProfile.css">
 
 <!-- 반드시 모든 CSS 중 가장 마지막에 로드 -->
 <link rel="stylesheet" href="font-theme.css">
@@ -33,6 +34,23 @@
     <div class="bokeh" style="width:12cqh;height:12cqh;right:18%;top:30%"></div>
 
     <div id="startScreen" class="start-screen">
+      <div class="menu-profile" hidden>
+        <button type="button" class="menu-profile-avatar-btn" aria-label="프로필 아이콘 선택">
+          <img class="menu-profile-avatar" src="assets/profile/profile_default.png" alt="">
+        </button>
+
+        <div class="menu-profile-info">
+          <div class="menu-profile-name">빛솔이</div>
+        </div>
+
+        <div class="menu-profile-popup" hidden>
+          <button type="button" class="menu-profile-option is-default" data-skin-id="">
+            <img src="assets/profile/profile_default.png" alt="">
+            <span>기본</span>
+          </button>
+        </div>
+      </div>
+
       <div class="start-logo" aria-label="혼꽃 - SPIRIT BLOSSOM">
         <div class="start-logo-main">혼꽃</div>
         <div class="start-logo-sub">SPIRIT BLOSSOM</div>
@@ -209,6 +227,7 @@
 <script src="mailboxUI.js" defer></script>
 <script src="walletUI.js" defer></script>
 <script src="monthlyPassUI.js" defer></script>
+<script src="menuProfileUI.js" defer></script>
 <script src="startMenu.js" defer></script>
 <script src="tutorialDialogueData.js" defer></script>
 <script src="tutorialSystem.js" defer></script>

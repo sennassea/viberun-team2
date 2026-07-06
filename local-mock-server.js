@@ -78,6 +78,57 @@ const BM_PACKAGE_PRODUCTS = [
   { id: "order_pack_legend_support", name: "전설 보조 팩", price: 10000, rewardId: "dummy_legend_support_pack", category: "order_pack", description: "전설 등급 신력 확정 소환" }
 ];
 
+/* 스킨 탭 캐릭터 스킨 구매 서버 검증 테이블입니다. 달빛서약☆마법무녀만 saleStartAt/saleEndAt
+   기간 제한이 있으며, saleEndAt은 exclusive로 처리합니다(해당 시각부터 판매 종료). */
+const BM_CHARACTER_SKIN_PRODUCTS = [
+  {
+    id: "skin_limited_moonlight_vow_magic_maiden",
+    name: "달빛서약☆마법무녀",
+    skinId: "moonlight_vow_magic_maiden",
+    grade: "limited",
+    price: 1500,
+    saleStartAt: "2026-07-06T00:00:00+09:00",
+    saleEndAt: "2026-08-20T00:00:00+09:00",
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
+    battleProfileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
+    battleStandingImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png"
+  },
+  {
+    id: "skin_premium_wolyeong_academy_transfer",
+    name: "월영학당 전학생",
+    skinId: "wolyeong_academy_transfer",
+    grade: "premium",
+    price: 1000,
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+    battleProfileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+    battleStandingImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png"
+  },
+  {
+    id: "skin_common_prayer_robe",
+    name: "백성의 기도복",
+    skinId: "common_prayer_robe",
+    grade: "common",
+    price: 700,
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_common_prayer_robe.png",
+    battleProfileIcon: "assets/profile/profile_common_prayer_robe.png",
+    battleStandingImage: "assets/skins/skin_common_prayer_robe.png"
+  }
+];
+
+/* 메인메뉴 프로필 UI 전용 상수입니다. 기본 프로필은 상품 데이터가 아니므로
+   구매 검증 테이블과 별도로 여기서만 관리합니다. */
+const DEFAULT_PROFILE_ICON = "assets/profile/profile_default.png";
+const DEFAULT_DISPLAY_NAME = "빛솔이";
+
+function resolveProfileIconBySkinId(skinId) {
+  if (!skinId) return DEFAULT_PROFILE_ICON;
+  const product = BM_CHARACTER_SKIN_PRODUCTS.find((item) => item.skinId === skinId);
+  return (product && product.profileIcon) || DEFAULT_PROFILE_ICON;
+}
+
 /* 달빛조각 충전(테스트 구매) 검증 테이블입니다. 실제 결제 검증 없이 rewardAmount만큼
    wallet.moonShards를 증가시키며, 차감/잔액 확인은 하지 않습니다. */
 const BM_MOON_CHARGE_PRODUCTS = [
@@ -159,19 +210,36 @@ function buildDefaultMailbox() {
   ];
 }
 
+function buildDefaultCharacterSkins() {
+  return {
+    ownedSkinIds: [],
+    equippedSkinId: null
+  };
+}
+
 function ensureAccount(accountId) {
   if (!accounts.has(accountId)) {
     accounts.set(accountId, {
       mailbox: buildDefaultMailbox(),
       wallet: { moonShards: INITIAL_MOCK_MOON_SHARDS },
       dummyInventory: [],
-      monthlyPass: buildDefaultMonthlyPass()
+      monthlyPass: buildDefaultMonthlyPass(),
+      characterSkins: buildDefaultCharacterSkins()
     });
   }
 
   const account = accounts.get(accountId);
   if (!account.monthlyPass) {
     account.monthlyPass = buildDefaultMonthlyPass();
+  }
+  if (!account.characterSkins) {
+    account.characterSkins = buildDefaultCharacterSkins();
+  }
+  if (!Array.isArray(account.characterSkins.ownedSkinIds)) {
+    account.characterSkins.ownedSkinIds = [];
+  }
+  if (!("equippedSkinId" in account.characterSkins)) {
+    account.characterSkins.equippedSkinId = null;
   }
   return account;
 }
@@ -286,6 +354,15 @@ function applyMailRewards(account, mail) {
       };
 
       account.wallet.moonShards = (Number(account.wallet.moonShards) || 0) + immediateRewardAmount;
+    } else if (reward.type === "character_skin") {
+      if (!account.characterSkins) {
+        account.characterSkins = buildDefaultCharacterSkins();
+      }
+
+      const skinId = String(reward.skinId || "");
+      if (skinId && !account.characterSkins.ownedSkinIds.includes(skinId)) {
+        account.characterSkins.ownedSkinIds.push(skinId);
+      }
     }
   });
 }
@@ -508,6 +585,104 @@ function handleBMPackagePurchase(req, res, productId) {
     product,
     mail,
     wallet: account.wallet
+  });
+}
+
+/* 캐릭터 스킨 구매입니다. 패키지 구매와 동일하게 달빛조각을 즉시 차감하지만,
+   보유 처리는 하지 않고 선물함 구매 메일만 생성합니다. 한정 스킨은 saleStartAt/saleEndAt
+   기간을 벗어나면 구매를 막습니다(saleEndAt은 exclusive). */
+function handleBMCharacterSkinPurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_CHARACTER_SKIN_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, code: "UNKNOWN_PRODUCT", message: "존재하지 않는 스킨 상품입니다." });
+    return;
+  }
+
+  const now = Date.now();
+
+  if (product.saleStartAt && now < Date.parse(product.saleStartAt)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_SALE_NOT_STARTED",
+      message: "아직 판매가 시작되지 않은 스킨입니다."
+    });
+    return;
+  }
+
+  if (product.saleEndAt && now >= Date.parse(product.saleEndAt)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_SALE_ENDED",
+      message: "판매 기간이 종료된 스킨입니다."
+    });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  if (account.characterSkins.ownedSkinIds.includes(product.skinId)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_ALREADY_OWNED",
+      message: "이미 보유 중인 스킨입니다.",
+      wallet: account.wallet,
+      characterSkins: account.characterSkins
+    });
+    return;
+  }
+
+  const currentMoonShards = Number(account.wallet.moonShards) || 0;
+  if (currentMoonShards < product.price) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "INSUFFICIENT_MOON_SHARDS",
+      message: "달빛조각이 부족합니다.",
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  account.wallet.moonShards = currentMoonShards - product.price;
+
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productCategory: "character_skin",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "moon_shard",
+    paidAmount: product.price,
+    rewards: [
+      {
+        type: "character_skin",
+        skinId: product.skinId,
+        grade: product.grade,
+        productId: product.id,
+        name: product.name
+      }
+    ]
+  };
+
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    mail,
+    wallet: account.wallet,
+    characterSkins: account.characterSkins
   });
 }
 
@@ -758,6 +933,79 @@ function handleMailboxRefund(req, res, mailId) {
 }
 
 /* ------------------------------------------------------------------------
+   메인메뉴 프로필 아이콘 (캐릭터 스킨 적용) Mock 핸들러
+   - 실소유 여부는 characterSkins.ownedSkinIds만 기준으로 판단합니다.
+   - 전투/카드/보상/상점 로직에는 관여하지 않고 equippedSkinId만 저장합니다.
+   ------------------------------------------------------------------------ */
+function handleProfileCharacterSkinsGet(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  let equippedSkinId = account.characterSkins.equippedSkinId || null;
+
+  /* equippedSkinId가 ownedSkinIds에 없는 비정상 상태라면 기본 외형으로 되돌립니다. */
+  if (equippedSkinId && !account.characterSkins.ownedSkinIds.includes(equippedSkinId)) {
+    equippedSkinId = null;
+    account.characterSkins.equippedSkinId = null;
+  }
+
+  sendJson(res, 200, {
+    ok: true,
+    profile: {
+      displayName: DEFAULT_DISPLAY_NAME,
+      equippedSkinId,
+      currentProfileIcon: resolveProfileIconBySkinId(equippedSkinId)
+    },
+    characterSkins: account.characterSkins
+  });
+}
+
+function handleProfileCharacterSkinsEquip(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_REQUEST", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const skinId = payload.skinId === undefined ? null : payload.skinId;
+  const account = ensureAccount(accountId);
+
+  if (skinId !== null && !account.characterSkins.ownedSkinIds.includes(skinId)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_NOT_OWNED",
+      message: "보유하지 않은 스킨입니다."
+    });
+    return;
+  }
+
+  account.characterSkins.equippedSkinId = skinId;
+
+  sendJson(res, 200, {
+    ok: true,
+    message: "스킨이 적용되었습니다.",
+    profile: {
+      displayName: DEFAULT_DISPLAY_NAME,
+      equippedSkinId: skinId,
+      currentProfileIcon: resolveProfileIconBySkinId(skinId)
+    },
+    characterSkins: account.characterSkins
+  });
+}
+
+/* ------------------------------------------------------------------------
    정적 파일 서빙 (index.html 및 프로젝트 루트 리소스)
    ------------------------------------------------------------------------ */
 function serveStaticFile(res, pathname) {
@@ -836,6 +1084,12 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const bmCharacterSkinPurchaseMatch = pathname.match(/^\/bm-store\/character-skin\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmCharacterSkinPurchaseMatch) {
+    readRequestBody(req).then(() => handleBMCharacterSkinPurchase(req, res, decodeURIComponent(bmCharacterSkinPurchaseMatch[1])));
+    return;
+  }
+
   const bmMoonChargePurchaseMatch = pathname.match(/^\/bm-store\/moon-charge\/([^/]+)\/purchase$/);
   if (method === "POST" && bmMoonChargePurchaseMatch) {
     readRequestBody(req).then(() => handleBMMoonChargePurchase(req, res, decodeURIComponent(bmMoonChargePurchaseMatch[1])));
@@ -867,6 +1121,16 @@ const server = http.createServer((req, res) => {
   const refundMatch = pathname.match(/^\/mailbox\/([^/]+)\/refund$/);
   if (method === "POST" && refundMatch) {
     handleMailboxRefund(req, res, decodeURIComponent(refundMatch[1]));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/profile/character-skins") {
+    handleProfileCharacterSkinsGet(req, res);
+    return;
+  }
+
+  if (method === "POST" && pathname === "/profile/character-skins/equip") {
+    readRequestBody(req).then((body) => handleProfileCharacterSkinsEquip(req, res, body));
     return;
   }
 

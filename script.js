@@ -799,6 +799,47 @@ function applyBattleStartRelics(){
 }
 
 /* =========================================================================
+   전투화면 스킨 외형 (프로필 아이콘 / 기본 전투 스탠딩)
+   - 전투 성능/스탯/판정/카드 효과에는 관여하지 않고, 표시용 이미지 경로만 결정합니다.
+   - equippedSkinId는 메인메뉴 프로필 UI가 이미 캐시해 둔 값을 전투 시작 시점에 1회만 읽습니다.
+   ========================================================================= */
+function getEquippedSkinIdForBattle(){
+  const menuProfileUI = window.VIBERUN_MENU_PROFILE_UI;
+  if(menuProfileUI && typeof menuProfileUI.getEquippedSkinId === "function"){
+    return menuProfileUI.getEquippedSkinId() || null;
+  }
+  return null;
+}
+
+function resolveBattleProfileIcon(equippedSkinId){
+  const storeData = window.VIBERUN_BM_STORE_DATA;
+  const fallback = (storeData && typeof storeData.getDefaultProfileIcon === "function")
+    ? storeData.getDefaultProfileIcon()
+    : "assets/profile/profile_default.png";
+
+  if(!equippedSkinId || !storeData || typeof storeData.getCharacterSkinBySkinId !== "function"){
+    return fallback;
+  }
+
+  const skin = storeData.getCharacterSkinBySkinId(equippedSkinId);
+  return (skin && skin.battleProfileIcon) || fallback;
+}
+
+function resolveBattleStandingImage(equippedSkinId){
+  const storeData = window.VIBERUN_BM_STORE_DATA;
+  const fallback = (storeData && typeof storeData.getDefaultBattleStandingImage === "function")
+    ? storeData.getDefaultBattleStandingImage()
+    : "assets/characters/player-temp-cutout.png";
+
+  if(!equippedSkinId || !storeData || typeof storeData.getCharacterSkinBySkinId !== "function"){
+    return fallback;
+  }
+
+  const skin = storeData.getCharacterSkinBySkinId(equippedSkinId);
+  return (skin && skin.battleStandingImage) || fallback;
+}
+
+/* =========================================================================
    전투 초기화
    ========================================================================= */
 function newGame(options={}){
@@ -815,6 +856,7 @@ function newGame(options={}){
 
   S = {
     player,
+    playerAppearance: { equippedSkinId: getEquippedSkinIdForBattle() },
     enemies:  [],       // 패키지 전체 몬스터 (동시 배치)
     selectedId: null,   // 현재 선택된 적 ID
     energy:   getMaxEnergy(),
@@ -3498,7 +3540,7 @@ function renderAll(){ renderHud(); renderEffects(); renderIntents(); renderField
 
 function renderHud(){
   normalizeRunResources();
-  $("#hudPortrait").textContent = S.player.emoji || "👼";
+  renderHudPortrait();
   $("#hudName").textContent     = S.player.name;
   $("#hudTitle").textContent    = S.player.title || "";
   $("#hudHp").textContent       = S.player.hp+"/"+S.player.maxHp;
@@ -3512,6 +3554,27 @@ function renderHud(){
   renderBattleProgressHud();
   renderSideItemSlots();
   renderProfileStatuses();
+}
+
+function renderHudPortrait(){
+  const portraitEl = $("#hudPortrait");
+  if(!portraitEl) return;
+
+  const equippedSkinId = S.playerAppearance ? S.playerAppearance.equippedSkinId : null;
+  const iconSrc = resolveBattleProfileIcon(equippedSkinId);
+
+  let imgEl = portraitEl.querySelector("img");
+  if(!imgEl){
+    portraitEl.textContent = "";
+    imgEl = document.createElement("img");
+    imgEl.alt = "";
+    imgEl.addEventListener("error", () => {
+      const fallback = resolveBattleProfileIcon(null);
+      if(imgEl.getAttribute("src") !== fallback) imgEl.src = fallback;
+    });
+    portraitEl.appendChild(imgEl);
+  }
+  if(imgEl.getAttribute("src") !== iconSrc) imgEl.src = iconSrc;
 }
 
 function renderBattleProgressHud(){
@@ -4092,9 +4155,11 @@ function renderField(){
   f.appendChild(monsterField);
 
   // 플레이어 (좌측 고정)
+  const equippedSkinId = S.playerAppearance ? S.playerAppearance.equippedSkinId : null;
   playerLayer.appendChild(combatantEl({
     cls:"player", emoji:S.player.emoji||"👼",
-    sprite:"assets/characters/player-temp-cutout.png",
+    sprite:resolveBattleStandingImage(equippedSkinId),
+    spriteFallback:resolveBattleStandingImage(null),
     name:S.player.name, hp:S.player.hp, maxHp:S.player.maxHp,
     block:S.player.block, weak:S.player.weak,
     anxiety:S.player.anxiety, lethargy:S.player.lethargy,
@@ -4141,6 +4206,14 @@ function combatantEl(o){
     ? ""
     : '<div class="combatant-info">'+LIFE.renderCombatantStats(statsRenderObj, { reserveBlockSpace:false })+statusHtml+'</div>';
   el.innerHTML = intentHtml + avatarHtml + infoHtml + '<div class="hit"></div>';
+  if(o.sprite && o.spriteFallback && o.spriteFallback !== o.sprite){
+    const spriteImgEl = el.querySelector(".sprite-avatar img");
+    if(spriteImgEl){
+      spriteImgEl.addEventListener("error", () => {
+        if(spriteImgEl.getAttribute("src") !== o.spriteFallback) spriteImgEl.src = o.spriteFallback;
+      });
+    }
+  }
   return el;
 }
 

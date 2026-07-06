@@ -9,6 +9,7 @@
 (function(){
   const READY_MESSAGE = "해당 탭은 준비 중입니다.";
   const PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 수령할 수 있습니다.";
+  const SKIN_PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 스킨을 수령할 수 있습니다.";
   const MOON_CHARGE_SUCCESS_MESSAGE = "테스트 구매가 완료되었습니다. 선물함에서 달빛조각을 수령할 수 있습니다.";
   const MOON_CHARGE_NOTICE = "테스트 구매입니다. 실제 결제가 발생하지 않습니다.";
   const RECOMMENDED_NOTICE = "운영자가 추천하는 특별 상품입니다.";
@@ -19,7 +20,8 @@
   const state = {
     activeTab: "package",
     wallet: { moonShards: 0 },
-    products: []
+    products: [],
+    ownedSkinIds: []
   };
 
   function escapeHtml(str){
@@ -133,6 +135,7 @@
     els.overlay.setAttribute("aria-hidden", "false");
     render();
     refreshWallet();
+    refreshOwnedSkins();
   }
 
   function close(){
@@ -163,6 +166,24 @@
     }
   }
 
+  /* 스킨 탭 재구매 방지용 보유 스킨 목록 조회입니다. 구매만 하고 선물함에서
+     수령하지 않은 스킨은 ownedSkinIds에 없으므로 재구매가 계속 허용됩니다. */
+  function refreshOwnedSkins(){
+    const service = window.VIBERUN_BM_STORE_SERVICE;
+    if(!service || typeof service.fetchCharacterSkinProfileState !== "function") return;
+
+    Promise.resolve(service.fetchCharacterSkinProfileState()).then(result => {
+      const ownedSkinIds = result && result.ok && result.characterSkins &&
+        Array.isArray(result.characterSkins.ownedSkinIds)
+        ? result.characterSkins.ownedSkinIds.slice()
+        : [];
+      state.ownedSkinIds = ownedSkinIds;
+      if(state.activeTab === "package") renderProducts();
+    }).catch(error => {
+      console.warn("[BMStoreUI] 보유 스킨 조회 중 오류가 발생했습니다.", error);
+    });
+  }
+
   function handleTabClick(event){
     const tab = event.target.closest(".bm-store-tab");
     if(!tab) return;
@@ -175,6 +196,7 @@
     state.activeTab = tab.dataset.tab;
     state.products = getProductsForTab(state.activeTab);
     render();
+    if(state.activeTab === "package") refreshOwnedSkins();
   }
 
   function handleBodyClick(event){
@@ -187,6 +209,12 @@
     const dimmedCard = event.target.closest(".bm-product-card.is-dimmed");
     if(dimmedCard){
       showToastMessage(dimmedCard.dataset.disabledReason || "준비 중입니다.", "info");
+      return;
+    }
+
+    const ownedSkinCard = event.target.closest(".bm-store-skin-card.is-owned");
+    if(ownedSkinCard){
+      showToastMessage("이미 보유 중인 스킨입니다.", "info");
     }
   }
 
@@ -222,6 +250,11 @@
       const product = findProductById(productId);
       if(product && product.rewardType === "moon_shard"){
         showToastMessage(MOON_CHARGE_SUCCESS_MESSAGE, "success");
+        return;
+      }
+
+      if(product && product.rewardType === "character_skin"){
+        showToastMessage(SKIN_PURCHASE_SUCCESS_MESSAGE, "success");
         return;
       }
 
@@ -286,12 +319,21 @@
       const emptyTextByTab = {
         order_pack: "판매 중인 주문 팩이 없습니다.",
         moon_charge: "판매 중인 충전 상품이 없습니다.",
-        recommended: "현재 추천 상품이 없습니다."
+        recommended: "현재 추천 상품이 없습니다.",
+        package: "판매 중인 스킨이 없습니다."
       };
       const emptyText = emptyTextByTab[state.activeTab] || "판매 중인 패키지가 없습니다.";
       els.body.innerHTML = (state.activeTab === "recommended"
         ? '<p class="bm-store-recommend-notice">' + escapeHtml(RECOMMENDED_NOTICE) + '</p>'
         : "") + '<div class="bm-store-empty">' + emptyText + '</div>';
+      return;
+    }
+
+    if(state.activeTab === "package"){
+      els.body.innerHTML =
+        '<div class="bm-store-skin-grid">' +
+          state.products.map(renderSkinProductCard).join("") +
+        '</div>';
       return;
     }
 
@@ -309,6 +351,53 @@
       '<div class="bm-store-package-grid bm-store-product-grid--' + escapeHtml(state.activeTab) + '">' +
         state.products.map(renderProductCard).join("") +
       '</div>' + notice;
+  }
+
+  function isSkinSaleEnded(product){
+    if(!product.saleEndAt) return false;
+    const saleEndAt = Date.parse(product.saleEndAt);
+    return Number.isFinite(saleEndAt) && Date.now() >= saleEndAt;
+  }
+
+  /* 스킨 탭 전용 카드 렌더러입니다. 3개 카드가 가로로 크게 배치되며,
+     한정 스킨은 saleEndAt이 지나면 "판매 종료"로, 이미 보유한 스킨은 "보유 중"으로
+     구매 버튼을 비활성화하고 카드를 딤드 처리해 재구매를 막습니다. */
+  function renderSkinProductCard(product){
+    const isBusy = purchasingProductId === product.id;
+    const saleEnded = isSkinSaleEnded(product);
+    const isOwned = !!product.skinId && state.ownedSkinIds.indexOf(product.skinId) !== -1;
+    const disabled = isBusy || saleEnded || isOwned || product.purchasable === false;
+
+    let buttonLabel = formatCount(product.price);
+    if(isOwned) buttonLabel = "보유 중";
+    else if(saleEnded) buttonLabel = "판매 종료";
+    else if(isBusy) buttonLabel = "구매 중...";
+
+    return (
+      '<article class="bm-store-skin-card bm-store-skin-card--' + escapeHtml(product.grade || "common") +
+        (isOwned ? " is-owned" : "") + '">' +
+        '<div class="bm-store-skin-title">' + escapeHtml(product.name) + '</div>' +
+        '<div class="bm-store-skin-badge">' + escapeHtml(product.gradeLabel || product.badge || "") + '</div>' +
+        (isOwned ? '<div class="bm-store-skin-owned-flag">보유 중</div>' : "") +
+
+        '<div class="bm-store-skin-art" aria-hidden="true">' +
+          (product.previewImage
+            ? '<img src="' + escapeHtml(product.previewImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+            : '<span class="bm-store-art-moon"></span><span class="bm-store-art-box">✦</span>') +
+        '</div>' +
+
+        '<div class="bm-store-skin-description">' +
+          '<p>' + escapeHtml(product.skinTypeName || "") + '</p>' +
+          '<p>' + escapeHtml(product.description || "") + '</p>' +
+        '</div>' +
+
+        '<button type="button" class="bm-store-buy-btn bm-store-skin-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+          (disabled ? " disabled" : "") + '>' +
+          (isOwned ? "" : '<span class="bm-store-price-icon" aria-hidden="true"></span>') +
+          '<span>' + buttonLabel + '</span>' +
+        '</button>' +
+      '</article>'
+    );
   }
 
   /* 추천 탭 전용 레이아웃입니다. 좌측에 월영의 약속 대형 카드, 우측 상단에 혼꽃 설화편 딤드 배너,
@@ -439,5 +528,9 @@
   window.addEventListener("viberun:auth-changed", event => {
     const isLoggedIn = !!(event && event.detail && event.detail.isLoggedIn);
     if(!isLoggedIn) close();
+  });
+
+  window.addEventListener("viberun:mailbox-changed", () => {
+    if(els && els.overlay.classList.contains("show")) refreshOwnedSkins();
   });
 })();

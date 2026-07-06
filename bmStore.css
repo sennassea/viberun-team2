@@ -379,6 +379,129 @@
   justify-self:center;
 }
 /* -------------------------------------------------------------------------
+   스킨 탭 전용 레이아웃 (구 패키지 탭)
+   - 한정/프리미엄/일반 스킨 3카드를 가로로 크게 배치합니다.
+   ------------------------------------------------------------------------- */
+.bm-store-skin-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:1.4cqh;
+  height:100%;
+  align-items:stretch;
+}
+.bm-store-skin-card{
+  position:relative;
+  min-height:48cqh;
+  padding:1.4cqh;
+  border:.22cqh solid rgba(176,123,58,.72);
+  border-radius:1.1cqh;
+  background:rgba(255,246,224,.88);
+  box-shadow:
+    0 .45cqh .9cqh rgba(77,46,18,.18),
+    inset 0 0 0 .12cqh rgba(255,255,255,.58);
+  overflow:hidden;
+  text-align:center;
+}
+.bm-store-skin-title{
+  font-size:2.5cqh;
+  font-weight:900;
+  color:#4d2f1d;
+  line-height:1.1;
+  word-break:keep-all;
+}
+.bm-store-skin-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:5.6cqh;
+  margin:.55cqh auto .9cqh;
+  padding:.25cqh .85cqw;
+  border-radius:.55cqh;
+  background:#7b5632;
+  color:#fff3d0;
+  font-size:1.25cqh;
+  font-weight:900;
+}
+.bm-store-skin-card--limited .bm-store-skin-badge{
+  background:#7b3b56;
+}
+.bm-store-skin-card--premium .bm-store-skin-badge{
+  background:#6a4a82;
+}
+.bm-store-skin-card--common .bm-store-skin-badge{
+  background:#6b5a42;
+}
+.bm-store-skin-art{
+  height:27cqh;
+  margin:.6cqh 0 1cqh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:.85cqh;
+  background:rgba(255,255,255,.36);
+  overflow:hidden;
+}
+.bm-store-skin-art img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+}
+.bm-store-skin-description{
+  min-height:6.8cqh;
+  font-size:1.28cqh;
+  line-height:1.35;
+  color:#5d4027;
+}
+.bm-store-skin-description p{
+  margin:.25cqh 0;
+  word-break:keep-all;
+}
+.bm-store-skin-buy-btn{
+  position:absolute;
+  left:1.4cqh;
+  right:1.4cqh;
+  bottom:1.4cqh;
+  width:calc(100% - 2.8cqh);
+  min-width:0;
+  justify-content:center;
+}
+.bm-store-skin-card.is-owned{
+  cursor:pointer;
+  filter:grayscale(.75) brightness(.92);
+}
+.bm-store-skin-owned-flag{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(30,22,16,.4);
+  color:#fff3d0;
+  font-weight:900;
+  font-size:2.2cqh;
+  text-shadow:0 .2cqh .4cqh rgba(0,0,0,.5);
+  pointer-events:none;
+}
+.bm-store-skin-card.is-owned .bm-store-buy-btn:disabled{
+  opacity:.85;
+}
+
+@media (max-width:720px){
+  .bm-store-skin-grid{
+    grid-template-columns:1fr;
+  }
+  .bm-store-skin-card{
+    min-height:0;
+    padding-bottom:6.4cqh;
+  }
+  .bm-store-skin-art{
+    height:34cqh;
+  }
+}
+
+/* -------------------------------------------------------------------------
    추천 탭 전용 레이아웃
    - 좌측: 월영의 약속 대형 카드 / 우측 상단: 혼꽃 설화편 딤드 배너
    - 우측 하단: 진언 스킨 딤드 / 캐릭터 스킨 딤드 / 확장팩 준비 중 영역

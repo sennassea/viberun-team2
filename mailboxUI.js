@@ -255,6 +255,7 @@
     if(reward.type === "moon_shard") return "🌙 " + amount;
     if(reward.type === "dummy_item") return "테스트용 더미 아이템";
     if(reward.type === "monthly_pass") return "월영의 약속 활성화";
+    if(reward.type === "character_skin") return (reward.name || "캐릭터 스킨") + " 획득";
     return String(reward.type || "") + " " + amount;
   }
 

@@ -237,6 +237,65 @@
     return purchaseFromCatalog(productId, findPackageProduct(productId), "/bm-store/package");
   }
 
+  /* 캐릭터 스킨 구매입니다. 달빛조각 결제이며, 실제 보유 처리는 하지 않고 서버가
+     선물함 구매 메일을 생성합니다. 한정 스킨은 saleEndAt이 지나면 구매를 막습니다. */
+  function purchaseCharacterSkin(productId){
+    const product = findPackageProduct(productId);
+
+    if(!product || product.rewardType !== "character_skin"){
+      return Promise.resolve({
+        ok: false,
+        code: "INVALID_CHARACTER_SKIN_PRODUCT",
+        message: "캐릭터 스킨 상품이 아닙니다."
+      });
+    }
+
+    const account = getAuthAccount();
+    if(!account){
+      return Promise.resolve({
+        ok: false,
+        code: "NOT_LOGGED_IN",
+        message: "로그인이 필요합니다."
+      });
+    }
+
+    if(product.saleEndAt){
+      const now = Date.now();
+      const saleEndAt = Date.parse(product.saleEndAt);
+
+      if(Number.isFinite(saleEndAt) && now >= saleEndAt){
+        return Promise.resolve({
+          ok: false,
+          code: "CHARACTER_SKIN_SALE_ENDED",
+          message: "판매 기간이 종료된 스킨입니다."
+        });
+      }
+    }
+
+    return fetchWalletIfNeeded().then(wallet => {
+      if(wallet.moonShards < product.price){
+        return {
+          ok: false,
+          code: "INSUFFICIENT_MOON_SHARDS",
+          message: "달빛조각이 부족합니다.",
+          wallet
+        };
+      }
+
+      return requestJson("/bm-store/character-skin/" + encodeURIComponent(productId) + "/purchase", {
+        method: "POST"
+      }).then(result => {
+        if(!result || !result.ok){
+          if(result && result.wallet) syncWallet(result.wallet);
+          return result || { ok: false, message: "구매에 실패했습니다." };
+        }
+
+        if(result.wallet) result.wallet = syncWallet(result.wallet);
+        return result;
+      });
+    });
+  }
+
   function purchaseOrderPack(productId){
     return purchaseFromCatalog(productId, findOrderPackProduct(productId), "/bm-store/package");
   }
@@ -334,6 +393,7 @@
 
     if(product.rewardType === "monthly_pass") return purchaseMonthlyPass(productId);
     if(product.rewardType === "moon_shard") return purchaseMoonCharge(productId);
+    if(product.rewardType === "character_skin") return purchaseCharacterSkin(productId);
     return purchaseFromCatalog(productId, product, "/bm-store/package");
   }
 
@@ -353,6 +413,20 @@
     });
   }
 
+  /* 메인메뉴 좌상단 프로필 UI 전용 조회/적용 함수입니다.
+     구매/보유 로직에는 관여하지 않고 equippedSkinId 조회·저장만 담당합니다. */
+  function fetchCharacterSkinProfileState(){
+    return requestJson("/profile/character-skins", { method: "GET" });
+  }
+
+  function equipCharacterSkinProfile(skinId){
+    return requestJson("/profile/character-skins/equip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skinId: skinId ?? null })
+    });
+  }
+
   function fetchDummyInventory(){
     return requestJson("/bm-store/dummy-inventory", { method: "GET" }).then(result => {
       if(result && result.ok && Array.isArray(result.dummyInventory)){
@@ -366,6 +440,7 @@
     getProductsByTab,
     getPackageProducts,
     purchasePackage,
+    purchaseCharacterSkin,
     getOrderPackProducts,
     purchaseOrderPack,
     getMoonChargeProducts,
@@ -376,6 +451,8 @@
     purchaseProduct,
     fetchMonthlyPassStatus,
     claimMonthlyPassDailyReward,
+    fetchCharacterSkinProfileState,
+    equipCharacterSkinProfile,
     fetchDummyInventory,
     getCachedDummyInventory(){
       return cachedDummyInventory.slice();
