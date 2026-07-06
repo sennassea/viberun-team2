@@ -169,6 +169,8 @@ const CARD_ART_FILES = {
   guardian_talisman: "guardian_talisman.jpg",
   guiding_rite: "guiding_rite.jpg",
   heating_ritual: "heating_ritual.jpg",
+  hesitation: "hesitation.jpg",
+  regret: "regret.jpg",
   last_struggle: "last_struggle.jpg",
   lotus_crossing: "lotus_crossing.jpg",
   lullaby_chant: "lullaby_chant.jpg",

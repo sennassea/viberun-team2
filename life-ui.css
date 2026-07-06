@@ -95,3 +95,6 @@
 .float.dmg{color:#ff5b52;} .float.heal{color:#6ee29a;} .float.blk{color:#7cc0ff;}
 @keyframes floatUp{0%{opacity:0; transform:translateY(1cqh) scale(.7)}
   20%{opacity:1; transform:translateY(-.5cqh) scale(1.1)} 100%{opacity:0; transform:translateY(-6cqh) scale(1)}}
+
+/* Top-center progress bar: icon removed, keep region/floor/turn text only */
+.progress-icon{display:none;}
