@@ -2,6 +2,8 @@
 
 (function () {
   const SELECTOR = "[data-tooltip], [data-global-tooltip], [data-tooltip-title]";
+  const SKIN_OPTION_SELECTOR = ".menu-profile-popup .menu-profile-option";
+  const SPIRIT_PATH_CARD_PREVIEW_SELECTOR = ".spirit-path-preview-item";
   const GAP = 10;
   let tooltipEl = null;
   let activeAnchor = null;
@@ -28,16 +30,38 @@
 
   function findAnchor(target) {
     if (!target || typeof target.closest !== "function") return null;
-    const anchor = target.closest(SELECTOR);
+    const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR);
     if (!anchor || anchor.dataset.tooltipDisabled === "true") return null;
     return anchor;
+  }
+
+  function getCardDbEntryByName(name) {
+    if (!name || typeof CARD_DB !== "object" || !CARD_DB) return null;
+    const key = Object.keys(CARD_DB).find(k => CARD_DB[k] && CARD_DB[k].name === name);
+    return key ? CARD_DB[key] : null;
   }
 
   function getTooltipData(anchor) {
     const title = anchor.dataset.tooltipTitle || "";
     const body = anchor.dataset.tooltip || anchor.dataset.globalTooltip || "";
-    if (!title && !body) return null;
-    return { title, body };
+    if (title || body) return { title, body };
+
+    if (anchor.classList && anchor.classList.contains("menu-profile-option") && anchor.closest(".menu-profile-popup")) {
+      return { title: "프로필", body: "보유 스킨에 따라 프로필 사진을 변경할 수 있습니다." };
+    }
+
+    if (anchor.classList && anchor.classList.contains("spirit-path-preview-item")) {
+      if (!anchor.dataset.spiritPathCardName) {
+        const rawName = anchor.getAttribute("title");
+        if (rawName) anchor.dataset.spiritPathCardName = rawName;
+      }
+      const card = getCardDbEntryByName(anchor.dataset.spiritPathCardName);
+      if (!card) return null;
+      const icon = card.emoji ? card.emoji + " " : "";
+      return { title: icon + (card.name || ""), body: card.desc || "" };
+    }
+
+    return null;
   }
 
   function buildHtml(data) {
@@ -50,18 +74,54 @@
     return title + body;
   }
 
+  function getOpenProfileSkinPopup(anchor) {
+    let popup = null;
+    if (anchor.classList && anchor.classList.contains("menu-profile-avatar-btn")) {
+      const profileRoot = anchor.closest(".menu-profile");
+      popup = profileRoot ? profileRoot.querySelector(".menu-profile-popup") : null;
+    } else {
+      popup = anchor.closest(".menu-profile-popup");
+    }
+    if (!popup || popup.hidden) return null;
+    return popup;
+  }
+
+  const LEFT_SIDE_SELECTOR = ".start-mailbox-button";
+
   function positionTooltip(anchor) {
     const tip = ensureTooltip();
-    const anchorRect = anchor.getBoundingClientRect();
     const tipRect = tip.getBoundingClientRect();
     const vw = window.innerWidth || document.documentElement.clientWidth;
     const vh = window.innerHeight || document.documentElement.clientHeight;
 
-    let left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
-    let top = anchorRect.bottom + GAP;
+    const openPopup = getOpenProfileSkinPopup(anchor);
+    const monthlyPassCard = anchor.closest ? anchor.closest(".monthly-pass-claim-card") : null;
+    const leftSideTarget = !openPopup && !monthlyPassCard && anchor.closest
+      ? anchor.closest(LEFT_SIDE_SELECTOR)
+      : null;
+    let left;
+    let top;
 
-    if (top + tipRect.height > vh - GAP) {
-      top = anchorRect.top - tipRect.height - GAP;
+    if (openPopup) {
+      const popupRect = openPopup.getBoundingClientRect();
+      left = popupRect.right + GAP;
+      top = popupRect.top + (popupRect.height - tipRect.height) / 2;
+    } else if (monthlyPassCard) {
+      const cardRect = monthlyPassCard.getBoundingClientRect();
+      left = cardRect.right + GAP;
+      top = cardRect.top + (cardRect.height - tipRect.height) / 2;
+    } else if (leftSideTarget) {
+      const targetRect = leftSideTarget.getBoundingClientRect();
+      left = targetRect.left - tipRect.width - GAP;
+      top = targetRect.top + (targetRect.height - tipRect.height) / 2;
+    } else {
+      const anchorRect = anchor.getBoundingClientRect();
+      left = anchorRect.left + (anchorRect.width - tipRect.width) / 2;
+      top = anchorRect.bottom + GAP;
+
+      if (top + tipRect.height > vh - GAP) {
+        top = anchorRect.top - tipRect.height - GAP;
+      }
     }
 
     left = Math.max(GAP, Math.min(left, vw - tipRect.width - GAP));
@@ -71,9 +131,16 @@
     tip.style.top = top + "px";
   }
 
+  function suppressNativeTooltip(anchor) {
+    if (anchor.hasAttribute("title")) {
+      anchor.removeAttribute("title");
+    }
+  }
+
   function show(anchor) {
     const data = getTooltipData(anchor);
     if (!data) return;
+    suppressNativeTooltip(anchor);
     window.clearTimeout(hideTimer);
     activeAnchor = anchor;
     const tip = ensureTooltip();
@@ -100,6 +167,11 @@
   }
 
   document.addEventListener("pointerover", event => {
+    const nameEl = event.target && typeof event.target.closest === "function"
+      ? event.target.closest(".menu-profile-name")
+      : null;
+    if (nameEl) suppressNativeTooltip(nameEl);
+
     const anchor = findAnchor(event.target);
     if (!anchor || anchor === activeAnchor) return;
     show(anchor);
@@ -122,6 +194,14 @@
   });
 
   document.addEventListener("pointerdown", event => {
+    const avatarBtn = event.target && typeof event.target.closest === "function"
+      ? event.target.closest(".menu-profile-avatar-btn")
+      : null;
+    if (avatarBtn) {
+      hide();
+      return;
+    }
+
     const anchor = findAnchor(event.target);
     if (anchor) show(anchor);
     else hide();
@@ -130,6 +210,50 @@
   document.addEventListener("scroll", refresh, true);
   window.addEventListener("resize", refresh);
   window.addEventListener("blur", hide);
+
+  function applyStartMenuProfileTooltips() {
+    const avatarBtn = document.querySelector(".menu-profile-avatar-btn");
+    if (avatarBtn) {
+      avatarBtn.dataset.tooltipTitle = "프로필";
+      avatarBtn.dataset.tooltip = "보유 스킨에 따라 프로필 사진을 변경할 수 있습니다.";
+    }
+
+    const monthlyPassCard = document.querySelector(".monthly-pass-claim-card");
+    if (monthlyPassCard) {
+      monthlyPassCard.dataset.tooltipTitle = "월영의 약속";
+      monthlyPassCard.dataset.tooltip = "매일 보상을 확인하고 받을 수 있는 월간 보상 영역입니다.";
+    }
+
+    const codexBtn = document.querySelector(".start-codex-button");
+    if (codexBtn) {
+      codexBtn.dataset.tooltipTitle = "도감";
+      codexBtn.dataset.tooltip = "게임 내 모든 주문, 법구, 약병 정보를 확인할 수 있습니다.";
+    }
+
+    const recordBtn = document.querySelector(".start-record-button");
+    if (recordBtn) {
+      recordBtn.dataset.tooltipTitle = "기록";
+      recordBtn.dataset.tooltip = "플레이 기록과 진행 내역을 확인할 수 있습니다.";
+    }
+
+    const moonWallet = document.querySelector(".start-moon-wallet");
+    if (moonWallet) {
+      moonWallet.dataset.tooltipTitle = "달빛 조각";
+      moonWallet.dataset.tooltip = "희귀 보상과 특별한 보물함을 여는 데 사용하는 유료 재화입니다.";
+    }
+
+    const mailboxBtn = document.querySelector(".start-mailbox-button");
+    if (mailboxBtn) {
+      mailboxBtn.dataset.tooltipTitle = "선물함";
+      mailboxBtn.dataset.tooltip = "지급된 보상과 선물을 확인하고 받을 수 있는 공간입니다.";
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", applyStartMenuProfileTooltips);
+  } else {
+    applyStartMenuProfileTooltips();
+  }
 
   window.GlobalTooltip = {
     hide,
