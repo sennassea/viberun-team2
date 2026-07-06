@@ -26,7 +26,11 @@ const DMAP_SPREAD  = 170;   // 같은 층 노드 간 간격 (가상 좌표)
 let mapScrollX = 0;
 let mapZoom    = 1.0;   // >1 = 확대, <1 = 축소
 
-const DMAP_ZOOM_MIN = 0.558; // 전체 노드 가로가 딱 맞는 최대 축소 (820/1470)
+/* 전체 노드 가로가 딱 맞는 축소값(820/1470=0.558)이었으나, 그 값 그대로는 우측 끝
+   보스 노드(DMAP_END_X=1340, 전체 폭의 약 91.2%)가 clip-path 안전 영역(약 89%)보다
+   바깥에 위치해 프레임 테두리에 걸쳐 보였다. 최대 축소를 조금 더 내려 모든 노드가
+   여백을 두고 안전 영역 안에 들어오게 한다 */
+const DMAP_ZOOM_MIN = 0.5;
 const DMAP_ZOOM_MAX = 1.5;   // 이미지1 수준의 적당한 확대까지만 허용
 
 function dmapViewW() { return DMAP_VIEW_W / mapZoom; }
