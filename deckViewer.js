@@ -418,8 +418,9 @@
       ".card-detail-card.card-frame-card .card-desc-text{position:absolute;left:8%;right:8%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.7cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}" +
       ".deck-viewer-card.card-frame-card .card-hit-layer,.card-detail-card.card-frame-card .card-hit-layer{position:absolute;inset:0;z-index:4;background:transparent;cursor:inherit;}" +
       ".card-detail-upgrade-toggle{height:4.2cqh;min-width:13cqw;border-radius:2.1cqh;border:.22cqh solid var(--c-gold);background:linear-gradient(180deg,#fff8d9,#ffe59a);color:#7a5510;font-size:1.8cqh;font-weight:900;cursor:pointer;box-shadow:0 .5cqh 1cqh rgba(80,60,20,.16);}" +
-      ".card-detail-upgrade-toggle:hover,.card-detail-upgrade-toggle:focus-visible{outline:none;transform:translateY(-.2cqh);box-shadow:0 .7cqh 1.3cqh rgba(80,60,20,.22);}" +
+      ".card-detail-upgrade-toggle:hover:not(:disabled),.card-detail-upgrade-toggle:focus-visible:not(:disabled){outline:none;transform:translateY(-.2cqh);box-shadow:0 .7cqh 1.3cqh rgba(80,60,20,.22);}" +
       ".card-detail-upgrade-toggle.active{background:linear-gradient(180deg,#eaf7ff,#cfe9ff);border-color:var(--c-blue);color:var(--c-blue-deep);}" +
+      ".card-detail-upgrade-toggle:disabled{filter:grayscale(.6);opacity:.55;cursor:not-allowed;box-shadow:none;}" +
       ".card-detail-kicker{font-size:1.5cqh;font-weight:900;color:var(--c-ink-soft);margin-bottom:.4cqh;}" +
       ".card-detail-nav{position:absolute;top:50%;transform:translateY(-50%);width:6.2cqh;height:6.2cqh;border:0;border-radius:0;background:transparent url(\"assets/ui_panels/card_detail_nav_panel.png\") center/100% 100% no-repeat;color:transparent;font-size:0;font-weight:900;line-height:1;display:grid;place-items:center;cursor:pointer;box-shadow:none;}" +
       ".card-detail-nav::before{display:block;color:#8a641a;font-size:4.6cqh;font-weight:900;line-height:1;text-shadow:0 .08cqh 0 rgba(255,255,255,.9),0 .18cqh .28cqh rgba(90,60,20,.24);transform:translateY(-.12cqh);}" +
@@ -1021,13 +1022,12 @@
   function cardDetailHtml(entry, index, total, isUpgrade){
     const card = isUpgrade ? getUpgradePreviewCard(entry.card) : entry.card;
     const typeId = getCardFilterType(card) || card.type;
-    const attrId = getCardFilterAttribute(card);
     const changeText = getUpgradeChangeText(entry.card, card);
     return '<button type="button" class="card-detail-nav card-detail-prev" data-card-detail-nav="prev" aria-label="이전 주문">‹</button>' +
       '<div class="card-detail-spread">' +
         '<div class="card-detail-front">' +
           detailCardFaceHtml(entry, card, isUpgrade) +
-          '<button type="button" class="card-detail-upgrade-toggle' + (isUpgrade ? ' active' : '') + '" data-card-detail-upgrade="true">' +
+          '<button type="button" class="card-detail-upgrade-toggle' + (isUpgrade ? ' active' : '') + '" data-card-detail-upgrade="true" disabled>' +
             (isUpgrade ? '기본 보기' : '강화 확인') +
           '</button>' +
         '</div>' +
@@ -1047,7 +1047,6 @@
           '<div class="card-detail-info">' +
             (isUpgrade ? '<section><h4>강화 변화</h4><p>' + escapeHtml(changeText) + '</p></section>' : '') +
             '<section><h4>주문 종류</h4><p>' + escapeHtml(getTypeDescription(card)) + '</p></section>' +
-            '<section><h4>주문 속성</h4><p>' + escapeHtml(getAttributeDescription(attrId)) + '</p></section>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -1155,13 +1154,6 @@
     if(attr === "memory") return "추억";
     if(attr === "spirit") return "성불";
     return card.attribute || card.attr || card.element || card.property || "속성 없음";
-  }
-
-  function getAttributeDescription(attribute){
-    if(attribute === "hope") return "상대의 절망을 위로하고 마음을 안정시키는 따뜻한 속성입니다.";
-    if(attribute === "memory") return "잊혀진 기억을 되돌려 인간성을 회복시키는 다정한 속성입니다.";
-    if(attribute === "spirit") return "남아있는 미련을 정화하여 편안히 승천시키는 맑은 속성입니다.";
-    return "아직 자세한 설명이 정해지지 않은 속성입니다.";
   }
 
   function escapeHtml(value){
