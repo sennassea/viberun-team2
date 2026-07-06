@@ -76,10 +76,11 @@ function injectRewardStyles(){
     .victory-section{border:.2cqh solid var(--c-panel-line);border-radius:1.4cqh;background:rgba(255,255,255,.55);padding:1.6cqh 1.5cqw;}
     .victory-section-title{font-size:1.8cqh;font-weight:900;color:var(--c-ink);margin-bottom:1.2cqh;}
     .victory-reward-row{min-height:15cqh;border:.25cqh dashed var(--c-panel-line);border-radius:1.2cqh;display:flex;align-items:center;justify-content:center;gap:1cqw;background:rgba(255,255,255,.45);}
-    .victory-reward-slot{position:relative;flex:0 0 10cqw;width:10cqw;height:12.5cqh;border:.2cqh solid #d6e6f5;border-radius:1.1cqh;background:linear-gradient(180deg,#fbfcff,#eef4fb);box-shadow:0 .5cqh 1cqh rgba(40,70,120,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.65cqh;color:var(--c-ink);font:inherit;cursor:pointer;}
+    .victory-reward-slot{position:relative;flex:0 0 10cqw;width:10cqw;height:13.8cqh;border:.2cqh solid #d6e6f5;border-radius:1.1cqh;background:linear-gradient(180deg,#fbfcff,#eef4fb);box-shadow:0 .5cqh 1cqh rgba(40,70,120,.14);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5cqh;color:var(--c-ink);font:inherit;cursor:pointer;}
     .victory-reward-slot.done{filter:saturate(.65) brightness(.9);border-color:#b8c6d4;background:linear-gradient(180deg,#edf1f5,#dfe6ee);color:#6f7d8a;}
     .victory-reward-check{position:absolute;top:.6cqh;right:.6cqw;width:2.3cqh;height:2.3cqh;border-radius:50%;display:none;place-items:center;background:#5d9f78;color:#fff;font-size:1.5cqh;font-weight:900;}
     .victory-reward-slot.done .victory-reward-check{display:grid;}
+    .victory-reward-category{font-size:1.1cqh;font-weight:900;color:var(--c-ink-soft);}
     .victory-reward-icon{width:4.8cqh;height:4.8cqh;border-radius:1cqh;display:grid;place-items:center;background:#fff;border:.18cqh solid var(--c-panel-line);font-size:2.3cqh;font-weight:900;color:var(--c-blue-deep);}
     .victory-reward-icon img{width:100%;height:100%;object-fit:contain;display:block;}
     .victory-reward-icon img{width:3.6cqh;height:3.6cqh;object-fit:contain;display:block;}

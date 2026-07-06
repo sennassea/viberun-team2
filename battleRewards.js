@@ -426,12 +426,18 @@ function getBattleVictoryInfo(){
   };
 }
 
+const BATTLE_VICTORY_REWARD_CATEGORY_LABELS = { gold:"복채", card:"주문", relic:"법구", potion:"약병" };
+function getBattleVictoryRewardCategoryLabel(id){
+  return BATTLE_VICTORY_REWARD_CATEGORY_LABELS[id] || "";
+}
+
 function renderBattleVictoryRewardSlots(host){
   const rewardState = ensureVictoryRewardState();
   host.innerHTML = getBattleVictoryRewards().map(item => {
     const done = !!rewardState.done[item.id];
     const doneText = rewardState.doneText[item.id] || item.doneText;
     return '<button type="button" class="victory-reward-slot' + (done ? ' done' : '') + '" data-reward-id="' + item.id + '">' +
+      '<div class="victory-reward-category">' + escapeHtml(getBattleVictoryRewardCategoryLabel(item.id)) + '</div>' +
       '<div class="victory-reward-icon">' + resourceIconHtml(item.icon) + '</div>' +
       '<div class="victory-reward-name">' + item.name + '</div>' +
       '<div class="victory-reward-state">' + (done ? doneText : item.value) + '</div>' +
