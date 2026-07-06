@@ -1103,20 +1103,29 @@
     var tipRect = tooltip.getBoundingClientRect();
     var pad = 8;
 
-    var tx;
-    if (subCardRect) {
+    var tx, ty;
+
+    if (cardEl.classList && cardEl.classList.contains("shop-detail-card-preview")) {
+      /* 상점 상세 패널의 선택 카드: 다른 상점 상품(약병/법구) 툴팁과 동일하게
+         카드 바로 아래에 표시하고, 화면 아래로 넘치면 위로 뒤집는다.          */
+      tx = (cRect.left - gRect.left) + (cRect.width - tipRect.width) / 2;
+      ty = (cRect.bottom - gRect.top) + pad;
+      if (ty + tipRect.height > gRect.height - pad) {
+        ty = (cRect.top - gRect.top) - tipRect.height - pad;
+      }
+    } else if (subCardRect) {
       tx = subCardRect.flippedLeft
         ? subCardRect.left - tipRect.width - pad
         : subCardRect.right + pad;
+      ty = (cRect.top - gRect.top);
     } else {
       var cardMidX = (cRect.left + cRect.right) / 2;
       var gameMidX = gRect.left + gRect.width / 2;
       tx = cardMidX > gameMidX
         ? (cRect.left  - gRect.left) - tipRect.width - pad
         : (cRect.right - gRect.left) + pad;
+      ty = (cRect.top - gRect.top);
     }
-
-    var ty = (cRect.top - gRect.top);
 
     tx = Math.max(pad, Math.min(gRect.width  - tipRect.width  - pad, tx));
     ty = Math.max(pad, Math.min(gRect.height - tipRect.height - pad, ty));
