@@ -80,3 +80,71 @@ window.BOHYUN_RUN_RESULT_DATA = {
     continue: "터치하여 계속"
   }
 };
+
+/* =========================================================================
+   ACT1_점수_달빛조각_통합기획서_v4.0 기준 임시 점수/보상 데이터
+
+   script.js가 실제 처치/피해량/정신력 데이터를 아직 넘겨주지 않으므로,
+   여기서는 route 방문 기록 기반의 임시 추정치만 보관한다.
+   추후 script.js 연결 시 snapshot.scoreBreakdown이 들어오면 이 값은
+   사용하지 않고 실제 값을 우선한다 (runResult.js의 getAct1ScoreBreakdown 참고).
+   ========================================================================= */
+window.BOHYUN_RUN_RESULT_DATA = Object.assign({}, window.BOHYUN_RUN_RESULT_DATA, {
+  act1Score: {
+    isTemporary: true,
+
+    labels: {
+      totalScore: "최종 여정 점수",
+      moonReward: "달빛조각 지급 예정",
+      nodeScore: "노드 점수",
+      temporaryNotice: "현재 점수는 script.js 미연결 상태의 임시 점수입니다."
+    },
+
+    nodeScores: {
+      start: 0,
+      lobby: 0,
+      enemy: 25,
+      normal: 25,
+      elite: 65,
+      event: 15,
+      shop: 5,
+      rest: 10,
+      treasure: 20,
+      special: 20,
+      boss: 150,
+      unknown: 0
+    },
+
+    clearBonus: {
+      act1Win: 100
+    },
+
+    temporaryEstimateBonus: {
+      enabled: true,
+
+      /*
+       * script.js 미연결 상태에서는 아래 항목을 실제로 알 수 없다.
+       * 따라서 결과창 QA용 임시 추정 보너스로만 사용한다.
+       * 추후 script.js에서 실제 snapshot.scoreBreakdown이 들어오면 이 값은 사용하지 않는다.
+       */
+      monsterKill: 105.79,
+      combatPerformance: 51,
+      bossEndHp: 15,
+      journeyAction: 10
+    },
+
+    rewardTiers: [
+      { min: 0, max: 649, moonShards: 40, label: "간신히 완주" },
+      { min: 650, max: 749, moonShards: 48, label: "하위 완주" },
+      { min: 750, max: 849, moonShards: 55, label: "평균 완주" },
+      { min: 850, max: 949, moonShards: 62, label: "숙련 완주" },
+      { min: 950, max: 1099, moonShards: 75, label: "상위권" },
+      { min: 1100, max: Infinity, moonShards: 95, label: "극상위" }
+    ],
+
+    defeatReward: {
+      moonShards: 0,
+      label: "미완주"
+    }
+  }
+});

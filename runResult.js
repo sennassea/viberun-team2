@@ -51,6 +51,195 @@ const RR_NODE_TYPE_INFO = {
   rest:  { emoji: "🛖", label: "휴식" }
 };
 
+/* ── ACT1 점수 / 달빛조각 임시 계산 유틸 ──────────────────────────────────
+   ACT1_점수_달빛조각_통합기획서_v4.0 기준. script.js를 아직 연결하지 않았으므로
+   route 방문 기록 기반의 임시 추정치만 계산한다. snapshot.scoreBreakdown이
+   실제로 들어오면(추후 script.js 연결) 그 값을 우선 사용한다.
+   모든 함수는 데이터 누락/오류 상황에서도 0으로 안전하게 폴백한다. */
+function rrToSafeNumber(value, fallback = 0){
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function getAct1ScoreData(){
+  const data = window.BOHYUN_RUN_RESULT_DATA || {};
+  return data.act1Score || {};
+}
+
+function getAct1NodeScore(node){
+  const scoreData = getAct1ScoreData();
+  const table = scoreData.nodeScores || {};
+  const type = node && node.type ? String(node.type) : "unknown";
+
+  return rrToSafeNumber(
+    table[type] ?? table.unknown,
+    0
+  );
+}
+
+function getAct1RouteScore(snapshot){
+  const route = Array.isArray(snapshot && snapshot.route) ? snapshot.route : [];
+
+  return route.reduce((sum, node) => {
+    return sum + getAct1NodeScore(node);
+  }, 0);
+}
+
+function getAct1TemporaryBonus(snapshot){
+  const scoreData = getAct1ScoreData();
+  const bonus = scoreData.temporaryEstimateBonus || {};
+
+  if(!bonus.enabled) return {
+    monsterKill: 0,
+    combatPerformance: 0,
+    bossEndHp: 0,
+    journeyAction: 0,
+    total: 0
+  };
+
+  /*
+   * 패배 시에는 완주 보상/추정 보너스를 지급하지 않는다.
+   * 기획서 보상표가 ACT1 완주 기준이기 때문이다.
+   */
+  if(!snapshot || snapshot.result !== "win"){
+    return {
+      monsterKill: 0,
+      combatPerformance: 0,
+      bossEndHp: 0,
+      journeyAction: 0,
+      total: 0
+    };
+  }
+
+  const result = {
+    monsterKill: rrToSafeNumber(bonus.monsterKill, 0),
+    combatPerformance: rrToSafeNumber(bonus.combatPerformance, 0),
+    bossEndHp: rrToSafeNumber(bonus.bossEndHp, 0),
+    journeyAction: rrToSafeNumber(bonus.journeyAction, 0)
+  };
+
+  result.total =
+    result.monsterKill +
+    result.combatPerformance +
+    result.bossEndHp +
+    result.journeyAction;
+
+  return result;
+}
+
+function getAct1ClearBonus(snapshot){
+  const scoreData = getAct1ScoreData();
+  const clearBonus = scoreData.clearBonus || {};
+
+  if(!snapshot || snapshot.result !== "win") return 0;
+  return rrToSafeNumber(clearBonus.act1Win, 0);
+}
+
+/*
+ * 추후 script.js에서 실제 점수 데이터가 들어오면 그 값을 우선 사용한다.
+ * 현재는 route 방문 기록 + ACT1 완주 보너스 + 임시 추정 보너스로 계산한다.
+ *
+ * 추후 script.js 연결 시 예상 snapshot 구조:
+ *
+ * snapshot.scoreBreakdown = {
+ *   nodeProgress: 604,
+ *   act1Clear: 100,
+ *   monsterKill: 106,
+ *   combatPerformance: 51,
+ *   bossEndHp: 15,
+ *   journeyAction: 10,
+ *   total: 786
+ * };
+ *
+ * snapshot.moonReward = {
+ *   moonShards: 55,
+ *   tierLabel: "평균 완주",
+ *   claimed: false
+ * };
+ *
+ * 이 데이터가 들어오면 runResult.js는 임시 추정값 대신 실제 값을 우선 사용한다.
+ */
+function getAct1ScoreBreakdown(snapshot){
+  if(!snapshot){
+    return {
+      nodeProgress: 0,
+      act1Clear: 0,
+      monsterKill: 0,
+      combatPerformance: 0,
+      bossEndHp: 0,
+      journeyAction: 0,
+      total: 0,
+      isTemporary: true
+    };
+  }
+
+  if(snapshot.scoreBreakdown && Number.isFinite(Number(snapshot.scoreBreakdown.total))){
+    return {
+      nodeProgress: rrToSafeNumber(snapshot.scoreBreakdown.nodeProgress, 0),
+      act1Clear: rrToSafeNumber(snapshot.scoreBreakdown.act1Clear, 0),
+      monsterKill: rrToSafeNumber(snapshot.scoreBreakdown.monsterKill, 0),
+      combatPerformance: rrToSafeNumber(snapshot.scoreBreakdown.combatPerformance, 0),
+      bossEndHp: rrToSafeNumber(snapshot.scoreBreakdown.bossEndHp, 0),
+      journeyAction: rrToSafeNumber(snapshot.scoreBreakdown.journeyAction, 0),
+      total: rrToSafeNumber(snapshot.scoreBreakdown.total, 0),
+      isTemporary: false
+    };
+  }
+
+  const nodeProgress = getAct1RouteScore(snapshot);
+  const act1Clear = getAct1ClearBonus(snapshot);
+  const temp = getAct1TemporaryBonus(snapshot);
+
+  const total =
+    nodeProgress +
+    act1Clear +
+    temp.monsterKill +
+    temp.combatPerformance +
+    temp.bossEndHp +
+    temp.journeyAction;
+
+  return {
+    nodeProgress,
+    act1Clear,
+    monsterKill: temp.monsterKill,
+    combatPerformance: temp.combatPerformance,
+    bossEndHp: temp.bossEndHp,
+    journeyAction: temp.journeyAction,
+    total: Math.floor(total),
+    isTemporary: true
+  };
+}
+
+function getAct1MoonReward(score, snapshot){
+  const scoreData = getAct1ScoreData();
+
+  if(!snapshot || snapshot.result !== "win"){
+    const defeatReward = scoreData.defeatReward || {};
+    return {
+      moonShards: rrToSafeNumber(defeatReward.moonShards, 0),
+      label: defeatReward.label || "미완주"
+    };
+  }
+
+  const tiers = Array.isArray(scoreData.rewardTiers) ? scoreData.rewardTiers : [];
+  const safeScore = rrToSafeNumber(score, 0);
+
+  const tier = tiers.find(item => {
+    const min = rrToSafeNumber(item.min, 0);
+    const max = item.max === Infinity ? Infinity : rrToSafeNumber(item.max, Infinity);
+    return safeScore >= min && safeScore <= max;
+  });
+
+  if(!tier){
+    return { moonShards: 0, label: "보상 없음" };
+  }
+
+  return {
+    moonShards: rrToSafeNumber(tier.moonShards, 0),
+    label: tier.label || ""
+  };
+}
+
 let rrOverlayEl = null;
 
 /* ── 노드 진입 시 루트 기록 ──────────────────────────────────────────────
@@ -275,7 +464,12 @@ function renderRunSummary(snapshot, onFinish){
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
   characterWrap.innerHTML = "";
 
+  const scoreBreakdown = getAct1ScoreBreakdown(snapshot);
+  const moonReward = getAct1MoonReward(scoreBreakdown.total, snapshot);
+
   const rows = [
+    { icon:"🏆", label:"최종 여정 점수",      value:scoreBreakdown.total,   unit:"점" },
+    { icon:"🌙", label:"달빛조각 지급 예정",  value:moonReward.moonShards,  unit:"개" },
     { icon:"🗼", label:"진행한 스테이지 수", value:snapshot.highestFloor, unit:"층" },
     { icon:"💀", label:"클리어 보스 수",     value:snapshot.cleared.boss,  unit:"개" },
     { icon:"👺", label:"클리어 노멀 수",      value:snapshot.cleared.enemy, unit:"개" },
@@ -283,6 +477,10 @@ function renderRunSummary(snapshot, onFinish){
     { icon:"🏺", label:"수집한 법구 수",      value:snapshot.relicCount,    unit:"개" },
     { icon:"🧪", label:"사용한 약병 수",      value:snapshot.usedPotionCount, unit:"개" }
   ];
+
+  const temporaryNotice = scoreBreakdown.isTemporary
+    ? '<div class="rr-score-notice">현재 점수와 달빛조각은 script.js 미연결 상태의 임시 계산값입니다. 실제 지급은 아직 진행되지 않습니다.</div>'
+    : '';
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
@@ -298,6 +496,7 @@ function renderRunSummary(snapshot, onFinish){
           '</div>'
         ).join("") +
       '</div>' +
+      temporaryNotice +
       '<button type="button" class="rr-summary-next" id="rrSummaryNext">다음</button>' +
     '</div>';
 
@@ -334,6 +533,29 @@ function renderRunDetail(snapshot, onFinish){
     ? snapshot.usedPotions.map(potion => rrItemCardHtml(potion.emoji, potion.name, potion.count)).join("")
     : '<div class="rr-empty-text">없음</div>';
 
+  const scoreBreakdown = getAct1ScoreBreakdown(snapshot);
+  const moonReward = getAct1MoonReward(scoreBreakdown.total, snapshot);
+
+  const scoreDetailHtml =
+    '<div class="rr-score-breakdown">' +
+      '<div class="rr-score-breakdown-title">여정 점수 상세</div>' +
+      '<div class="rr-score-breakdown-grid">' +
+        '<div><span>노드 진행</span><strong>' + scoreBreakdown.nodeProgress + '점</strong></div>' +
+        '<div><span>ACT1 완주</span><strong>' + scoreBreakdown.act1Clear + '점</strong></div>' +
+        '<div><span>몬스터 처치</span><strong>' + scoreBreakdown.monsterKill + '점</strong></div>' +
+        '<div><span>전투 수행</span><strong>' + scoreBreakdown.combatPerformance + '점</strong></div>' +
+        '<div><span>보스 종료 상태</span><strong>' + scoreBreakdown.bossEndHp + '점</strong></div>' +
+        '<div><span>여정 행동</span><strong>' + scoreBreakdown.journeyAction + '점</strong></div>' +
+      '</div>' +
+      '<div class="rr-score-reward-line">' +
+        '<span>최종 ' + scoreBreakdown.total + '점</span>' +
+        '<strong>🌙 ' + moonReward.moonShards + '개 지급 예정</strong>' +
+      '</div>' +
+      (scoreBreakdown.isTemporary
+        ? '<div class="rr-score-notice">현재는 script.js 미연결 상태의 임시 계산값입니다. 추후 지급 연동 예정입니다.</div>'
+        : '') +
+    '</div>';
+
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
     '<div class="rr-detail-panel">' +
@@ -342,6 +564,7 @@ function renderRunDetail(snapshot, onFinish){
         '<div class="rr-detail-section-title">❀ 밟은 노드 루트 ❀</div>' +
         rrDragWrapHtml(routeHtml, "rr-route-viewport") +
       '</div>' +
+      scoreDetailHtml +
       '<div class="rr-detail-grid">' +
         '<div class="rr-detail-stack">' +
           '<div class="rr-detail-tile">' +
@@ -396,10 +619,14 @@ function renderRunDetail(snapshot, onFinish){
 }
 
 function rrRouteNodeHtml(node){
-  const info = RR_NODE_TYPE_INFO[node.type] || { emoji: "❔", label: node.type };
+  const type = node && node.type ? node.type : "unknown";
+  const info = RR_NODE_TYPE_INFO[type] || { emoji: "❔", label: type };
+  const score = getAct1NodeScore(node);
+
   return '<div class="rr-route-node">' +
     '<div class="rr-route-node-icon">' + info.emoji + '</div>' +
-    '<div class="rr-route-node-label">' + info.label + '</div>' +
+    '<div class="rr-route-node-label">' + escapeRrHtml(info.label) + '</div>' +
+    (score > 0 ? '<div class="rr-route-node-score">+' + score + '</div>' : '') +
   '</div>';
 }
 
@@ -496,7 +723,7 @@ function buildRunResultSnapshot(result){
     highestFloor = Math.max(0, nodeFloorIdx(getCurrentNodeId()));
   }
 
-  return {
+  const snapshot = {
     result,
     highestFloor,
     cleared: {
@@ -512,6 +739,18 @@ function buildRunResultSnapshot(result){
     route: Array.isArray(stats.route) ? stats.route : [],
     playTimeMs: Date.now() - (stats.startedAt || Date.now())
   };
+
+  /* ACT1 임시 점수/달빛조각 지급 예정량. 추후 script.js 연결 시
+     snapshot.scoreBreakdown이 이미 채워져 있으면 getAct1ScoreBreakdown이
+     그 값을 우선 사용한다. */
+  const scoreBreakdown = getAct1ScoreBreakdown(snapshot);
+  const moonReward = getAct1MoonReward(scoreBreakdown.total, snapshot);
+
+  snapshot.scoreBreakdown = scoreBreakdown;
+  snapshot.totalScore = scoreBreakdown.total;
+  snapshot.moonRewardPreview = moonReward;
+
+  return snapshot;
 }
 
 function summarizeRrPotions(list){
@@ -759,6 +998,35 @@ function ensureRrStyles(){
     ".rr-item-card-count{position:absolute;top:-.4cqh;right:.4cqh;min-width:2.2cqh;height:2.2cqh;padding:0 .3cqh;" +
       "border-radius:1.1cqh;background:#a5322a;color:#fbe9c8;font-size:1.1cqh;font-weight:900;" +
       "display:grid;place-items:center;box-shadow:0 .2cqh .5cqh rgba(0,0,0,.3);}" +
+
+    /* ACT1 임시 점수 / 달빛조각 지급 예정 표시 (script.js 미연결 상태) */
+    ".rr-score-notice{width:100%;margin:1cqh 0 0;padding:.8cqh 1cqw;border-radius:1cqh;" +
+      "background:rgba(120,80,30,.12);border:.12cqh solid rgba(160,120,70,.35);" +
+      "font-size:1.2cqh;font-weight:800;color:#7a6142;text-align:center;line-height:1.35;}" +
+
+    ".rr-route-node-score{font-size:1.05cqh;font-weight:900;color:#a5322a;" +
+      "background:rgba(207,91,82,.12);border:.1cqh solid rgba(207,91,82,.28);" +
+      "padding:.12cqh .45cqw;border-radius:.8cqh;line-height:1.2;}" +
+
+    ".rr-score-breakdown{border-radius:1.2cqh;border:.16cqh solid rgba(150,110,60,.4);" +
+      "background:rgba(255,255,255,.22);padding:1cqh 1cqw;display:flex;flex-direction:column;gap:.8cqh;}" +
+
+    ".rr-score-breakdown-title{text-align:center;font-size:1.45cqh;font-weight:900;color:#8a6a3c;}" +
+
+    ".rr-score-breakdown-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6cqh .8cqw;}" +
+
+    ".rr-score-breakdown-grid div{display:flex;align-items:center;justify-content:space-between;gap:.6cqw;" +
+      "padding:.55cqh .7cqw;border-radius:.8cqh;background:rgba(255,250,238,.65);" +
+      "border:.1cqh solid rgba(160,120,70,.22);}" +
+
+    ".rr-score-breakdown-grid span{font-size:1.05cqh;font-weight:800;color:#7a6142;}" +
+
+    ".rr-score-breakdown-grid strong{font-size:1.2cqh;font-weight:900;color:#a5322a;}" +
+
+    ".rr-score-reward-line{display:flex;align-items:center;justify-content:center;gap:1.2cqw;" +
+      "font-size:1.45cqh;font-weight:900;color:#4a3524;}" +
+
+    ".rr-score-reward-line strong{color:#a5322a;}" +
 
     "@media (max-width:900px){" +
       ".rr-frame{width:94%;height:84%;}" +
