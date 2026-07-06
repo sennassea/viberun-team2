@@ -316,16 +316,14 @@ function ensureBattleVictoryOverlay(){
         '<div class="victory-reward-row" aria-label="획득 보상 목록"></div>' +
       '</div>' +
       '<div class="victory-section victory-kill-section">' +
-        '<div class="victory-section-title">처치한 악령</div>' +
-        '<div class="victory-enemy-name"></div>' +
+        '<div class="victory-section-title">전투 정보</div>' +
         '<div class="victory-battle-meta">' +
-          '<span class="victory-meta-location"></span>' +
           '<span class="victory-meta-floor"></span>' +
           '<span class="victory-meta-turn"></span>' +
         '</div>' +
       '</div>' +
       '<div class="victory-button-area">' +
-        '<button type="button" class="victory-next" aria-disabled="true">다음층으로</button>' +
+        '<button type="button" class="victory-next" aria-disabled="true">다음 여정으로</button>' +
       '</div>' +
     '</div>' +
     '<div class="victory-confirm-modal" aria-hidden="true">' +
@@ -359,14 +357,10 @@ function ensureBattleVictoryOverlay(){
 function renderBattleVictoryOverlay(){
   const ov = ensureBattleVictoryOverlay();
   const rewardRow = ov.querySelector(".victory-reward-row");
-  const enemyName = ov.querySelector(".victory-enemy-name");
-  const location = ov.querySelector(".victory-meta-location");
   const floor = ov.querySelector(".victory-meta-floor");
   const turn = ov.querySelector(".victory-meta-turn");
   const info = getBattleVictoryInfo();
   if(rewardRow) renderBattleVictoryRewardSlots(rewardRow);
-  if(enemyName) enemyName.textContent = info.enemyNames;
-  if(location) location.textContent = info.location;
   if(floor) floor.textContent = info.floor;
   if(turn) turn.textContent = info.turn;
   updateBattleVictoryNextButton(ov);
@@ -429,10 +423,9 @@ function getBattleVictoryInfo(){
   const stageLabel = stage && stage.label ? stage.label : "";
   const floorMatch = stageLabel.match(/(\d+)\s*층/);
   const hudFloor = $("#hudFloor") ? $("#hudFloor").textContent.trim() : "";
-  const floor = floorMatch ? floorMatch[1] + "층" : hudFloor.replace(/F$/, "층") || "1층";
+  const floorNum = floorMatch ? floorMatch[1] : hudFloor.replace(/F$/, "") || "1";
+  const floor = floorNum + " 스테이지";
   return {
-    enemyNames: S.enemies.map(e => e.name).join(", ") || "악령",
-    location: stageLabel ? "병원 " + stageLabel : "병원 " + floor,
     floor,
     turn: "TURN " + (S.turn || 1),
   };

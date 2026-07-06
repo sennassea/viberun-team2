@@ -86,7 +86,6 @@ function injectRewardStyles(){
     .victory-reward-icon img{width:3.6cqh;height:3.6cqh;object-fit:contain;display:block;}
     .victory-reward-name{font-size:1.55cqh;font-weight:900;white-space:nowrap;}
     .victory-reward-state{min-height:1.6cqh;font-size:1.15cqh;font-weight:800;color:var(--c-ink-soft);}
-    .victory-enemy-name{min-height:2.4cqh;font-size:1.85cqh;font-weight:900;color:var(--c-ink);margin-bottom:1cqh;}
     .victory-battle-meta{display:flex;justify-content:center;gap:.8cqw;flex-wrap:wrap;}
     .victory-battle-meta span{min-width:7cqw;padding:.55cqh .9cqw;border-radius:.8cqh;background:#eef4fb;border:.15cqh solid #d6e6f5;font-size:1.4cqh;font-weight:800;color:var(--c-ink-soft);}
     .victory-button-area{display:flex;justify-content:center;}
