@@ -655,10 +655,12 @@
     return (
       '<article class="bm-product-card bm-recommended-small-card' + (isOwned ? ' is-owned' : '') + '">' +
         (isOwned ? '<div class="bm-store-owned-flag">보유 중</div>' : '') +
-        '<div class="bm-recommended-small-art">' +
-          (product.previewImage
-            ? '<img src="' + escapeHtml(product.previewImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
-            : '<span class="bm-store-art-icon">' + escapeHtml(product.icon || "✦") + '</span>') +
+        '<div class="bm-recommended-small-art' + (isCharacterSkin && product.profileIcon ? ' bm-recommended-small-art--profile' : '') + '">' +
+          (isCharacterSkin && product.profileIcon
+            ? '<img src="' + escapeHtml(product.profileIcon) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+            : product.previewImage
+              ? '<img src="' + escapeHtml(product.previewImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+              : '<span class="bm-store-art-icon">' + escapeHtml(product.icon || "✦") + '</span>') +
         '</div>' +
         '<h3>' + escapeHtml(product.name) + '</h3>' +
         (product.subtitle || product.skinTypeName
@@ -693,15 +695,11 @@
       '<article class="bm-moon-charge-card">' +
         (product.recommendedBadge ? '<div class="bm-moon-charge-badge">' + escapeHtml(product.recommendedBadge) + '</div>' : "") +
         '<h3 class="bm-moon-charge-title">' + escapeHtml(product.name) + '</h3>' +
-        (product.subtitle ? '<p class="bm-moon-charge-subtitle">' + escapeHtml(product.subtitle) + '</p>' : "") +
 
         '<div class="bm-moon-charge-art" aria-hidden="true">' +
           '<span class="bm-store-art-moon"></span>' +
           '<span class="bm-moon-charge-amount">' + formatCount(rewardAmount) + '</span>' +
         '</div>' +
-
-        (product.description ? '<p class="bm-moon-charge-desc">' + escapeHtml(product.description) + '</p>' : "") +
-        (product.unitPriceLabel ? '<p class="bm-moon-charge-unit">' + escapeHtml(product.unitPriceLabel) + '</p>' : "") +
 
         '<button type="button" class="bm-store-buy-btn bm-moon-charge-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
           (isBusy ? " disabled" : "") + '>' +
