@@ -897,3 +897,88 @@
     align-self:flex-end;
   }
 }
+
+/* BM 상품 구매 확인 팝업: 월영당 본 팝업(z-index:305)보다 위에 떠야 합니다. */
+.bm-purchase-confirm{
+  position:fixed;
+  inset:0;
+  z-index:400;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2cqh;
+}
+
+.bm-purchase-confirm-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(18, 12, 8, .55);
+}
+
+.bm-purchase-confirm-panel{
+  position:relative;
+  width:min(70cqw, 44cqh, 92vw);
+  padding:2.4cqh;
+  border:.25cqh solid rgba(199, 155, 84, .9);
+  border-radius:1.2cqh;
+  background:rgba(255, 246, 224, .98);
+  box-shadow:0 1cqh 2cqh rgba(35, 20, 9, .38);
+  color:#4d2f1d;
+  text-align:center;
+}
+
+.bm-purchase-confirm-title{
+  margin:0 0 1.2cqh;
+  font-size:2.6cqh;
+  font-weight:900;
+}
+
+.bm-purchase-confirm-message{
+  margin:0;
+  font-size:1.75cqh;
+  font-weight:800;
+  line-height:1.45;
+}
+
+.bm-purchase-confirm-message strong{
+  color:#a5673a;
+  font-weight:900;
+}
+
+.bm-purchase-confirm-price{
+  margin:1.2cqh 0 0;
+  font-size:1.55cqh;
+  font-weight:900;
+  color:#2f6f6a;
+}
+
+.bm-purchase-confirm-actions{
+  display:flex;
+  gap:1cqh;
+  margin-top:2cqh;
+}
+
+.bm-purchase-confirm-actions button{
+  flex:1;
+  height:4.3cqh;
+  border:0;
+  border-radius:.75cqh;
+  font:inherit;
+  font-size:1.65cqh;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.bm-purchase-confirm-cancel{
+  background:#d8c3a0;
+  color:#4d2f1d;
+}
+
+.bm-purchase-confirm-ok{
+  background:#a5673a;
+  color:#fff8dc;
+}
+
+.bm-purchase-confirm-actions button:hover{
+  filter:brightness(1.05);
+}
