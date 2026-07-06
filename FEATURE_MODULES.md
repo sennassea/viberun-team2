@@ -8,7 +8,7 @@ This project still keeps several older systems in broad files. To reduce team co
 - Combat tooltip layer: `tooltip.js`
 - Global tooltip layer for non-combat screens: `globalTooltip.js`, `globalTooltip.css`
 - Sound config and playback: `soundConfig.js`, `soundManager.js`
-- Character, monster, card, potion, relic data: `characterData.js`, `monsterData.js`, `cardData.js`, `PotionData.js`, `EquipmentData.js`, `equipment.js`
+- Character, monster, card, potion, relic data: `characterData.js`, `monsterData.js`, `cardData.js`, `PotionData.js`, `equipment.js`
 - Map and node flow: `mapSystem.js`, `mapNodeLogic.js`, `mapUI.js`, `tutorialMapSystem.js`, `encounterPackages.js`
 - Shop, rest, event screens: `shopNode.js`, `restNode.js`, `eventNode.js`, `eventData.js`
 - Rewards and run result: `runResultData.js`, `runResult.js`

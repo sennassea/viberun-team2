@@ -365,13 +365,13 @@ async function executeSinglePotionFx(fx, context={}){
         drawCards(fx.drawIfNone || 1, { source:"potion" });
         return true;
       }
-      const picked = await chooseCardFromCandidates({
+      const uid = await chooseHandCardUidViaDeckViewer({
         title: context.potion?.name || "경문 잿물",
         desc: "소멸할 상태 주문을 선택하세요.",
         candidates
       });
-      if(!picked) return false;
-      const removed = removeHandCardByUid(picked.uid);
+      if(!uid) return false;
+      const removed = removeHandCardByUid(uid);
       if(!removed) return false;
       if(Array.isArray(S.exhaust)) S.exhaust.push(removed.key);
       toast((CARD_DB[removed.key]?.name || removed.key) + " 소멸");
@@ -381,13 +381,13 @@ async function executeSinglePotionFx(fx, context={}){
       drawCards(fx.draw || 0, { source:"potion" });
       const candidates = getAnyHandCandidates();
       if(!candidates.length) return true;
-      const picked = await chooseCardFromCandidates({
+      const uid = await chooseHandCardUidViaDeckViewer({
         title: context.potion?.name || "새벽 샘물",
         desc: "버릴 손패 1장을 선택하세요.",
         candidates
       });
-      if(!picked) return false;
-      const removed = removeHandCardByUid(picked.uid);
+      if(!uid) return false;
+      const removed = removeHandCardByUid(uid);
       if(!removed) return false;
       discardCard(removed.key, { source:"potionDiscardChoice", instance:removed.instance });
       return true;
@@ -398,13 +398,13 @@ async function executeSinglePotionFx(fx, context={}){
         toast("버릴 손패가 없습니다.");
         return false;
       }
-      const picked = await chooseCardFromCandidates({
+      const uid = await chooseHandCardUidViaDeckViewer({
         title: context.potion?.name || "응어리 먹물",
         desc: "버릴 손패 1장을 선택하세요.",
         candidates
       });
-      if(!picked) return false;
-      const removed = removeHandCardByUid(picked.uid);
+      if(!uid) return false;
+      const removed = removeHandCardByUid(uid);
       if(!removed) return false;
       const removedCard = CARD_DB[removed.key];
       if(removedCard && removedCard.attr === "한풀이 덱"){
