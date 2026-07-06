@@ -170,8 +170,10 @@ async function endTurn(){
 
 function endGame(result){
   const giveUpToStartOnly = !!(S && S.giveUpToStartOnly);
-  S.over = result; S.busy = false;
-  if(S) S.giveUpToStartOnly = false;
+  if(S){
+    S.over = result; S.busy = false;
+    S.giveUpToStartOnly = false;
+  }
   saveCompletedRunRecord(result);
 
   // 보스 처치(승리) 시 신령의 은혜 신령 출현 연출을 먼저 보여준다.
