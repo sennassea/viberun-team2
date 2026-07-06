@@ -93,7 +93,10 @@
     rootEl = document.createElement("div");
     rootEl.className = "spirit-path-modal";
     rootEl.hidden = true;
-    document.body.appendChild(rootEl);
+    /* 로그인/월영당/선물함 모달과 동일하게 #game 안에 붙여야 z-index 비교가
+       같은 스태킹 컨텍스트 안에서 이뤄집니다(#stageWrap이 position:fixed라
+       그 밖에 붙이면 z-index 값과 무관하게 항상 위/아래로 분리됩니다). */
+    (document.querySelector("#game") || document.body).appendChild(rootEl);
     return rootEl;
   }
 
