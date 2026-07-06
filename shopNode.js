@@ -188,9 +188,14 @@ function pickShopItemsByRarity(list, count) {
 }
 
 function buildCardStock() {
+  const cardPool =
+    window.VIBERUN_SPIRIT_PATH_FILTER &&
+    typeof window.VIBERUN_SPIRIT_PATH_FILTER.filterCardKeysBySpiritPath === "function"
+      ? window.VIBERUN_SPIRIT_PATH_FILTER.filterCardKeysBySpiritPath(CARD_REWARD_POOL)
+      : CARD_REWARD_POOL;
   const keys = typeof window.getWeightedCardRewardKeys === "function"
-    ? window.getWeightedCardRewardKeys(SHOP_CARD_STOCK_COUNT, CARD_REWARD_POOL, { context: "shop" })
-    : pickShopItems(CARD_REWARD_POOL, SHOP_CARD_STOCK_COUNT);
+    ? window.getWeightedCardRewardKeys(SHOP_CARD_STOCK_COUNT, cardPool, { context: "shop" })
+    : pickShopItems(cardPool, SHOP_CARD_STOCK_COUNT);
   return keys.map((key) => {
     const card = CARD_DB[key];
 
