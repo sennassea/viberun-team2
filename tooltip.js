@@ -52,7 +52,6 @@
       color: "#d14040",
             desc: function (m, weak, displayedStatusName, enemy) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         var rawDamage = m.v;
         var actualDamage = m.v;
         if (window.previewMonsterFinalDamage && enemy) {
@@ -76,7 +75,6 @@
       color: "#3f8fe0",
             desc: function (m, weak, displayedStatusName, enemy) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         var target = window.getPlannedMonsterSupportTarget && enemy
           ? window.getPlannedMonsterSupportTarget(enemy, m)
           : enemy;
@@ -92,7 +90,6 @@
       color: "#8a5cc0",
       desc: function (m) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         return s + "다음 플레이어 턴 주문 뽑기를 " + (m.v || 1) + " 감소시키려 합니다.";
       }
     },
@@ -102,7 +99,6 @@
       color: "#8a5cc0",
       desc: function (m) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         return s + "다음 손패에서 비용이 가장 높은 사용 가능 주문 1장을 잠그려 합니다.";
       }
     },
@@ -112,7 +108,6 @@
       color: "#8a5cc0",
       desc: function (m) {
         var s = "적이 ";
-        if (m.name) s += '"' + m.name + '" / ';
         return s + "다음 턴의 주문 타입 규칙을 예고합니다.";
       }
     },
@@ -123,7 +118,6 @@
       desc: function (m, weak, displayedStatusName) {
         var statusName = getIntentTitleName(m, displayedStatusName) || "동요";
         var s = "이 적은 ";
-        if (m.name) s += '"' + m.name + '" / ';
         s += statusName + " " + m.v + "을 부여하려고 합니다.";
         return appendIntentStatusEffects(s, [statusName]);
       }
@@ -264,6 +258,13 @@
   function getIntentIcon(intent, info, displayedStatusName) {
     var statusName = getIntentTitleName(intent, displayedStatusName);
     return (statusName && INTENT_STATUS_INFO[statusName] && INTENT_STATUS_INFO[statusName].icon) || info.icon;
+  }
+
+  /* 스킬명이 있으면 스킬명을, 없으면 부여 상태명/행동 타입명을 제목으로 사용한다 (아이콘은 makeRow가 제목 뒤에 붙임) */
+  function getIntentDisplayTitle(intent, info, displayedStatusName) {
+    if (!intent) return info.name;
+    var statusName = getIntentTitleName(intent, displayedStatusName);
+    return intent.name || statusName || info.name;
   }
 
   function appendIntentStatusEffects(text, statusNames) {
@@ -471,16 +472,14 @@
     "#battle-tooltip.tt-show{display:block}" +
 
     /* 행 */
-    ".btt-row{display:flex;align-items:flex-start;gap:.75cqw;padding:.6cqh 0}" +
+    ".btt-row{display:flex;align-items:flex-start;padding:.6cqh 0}" +
     ".btt-row+.btt-row{border-top:.12cqh solid rgba(255,255,255,.09)}" +
-
-    /* 아이콘 */
-    ".btt-ico{font-size:2.1cqh;line-height:1.2;flex:none;width:2.7cqh;text-align:center}" +
-    ".btt-ico img{width:2.2cqh;height:2.2cqh;object-fit:contain;display:block;margin:0 auto;}" +
 
     /* 텍스트 */
     ".btt-body{flex:1;min-width:0}" +
     ".btt-name{display:block;font-size:1.6cqh;font-weight:800;color:#fff;line-height:1.3}" +
+    ".btt-name-ico{font-size:1.4cqh;margin-left:.3cqw;vertical-align:middle}" +
+    ".btt-name-ico img{width:1.5cqh;height:1.5cqh;object-fit:contain;display:inline-block;vertical-align:middle;margin-left:.3cqw}" +
     ".btt-desc{display:block;font-size:1.28cqh;color:rgba(190,210,235,.80);" +
       "margin-top:.15cqh;line-height:1.45;white-space:pre-wrap}" +
 
@@ -512,14 +511,15 @@
   /* ── HTML 빌더 헬퍼 ───────────────────────────────────────────────────── */
   function makeRow(icon, name, desc, nameColor) {
     var cs = nameColor ? ' style="color:' + nameColor + '"' : "";
-    var iconHtml = (typeof icon === "string" && icon.indexOf("assets/") === 0)
-      ? '<img src="' + icon + '" alt="" aria-hidden="true">'
-      : icon;
-    var ico = icon ? '<div class="btt-ico">' + iconHtml + '</div>' : "";
+    var nameIconHtml = "";
+    if (icon) {
+      nameIconHtml = (typeof icon === "string" && icon.indexOf("assets/") === 0)
+        ? '<img class="btt-name-ico" src="' + icon + '" alt="" aria-hidden="true">'
+        : '<span class="btt-name-ico">' + icon + '</span>';
+    }
     return '<div class="btt-row">'
-      + ico
       + '<div class="btt-body">'
-      + '<span class="btt-name"' + cs + '>' + name + '</span>'
+      + '<span class="btt-name"' + cs + '>' + name + nameIconHtml + '</span>'
       + '<span class="btt-desc">' + desc + '</span>'
       + '</div></div>';
   }
@@ -571,7 +571,7 @@
       }
       rows.push(makeRow(
         getIntentIcon(enemy.intent, info, displayedStatusName),
-        getIntentTitleName(enemy.intent, displayedStatusName) || info.name,
+        getIntentDisplayTitle(enemy.intent, info, displayedStatusName),
         intentDesc,
         info.color
       ));
