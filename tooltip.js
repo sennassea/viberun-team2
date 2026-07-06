@@ -677,8 +677,11 @@
   function isEnemyTooltipHit(target, cbEl) {
     if (!target || !cbEl || !cbEl.contains(target)) return false;
     if (target.closest(".enemy-status-icons,.enemy-status-icon")) return false;
-    var hitEl = target.closest(".avatar,.intent,.combatant-info");
-    return !!(hitEl && cbEl.contains(hitEl));
+    if (target.closest(".avatar,.intent")) return true;
+    /* .combatant-info은 min-height로 인해 실제 표시 내용(체력바/상태 배지)보다
+       아래쪽에 빈 여백이 생길 수 있어, 컨테이너 자신이 타깃일 때(=빈 여백)는 제외한다 */
+    var infoEl = cbEl.querySelector(".combatant-info");
+    return !!(infoEl && infoEl.contains(target) && target !== infoEl);
   }
 
   field.addEventListener("mouseover", function (e) {
