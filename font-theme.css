@@ -66,8 +66,6 @@ button,
 .mnode-sublbl,
 .mfloor-lbl,
 .mnode-dimmed-badge,
-.event-stage-title-main,
-.event-title,
 .event-choice-label,
 .event-card-name,
 .event-btn,
@@ -155,6 +153,13 @@ textarea,
    10. 전투 화면 현재 위치 UI (학교/구역/턴)
    11. 가방 UI 제목
    12. 보유 주문 UI 제목
+   13. 상점 노드 제목
+   14. 이벤트 노드 제목
+   15. 휴식(기도터) 노드 제목
+   16. 상점 노드 탭 ('주문'/'약병'/'법구')
+   17. 기도터 노드 행동 카드 제목 ('받아들이기'/'정리하기'/'휴식하기')
+   18. 각 노드(전투/상점/이벤트/기도터) 프로필 닉네임
+   19. 이벤트 UI 제목 (예: 열면 안되는 병실 서랍)
    ========================================================================= */
 .start-logo-main,
 .monthly-pass-claim-title,
@@ -172,7 +177,16 @@ textarea,
 .progress-floor,
 .progress-turn,
 .bag-ui-title,
-.deck-viewer-head h2 {
+.deck-viewer-head h2,
+.shop-stage-title-main,
+.event-stage-title-main,
+.prayer-stage-title-main,
+.shop-tab,
+.prayer-card-title,
+#shopName,
+#eventName,
+#prayerName,
+.event-title {
   font-family: var(--font-special-title) !important;
   font-weight: 700;
 }
