@@ -337,6 +337,22 @@
     return purchaseFromCatalog(productId, product, "/bm-store/package");
   }
 
+  /* 메인메뉴 좌하단 월영의 약속 일일 보상 UI가 사용하는 상태 조회/수령 함수입니다.
+     계정용 wallet.moonShards만 동기화하며, 전투용 S.moonShards와는 연결하지 않습니다. */
+  function fetchMonthlyPassStatus(){
+    return requestJson("/bm-store/monthly-pass/status", { method: "GET" }).then(result => {
+      if(result && result.wallet) syncWallet(result.wallet);
+      return result;
+    });
+  }
+
+  function claimMonthlyPassDailyReward(){
+    return requestJson("/bm-store/monthly-pass/claim-daily", { method: "POST" }).then(result => {
+      if(result && result.wallet) syncWallet(result.wallet);
+      return result;
+    });
+  }
+
   function fetchDummyInventory(){
     return requestJson("/bm-store/dummy-inventory", { method: "GET" }).then(result => {
       if(result && result.ok && Array.isArray(result.dummyInventory)){
@@ -358,6 +374,8 @@
     purchaseMonthlyPass,
     getRecommendedProducts,
     purchaseProduct,
+    fetchMonthlyPassStatus,
+    claimMonthlyPassDailyReward,
     fetchDummyInventory,
     getCachedDummyInventory(){
       return cachedDummyInventory.slice();

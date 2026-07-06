@@ -176,6 +176,7 @@
       syncCommonWallet(result.wallet);
       render();
       refreshBadge();
+      window.dispatchEvent(new CustomEvent("viberun:mailbox-changed"));
 
       const message = item && item.source === "bm_purchase"
         ? purchaseClaimToastMessage(item)
@@ -240,6 +241,7 @@
       syncCommonWallet(result.wallet);
       render();
       refreshBadge();
+      window.dispatchEvent(new CustomEvent("viberun:mailbox-changed"));
       if(typeof toast === "function") toast(rewardToastMessage(result.rewards) || "모든 선물을 받았습니다.", "success");
     }).catch(error => {
       console.warn("[MailboxUI] 모두 받기 중 오류가 발생했습니다.", error);
