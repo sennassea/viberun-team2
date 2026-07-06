@@ -95,7 +95,7 @@ window.BOHYUN_RUN_RESULT_DATA = Object.assign({}, window.BOHYUN_RUN_RESULT_DATA,
 
     labels: {
       totalScore: "최종 여정 점수",
-      moonReward: "달빛조각 지급 예정",
+      moonReward: "달빛조각 수령 가능",
       nodeScore: "구역 점수",
       temporaryNotice: "현재 점수는 script.js 미연결 상태의 임시 점수입니다."
     },
@@ -123,9 +123,8 @@ window.BOHYUN_RUN_RESULT_DATA = Object.assign({}, window.BOHYUN_RUN_RESULT_DATA,
       enabled: true,
 
       /*
-       * script.js 미연결 상태에서는 아래 항목을 실제로 알 수 없다.
-       * 따라서 결과창 QA용 임시 추정 보너스로만 사용한다.
-       * 추후 script.js에서 실제 snapshot.scoreBreakdown이 들어오면 이 값은 사용하지 않는다.
+       * 실제 RUN_STATE.runStats.scoreBreakdown이 없을 때만 사용하는 fallback 값.
+       * 정상 런에서는 battleRunState.js / battleRewards.js에서 기록한 실제 점수를 우선 사용한다.
        */
       monsterKill: 105.79,
       combatPerformance: 51,

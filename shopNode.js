@@ -95,6 +95,12 @@ function closeShopNode() {
 
 /* 나가기: 상점 종료 후 맵으로 복귀 (기획서 8장 순서 7) */
 function exitShopNode() {
+  if(typeof recordCompletedNodeScore === "function"){
+    recordCompletedNodeScore("shop", {
+      reason: "상점 방문 완료"
+    });
+  }
+
   closeShopNode();
   if (typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
   window.MAP_STATE.proceedMode = true;
