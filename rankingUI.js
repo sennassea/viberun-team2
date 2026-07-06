@@ -13,6 +13,7 @@ const RANKING_TABS = [
 ];
 
 const RANKING_NOTICE_TEXT = "여정이 끝나면 점수가 즉시 랭킹에 반영됩니다.";
+const RANKING_MAX_ROWS = 100;
 
 let rankingActivePeriod = "all";
 
@@ -85,6 +86,8 @@ function buildRankingPage(){
     handleMyRankingClick(overlay);
   });
 
+  setupRankingBodyDragScroll(overlay.querySelector(".ranking-page-body"));
+
   document.getElementById("game").appendChild(overlay);
   return overlay;
 }
@@ -117,7 +120,7 @@ function renderRankingRows(body, response){
     return;
   }
 
-  const rows = Array.isArray(response.rows) ? response.rows : [];
+  const rows = (Array.isArray(response.rows) ? response.rows : []).slice(0, RANKING_MAX_ROWS);
   if(!rows.length){
     body.innerHTML = '<p class="ranking-page-empty">아직 랭킹 데이터가 없습니다.</p>';
     return;
@@ -127,10 +130,9 @@ function renderRankingRows(body, response){
     const playTime = formatRankingPlayTime(row.playTimeMs);
     return '<div class="ranking-page-item">' +
       '<div class="ranking-page-rank">' + (index + 1) + '</div>' +
-      '<div class="ranking-page-main">' +
-        '<strong>' + escapeRankingHtml(row.nickname || "익명") + '</strong>' +
-        '<span>' + (row.score || 0) + '점 · ' + playTime + '</span>' +
-      '</div>' +
+      '<div class="ranking-page-name">' + escapeRankingHtml(row.nickname || "익명") + '</div>' +
+      '<div class="ranking-page-time">' + playTime + '</div>' +
+      '<div class="ranking-page-score">' + (row.score || 0) + '점</div>' +
     '</div>';
   }).join("");
 }
@@ -173,6 +175,45 @@ function handleMyRankingClick(overlay){
   });
 }
 
+function setupRankingBodyDragScroll(body){
+  if(!body || body.dataset.dragScrollBound) return;
+  body.dataset.dragScrollBound = "1";
+
+  let dragging = false;
+  let startY = 0;
+  let startScrollTop = 0;
+  let moved = false;
+
+  const onMove = event => {
+    if(!dragging) return;
+    const deltaY = event.clientY - startY;
+    if(Math.abs(deltaY) > 3) moved = true;
+    body.scrollTop = startScrollTop - deltaY;
+  };
+
+  const onUp = () => {
+    if(!dragging) return;
+    dragging = false;
+    body.classList.remove("dragging");
+    window.removeEventListener("mousemove", onMove);
+    window.removeEventListener("mouseup", onUp);
+  };
+
+  body.addEventListener("mousedown", event => {
+    dragging = true;
+    moved = false;
+    startY = event.clientY;
+    startScrollTop = body.scrollTop;
+    body.classList.add("dragging");
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  });
+
+  body.addEventListener("click", event => {
+    if(moved) event.stopPropagation();
+  }, true);
+}
+
 function formatRankingPlayTime(playTimeMs){
   if(!playTimeMs) return "0:00";
   const totalSeconds = Math.floor(playTimeMs / 1000);
@@ -205,13 +246,14 @@ function injectRankingPageStyles(){
     '.ranking-page-tab{border:.2cqh solid rgba(201,164,91,.52);border-radius:1cqh;background:rgba(255,255,255,.72);color:var(--c-ink-soft);font-family:var(--font-title);font-size:1.9cqh;font-weight:900;padding:1cqh 0;cursor:pointer;}' +
     '.ranking-page-tab.active{background:#d6a95b;color:#fff;border-color:#d6a95b;}' +
     '.ranking-page-meta{margin-top:1.2cqh;font-size:1.4cqh;font-weight:700;color:var(--c-ink-soft);text-align:center;min-height:2cqh;}' +
-    '.ranking-page-body{min-height:28cqh;padding:1.6cqh .6cqw .2cqh;overflow:auto;display:grid;gap:1cqh;}' +
+    '.ranking-page-body{height:28cqh;max-height:28cqh;padding:1.6cqh .6cqw .2cqh;overflow-y:auto;overflow-x:hidden;display:grid;gap:.7cqh;align-content:start;cursor:grab;user-select:none;}' +
+    '.ranking-page-body.dragging{cursor:grabbing;}' +
     '.ranking-page-empty{align-self:center;padding:6cqh 1cqw;text-align:center;font-size:2cqh;font-weight:900;color:var(--c-ink-soft);}' +
-    '.ranking-page-item{display:flex;align-items:center;gap:1cqw;min-height:7cqh;padding:1cqh 1.15cqw;border:.14cqh solid rgba(201,164,91,.58);border-radius:1cqh;background:rgba(255,250,238,.74);box-shadow:inset 0 0 0 .08cqh rgba(255,255,255,.72);}' +
+    '.ranking-page-item{display:grid;grid-template-columns:4.2cqh 1fr auto auto;align-items:center;gap:1cqw;min-height:6cqh;padding:1cqh 1.15cqw;border:.14cqh solid rgba(201,164,91,.58);border-radius:1cqh;background:rgba(255,250,238,.74);box-shadow:inset 0 0 0 .08cqh rgba(255,255,255,.72);}' +
     '.ranking-page-rank{width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;background:#d6a95b;color:#fff;font-size:1.8cqh;font-weight:900;box-shadow:inset 0 -.2cqh .45cqh rgba(83,49,12,.24);}' +
-    '.ranking-page-main{min-width:0;display:grid;gap:.25cqh;}' +
-    '.ranking-page-main strong{font-size:2.2cqh;line-height:1.1;color:#52371f;}' +
-    '.ranking-page-main span{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);}' +
+    '.ranking-page-name{min-width:0;font-size:2cqh;font-weight:900;color:#52371f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    '.ranking-page-time{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);white-space:nowrap;}' +
+    '.ranking-page-score{font-size:1.6cqh;font-weight:900;color:#6b4628;white-space:nowrap;}' +
     '.ranking-page-my-button{margin-top:1.2cqh;height:6cqh;border:.24cqh solid rgba(201,164,91,.72);border-radius:1.2cqh;background:linear-gradient(180deg, rgba(255,250,238,.96), rgba(239,211,151,.94));color:#6b4628;font-family:var(--font-title);font-size:2.1cqh;font-weight:900;cursor:pointer;}' +
     '.ranking-page-my-button:hover{border-color:var(--c-gold);}' +
     '.ranking-page-my-result{margin-top:1cqh;min-height:2cqh;text-align:center;font-size:1.45cqh;font-weight:800;color:#52371f;}';
