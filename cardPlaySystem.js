@@ -276,7 +276,7 @@ function triggerBlessingOnCardPlayed(card, key, context={}){
   const altarEnergy = getBlessingCount("altarEnergy");
   if(altarEnergy > 0 && !S.blessingTurnFlags.altarEnergy && card && card.type === "skill" && key !== "altar_preparation"){
     S.blessingTurnFlags.altarEnergy = true;
-    gainPlayerBlock(altarEnergy * 2);
+    gainPlayerBlock(altarEnergy);
   }
   const heat = Math.max(0, context.heatBeforePlay || 0);
   if(heat > 0 && !S.blessingTurnFlags.heat && (S.cardsPlayedThisTurn || 0) === 4){
@@ -717,7 +717,7 @@ async function playCard(handIndex, targetEnemy){
   for(const e of card.fx){
     switch(e.t){
       case "damage": {
-        const gutpanBonus = e.gutpanBonus ? getBlessingCount(e.gutpanBonus) : 0;
+        const gutpanBonus = e.gutpanBonus ? getBlessingCount(e.gutpanBonus) * (Number.isFinite(e.gutpanBonusMultiplier) ? e.gutpanBonusMultiplier : 1) : 0;
         const bellBonus = key === "bell_strike" ? (S.bellStrikePurifyBonusThisTurn || 0) : 0;
         applyDamageWithFeedback(targetEnemy, applyCardAttackMultiplier(getPlayerAttackDamage(getGrowthAdjustedValue(cardInstance, e) + relicDamageBonus + gutpanBonus + bellBonus, targetEnemy)), S.player.weak, { source:"card", cardKey:key, damageKind:"purification" });
         break;
