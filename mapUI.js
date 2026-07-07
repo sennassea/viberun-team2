@@ -374,12 +374,14 @@ function renderCanvas(currentNodeId) {
     const { x, y } = pos[currentNodeId];
     const charH = 74;
     const charW = charH * (193 / 260);
-    // 발이 노드 원 안쪽으로 살짝 겹치도록 해서 원 위에 서 있는 것처럼 보이게 함
-    const feetY = y - curNodeR + 9;
-    svgPin = `<image href="assets/map_icons/player_marker.png"
-      x="${(x - charW / 2) | 0}" y="${(feetY - charH) | 0}"
-      width="${charW | 0}" height="${charH | 0}"
-      class="mplayer-marker" preserveAspectRatio="xMidYMid meet"/>`;
+    // 발이 노드 원 안쪽으로 더 깊이 겹치도록 해서 원을 밟고 선 느낌을 강조함
+    const feetY = y - curNodeR + 20;
+    svgPin = `<g transform="translate(${x | 0},${(feetY - charH) | 0}) scale(-1,1)">
+      <image href="assets/map_icons/player_marker.png"
+        x="${-charW / 2 | 0}" y="0"
+        width="${charW | 0}" height="${charH | 0}"
+        class="mplayer-marker" preserveAspectRatio="xMidYMid meet"/>
+    </g>`;
   }
 
   /* ── SVG 업데이트 ── */
