@@ -1213,7 +1213,6 @@
       '<img class="item-frame-layer" src="' + escapeAttr(itemFramePath(safeItem)) + '" alt="" aria-hidden="true" draggable="false">' +
       '<div class="item-text-layer">' +
         '<div class="item-name-text">' + escapeHtml(safeItem.name || "") + '</div>' +
-        '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(safeItem.desc || "")) + '</div>' +
       '</div>' +
       '<div class="item-hit-layer" aria-hidden="true"></div>';
   }

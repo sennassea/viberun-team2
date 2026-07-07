@@ -27,7 +27,7 @@
       target: "none",
       attr: "상태",
       rarity: "status",
-      desc: "사용 불가\n덱에 남아 손패 자리를 차지합니다",
+      desc: "사용 불가\n덱에 남아 손패 자리를 차지합니다.",
       fx: [],
       unplayable: true,
       unremovableFromDeck: true
@@ -40,7 +40,7 @@
       target: "none",
       attr: "상태",
       rarity: "status",
-      desc: "사용 불가\n버려지면 정신력 3을 받고 소멸합니다",
+      desc: "사용 불가\n버려지면 정신력 3을 받고,\n소멸합니다.",
       fx: [],
       unplayable: true,
       damageOnDiscard: 3
@@ -53,7 +53,7 @@
       target: "none",
       attr: "상태",
       rarity: "status",
-      desc: "사용 불가\n턴 종료 시 소멸합니다",
+      desc: "사용 불가\n턴 종료 시 소멸합니다.",
       fx: [],
       unplayable: true,
       exhaustOnTurnEnd: true
@@ -66,7 +66,7 @@
       target: "none",
       attr: "상태",
       rarity: "status",
-      desc: "사용 불가\n덱과 손패 흐름을 방해합니다",
+      desc: "사용 불가\n덱과 손패 흐름을 방해합니다.",
       fx: [],
       unplayable: true
     }
