@@ -30,7 +30,6 @@
 
   if(!cheatEnabledFlag){
     console.warn("[CHEAT] 치트 모드가 꺼져 있습니다. 주소에 ?cheat=1을 붙여주세요.");
-    return;
   }
 
   /* ── 공통 유틸 ─────────────────────────────────────────────────────────── */
@@ -909,4 +908,7 @@
   };
 
   console.log("[CHEAT] 치트 모드가 활성화되었습니다. CHEAT.help()로 사용법을 확인하세요.");
+  if(window.VIBERUN_DEBUG && typeof window.VIBERUN_DEBUG.guardCheatTree === "function"){
+    window.VIBERUN_DEBUG.guardCheatTree(window.CHEAT, "CHEAT");
+  }
 })();

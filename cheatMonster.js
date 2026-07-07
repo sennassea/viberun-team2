@@ -293,4 +293,7 @@
   }
 
   console.log("[CHEAT] 몬스터 소환 치트(CHEAT.monster)가 등록되었습니다.");
+  if(window.VIBERUN_DEBUG && typeof window.VIBERUN_DEBUG.guardCheatTree === "function"){
+    window.VIBERUN_DEBUG.guardCheatTree(window.CHEAT, "CHEAT");
+  }
 })();

@@ -82,4 +82,7 @@
   }
 
   console.log("[CHEAT] 이벤트 진입 치트(CHEAT.event)가 등록되었습니다.");
+  if(window.VIBERUN_DEBUG && typeof window.VIBERUN_DEBUG.guardCheatTree === "function"){
+    window.VIBERUN_DEBUG.guardCheatTree(window.CHEAT, "CHEAT");
+  }
 })();
