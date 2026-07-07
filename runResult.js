@@ -332,6 +332,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     result: snapshot.result,
     score: scoreBreakdown.total,
     scoreBreakdown,
+    rewardMoonShards: moonReward.moonShards,
     isTemporary: !!scoreBreakdown.isTemporary
   }).then(result => {
     if(result && result.ok){
