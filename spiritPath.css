@@ -22,45 +22,64 @@
 
 .spirit-path-panel{
   position:relative;
-  width:min(176cqh, 98vw);
-  aspect-ratio:1600 / 887;
+  width:min(118cqh, 98vw);
   max-height:98cqh;
-  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.55cqh;
+  overflow:visible;
   box-sizing:border-box;
-  padding:3.2cqh 4.1cqh 2.8cqh;
+  padding:0;
   border:0;
   border-radius:0;
-  background:transparent url("assets/ui/spirit_path/background_pannel.png") center/100% 100% no-repeat;
+  background:transparent;
   box-shadow:none;
   color:#f8e7ba;
   text-align:center;
   font-family:var(--font-title, inherit);
 }
 
+.spirit-path-main-frame{
+  position:relative;
+  width:100%;
+  aspect-ratio:1600 / 887;
+  box-sizing:border-box;
+  background:transparent url("assets/ui/spirit_path/background_pannel.png") center/contain no-repeat;
+}
+
+.spirit-path-main-content{
+  position:absolute;
+  inset:7.1cqh 5.3cqh 4.6cqh;
+  display:flex;
+  flex-direction:column;
+  box-sizing:border-box;
+}
+
 .spirit-path-title{
   margin:0;
-  font-size:3.05cqh;
+  font-size:2.72cqh;
   font-weight:900;
   color:#f9d989;
   text-shadow:0 .18cqh .3cqh rgba(0,0,0,.6);
 }
 
 .spirit-path-desc{
-  margin:.45cqh 0 .5cqh;
-  font-size:1.24cqh;
-  line-height:1.32;
+  margin:.34cqh 0 .36cqh;
+  font-size:1.08cqh;
+  line-height:1.24;
   font-weight:700;
   color:#d9c196;
 }
 
 .spirit-path-count{
   width:max-content;
-  margin:0 auto .65cqh;
-  padding:.25cqh 1cqh;
+  margin:0 auto .42cqh;
+  padding:.22cqh .95cqh;
   border:.12cqh solid rgba(219, 178, 101, .58);
   border-radius:999px;
   background:rgba(26, 83, 70, .72);
-  font-size:1.28cqh;
+  font-size:1.12cqh;
   font-weight:900;
   color:#fff2bf;
 }
@@ -68,15 +87,17 @@
 .spirit-path-card-list{
   display:grid;
   grid-template-columns:repeat(5, minmax(0, 1fr));
-  gap:.6cqh;
+  gap:.46cqh;
   align-items:stretch;
+  min-height:0;
+  flex:1;
 }
 
 .spirit-path-card{
   position:relative;
   display:flex;
   flex-direction:column;
-  min-height:37.2cqh;
+  min-height:0;
   box-sizing:border-box;
   padding:.9cqh .82cqh .82cqh;
   border:0;
@@ -111,7 +132,7 @@
   right:-.28cqh;
   top:-.16cqh;
   z-index:8;
-  width:15cqh;
+  width:12.6cqh;
   aspect-ratio:1092 / 619;
   display:flex;
   align-items:center;
@@ -121,10 +142,13 @@
 }
 
 .spirit-path-selected-ribbon span{
-  transform:translate(1.1cqh, -1.05cqh) rotate(15deg);
+  position:absolute;
+  left:63%;
+  top:28%;
+  transform:translate(-50%, -50%) rotate(32deg);
   transform-origin:center;
   color:#3a260d;
-  font-size:1.45cqh;
+  font-size:1.62cqh;
   line-height:1;
   font-weight:900;
   white-space:nowrap;
@@ -500,8 +524,8 @@
 
 .spirit-path-journey-panel{
   position:relative;
-  margin-top:.45cqh;
-  padding:1.15cqh 2.2cqh 1.05cqh;
+  width:100%;
+  padding:1.1cqh 2.15cqh 1cqh;
   aspect-ratio:2121 / 451;
   box-sizing:border-box;
   display:flex;
@@ -638,24 +662,19 @@
   .spirit-path-panel{
     width:min(112cqh, 96vw);
   }
-
-  .spirit-path-card-list{
-    grid-template-columns:repeat(3, minmax(0, 1fr));
-  }
-
-  .spirit-path-card{
-    min-height:42cqh;
-  }
 }
 
 @media (max-width: 820px){
   .spirit-path-panel{
     width:96vw;
-    padding:2cqh 1.5cqh 1.6cqh;
+  }
+
+  .spirit-path-main-content{
+    inset:6.2cqh 4.4cqh 4.2cqh;
   }
 
   .spirit-path-card-list{
-    grid-template-columns:repeat(2, minmax(0, 1fr));
+    grid-template-columns:repeat(5, minmax(0, 1fr));
   }
 
   .spirit-path-act-option{
