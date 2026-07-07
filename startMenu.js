@@ -213,6 +213,9 @@ function updateStartScreenMode(options={}){
   refreshStartMonthlyPassUI();
   refreshStartMenuProfileUI();
   setStartMenuVisible(settings, true);
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmTitle");
+  }
 }
 
 function updateStartMailboxVisibility(button){

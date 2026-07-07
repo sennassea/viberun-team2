@@ -84,6 +84,9 @@ function openShopNode() {
   switchShopTab("card");
   shopOverlayEl.classList.add("show");
   shopOverlayEl.setAttribute("aria-hidden", "false");
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmShop");
+  }
 }
 
 function closeShopNode() {
@@ -332,33 +335,47 @@ function buyCurrentItem() {
 
 function buyCard(item) {
   const price = getEffectiveShopPrice(item);
-  if (!canAfford(price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
+  if (!canAfford(price)) {
+    if (typeof toast === "function") toast("골드가 부족합니다.");
+    if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuyFail");
+    return;
+  }
   if (typeof addPermanentCard === "function") addPermanentCard(item.sourceKey, { source:"shop" });
   else STARTER_DECK.push(item.sourceKey);
   S.gold -= price;
   SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
+  if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuy");
   finalizeShopChange();
 }
 
 function buyPotion(item) {
   if (getPotionCount() >= SHOP_POTION_SLOT_LIMIT) { if (typeof toast === "function") toast("약병 슬롯이 가득 찼습니다."); return; }
   const price = getEffectiveShopPrice(item);
-  if (!canAfford(price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
+  if (!canAfford(price)) {
+    if (typeof toast === "function") toast("골드가 부족합니다.");
+    if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuyFail");
+    return;
+  }
   if (!Array.isArray(S.potions)) S.potions = [];
   S.potions.push({ ...item, soldOut: undefined, category: undefined });
   S.gold -= price;
   SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
+  if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuy");
   finalizeShopChange();
 }
 
 function buyRelic(item) {
   if (isRelicOwned(item.id)) { if (typeof toast === "function") toast("이미 보유한 법구입니다."); return; }
   const price = getEffectiveShopPrice(item);
-  if (!canAfford(price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
+  if (!canAfford(price)) {
+    if (typeof toast === "function") toast("골드가 부족합니다.");
+    if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuyFail");
+    return;
+  }
   if (!Array.isArray(S.relics)) S.relics = [];
   // 효과 배열(fx)까지 보존해야 전투 시작/턴 종료/조건부 법구 효과가 정상 발동됩니다.
   S.relics.push({ ...item });
@@ -366,6 +383,7 @@ function buyRelic(item) {
   SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
+  if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuy");
   finalizeShopChange();
 }
 

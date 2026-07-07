@@ -285,6 +285,9 @@ function openMap(){
   renderCanvas(getCurrentNodeId());
   ov.style.display = "grid";
   requestAnimationFrame(() => requestAnimationFrame(() => { ov.style.opacity = "1"; }));
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmMap");
+  }
 }
 
 function closeMap(){
