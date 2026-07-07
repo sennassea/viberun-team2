@@ -531,8 +531,8 @@ function buildOverlay() {
         <div class="dmap-action-bar">
           <button class="dmap-action-btn ui-asset-button ui-codex-button" id="dMapDeckBtn">📖 보유 주문</button>
           <button class="dmap-action-btn ui-asset-button ui-bag-button" id="dMapItemBtn">🎒 가방</button>
-          <button class="dmap-action-btn ui-depth-button" id="dMapDepthBtn">심도 <span class="depth-button-count" id="dMapDepthCount">0</span></button>
           <button class="dmap-action-btn ui-asset-button ui-settings-button" id="dMapSettingsBtn">⚙️ 설정</button>
+          <button class="dmap-action-btn ui-asset-button ui-depth-button" id="dMapDepthBtn">심도 <span class="depth-button-count" id="dMapDepthCount">0</span></button>
         </div>
         <div class="map-footer dmap-footer" id="mapFooter"></div>
       </div>
