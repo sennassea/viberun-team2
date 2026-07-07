@@ -1308,6 +1308,11 @@
     tutorialBattleIntroActive = true;
     pauseTutorialBattleIntroCombat();
     setTutorialStep(dialogue.id);
+    /* "혼을 인도했습니다" (W-056)가 곧 전투 종료 시점이므로, 엔딩 대사가 전부 끝나기를
+       기다리지 않고 이 대사가 뜨는 순간 바로 튜토리얼 BGM으로 전환한다. */
+    if(step.id === "W-056" && window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+      window.VIBERUN_SOUND.playBgm("bgmTutorial");
+    }
     if(step.systemPopup){
       renderTutorialBattleSystemPopup(dialogue, () => {
         showTutorialFinalEndingDialogueSequence(steps, index + 1);
