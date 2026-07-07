@@ -35,6 +35,7 @@ function createDefaultJourneyState(){
     endlessLevel: 0,
     activeDebuffIds: [],
     clearedBossPackageIds: [],
+    bossHistory: [],
     totalDisplayFloorOffset: 0
   };
 }
@@ -50,6 +51,7 @@ function cloneJourneyState(journey){
     endlessLevel: Number.isFinite(source.endlessLevel) ? source.endlessLevel : defaults.endlessLevel,
     activeDebuffIds: Array.isArray(source.activeDebuffIds) ? source.activeDebuffIds.slice() : [],
     clearedBossPackageIds: Array.isArray(source.clearedBossPackageIds) ? source.clearedBossPackageIds.slice() : [],
+    bossHistory: Array.isArray(source.bossHistory) ? source.bossHistory.slice() : [],
     totalDisplayFloorOffset: Number.isFinite(source.totalDisplayFloorOffset)
       ? source.totalDisplayFloorOffset
       : defaults.totalDisplayFloorOffset

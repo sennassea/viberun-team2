@@ -85,8 +85,15 @@ window.START_INFINITE_JOURNEY = function(){
     || (typeof S !== "undefined" && S && S.battlePackageId)
     || (typeof S !== "undefined" && S && S.battleStage && S.battleStage.packageId)
     || null;
-  if(bossPackageId && journey.clearedBossPackageIds.indexOf(bossPackageId) === -1){
-    journey.clearedBossPackageIds.push(bossPackageId);
+  if(bossPackageId){
+    if(journey.clearedBossPackageIds.indexOf(bossPackageId) === -1){
+      journey.clearedBossPackageIds.push(bossPackageId);
+    }
+    if(!Array.isArray(journey.bossHistory)) journey.bossHistory = [];
+    if(journey.bossHistory[journey.bossHistory.length - 1] !== bossPackageId){
+      journey.bossHistory.push(bossPackageId);
+      journey.bossHistory = journey.bossHistory.slice(-20);
+    }
   }
 
   /* ACT1 맵 재생성 실패 시, 변경 전 journey 상태로 복구하고 진입을 중단한다.
