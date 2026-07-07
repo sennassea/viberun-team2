@@ -190,7 +190,7 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
     if(isPotionSlots && !filled){
       slot.innerHTML = '<span class="side-empty-potion-icon" aria-hidden="true"></span>';
     } else if(filled && item && item.iconImage){
-      slot.innerHTML = '<img class="side-item-icon" src="' + escapeHtml(item.iconImage) + '" alt="" aria-hidden="true">';
+      slot.innerHTML = '<img class="side-item-icon" src="' + escapeHtml(item.iconImage) + '" alt="" aria-hidden="true" draggable="false">';
     } else {
       slot.textContent = filled && item && item.emoji ? item.emoji : fallbackIcon;
     }
@@ -400,8 +400,7 @@ function renderEnergyOrbs(){
   wrap.innerHTML = "";
   for(let i=0; i<ENERGY_SLOT_COUNT; i++){
     const orb = document.createElement("span");
-    let state = "empty";
-    if(i < getMaxEnergy()) state = i < S.energy ? "active" : "used";
+    const state = i < S.energy ? "active" : "used";
     orb.className = "energy-slot "+state;
     wrap.appendChild(orb);
   }

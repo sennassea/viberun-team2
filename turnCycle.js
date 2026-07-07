@@ -127,6 +127,7 @@ async function endTurn(){
   S.blockGainMultiplierThisTurn = 1;
   S.bellStrikePurifyBonusThisTurn = 0;
   S.nextHighCostCardCostDown = null;
+  S.nextAttackMultiplier = null;
   resetBlessingTurnFlags();
   const anxietyPenalty  = (S.player.anxiety||0)  > 0 ? 1 : 0;
   const lethargyPenalty = (S.player.lethargy||0) > 0 ? 1 : 0;

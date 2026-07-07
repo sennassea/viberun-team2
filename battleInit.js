@@ -296,6 +296,18 @@ function newGame(options={}){
   if(hasRelic("reversed_talisman_book")) drawCards(1, { source:"turnStartRelic" });
   applyPlayerTurnStartGimmicks();
   renderAll();
+  showBattleStartHint();
+}
+
+// 전투 시작 직후 안내 문구를 3초간만 표시하고 자동으로 숨긴다.
+function showBattleStartHint(){
+  const hintEl = document.getElementById("hint");
+  if(!hintEl) return;
+  hintEl.classList.remove("hint-hidden");
+  clearTimeout(showBattleStartHint._timer);
+  showBattleStartHint._timer = setTimeout(function(){
+    hintEl.classList.add("hint-hidden");
+  }, 3000);
 }
 
 // MONSTER_DEFS(패키지 몬스터 전체)를 한 번에 전장에 배치
