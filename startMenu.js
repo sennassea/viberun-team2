@@ -81,29 +81,8 @@ function continueGameFromMenu(){
     return;
   }
 
-  S = saved.state;
-  normalizeRunResources();
-  STARTER_DECK = [...saved.starterDeck];
-  if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
-  S.busy = false;
-  if(window.MAP_STATE && saved.mapState){
-    window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
-    window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
-  }
-  if(typeof updateHudFloor === "function") updateHudFloor();
+  if(typeof window.restoreSavedRunState === "function") window.restoreSavedRunState(saved);
   $("#over").classList.remove("show");
-  closeRewardOverlay();
-  renderAll();
-  /* 보상 선택 화면이 열려 있던 상태로 저장되었다면, 새로 뽑지 않고
-     저장된 카드 3종(S.victoryCardRewardKeys)을 그대로 다시 표시한다. */
-  if(S && S.rewardOpen){
-    if(S.victoryCardRewardOpen && Array.isArray(S.victoryCardRewardKeys) && typeof renderRewardOverlay === "function"){
-      renderRewardOverlay(S.victoryCardRewardKeys);
-    } else if(typeof renderBattleVictoryOverlay === "function"){
-      renderBattleVictoryOverlay();
-    }
-    if(typeof updateEndBtn === "function") updateEndBtn();
-  }
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.add("hidden");
   updateContinueButtonInfo();
@@ -291,16 +270,31 @@ function updateContinueButtonInfo(options={}){
   }
 
   button.classList.add("has-save");
-  const floor = formatSavedFloor(saved);
+  const label = formatSavedProgressLabel(saved);
   const turn = saved.state && saved.state.turn ? saved.state.turn : 1;
-  status.textContent = floor + " " + turn + "턴";
+  status.textContent = label + " / " + turn + "턴";
 }
 
-function formatSavedFloor(saved){
-  const label = saved.mapState && saved.mapState.floorLabel ? saved.mapState.floorLabel : "";
-  const match = label.match(/(\d+)\s*F/i);
-  if(match) return match[1] + "층";
-  return "신령의 은혜";
+function formatSavedProgressLabel(saved){
+  const mapState = saved.mapState || {};
+  const journey = saved.state && saved.state.journey;
+  const actName = mapState.actName || (journey && journey.actName) || "최초의 여정";
+  const currentStage = Number.isFinite(mapState.currentStage) ? mapState.currentStage : 0;
+
+  // displayAreaLabel(저장 당시 실제 표시 구역)을 우선 사용하고, 구버전 세이브처럼
+  // 값이 없는 경우에만 저장된 floorLabel 텍스트를 파싱해 구역 수를 복원한다.
+  let areaLabel = mapState.displayAreaLabel;
+  if(!areaLabel){
+    if(currentStage < 0){
+      areaLabel = "신령의 은혜";
+    } else {
+      const legacyLabel = mapState.floorLabel || "";
+      const match = legacyLabel.match(/(\d+)\s*(?:F|구역)/i);
+      areaLabel = match ? (match[1] + "구역") : "신령의 은혜";
+    }
+  }
+
+  return actName + " / " + areaLabel;
 }
 
 $("#returnStart").addEventListener("click", returnToStartScreen);

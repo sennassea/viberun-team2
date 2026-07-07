@@ -124,15 +124,22 @@
         </div>
         <div id="profileStatusEffects" class="profile-status-effects" aria-label="플레이어 상태이상"></div>
         <div class="progress-center-hud" aria-label="진행 정보">
+          <div class="progress-act" id="hudAct">최초의 여정</div>
+          <div class="progress-separator"></div>
           <div class="progress-region"><span class="progress-icon">🏥</span><span>병원</span></div>
           <div class="progress-separator"></div>
-          <div class="progress-floor" id="hudFloor">1F</div>
+          <div class="progress-floor" id="hudFloor">1구역</div>
           <div class="progress-separator"></div>
           <div class="progress-turn" id="hudTurn"><span id="hudTurnNum">1</span>턴</div>
         </div>
         <div class="spacer"></div>
         <div class="top-right-menu" aria-label="상단 메뉴">
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-map-button">🗺️<span class="sr-only">여정</span></div>
+          <div class="hud-card hud-btn top-menu-button ui-depth-button" id="depthButton">
+            <span class="depth-button-label">심도</span>
+            <span class="depth-button-count" id="depthButtonCount">0</span>
+            <span class="sr-only">심도</span>
+          </div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-codex-button" id="deckViewerButton">📖 <span id="hudDeck">18</span><span class="sr-only">도감</span></div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-bag-button" id="bagViewerButton">🎒<span class="sr-only">가방</span></div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-settings-button">⚙️</div>
@@ -237,6 +244,7 @@
 <script src="mobileAppGuard.js" defer></script>
 <script src="lifeSystem.js" defer></script>
 <script src="balanceData.js" defer></script>
+<script src="endlessJourneyData.js" defer></script>
 <script src="equipment.js" defer></script>
 <script src="PotionData.js" defer></script>
 <script src="cardData.js" defer></script>
@@ -288,11 +296,15 @@
 <script src="restNode.js" defer></script>
 <script src="bagUI.js" defer></script>
 <script src="shopNode.js" defer></script>
+<script src="endlessJourneyEffects.js" defer></script>
 <script src="eventNode.js" defer></script>
 <script src="treasureNode.js" defer></script>
 <script src="runResultData.js" defer></script>
 <script src="runRewardService.js" defer></script>
 <script src="startBlessing.js" defer></script>
+<script src="endlessJourney.js" defer></script>
+<script src="endlessDepthUI.js" defer></script>
+<script src="journeyDisplay.js" defer></script>
 <script src="runResult.js" defer></script>
 <script src="hand-layout.js" defer></script>
 <script src="cheatConsole.js" defer></script>

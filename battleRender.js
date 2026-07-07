@@ -20,6 +20,7 @@ function renderHud(){
   renderBattleProgressHud();
   renderSideItemSlots();
   renderProfileStatuses();
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
 }
 
 function renderHudPortrait(){
@@ -88,10 +89,15 @@ window.addEventListener("viberun:profile-nickname-changed", event => {
 });
 
 function renderBattleProgressHud(){
+  const act = document.getElementById("hudAct");
   const region = document.querySelector(".progress-region");
   const floor = document.getElementById("hudFloor");
   const turn = document.getElementById("hudTurn");
   if(S && S.tutorialMode){
+    if(act) act.style.display = "none";
+    if(act && act.nextElementSibling && act.nextElementSibling.classList.contains("progress-separator")){
+      act.nextElementSibling.style.display = "none";
+    }
     if(region) region.innerHTML = '<span>튜토리얼 구역</span>';
     if(floor) floor.style.display = "none";
     if(turn && turn.previousElementSibling && turn.previousElementSibling.classList.contains("progress-separator")){
@@ -107,14 +113,20 @@ function renderBattleProgressHud(){
   const themeLabel = BATTLE_THEME_LABELS[battleTheme] ||
     (S && S.battleStage && S.battleStage.packageThemeLabel) ||
     BATTLE_THEME_LABELS.hospital;
-  const currentFloor = (typeof nodeFloorIdx === "function" && typeof getCurrentNodeId === "function")
-    ? nodeFloorIdx(getCurrentNodeId())
-    : 1;
-  const stageLabel = currentFloor > 0 ? currentFloor + "구역" : "1구역";
+  const labels = typeof getHudProgressLabels === "function"
+    ? getHudProgressLabels()
+    : { actName: "최초의 여정", area: "1구역" };
+  if(act){
+    act.style.display = "";
+    act.textContent = labels.actName;
+  }
+  if(act && act.nextElementSibling && act.nextElementSibling.classList.contains("progress-separator")){
+    act.nextElementSibling.style.display = "";
+  }
   if(region) region.innerHTML = '<span class="progress-icon">🏥</span><span>' + themeLabel + '</span>';
   if(floor){
     floor.style.display = "";
-    floor.textContent = stageLabel;
+    floor.textContent = labels.area;
   }
   if(turn && turn.previousElementSibling && turn.previousElementSibling.classList.contains("progress-separator")){
     turn.previousElementSibling.style.display = "";

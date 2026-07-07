@@ -439,20 +439,47 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
   console.log(`[ACT1] 맵 생성 완료: ${floors.length}층 (로비+${ACT1_TOTAL_FLOORS}층+보스), ${stages.length}스테이지`);
 };
 
+/* ── ACT1 맵 재생성 공용 함수 ───────────────────────────────────────────
+   새 게임 시작과 끝없는 여정 진입이 모두 이 함수를 통해 ACT1 맵을 만든다.
+   런 상태(덱/체력/골드 등)는 건드리지 않고 맵과 관련 MAP_STATE만 갱신한다. */
+window.ACT1_REGENERATE_MAP = function(options = {}) {
+  const opts = options && typeof options === "object" ? options : {};
+
+  if (opts.resetCombatHistory !== false &&
+      typeof window.ACT1_RESET_COMBAT_HISTORY === "function") {
+    window.ACT1_RESET_COMBAT_HISTORY();
+  }
+
+  if (typeof generateMap !== "function") {
+    console.warn("[ACT1] generateMap을 찾을 수 없어 ACT1 맵을 재생성할 수 없습니다.");
+    return false;
+  }
+
+  generateMap();
+
+  if (window.MAP_STATE) {
+    window.MAP_STATE.currentStage = Number.isFinite(opts.currentStage) ? opts.currentStage : -1;
+    window.MAP_STATE.proceedMode = !!opts.proceedMode;
+    window.MAP_STATE.startMapMode = !!opts.startMapMode;
+  }
+
+  if (typeof updateHudFloor === "function") updateHudFloor();
+  return true;
+};
+
 /* ── 새 게임 시작: 로비에서 신령의 은혜 화면을 먼저 연다 ─────────────── */
 window.ACT1_START_NEW_GAME = function() {
   try { localStorage.removeItem("viberunSaveState"); } catch (e) {}
-  if (typeof window.ACT1_RESET_COMBAT_HISTORY === "function") window.ACT1_RESET_COMBAT_HISTORY();
 
-  /* ACT1 15층 맵 생성 */
-  if (typeof generateMap === "function") generateMap();
   if (typeof beginNewRun === "function") beginNewRun();
 
-  if (window.MAP_STATE) {
-    window.MAP_STATE.currentStage = -1;   // 로비(신령의 은혜) 위치
-    window.MAP_STATE.proceedMode  = false;
-    window.MAP_STATE.startMapMode = false;
-  }
+  /* ACT1 15층 맵 생성 */
+  window.ACT1_REGENERATE_MAP({
+    resetCombatHistory: true,
+    currentStage: -1,
+    proceedMode: false,
+    startMapMode: false
+  });
 
   /* 시작 화면 숨기기 */
   const startScreen = document.getElementById("startScreen");

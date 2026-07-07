@@ -233,7 +233,8 @@ function triggerBlessingOnTurnEnd(){
   ensureBlessingState();
   const healingFragrance = getBlessingCount("healingFragrance");
   if(healingFragrance > 0){
-    const healed = LIFE.heal(S.player, healingFragrance);
+    const healValue = typeof scaleEndlessPlayerHeal === "function" ? scaleEndlessPlayerHeal(healingFragrance) : healingFragrance;
+    const healed = LIFE.heal(S.player, healValue);
     if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
   }
   const quietBarrier = getBlessingCount("quietBarrier");
@@ -866,7 +867,8 @@ async function playCard(handIndex, targetEnemy){
       case "gainBlessing":
         gainBlessing(e.key, e.v || 1); break;
       case "heal": {
-        const healed = LIFE.heal(S.player, e.v);
+        const healValue = typeof scaleEndlessPlayerHeal === "function" ? scaleEndlessPlayerHeal(e.v) : e.v;
+        const healed = LIFE.heal(S.player, healValue);
         if(healed>0) spawnFloat('.player', '+'+healed, 'heal');
         break;
       }

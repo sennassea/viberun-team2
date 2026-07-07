@@ -435,11 +435,101 @@
     return candidates[candidates.length - 1];
   }
 
+  /* ── 끝없는 여정 보스 중복 방지 헬퍼 ───────────────────────────────────
+     끝없는 여정에서는 직전에 등장했던 보스 패키지를 가능한 한 피하고,
+     3개 보스가 모두 소진되면 가장 오래전에 나온 보스부터 재허용한다.
+     최초의 여정(mode !== "endless")에서는 아무 영향을 주지 않는다. */
+  function getCurrentJourney(){
+    if(typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.journey) return RUN_STATE.journey;
+    if(typeof S !== "undefined" && S && S.journey) return S.journey;
+    return null;
+  }
+
+  function getClearedBossPackageIds(){
+    const journey = getCurrentJourney();
+    return (journey && Array.isArray(journey.clearedBossPackageIds)) ? journey.clearedBossPackageIds : [];
+  }
+
+  function getBossHistory(){
+    const journey = getCurrentJourney();
+    return (journey && Array.isArray(journey.bossHistory)) ? journey.bossHistory : [];
+  }
+
+  function isEndlessJourneyMode(){
+    const journey = getCurrentJourney();
+    return !!(journey && journey.mode === "endless");
+  }
+
+  /* 보스 후보 목록(candidates)에서 끝없는 여정 규칙에 맞게 걸러낸다.
+     - 끝없는 여정이 아니거나 보스 후보가 없으면 원본을 그대로 반환한다.
+     - 아직 클리어하지 않은 보스가 있으면 그 보스만 남긴다.
+     - 모두 클리어했다면 bossHistory 기준 가장 오래전에 등장한 보스만 남긴다.
+     - 어떤 경우에도 필터 결과가 비면(맵 생성이 막히면 안 되므로) 원본을 반환한다. */
+  function filterEndlessBossCandidates(candidates){
+    if(!Array.isArray(candidates) || !candidates.length) return candidates;
+    if(!isEndlessJourneyMode()) return candidates;
+
+    const bossCandidates = candidates.filter(pkg => pkg && pkg.nodeType === "boss");
+    if(!bossCandidates.length) return candidates;
+
+    const cleared = getClearedBossPackageIds();
+    const uncleared = bossCandidates.filter(pkg => cleared.indexOf(pkg.id) === -1);
+    const others = candidates.filter(pkg => !(pkg && pkg.nodeType === "boss"));
+
+    if(uncleared.length) return others.concat(uncleared);
+
+    const history = getBossHistory();
+    if(!history.length) return candidates;
+
+    let minLastSeen = Infinity;
+    bossCandidates.forEach(pkg => {
+      const idx = history.lastIndexOf(pkg.id);
+      if(idx < minLastSeen) minLastSeen = idx;
+    });
+    const oldestGroup = bossCandidates.filter(pkg => history.lastIndexOf(pkg.id) === minLastSeen);
+    if(!oldestGroup.length) return candidates;
+    return others.concat(oldestGroup);
+  }
+
   /* ── stageTheme 자동 선택 함수 (지시서 8장) ─────────────────────────────
      한 런 안에서 병원/공원/학교 패키지가 한쪽으로 몰리지 않도록,
      지금까지 가장 적게 나온 테마를 우선 선택한다. */
   global.ACT1_PICK_STAGE_THEME = function(nodeType, floor, themeCounts){
     themeCounts = themeCounts || {};
+
+    /* 끝없는 여정의 보스 스테이지: 아직 안 나온 보스 테마를 우선하고,
+       모두 소진됐으면 bossHistory상 가장 오래된 보스의 테마를 우선한다.
+       최초의 여정에서는 이 분기를 타지 않고 기존 로직을 그대로 사용한다. */
+    if(nodeType === "boss" && isEndlessJourneyMode()){
+      const bossPkgs = PACKAGES.filter(pkg => pkg.nodeType === "boss");
+      const cleared = getClearedBossPackageIds();
+      const uncleared = bossPkgs.filter(pkg => cleared.indexOf(pkg.id) === -1);
+
+      let pickedTheme = null;
+      if(uncleared.length){
+        pickedTheme = uncleared[Math.floor(Math.random() * uncleared.length)].theme;
+      } else {
+        const history = getBossHistory();
+        if(history.length){
+          let minLastSeen = Infinity;
+          bossPkgs.forEach(pkg => {
+            const idx = history.lastIndexOf(pkg.id);
+            if(idx < minLastSeen) minLastSeen = idx;
+          });
+          const oldestBosses = bossPkgs.filter(pkg => history.lastIndexOf(pkg.id) === minLastSeen);
+          if(oldestBosses.length){
+            pickedTheme = oldestBosses[Math.floor(Math.random() * oldestBosses.length)].theme;
+          }
+        }
+      }
+
+      if(pickedTheme){
+        themeCounts[pickedTheme] = (themeCounts[pickedTheme] || 0) + 1;
+        return pickedTheme;
+      }
+      /* 판단 불가 시(데이터 누락 등) 아래 기존 로직으로 폴백한다. */
+    }
+
     const minCount = Math.min(...THEMES.map(t => themeCounts[t] || 0));
     const candidates = THEMES.filter(t => (themeCounts[t] || 0) === minCount);
     const picked = candidates[Math.floor(Math.random() * candidates.length)];
@@ -466,6 +556,14 @@
     );
 
     if(!candidates.length) return null;
+
+    /* 끝없는 여정 보스 중복 방지 안전장치. ACT1_PICK_STAGE_THEME에서 이미
+       테마를 걸러내지만, 이 단계에서도 한 번 더 필터링해 이중으로 방지한다.
+       필터 결과가 비면(막힘 방지) 원래 candidates를 그대로 사용한다. */
+    if(nodeType === "boss"){
+      const filtered = filterEndlessBossCandidates(candidates);
+      if(Array.isArray(filtered) && filtered.length) candidates = filtered;
+    }
 
     let pick = weightedPackagePick(candidates, phase, nodeType, recent, {});
     if(!pick || getPackageWeight(pick, phase, nodeType, recent, {}) <= 0){

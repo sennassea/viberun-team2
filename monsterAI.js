@@ -85,7 +85,9 @@ function applyNextPhaseIfNeeded(enemy){
   enemy.family = phase.family || previousFamily;
   enemy.spawnIndex = previousSpawnIndex;
   enemy.summoned = previousSummoned;
-  enemy.maxHp = phase.maxHp || enemy.maxHp;
+  enemy.maxHp = phase.maxHp
+    ? (typeof scaleEndlessEnemyMaxHp === "function" ? scaleEndlessEnemyMaxHp(enemy, phase.maxHp) : phase.maxHp)
+    : enemy.maxHp;
   enemy.hp = enemy.maxHp;
   enemy.block = 0;
   enemy.weak = preservedWeak;
@@ -352,10 +354,11 @@ function getMonsterDefendValue(actor, move, target){
 
 function grantEnemyBlock(target, value){
   if(!target || value <= 0) return 0;
-  LIFE.addBlock(target, value);
+  const scaledValue = typeof scaleEndlessEnemyBlock === "function" ? scaleEndlessEnemyBlock(target, value) : value;
+  LIFE.addBlock(target, scaledValue);
   target.enemyBlockExpiresOnNextAction = true;
   target.enemyBlockGainedTurn = S.turn || 0;
-  return value;
+  return scaledValue;
 }
 
 function clearExpiredEnemyBlockBeforeAction(enemy){
@@ -396,6 +399,7 @@ function getMonsterIntentRawDamage(enemy, move){
   if(move.summonDamage){
     damage += countLivingSummons(move.summonDamage.group) * (move.summonDamage.per || 1);
   }
+  if(typeof scaleEndlessEnemyDamage === "function") damage = scaleEndlessEnemyDamage(enemy, damage);
   return Math.max(0, Math.floor(damage));
 }
 

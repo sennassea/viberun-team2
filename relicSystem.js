@@ -114,7 +114,10 @@ function getPlayerAttackDamage(rawDamage, targetEnemy){
 
 function gainPlayerBlock(value){
   const multiplier = (S && S.blockGainMultiplierThisTurn) || 1;
-  const requested = Math.max(0, Math.floor((value || 0) * multiplier));
+  let requested = Math.max(0, Math.floor((value || 0) * multiplier));
+  if(S && S.endlessBattleStartPhase && typeof scaleEndlessPlayerStartBlock === "function"){
+    requested = scaleEndlessPlayerStartBlock(requested);
+  }
   const before = S && S.player ? (S.player.block || 0) : 0;
   LIFE.addBlock(S.player, requested);
   const gained = Math.max(0, (S.player.block || 0) - before);
@@ -174,7 +177,8 @@ function applyRelicEffect(relic, effect, context={}){
       toast(relic.name+" 발동");
       break;
     case "heal": {
-      const healed = LIFE.heal(S.player, effect.v || 0);
+      const healValue = typeof scaleEndlessPlayerHeal === "function" ? scaleEndlessPlayerHeal(effect.v || 0) : (effect.v || 0);
+      const healed = LIFE.heal(S.player, healValue);
       if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
       toast(relic.name+" 발동");
       break;
@@ -444,7 +448,8 @@ function tryApplyFatalRelic(){
   const ratio = typeof effect?.v === "number" ? effect.v : (planned.healByMaxHpRatio || 0.5);
   const healValue = Math.max(1, Math.floor((S.player.maxHp || 1) * ratio));
   S.player.hp = 0;
-  const healed = LIFE.heal(S.player, healValue);
+  const scaledHealValue = typeof scaleEndlessPlayerHeal === "function" ? scaleEndlessPlayerHeal(healValue) : healValue;
+  const healed = LIFE.heal(S.player, scaledHealValue);
   if(!effect || effect.consume || (relic.plannedConditions && relic.plannedConditions.consumeRelic)) S.relics.splice(relicIndex, 1);
   if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
   toast(relic.name+" 발동");

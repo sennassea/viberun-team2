@@ -384,10 +384,17 @@ function renderCanvas(currentNodeId) {
   const closeBtn = document.getElementById("mapClose");
   if (closeBtn) closeBtn.style.display = window.MAP_STATE.proceedMode ? "none" : "";
 
-  /* ── 현재 위치 배지 ── */
+  /* ── ACT 배지 (좌상단) ── */
+  const actBadge = document.getElementById("mapCurrentAct");
+  if (actBadge) {
+    actBadge.textContent = typeof getCurrentActName === "function" ? getCurrentActName() : "최초의 여정";
+  }
+
+  /* ── 현재 위치 배지 (닫기 버튼 근처) ── */
   const floorBadge = document.getElementById("mapCurrentFloor");
   if (floorBadge) {
-    floorBadge.textContent = tutorialCurrentLabel || (myFloor > 0 ? `${myFloor}층` : "신령의 은혜");
+    floorBadge.textContent = tutorialCurrentLabel ||
+      (typeof formatDisplayAreaByFloorIndex === "function" ? formatDisplayAreaByFloorIndex(myFloor) : "신령의 은혜");
   }
 
   /* ── 푸터 텍스트 ── */
@@ -408,6 +415,8 @@ function renderCanvas(currentNodeId) {
       startStage(+el.dataset.nextstage);
     });
   });
+
+  if (typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
 }
 
 /* ── 범례 데이터 ──────────────────────────────────────────────────────────── */
@@ -489,16 +498,19 @@ function buildOverlay() {
   div.innerHTML = `
     <div class="map-panel dmap-panel">
       <div class="map-header dmap-header">
-        <div class="dmap-loc-badge">
-          <span class="dmap-loc-icon">📍</span>
-          <span>현재 위치</span>
-          <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
+        <div class="dmap-loc-badge" id="mapCurrentActBadge">
+          <span class="dmap-loc-icon">🚩</span>
+          <span id="mapCurrentAct">최초의 여정</span>
         </div>
         <span class="map-title dmap-title" aria-label="여정">
           <span class="dmap-title-emoji" aria-hidden="true">🗺️</span>
           <span class="dmap-title-char dmap-title-left" aria-hidden="true">여</span>
           <span class="dmap-title-char dmap-title-right" aria-hidden="true">정</span>
         </span>
+        <div class="dmap-cur-badge" id="mapCurLocBadge">
+          <span class="dmap-loc-icon">📍</span>
+          <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
+        </div>
         <button class="map-close dmap-close" id="mapClose" aria-label="닫기">✕</button>
       </div>
       <div class="map-body dmap-body">
@@ -519,6 +531,7 @@ function buildOverlay() {
         <div class="dmap-action-bar">
           <button class="dmap-action-btn ui-asset-button ui-codex-button" id="dMapDeckBtn">📖 보유 주문</button>
           <button class="dmap-action-btn ui-asset-button ui-bag-button" id="dMapItemBtn">🎒 가방</button>
+          <button class="dmap-action-btn ui-depth-button" id="dMapDepthBtn">심도 <span class="depth-button-count" id="dMapDepthCount">0</span></button>
           <button class="dmap-action-btn ui-asset-button ui-settings-button" id="dMapSettingsBtn">⚙️ 설정</button>
         </div>
         <div class="map-footer dmap-footer" id="mapFooter"></div>
@@ -551,6 +564,12 @@ function buildOverlay() {
     const footer = document.getElementById("mapFooter");
     if (footer) footer.textContent = "가방 기능을 불러올 수 없습니다. bagUI.js 로드 상태를 확인하세요.";
   });
+
+  /* 심도 확인: 끝없는 여정 심도 드롭다운 토글 (endlessDepthUI.js) */
+  const depthBtn = div.querySelector("#dMapDepthBtn");
+  if(depthBtn && typeof window.bindDepthButton === "function"){
+    window.bindDepthButton(depthBtn);
+  }
 
   /* 설정: 기존 설정 버튼 트리거 */
   div.querySelector("#dMapSettingsBtn").addEventListener("click", () => {
@@ -632,6 +651,9 @@ function closeMapPopupViews(except) {
   }
   if (except !== "bag" && typeof window.BAG_UI_CLOSE === "function") {
     window.BAG_UI_CLOSE();
+  }
+  if (except !== "depth" && typeof window.closeDepthDropdown === "function") {
+    window.closeDepthDropdown();
   }
   if (except !== "settings" && typeof window.SETTINGS_VIEWER_CLOSE === "function") {
     window.SETTINGS_VIEWER_CLOSE();

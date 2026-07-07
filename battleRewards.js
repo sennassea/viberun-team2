@@ -28,7 +28,9 @@ function nodeClear(){
    ========================================================================= */
 function getRandomRewardKeys(count, context){
   const resolvedContext = context || (S && S.battleNodeType === "elite" ? "elite" : "battle");
-  return getWeightedCardRewardKeys(count, undefined, { context: resolvedContext });
+  const delta = typeof getEndlessCardRewardChoiceDelta === "function" ? getEndlessCardRewardChoiceDelta() : 0;
+  const finalCount = Math.max(1, count + delta);
+  return getWeightedCardRewardKeys(finalCount, undefined, { context: resolvedContext });
 }
 
 let cardRewardPickMode = null;
@@ -72,7 +74,8 @@ function getBattleVictoryGoldAmount(){
     ? Math.floor(S.battleVictoryGoldOverride)
     : null;
   if(override !== null) return Math.max(0, override);
-  return getBalanceBattleGold(S && S.battleNodeType);
+  const amount = getBalanceBattleGold(S && S.battleNodeType);
+  return typeof scaleEndlessBattleGold === "function" ? scaleEndlessBattleGold(amount) : amount;
 }
 
 function grantBattleGoldReward(){
@@ -458,11 +461,9 @@ function pickBattleVictoryCandidate(list){
 function getBattleVictoryInfo(){
   const stageIdx = window.MAP_STATE ? window.MAP_STATE.currentStage : -1;
   const stage = window.ACT1_MAP_STAGES && stageIdx >= 0 ? window.ACT1_MAP_STAGES[stageIdx] : null;
-  const stageLabel = stage && stage.label ? stage.label : "";
-  const floorMatch = stageLabel.match(/(\d+)\s*층/);
-  const hudFloor = $("#hudFloor") ? $("#hudFloor").textContent.trim() : "";
-  const floorNum = floorMatch ? floorMatch[1] : hudFloor.replace(/F$/, "") || "1";
-  const floor = floorNum + " 구역";
+  const floor = (stage && Number.isFinite(stage.floor) && typeof formatDisplayAreaByFloorIndex === "function")
+    ? formatDisplayAreaByFloorIndex(stage.floor)
+    : (typeof formatCurrentDisplayArea === "function" ? formatCurrentDisplayArea() : "1구역");
   return {
     floor,
     turn: "TURN " + (S.turn || 1),

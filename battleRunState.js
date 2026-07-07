@@ -27,6 +27,49 @@ function createRunRewardId(){
   return "act1-run-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
 }
 
+function createDefaultJourneyState(){
+  // 끝없는 여정 진행 상태 모델: 현재 모드/레벨, 적용 중인 디버프, 중복 방지를 위한
+  // 클리어/처치 보스 기록까지 실제 진행에 사용되는 상태다.
+  return {
+    mode: "first",
+    actName: "최초의 여정",
+    endlessLevel: 0,
+    activeDebuffIds: [],
+    clearedBossPackageIds: [],
+    bossHistory: [],
+    totalDisplayFloorOffset: 0
+  };
+}
+
+function cloneJourneyState(journey){
+  const defaults = createDefaultJourneyState();
+  const source = journey && typeof journey === "object" ? journey : defaults;
+
+  // 과거 세이브나 부분 저장 데이터가 들어와도 배열 필드는 항상 새 배열로 보정한다.
+  return {
+    mode: source.mode === "endless" ? "endless" : defaults.mode,
+    actName: typeof source.actName === "string" && source.actName ? source.actName : defaults.actName,
+    endlessLevel: Number.isFinite(source.endlessLevel) ? source.endlessLevel : defaults.endlessLevel,
+    activeDebuffIds: Array.isArray(source.activeDebuffIds) ? source.activeDebuffIds.slice() : [],
+    clearedBossPackageIds: Array.isArray(source.clearedBossPackageIds) ? source.clearedBossPackageIds.slice() : [],
+    bossHistory: Array.isArray(source.bossHistory) ? source.bossHistory.slice() : [],
+    totalDisplayFloorOffset: Number.isFinite(source.totalDisplayFloorOffset)
+      ? source.totalDisplayFloorOffset
+      : defaults.totalDisplayFloorOffset
+  };
+}
+
+function ensureJourneyState(runState){
+  if(!runState || typeof runState !== "object"){
+    console.warn("[EndlessJourney] RUN_STATE가 없어 기본 journey 상태를 반환합니다.");
+    return createDefaultJourneyState();
+  }
+
+  // 기존 저장 데이터에는 journey가 없으므로 로드 직후 여기에서 기본값을 채운다.
+  runState.journey = cloneJourneyState(runState.journey);
+  return runState.journey;
+}
+
 function createFreshRunState(){
   const player = LIFE.createPlayer(PLAYER_DEF);
   player.block = 0;
@@ -41,6 +84,7 @@ function createFreshRunState(){
     nextBattleStartBlock: 0,
     selectedSpiritPathDeckIds: getInitialSpiritPathSelection(),
     alwaysIncludeGenericItems: true,
+    journey: createDefaultJourneyState(),
     // 기도터 "정리하기"(주문 제거)를 이번 런에서 사용한 횟수 - 새 런 시작 시 0으로 초기화
     cleanseCount: 0,
     // 전투 요약/상세 화면(runResult.js)에서 사용하는 이번 여정 누적 기록 (기획서 §5-1)
@@ -516,5 +560,71 @@ function syncRunStateFromCombat(){
     ? S.selectedSpiritPathDeckIds.slice()
     : RUN_STATE.selectedSpiritPathDeckIds;
   RUN_STATE.alwaysIncludeGenericItems = true;
+  RUN_STATE.journey = cloneJourneyState(S.journey || RUN_STATE.journey);
+  S.journey = cloneJourneyState(RUN_STATE.journey);
 }
 
+/* 이어하기 복원 공용 함수: settingsViewer.js(설정창 이어하기)와 startMenu.js
+   (시작화면 이어하기)가 각자 복원 로직을 중복 구현하던 것을 하나로 합친다.
+   새 게임이 아니므로 beginNewRun()은 절대 호출하지 않고, 저장된 덱/체력/
+   법구/약병/골드/journey(심도·보스기록)를 그대로 복원한다. */
+function restoreSavedRunState(saved){
+  if(!saved || !saved.state) return false;
+
+  S = saved.state;
+  if(typeof normalizeRunResources === "function") normalizeRunResources();
+  if(typeof ensureJourneyState === "function") ensureJourneyState(S);
+  if(typeof STARTER_DECK !== "undefined" && Array.isArray(saved.starterDeck)){
+    STARTER_DECK = [...saved.starterDeck];
+  }
+  if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
+  if(S) S.busy = false;
+
+  const mapState = saved.mapState;
+  const wantedStage = mapState && Number.isFinite(mapState.currentStage) ? mapState.currentStage : 0;
+  const wantedProceedMode = !!(mapState && mapState.proceedMode);
+  const wantedStartMapMode = !!(mapState && mapState.startMapMode);
+
+  if(window.MAP_STATE && mapState){
+    // ACT1 맵 데이터(MAP_FLOORS/MAP_PATHS/MAP_STAGES)를 재생성해 새로고침 이후에도
+    // 현재 런과 어긋난 맵을 참조하지 않도록 한다. 전투 패키지 기록은 보스 중복
+    // 방지/최근 패키지 회피 흐름이 깨지지 않도록 초기화하지 않는다(resetCombatHistory: false).
+    if(typeof window.ACT1_REGENERATE_MAP === "function"){
+      window.ACT1_REGENERATE_MAP({
+        resetCombatHistory: false,
+        currentStage: wantedStage,
+        proceedMode: wantedProceedMode,
+        startMapMode: wantedStartMapMode
+      });
+    } else {
+      if(typeof generateMap === "function") generateMap();
+      window.MAP_STATE.currentStage = wantedStage;
+      window.MAP_STATE.proceedMode = wantedProceedMode;
+      window.MAP_STATE.startMapMode = wantedStartMapMode;
+    }
+  }
+
+  if(typeof updateHudFloor === "function") updateHudFloor();
+  if(typeof renderAll === "function") renderAll();
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
+  if(typeof window.closeDepthDropdown === "function") window.closeDepthDropdown();
+  if(typeof closeRewardOverlay === "function") closeRewardOverlay();
+
+  // 보상 선택 화면이 열려 있던 상태로 저장되었다면, 새로 뽑지 않고
+  // 저장된 카드 3종(S.victoryCardRewardKeys)을 그대로 다시 표시한다.
+  if(S && S.rewardOpen){
+    if(S.victoryCardRewardOpen && Array.isArray(S.victoryCardRewardKeys) && typeof renderRewardOverlay === "function"){
+      renderRewardOverlay(S.victoryCardRewardKeys);
+    } else if(typeof renderBattleVictoryOverlay === "function"){
+      renderBattleVictoryOverlay();
+    }
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
+  return true;
+}
+
+window.createDefaultJourneyState = createDefaultJourneyState;
+window.cloneJourneyState = cloneJourneyState;
+window.restoreSavedRunState = restoreSavedRunState;
+window.ensureJourneyState = ensureJourneyState;

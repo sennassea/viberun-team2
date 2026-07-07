@@ -301,11 +301,11 @@ function canAfford(price) {
 
 function getEffectiveShopPrice(item) {
   const base = Math.max(0, item && Number.isFinite(item.price) ? item.price : 0);
-  if (!SHOP_STATE || SHOP_STATE.firstPurchaseDone) return base;
-  if (typeof hasRelic === "function" && hasRelic("peddler_abacus")) {
-    return Math.max(0, Math.floor(base * 0.85));
+  let price = base;
+  if (SHOP_STATE && !SHOP_STATE.firstPurchaseDone && typeof hasRelic === "function" && hasRelic("peddler_abacus")) {
+    price = Math.max(0, Math.floor(base * 0.85));
   }
-  return base;
+  return typeof scaleEndlessShopPrice === "function" ? scaleEndlessShopPrice(price) : price;
 }
 
 function isRelicOwned(id) {
