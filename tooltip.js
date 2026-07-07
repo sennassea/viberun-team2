@@ -360,6 +360,54 @@
       icon: "🎯",
       name: "전체 공격",
       desc: "전투 중인 모든 적에게 효과를 적용합니다."
+    },
+    {
+      test: function (d) { return /치유의 향기/.test(d); },
+      icon: "",
+      name: "치유의 향기",
+      desc: "치유의 향기가 유지되는 동안 턴 종료 시 정신력을 1 회복합니다."
+    },
+    {
+      test: function (d) { return /제단의 기운/.test(d); },
+      icon: "",
+      name: "제단의 기운",
+      desc: "이 위령 동안 매 턴 처음으로 복 주문을 사용하면 마음의 결계를 2 얻습니다."
+    },
+    {
+      test: function (d) { return /고요한 결계/.test(d); },
+      icon: "",
+      name: "고요한 결계",
+      desc: "이 위령 동안 턴 종료 시 결계가 1 이상 남아 있으면 다음 턴 시작 시 결계를 3 얻습니다."
+    },
+    {
+      test: function (d) { return /회상의 메아리/.test(d); },
+      icon: "",
+      name: "회상의 메아리",
+      desc: "이 위령 동안 매 턴 처음 회상이 있는 유령을 정화하면 그 유령에게 회상 1을 추가 부여합니다."
+    },
+    {
+      test: function (d) { return /인도의 손길/.test(d); },
+      icon: "",
+      name: "인도의 손길",
+      desc: "이 위령 동안 매 턴 처음으로 성불 표식을 부여하면 주문을 1장 뽑습니다."
+    },
+    {
+      test: function (d) { return /응어리 복/.test(d); },
+      icon: "",
+      name: "응어리 복",
+      desc: "이 위령 동안 한풀이 주문의 수치가 증가할 때마다 마음의 결계를 2 얻습니다."
+    },
+    {
+      test: function (d) { return /신명 복/.test(d); },
+      icon: "",
+      name: "신명 복",
+      desc: "이 위령 동안 방울치기의 정화량이 1 증가합니다."
+    },
+    {
+      test: function (d) { return /열기 복/.test(d); },
+      icon: "",
+      name: "열기 복",
+      desc: "이 위령 동안 매 턴 4번째 주문을 사용하면 모든 유령의 미련을 2만큼 정화합니다."
     }
     /* 예시 — 새 용어 추가:
     {
