@@ -518,6 +518,11 @@
       "padding:1.1cqh 1.2cqw;" +
       "box-shadow:0 .6cqh 2.4cqh rgba(0,0,0,.55)}" +
     "#battle-tooltip.tt-show{display:block}" +
+    /* #game은 container-type:size로 자체 stacking context를 만들어서, #game 안에
+       자식으로 붙어있으면 #game 밖의 모달(z-index로 그 위에 뜨는 팝업 등)에 항상
+       가려진다. #game 밖 카드(예: 월영당 확장덱 구매 확인 팝업)에 툴팁을 띄울 때만
+       document.body로 옮기고 이 클래스로 position:fixed 전환해 항상 최상단에 뜨게 한다 */
+    "#battle-tooltip.tt-fixed-layer,#battle-subcard-preview.tt-fixed-layer{position:fixed}" +
 
     /* 행 */
     ".btt-row{display:flex;align-items:flex-start;padding:.6cqh 0}" +
@@ -1054,6 +1059,32 @@
     hideItemSlotTooltip();
   });
 
+  /* ── #game 밖 카드(월영당 확장덱 구매 확인 팝업 등)에 대한 툴팁 레이어 전환 ──── */
+  function isCardOutsideGame(cardEl) {
+    return !!(cardEl && !game.contains(cardEl));
+  }
+
+  function syncTooltipLayer(outside) {
+    if (outside) {
+      if (tooltip.parentNode !== document.body) document.body.appendChild(tooltip);
+      if (subCardPreview.parentNode !== document.body) document.body.appendChild(subCardPreview);
+      tooltip.classList.add("tt-fixed-layer");
+      subCardPreview.classList.add("tt-fixed-layer");
+    } else {
+      if (tooltip.parentNode !== game) game.appendChild(tooltip);
+      if (subCardPreview.parentNode !== game) game.appendChild(subCardPreview);
+      tooltip.classList.remove("tt-fixed-layer");
+      subCardPreview.classList.remove("tt-fixed-layer");
+    }
+  }
+
+  /* position:fixed로 전환된 상태에서는 좌표 기준이 #game이 아니라 뷰포트이므로,
+     아래 위치 계산 함수들이 기준으로 삼는 사각형을 뷰포트 전체로 바꿔준다 */
+  function getPositionOrigin(outside) {
+    if (outside) return { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+    return game.getBoundingClientRect();
+  }
+
   function buildCardTermHtml(descText, extraDescText) {
     var seenNames = {};
     var rows = [];
@@ -1116,7 +1147,7 @@
      아니면 화면 기준) 공간 밖으로 나가면 왼쪽으로 뒤집힌다.
      반환값은 뒤이어 툴팁을 이어붙이는 데 쓰인다. */
   function positionSubCardPreview(cardEl) {
-    var gRect = game.getBoundingClientRect();
+    var gRect = getPositionOrigin(isCardOutsideGame(cardEl));
     var boundsRect = getPreviewBoundsRect(cardEl);
     var cRect = cardEl.getBoundingClientRect();
     var pad = 8;
@@ -1171,7 +1202,7 @@
      서브카드가 있으면: "메인 카드 - 서브카드 - 툴팁" 순서로 겹치지 않게 서브카드
      바로 옆(서브카드가 뒤집혔으면 반대쪽)에 이어붙인다.                        */
   function positionCardTooltip(cardEl, subCardRect) {
-    var gRect   = game.getBoundingClientRect();
+    var gRect   = getPositionOrigin(isCardOutsideGame(cardEl));
     var boundsRect = getPreviewBoundsRect(cardEl);
     var cRect   = cardEl.getBoundingClientRect();
     var tipRect = tooltip.getBoundingClientRect();
@@ -1245,6 +1276,8 @@
     activeDockEl = null;
     cardActiveEl = cardEl;
 
+    syncTooltipLayer(isCardOutsideGame(cardEl));
+
     var subCardRect = subCardEntry ? showSubCardPreview(cardEl, subCardEntry) : null;
     if (!subCardEntry) hideSubCardPreview();
 
@@ -1282,6 +1315,9 @@
   /* 미리보기(.shop-detail-card-preview), 이벤트 노드 주문 보상          */
   /* 선택창의 .event-card, 신령의 은혜/보물 등 결과 팝업의 카드형 항목    */
   /* .random-item-result-card-frame                                     */
+  /* (월영당 확장덱 구매 확인 팝업의 .bm-deck-preview-card는 #game 밖의   */
+  /*  document.body 모달이라 이 game 레벨 위임이 닿지 않는다 — 아래 별도  */
+  /*  document 레벨 위임(BM_DECK_PREVIEW_CARD_SELECTOR)에서 처리한다)     */
   var DECK_OR_REWARD_CARD_SELECTOR =
     ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card,.random-item-result-card-frame";
 
@@ -1298,6 +1334,27 @@
     if (!dvCard) return;
     var to = e.relatedTarget;
     if (to && dvCard.contains(to)) return; /* 주문 내부 이동 시 무시 */
+    hideCardTooltip();
+  });
+
+  /* 월영당 확장덱 구매 확인 팝업(.bm-purchase-confirm)은 bmStoreUI.js가 #game이 아니라
+     document.body에 직접 붙이는 모달이라 위 game 레벨 위임이 닿지 않는다. 이 팝업의 주문
+     카드(.bm-deck-preview-card)만 document 레벨에서 같은 방식으로 위임 처리한다. */
+  var BM_DECK_PREVIEW_CARD_SELECTOR = ".bm-deck-preview-card";
+
+  document.addEventListener("mouseover", function (e) {
+    var bmCard = e.target.closest(BM_DECK_PREVIEW_CARD_SELECTOR);
+    if (!bmCard) return;
+    if (bmCard === cardActiveEl) return;
+    showCardTooltip(bmCard);
+  });
+
+  document.addEventListener("mouseout", function (e) {
+    if (!cardActiveEl || !cardActiveEl.matches || !cardActiveEl.matches(BM_DECK_PREVIEW_CARD_SELECTOR)) return;
+    var bmCard = e.target.closest(BM_DECK_PREVIEW_CARD_SELECTOR);
+    if (!bmCard) return;
+    var to = e.relatedTarget;
+    if (to && bmCard.contains(to)) return;
     hideCardTooltip();
   });
 
