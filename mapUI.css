@@ -223,7 +223,7 @@
   width: var(--dmap-legend-width);
   min-width: 0;
   max-width: 100%;
-  padding: 4.6cqh 1.4cqw 1.6cqh;
+  padding: 10.6cqh 1.4cqw 1.6cqh;
   display: flex;
   flex-direction: column;
   /* #mapCanvas는 상단부터 노드가 시작되는데, 범례를 세로 중앙정렬하면 항목 수가
@@ -247,6 +247,10 @@
   padding-bottom: 0.5cqh;
   margin-bottom: 0.5cqh;
   letter-spacing: 0.06em;
+}
+.dmap-legend-title-word {
+  position: relative;
+  left: -0.3cqw;
 }
 
 .dmap-legend-item {
@@ -346,8 +350,7 @@
 
 /* ── 하단 바 ──────────────────────────────────────────────────────────────── */
 .dmap-bottom {
-  /* .dmap-body 아래에 하단 바가 붕 떠 보이는 것을 막기 위한 구분선 */
-  border-top: 0.14cqh solid rgba(176, 130, 50, 0.4);
+  border-top: none;
   background: transparent;
   display: flex;
   align-items: center;
