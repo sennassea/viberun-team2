@@ -1,0 +1,128 @@
+.debug-entry-button,
+.debug-panel {
+  position: absolute;
+  z-index: 280;
+  font-family: var(--font-title, inherit);
+}
+
+.debug-entry-button {
+  right: 22cqw;
+  top: 6.5cqh;
+  bottom: auto;
+  min-width: 8.5cqh;
+  height: 4.8cqh;
+  border: .18cqh solid rgba(201,164,91,.75);
+  border-radius: 1cqh;
+  background: rgba(255,248,231,.92);
+  color: #6b4628;
+  font-size: 1.6cqh;
+  font-weight: 900;
+  box-shadow: 0 .7cqh 1.8cqh rgba(0,0,0,.22);
+  cursor: pointer;
+}
+
+.debug-entry-button[hidden],
+.debug-panel[hidden] {
+  display: none !important;
+}
+
+.debug-panel {
+  right: 22cqw;
+  top: 12.2cqh;
+  bottom: auto;
+  width: min(36cqw, 44cqh);
+  max-height: 72cqh;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 1.2cqh;
+  padding: 1.8cqh 1.4cqw;
+  border: .2cqh solid rgba(201,164,91,.78);
+  border-radius: 1.2cqh;
+  background: rgba(255,250,238,.96);
+  box-shadow: 0 1.4cqh 4cqh rgba(0,0,0,.3);
+  color: #4e351f;
+}
+
+.debug-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1cqw;
+}
+
+.debug-panel-title {
+  font-size: 1.9cqh;
+  font-weight: 900;
+}
+
+.debug-panel-close {
+  width: 3.4cqh;
+  height: 3.4cqh;
+  border: 0;
+  border-radius: 50%;
+  background: #6b4628;
+  color: #fff;
+  font-size: 1.8cqh;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.debug-category-list,
+.debug-command-list {
+  display: grid;
+  gap: .8cqh;
+}
+
+.debug-category-list {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.debug-category-button,
+.debug-command-button {
+  border: .16cqh solid rgba(201,164,91,.68);
+  border-radius: .8cqh;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.debug-category-button {
+  min-height: 4.2cqh;
+  background: linear-gradient(180deg, rgba(255,244,213,.96), rgba(232,197,126,.92));
+  color: #65401f;
+  font-size: 1.45cqh;
+  box-shadow: inset 0 .12cqh 0 rgba(255,255,255,.75);
+}
+
+.debug-category-button.active {
+  border-color: rgba(42,106,99,.9);
+  background: linear-gradient(180deg, #2f8278, #19554f);
+  color: #fff;
+}
+
+.debug-command-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow-y: auto;
+  padding-right: .3cqw;
+}
+
+.debug-command-button {
+  min-height: 3.4cqh;
+  padding: .45cqh .35cqw;
+  border-color: rgba(126,93,54,.55);
+  background: rgba(255,255,255,.88);
+  color: #4f3822;
+  font-size: 1.18cqh;
+  line-height: 1.15;
+  box-shadow: 0 .25cqh .55cqh rgba(80,50,20,.12);
+}
+
+.debug-command-button:active {
+  transform: translateY(.08cqh);
+}
+
+.debug-status-line {
+  min-height: 2cqh;
+  font-size: 1.25cqh;
+  font-weight: 800;
+  color: #806342;
+}
