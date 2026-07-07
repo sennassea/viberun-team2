@@ -29,6 +29,7 @@ window.VIBERUN_SOUND_CONFIG = {
     bgmPrayer: { category: "bgm", src: "bgm/prayer_site.mp3" },
     bgmReward: { category: "bgm", src: "bgm/reward.mp3" },
     bgmSpiritBlessing: { category: "bgm", src: "bgm/spirit_blessing.mp3" },
+    bgmTutorial: { category: "bgm", src: "bgm/tutorial.mp3" },
 
     /* 공용 UI 효과음 */
     uiButtonClick: { category: "ui", src: "sfx/button_common.mp3" },
