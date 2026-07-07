@@ -8,6 +8,7 @@
 (function(){
   let cachedProfile = null;
   let cachedWallet = null;
+  let isGrantingTestGem = false;
 
   function getClient(){
     const bridge = window.VIBERUN_SUPABASE;
@@ -150,6 +151,59 @@
     });
   }
 
+  function getCurrentUserId(){
+    const auth = window.VIBERUN_AUTH;
+    if(!auth || typeof auth.getAccountInfo !== "function") return "";
+    const account = auth.getAccountInfo();
+    if(!account || !account.isLoggedIn) return "";
+    return String(account.accountId || account.uid || "").trim();
+  }
+
+  function grantTestGem(amount){
+    const client = getClient();
+    const userId = getCurrentUserId();
+    const delta = Math.max(1, Math.floor(Number(amount) || 100));
+
+    if(isGrantingTestGem){
+      return Promise.resolve({ ok: false, code: "REQUEST_PENDING", message: "이미 처리 중입니다." });
+    }
+
+    if(!client || !userId){
+      return Promise.resolve({ ok: false, code: "SUPABASE_UNAVAILABLE", message: "로그인이 필요합니다." });
+    }
+
+    isGrantingTestGem = true;
+    return getOrCreateWallet(userId).then(walletResult => {
+      if(!walletResult || !walletResult.ok || !walletResult.wallet){
+        return walletResult || { ok: false, message: "재화 정보를 불러오지 못했습니다." };
+      }
+
+      const currentGem = Math.max(0, Math.floor(Number(walletResult.wallet.gem) || 0));
+      const nextGem = currentGem + delta;
+      return client.from("wallets")
+        .update({ gem: nextGem, updated_at: new Date().toISOString() })
+        .eq("user_id", userId)
+        .select("*")
+        .single()
+        .then(updateResult => {
+          if(updateResult && updateResult.error){
+            return { ok: false, error: updateResult.error, message: updateResult.error.message || "테스트 재화 지급에 실패했습니다." };
+          }
+
+          return {
+            ok: true,
+            wallet: syncWalletCache(updateResult.data),
+            amount: delta
+          };
+        });
+    }).catch(error => {
+      console.warn("[UserData] test gem 지급 중 오류가 발생했습니다.", error);
+      return { ok: false, error, message: "테스트 재화 지급에 실패했습니다." };
+    }).finally(() => {
+      isGrantingTestGem = false;
+    });
+  }
+
   function getCachedProfile(){
     return cachedProfile ? Object.assign({}, cachedProfile) : null;
   }
@@ -168,6 +222,7 @@
     getOrCreateProfile,
     getOrCreateWallet,
     prepareUserData,
+    grantTestGem,
     getCachedProfile,
     getCachedWallet,
     clearCache

@@ -31,8 +31,9 @@
   }
 
   function normalizeWallet(wallet){
-    const moonShards = Math.max(0, Math.floor(Number(wallet && wallet.moonShards) || 0));
-    return { moonShards };
+    const gemValue = wallet && typeof wallet.gem !== "undefined" ? wallet.gem : (wallet && wallet.moonShards);
+    const moonShards = Math.max(0, Math.floor(Number(gemValue) || 0));
+    return { gem: moonShards, moonShards };
   }
 
   function syncWallet(wallet){
@@ -373,6 +374,10 @@
       });
     }
 
+    if(!API_BASE){
+      return purchaseMoonChargeForTest(product);
+    }
+
     return requestJson("/bm-store/moon-charge/" + encodeURIComponent(product.id) + "/purchase", {
       method: "POST"
     }).then(result => {
@@ -383,6 +388,38 @@
 
       if(result.wallet) result.wallet = syncWallet(result.wallet);
       return result;
+    });
+  }
+
+  function purchaseMoonChargeForTest(product){
+    const userData = window.VIBERUN_USER_DATA;
+    if(!userData || typeof userData.grantTestGem !== "function"){
+      return Promise.resolve({
+        ok: false,
+        code: "TEST_PURCHASE_UNAVAILABLE",
+        message: "테스트 구매 기능을 사용할 수 없습니다."
+      });
+    }
+
+    const amount = Math.max(0, Math.floor(Number(product.rewardAmount) || 0));
+    if(!amount){
+      return Promise.resolve({
+        ok: false,
+        code: "INVALID_REWARD_AMOUNT",
+        message: "지급할 테스트 재화가 없습니다."
+      });
+    }
+
+    return Promise.resolve(userData.grantTestGem(amount)).then(result => {
+      if(!result || !result.ok) return result || { ok: false, message: "테스트 구매에 실패했습니다." };
+
+      return {
+        ok: true,
+        wallet: syncWallet(result.wallet),
+        testPurchase: true,
+        productId: product.id,
+        rewardAmount: amount
+      };
     });
   }
 
