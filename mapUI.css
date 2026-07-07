@@ -248,10 +248,6 @@
   margin-bottom: 0.5cqh;
   letter-spacing: 0.06em;
 }
-.dmap-legend-title-word {
-  position: relative;
-  left: -0.3cqw;
-}
 
 .dmap-legend-item {
   box-sizing: border-box;
@@ -326,7 +322,10 @@
   bottom: 6cqh;
   width: var(--dmap-legend-width);
   box-sizing: border-box;
-  padding: 0.6cqh 1.4cqw 0;
+  /* 좌우 패딩을 범례 목록(1.4cqw)보다 넉넉히 줘서, 꽉 채워진 말풍선 배경이 카드
+     테두리 장식(모서리 구름 문양)까지 닿지 않고 카드 안쪽에 가운데 정렬된
+     것처럼 보이게 한다. */
+  padding: 0.6cqh 2.6cqw 0;
   display: none;
   overflow: hidden;
   pointer-events: none;

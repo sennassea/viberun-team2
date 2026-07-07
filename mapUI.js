@@ -454,7 +454,7 @@ const DMAP_LEGEND_DATA = [
     type: "treasure",
     icon: "🎁",
     label: "보물",
-    tip: "10층에서만 발견되는 특별한 보상입니다. 복채와 법구를 얻을 수 있습니다.",
+    tip: "특별한 보상입니다. 복채와 법구를 얻을 수 있습니다.",
   },
 ];
 
@@ -511,7 +511,7 @@ function buildOverlay() {
           </div>
         </div>
         <div class="map-legend dmap-legend" id="dMapLegend">
-          <div class="legend-title dmap-legend-title">✦ <span class="dmap-legend-title-word">길잡이</span> ✦</div>
+          <div class="legend-title dmap-legend-title">✦ 길잡이 ✦</div>
           ${legendHtml}
         </div>
         <div class="dmap-tip-box" id="dMapTipBox"></div>
