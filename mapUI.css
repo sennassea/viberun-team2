@@ -223,11 +223,14 @@
   width: var(--dmap-legend-width);
   min-width: 0;
   max-width: 100%;
-  padding: 1.6cqh 1.4cqw;
+  padding: 4.6cqh 1.4cqw 1.6cqh;
   display: flex;
   flex-direction: column;
-  /* 항목들을 위쪽에 몰아두지 않고 패널 세로 중앙에 오도록 한다 */
-  justify-content: center;
+  /* #mapCanvas는 상단부터 노드가 시작되는데, 범례를 세로 중앙정렬하면 항목 수가
+     패널을 다 못 채워 전체 블록이 아래로 밀려 보이고, 마지막 항목이 하단에 고정된
+     툴팁(.dmap-tip-box)과 너무 가까워지는 문제가 있었다. 위쪽 정렬로 캔버스와
+     시작선을 맞추되, 상단 프레임 장식과 너무 붙지 않도록 padding-top으로 살짝 내린다. */
+  justify-content: flex-start;
   gap: 0.95cqh;
   overflow: hidden auto;
   background: transparent;
@@ -358,7 +361,7 @@
   display: flex;
   gap: 0.7cqw;
   flex-shrink: 0;
-  transform: translate(3.3cqh, -3cqh);
+  transform: translate(3.3cqh, -2.3cqh);
 }
 
 .dmap-action-btn {
