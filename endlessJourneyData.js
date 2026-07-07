@@ -2,7 +2,7 @@
 /* =========================================================================
    Endless Journey Data
    - This file only owns endless journey debuff data.
-   - Debuffs are intentionally not applied to combat in this pass.
+   - Debuffs are applied through endlessJourneyEffects.js.
    ========================================================================= */
 
 // 임시 밸런스 수치: 추후 기획 이미지/시트 기준으로 name, desc, value를 교체한다.

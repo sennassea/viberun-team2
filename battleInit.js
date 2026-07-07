@@ -292,6 +292,7 @@ function newGame(options={}){
   drawCards(DRAW_PER_TURN, { source:"turnStartBase" });
   // 전투 시작 효과는 전투당 1회만 적용한다.
   // 드로우 이후에 호출하여 "전투 시작 시 드로우 +1" 계열 법구도 자연스럽게 처리한다.
+  S.endlessBattleStartPhase = true;
   applyBattleStartRelics();
   applyRelicTrigger("battleStartAfterDraw");
   if(S.nextBattleStartBlock > 0){
@@ -299,6 +300,7 @@ function newGame(options={}){
     S.nextBattleStartBlock = 0;
     if(RUN_STATE) RUN_STATE.nextBattleStartBlock = 0;
   }
+  S.endlessBattleStartPhase = false;
   applyRelicTrigger("turnStart");
   if(hasRelic("reversed_talisman_book")) drawCards(1, { source:"turnStartRelic" });
   applyPlayerTurnStartGimmicks();
@@ -393,6 +395,11 @@ function clearBattleBackground(){
 
 function createCombatEnemy(def, index, options = {}){
   const e = LIFE.createMonster(def, index);
+  if(typeof scaleEndlessEnemyMaxHp === "function"){
+    e.maxHp = scaleEndlessEnemyMaxHp(e, e.maxHp);
+    e.hp = e.maxHp;
+    e.block = Math.min(e.maxHp, e.block || 0);
+  }
   e.baseId = def.id || e.id;
   if(options.idSuffix) e.id = e.baseId + "_" + options.idSuffix;
   e.spawnIndex = index;

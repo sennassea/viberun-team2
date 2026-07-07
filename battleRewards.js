@@ -28,7 +28,9 @@ function nodeClear(){
    ========================================================================= */
 function getRandomRewardKeys(count, context){
   const resolvedContext = context || (S && S.battleNodeType === "elite" ? "elite" : "battle");
-  return getWeightedCardRewardKeys(count, undefined, { context: resolvedContext });
+  const delta = typeof getEndlessCardRewardChoiceDelta === "function" ? getEndlessCardRewardChoiceDelta() : 0;
+  const finalCount = Math.max(1, count + delta);
+  return getWeightedCardRewardKeys(finalCount, undefined, { context: resolvedContext });
 }
 
 let cardRewardPickMode = null;
@@ -72,7 +74,8 @@ function getBattleVictoryGoldAmount(){
     ? Math.floor(S.battleVictoryGoldOverride)
     : null;
   if(override !== null) return Math.max(0, override);
-  return getBalanceBattleGold(S && S.battleNodeType);
+  const amount = getBalanceBattleGold(S && S.battleNodeType);
+  return typeof scaleEndlessBattleGold === "function" ? scaleEndlessBattleGold(amount) : amount;
 }
 
 function grantBattleGoldReward(){

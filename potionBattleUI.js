@@ -249,7 +249,8 @@ async function executeSinglePotionFx(fx, context={}){
   const targetEnemy = context.targetEnemy;
   switch(fx.t){
     case "heal": {
-      const healed = LIFE.heal(S.player, amount);
+      const healValue = typeof scaleEndlessPlayerHeal === "function" ? scaleEndlessPlayerHeal(amount) : amount;
+      const healed = LIFE.heal(S.player, healValue);
       if(healed > 0) spawnFloat(".player", "+"+healed, "heal");
       return true;
     }
