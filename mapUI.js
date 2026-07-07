@@ -24,7 +24,7 @@ const DMAP_SPREAD  = 170;   // 같은 층 노드 간 간격 (가상 좌표)
 /* ── 2D 스크롤 / 줌 상태 ──────────────────────────────────────────────────── */
 // mapScrollY 는 mapSystem.js 에서 let 으로 선언됨 – 공유 가능
 let mapScrollX = 0;
-let mapZoom    = 1.0;   // >1 = 확대, <1 = 축소
+let mapZoom    = 1.2;   // >1 = 확대, <1 = 축소
 
 /* 전체 노드 가로가 딱 맞는 축소값(820/1470=0.558)이었으나, 그 값 그대로는 우측 끝
    보스 노드(DMAP_END_X=1340, 전체 폭의 약 91.2%)가 clip-path 안전 영역(약 89%)보다
@@ -77,8 +77,8 @@ function getDiagNodePos(floors) {
 
 /* ── centerScrollOnFloor 오버라이드 (2D) ────────────────────────────────── */
 function centerScrollOnFloor(fi) {
-  // 맵 열 때 기본 줌 1.0 (최소줌 0.558에서 휠 5번 확대한 수준)
-  mapZoom = 1.0;
+  // 맵 열 때 기본 줌 1.2 (최소줌 0.558에서 휠 5번 확대한 수준보다 조금 더 확대)
+  mapZoom = 1.2;
 
   const pos   = getDiagNodePos(MAP_FLOORS);
   const floor = MAP_FLOORS[fi];
@@ -323,6 +323,7 @@ function renderCanvas(currentNodeId) {
 
   /* ── 노드 그룹 ── */
   let svgNodes = "";
+  let curNodeR = 27;
   MAP_FLOORS.forEach(floor => floor.forEach(node => {
     const p = pos[node.id]; if (!p) return;
     const { x, y } = p;
@@ -332,6 +333,7 @@ function renderCanvas(currentNodeId) {
 
     // 보스는 약간 크게, 현재 위치는 조금 크게
     const r = node.type === "boss" ? 28 : (cur ? 27 : 22);
+    if (cur) curNodeR = r;
 
     const cls = [
       "mnode", `mnode-${node.type}`,
@@ -366,13 +368,19 @@ function renderCanvas(currentNodeId) {
     </g>`;
   }));
 
-  /* ── 플레이어 마커 ── */
+  /* ── 플레이어 마커 (노드 아이콘 위에 서 있는 캐릭터) ── */
   let svgPin = "";
   if (pos[currentNodeId]) {
     const { x, y } = pos[currentNodeId];
-    svgPin = `<g transform="translate(${x | 0},${(y - 47) | 0})">
-      <polygon points="0,-14 12,8 -12,8" fill="#e7b54a" stroke="#b07d1d" stroke-width="2"/>
-      <text text-anchor="middle" y="-1" font-size="14">👼</text>
+    const charH = 74;
+    const charW = charH * (193 / 260);
+    // 발이 노드 원 안쪽으로 더 깊이 겹치도록 해서 원을 밟고 선 느낌을 강조함
+    const feetY = y - curNodeR + 20;
+    svgPin = `<g transform="translate(${x | 0},${(feetY - charH) | 0}) scale(-1,1)">
+      <image href="assets/map_icons/player_marker.png"
+        x="${-charW / 2 | 0}" y="0"
+        width="${charW | 0}" height="${charH | 0}"
+        class="mplayer-marker" preserveAspectRatio="xMidYMid meet"/>
     </g>`;
   }
 
@@ -390,21 +398,14 @@ function renderCanvas(currentNodeId) {
     actBadge.textContent = typeof getCurrentActName === "function" ? getCurrentActName() : "최초의 여정";
   }
 
-  /* ── 현재 위치 배지 (닫기 버튼 근처) ── */
-  const floorBadge = document.getElementById("mapCurrentFloor");
-  if (floorBadge) {
-    floorBadge.textContent = tutorialCurrentLabel ||
-      (typeof formatDisplayAreaByFloorIndex === "function" ? formatDisplayAreaByFloorIndex(myFloor) : "신령의 은혜");
-  }
-
   /* ── 푸터 텍스트 ── */
   const footer = document.getElementById("mapFooter");
   if (footer) {
-    footer.textContent = tutorialCurrentLabel
-      ? "📍 현재 위치: " + tutorialCurrentLabel
-      : window.MAP_STATE.proceedMode
+    const areaLabel = tutorialCurrentLabel ||
+      (typeof formatDisplayAreaByFloorIndex === "function" ? formatDisplayAreaByFloorIndex(myFloor) : "신령의 은혜");
+    footer.textContent = window.MAP_STATE.proceedMode
       ? "강조된 다음 구역을 클릭/터치하여 진행하세요"
-      : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
+      : (areaLabel ? "📍 현재 위치: " + areaLabel : "");
   }
 
   /* ── 다음 노드 클릭 이벤트 ── */
@@ -461,7 +462,7 @@ const DMAP_LEGEND_DATA = [
     type: "treasure",
     icon: "🎁",
     label: "보물",
-    tip: "10층에서만 발견되는 특별한 보상입니다. 복채와 법구를 얻을 수 있습니다.",
+    tip: "특별한 보상입니다. 복채와 법구를 얻을 수 있습니다.",
   },
 ];
 
@@ -507,10 +508,6 @@ function buildOverlay() {
           <span class="dmap-title-char dmap-title-left" aria-hidden="true">여</span>
           <span class="dmap-title-char dmap-title-right" aria-hidden="true">정</span>
         </span>
-        <div class="dmap-cur-badge" id="mapCurLocBadge">
-          <span class="dmap-loc-icon">📍</span>
-          <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
-        </div>
         <button class="map-close dmap-close" id="mapClose" aria-label="닫기">✕</button>
       </div>
       <div class="map-body dmap-body">
@@ -522,7 +519,7 @@ function buildOverlay() {
           </div>
         </div>
         <div class="map-legend dmap-legend" id="dMapLegend">
-          <div class="legend-title dmap-legend-title">✦ 범례 ✦</div>
+          <div class="legend-title dmap-legend-title">✦ 길잡이 ✦</div>
           ${legendHtml}
         </div>
         <div class="dmap-tip-box" id="dMapTipBox"></div>

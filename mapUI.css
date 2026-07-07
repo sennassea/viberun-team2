@@ -40,12 +40,12 @@
   border: 0;
   border-radius: 3cqh;
   padding: 0.3cqh 1cqw;
-  font-size:1.67cqh;
+  font-size:2cqh;
   font-weight: 800;
   color: #3b2a0a;
   white-space: nowrap;
   flex-shrink: 0;
-  transform: translate(2.6cqw, 2cqh);
+  transform: translate(2.6cqw, 1.2cqh);
 }
 .dmap-loc-icon { display: none; }
 .dmap-loc-floor {
@@ -79,17 +79,23 @@
   width: 4.8cqh;
   height: 4.8cqh;
   line-height: 4.8cqh;
-  font-size:5cqh;
+  font-size:4.2cqh;
   font-weight: 900;
-  color: #4a2b07;
   text-align: center;
-  text-shadow: 0 0.12cqh 0 rgba(255,255,255,.8), 0 0.25cqh 0.45cqh rgba(90,55,10,.24);
+  /* 밝은 크림색 배경 위라 완전 어두운 색을 베이스로 잡고, 그 위에 미세한 그라디언트만
+     얹어 입체감을 준다(밝은 금색 베이스는 배경에 묻혀 가독성이 떨어졌다). */
+  color: transparent;
+  background: linear-gradient(180deg, #3a230a 0%, #221405 55%, #0f0803 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 0.03cqh rgba(0,0,0,0.35);
+  text-shadow: 0 0.08cqh 0 rgba(255,225,160,.22), 0 0.3cqh 0.5cqh rgba(0,0,0,.4);
 }
 .dmap-title-left {
-  left: 1.1cqh;
+  left: -3.4cqh;
 }
 .dmap-title-right {
-  right: 1.1cqh;
+  right: -3.4cqh;
 }
 
 .dmap-cur-badge {
@@ -125,6 +131,10 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  /* .dmap-loc-badge가 배경 플레이트 중앙에 오도록 translateY(1.2cqh)만큼 내려가 있어서,
+     같은 헤더 줄에 있는 닫기 버튼도 같은 만큼 내려 두 요소의 세로선을 맞춘다.
+     가로로는 프레임 우상단 장식(구름/매듭 문양)과 겹쳐서 왼쪽으로 살짝 밀어낸다. */
+  transform: translate(-1.6cqw, 1.2cqh);
   transition: transform 0.12s;
 }
 .map-close.dmap-close:hover {
@@ -135,7 +145,16 @@
 /* ── 바디 ─────────────────────────────────────────────────────────────────── */
 .dmap-body {
   flex: 1;
-  --dmap-legend-width: clamp(118px, 15cqw, 150px);
+  /* map_main_area_panel.png(857x568) : map_side_info_panel.png(234x568) 실측 비율.
+     두 패널 다 .dmap-body와 같은 폭을 공유하므로, cqw(=#game 기준, 패널 폭과 무관)가 아니라
+     .dmap-body 자신의 폭(%)으로 잡아야 패널 크기가 바뀌어도 실제 에셋 칸과 어긋나지 않는다.
+     map-ratio + legend-ratio + divider-gap = 100%이 항상 성립하므로(즉 셋 중 둘을 동시에
+     늘리려면 나머지 하나를 그만큼 줄여야 함), 맵/범례를 동시에 아주 살짝씩 넓히기 위해
+     divider-gap을 최소한으로 줄여 여유를 만들었다. */
+  --dmap-map-ratio: 77.1%;
+  --dmap-legend-ratio: 22.5%;
+  --dmap-divider-gap: 0.4%;
+  --dmap-legend-width: var(--dmap-legend-ratio);
   position: relative;
   display: block;
   min-height: 0;
@@ -147,7 +166,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  right: var(--dmap-legend-width);
+  right: calc(var(--dmap-legend-width) + var(--dmap-divider-gap));
   bottom: 0;
   width: auto;
   min-width: 0;
@@ -158,13 +177,29 @@
   background: transparent;
 }
 .dmap-canvas-wrap #mapCanvas {
-  /* 프레임 아트(map_popup_frame.png)의 실제 양피지 영역을 스크린샷 픽셀 단위로 실측해
-     맞춘 값입니다. 기존 값(우측 94%, 하단 92%)은 실제 프레임의 범례 구분선(약 91.7%)·
-     하단 테두리(약 91.8%)보다 바깥까지 허용되어 있어, 축소했을 때 노드가 구분선/테두리
-     위에 그대로 걸쳐 보이는 문제가 있었습니다. */
-  /* 상단(5%)이 실제로는 부족해서 노드가 헤더 쪽으로 삐져나갔던 것을 다시 실측해
-     10%로 더 안쪽으로 당김 */
-  clip-path: polygon(22% 10%, 78% 10%, 89% 33%, 89% 70%, 70% 90%, 30% 90%, 3% 66%, 3% 27%);
+  /* 이 polygon은 #mapCanvas 자기 자신의 박스(%) 기준이라, .dmap-canvas-wrap의 실제 폭이
+     바뀌면(=범례 폭 수정 등) 같은 %가 가리키는 절대 위치도 함께 바뀐다. 예전 값(22% 10%,
+     78% 10%, 89% 33%, 89% 70%, 70% 90%, 30% 90%, 3% 66%, 3% 27%)은 legend-width가
+     clamp(118px,15cqw,150px)로 지금보다 훨씬 좁던 시절(=박스가 지금보다 넓던 시절)
+     기준으로 실측된 값이어서, legend-width를 실제 에셋 비율(21.5%)로 넓힌 뒤에는 우측
+     inset이 과도해져 정상 노드가 잘려 보이는 문제가 있었다.
+     지금은 .dmap-canvas-wrap 자체의 right가 이미 구분선에 맞게 정확히 잡혀 있으므로,
+     여기서는 프레임 모서리 장식(구름 문양)만 살짝 가리는 최소한의 여유만 둔다. */
+  clip-path: polygon(6% 3%, 96% 3%, 100% 18%, 100% 84%, 95% 97%, 5% 97%, 0% 84%, 0% 18%);
+  /* clip-path 경계가 각지고 또렷해서 드래그 시 노드/경로가 잘리는 라인이 선명하게 보이던
+     문제를 완화하기 위해, 상하좌우 네 면 전체(팔각형 모양과 무관하게 박스 전체 둘레)가
+     가장자리로 갈수록 서서히 투명해지도록 두 방향 선형 그라디언트를 겹쳐 마스크한다. */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  -webkit-mask-composite: source-in, source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-composite: intersect;
+  /* 맵 영역(#mapCanvas) 자체를 80% 크기로 축소하되, 중심은 그대로 유지 */
+  transform: scale(0.8);
+  transform-origin: 50% 50%;
 }
 .dmap-canvas-wrap:active { cursor: grabbing; }
 
@@ -198,18 +233,19 @@
   width: var(--dmap-legend-width);
   min-width: 0;
   max-width: 100%;
-  padding: 1.6cqh 1.4cqw;
+  padding: 10.6cqh 1.4cqw 1.6cqh;
   display: flex;
   flex-direction: column;
-  /* 항목들을 위쪽에 몰아두지 않고 패널 세로 중앙에 오도록 한다 */
-  justify-content: center;
+  /* #mapCanvas는 상단부터 노드가 시작되는데, 범례를 세로 중앙정렬하면 항목 수가
+     패널을 다 못 채워 전체 블록이 아래로 밀려 보이고, 마지막 항목이 하단에 고정된
+     툴팁(.dmap-tip-box)과 너무 가까워지는 문제가 있었다. 위쪽 정렬로 캔버스와
+     시작선을 맞추되, 상단 프레임 장식과 너무 붙지 않도록 padding-top으로 살짝 내린다. */
+  justify-content: flex-start;
   gap: 0.95cqh;
   overflow: hidden auto;
   background: transparent;
   border-left: 0;
   contain: layout paint;
-  /* 중앙보다 아주 살짝 위로, 왼쪽으로 많이 이동했던 것을 아주아주 살짝만 오른쪽으로 */
-  transform: translate(-2.6cqw, -2.4cqh);
 }
 
 .dmap-legend-title {
@@ -221,6 +257,9 @@
   padding-bottom: 0.5cqh;
   margin-bottom: 0.5cqh;
   letter-spacing: 0.06em;
+  /* legend 폭 비율이 넓어지면서 박스 중심이 실제 카드 에셋 장식(모서리 문양) 중심보다
+     왼쪽으로 밀려 보여서, 카드 쪽으로 살짝 우측 보정한다. */
+  transform: translateX(-0.6cqw);
 }
 
 .dmap-legend-item {
@@ -292,12 +331,14 @@
      안이 아니라 .dmap-body 기준으로 배치해서 목록 위치와 무관하게, 범례 목록
      바로 아래 여백에 뜨도록 한다. */
   position: absolute;
-  right: 3cqw;
+  right: 0;
   bottom: 6cqh;
   width: var(--dmap-legend-width);
-  max-width: calc(100% - 2.8cqw);
   box-sizing: border-box;
-  padding-top: 0.6cqh;
+  /* 좌우 패딩을 범례 목록(1.4cqw)보다 넉넉히 줘서, 꽉 채워진 말풍선 배경이 카드
+     테두리 장식(모서리 구름 문양)까지 닿지 않고 카드 안쪽에 가운데 정렬된
+     것처럼 보이게 한다. */
+  padding: 0.6cqh 2.6cqw 0;
   display: none;
   overflow: hidden;
   pointer-events: none;
@@ -321,21 +362,21 @@
 
 /* ── 하단 바 ──────────────────────────────────────────────────────────────── */
 .dmap-bottom {
-  border-top: 0;
+  border-top: none;
   background: transparent;
   display: flex;
   align-items: center;
   padding: 0.55cqh 1.5cqw;
   gap: 1.5cqw;
   flex-shrink: 0;
-  min-height: 0;
+  min-height: 5.8cqh;
 }
 
 .dmap-action-bar {
   display: flex;
   gap: 0.7cqw;
   flex-shrink: 0;
-  transform: translate(3.3cqh, -3cqh);
+  transform: translate(3.3cqh, -2.3cqh);
 }
 
 .dmap-action-btn {
@@ -435,6 +476,11 @@
 .mnode-icon {
   pointer-events: none;
   filter: drop-shadow(0 1.2px 1.8px rgba(0,0,0,.28));
+}
+
+.mplayer-marker {
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
 }
 
 /* 경로 선 */
