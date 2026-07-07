@@ -139,7 +139,9 @@
     { match: "클리어 보스 수", title: "클리어 보스 수",
       body: "처치한 ACT1 보스 수입니다. 보스 처치는 +150점으로 가장 큰 전투 성취 점수입니다." },
     { match: "클리어 노멀 수", title: "클리어 노멀 수",
-      body: "클리어한 일반 전투 수입니다. 일반 전투 클리어 시 +25점의 기본 진행 점수를 얻습니다." },
+      /* colorizeRarityLabels가 "일반"을 자동 강조하므로, 이 툴팁만 강조를 피하려고
+         두 글자 사이에 폭 없는 문자(ZWSP)를 넣어 리터럴 매치를 깬다. */
+      body: "클리어한 일​반 전투 수입니다. 일​반 전투 클리어 시 +25점의 기본 진행 점수를 얻습니다." },
     { match: "클리어 엘리트 수", title: "클리어 엘리트 수",
       body: "클리어한 엘리트 전투 수입니다. 위험한 경로를 선택한 만큼 +65점의 더 높은 점수가 반영됩니다." },
     { match: "수집한 법구 수", title: "수집한 법구 수",
@@ -454,7 +456,9 @@
     const moonWallet = document.querySelector(".start-moon-wallet");
     if (moonWallet) {
       moonWallet.dataset.tooltipTitle = "달빛 조각";
-      moonWallet.dataset.tooltip = "희귀 보상과 특별한 보물함을 여는 데 사용하는 유료 재화입니다.";
+      /* colorizeRarityLabels(rarityLabelColor.js)가 "희귀"를 자동 강조하므로,
+         이 툴팁만 강조를 피하려고 두 글자 사이에 폭 없는 문자(ZWSP)를 넣어 리터럴 매치를 깬다. */
+      moonWallet.dataset.tooltip = "희​귀 보상과 특별한 보물함을 여는 데 사용하는 유료 재화입니다.";
     }
 
     const mailboxBtn = document.querySelector(".start-mailbox-button");

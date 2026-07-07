@@ -609,9 +609,13 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   background:#fff; color:var(--c-ink); font-size:3.45cqh; font-weight:800; line-height:1; cursor:pointer;}
 .deck-viewer-tabs{display:flex; gap:.6cqw; padding:1.1cqh 0 0;}
 .deck-viewer-tab{height:4.2cqh; padding:0 1.2cqw; border-radius:.9cqh;
-  border:0.2cqh solid var(--c-panel-line); background:rgba(255,255,255,.72);
-  color:var(--c-ink-soft); font-family:var(--font-title); font-size:2.01cqh; font-weight:800; cursor:pointer;}
-.deck-viewer-tab.active{background:var(--c-blue); border-color:var(--c-blue-deep); color:#fff;}
+  border:0.2cqh solid var(--c-panel-line); background:linear-gradient(180deg,#fff8ea,#f0e0bd);
+  color:var(--c-ink); font-family:var(--font-title); font-size:2.01cqh; font-weight:800; cursor:pointer;
+  box-shadow:0 .25cqh .5cqh rgba(120,90,40,.14); transition:background .15s, box-shadow .15s, transform .15s;}
+.deck-viewer-tab:hover{background:linear-gradient(180deg,#fffcf3,#f6e8c9);}
+.deck-viewer-tab.active{background:linear-gradient(180deg,#ffe6a8,#e7b54a);
+  border-color:var(--c-gold-deep); color:#5b3a12;
+  box-shadow:0 .35cqh .9cqh rgba(176,125,29,.4), inset 0 0 0 .12cqh #fff6df; transform:translateY(-.1cqh);}
 .deck-viewer-summary{font-size:2.07cqh; font-weight:700; color:var(--c-ink-soft); padding:1.1cqh 0;}
 .deck-viewer-grid{display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:1.2cqh;
   overflow:auto; padding:.5cqh .4cqw 1cqh;}
