@@ -110,11 +110,76 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
     }));
   }
 
+  function act1ClonePlain(value) {
+    if (Array.isArray(value)) return value.map(act1ClonePlain);
+    if (value && typeof value === "object") {
+      return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, act1ClonePlain(item)]));
+    }
+    return value;
+  }
+
+  function act1MergePatch(target, patch) {
+    if (!target || !patch || typeof patch !== "object") return;
+    Object.entries(patch).forEach(([key, value]) => {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        if (!target[key] || typeof target[key] !== "object" || Array.isArray(target[key])) target[key] = {};
+        act1MergePatch(target[key], value);
+      } else {
+        target[key] = act1ClonePlain(value);
+      }
+    });
+  }
+
+  function act1ApplyMoveOverrides(moves, overrides) {
+    if (!Array.isArray(moves) || !overrides) return;
+    Object.entries(overrides).forEach(([index, patch]) => {
+      const move = moves[Number(index)];
+      if (move) act1MergePatch(move, patch);
+    });
+  }
+
+  function act1ApplyPhaseOverrides(monster, override) {
+    if (!monster || !monster.phaseConfig || !override || !override.phaseConfig) return;
+    const phaseConfig = override.phaseConfig;
+    if (Array.isArray(phaseConfig.thresholds)) {
+      monster.phaseConfig.thresholds = phaseConfig.thresholds.slice();
+    }
+    if (!phaseConfig.phases || !Array.isArray(monster.phaseConfig.phases)) return;
+    Object.entries(phaseConfig.phases).forEach(([index, phaseOverride]) => {
+      const phase = monster.phaseConfig.phases[Number(index)];
+      if (!phase || !phaseOverride) return;
+      act1ApplyMoveOverrides(phase.moves, phaseOverride.moves);
+      const rest = { ...phaseOverride };
+      delete rest.moves;
+      act1MergePatch(phase, rest);
+    });
+  }
+
+  function act1ApplyPackageBalanceOverrides(pkg, monsters) {
+    const overrides = window.BOHYUN_BALANCE && window.BOHYUN_BALANCE.act1MonsterPackageOverrides;
+    const packageOverrides = pkg && overrides ? overrides[pkg.id] : null;
+    if (!packageOverrides || !Array.isArray(monsters)) return monsters;
+    monsters.forEach(monster => {
+      const override = monster && packageOverrides[monster.id];
+      if (!override) return;
+      if (Number.isFinite(override.maxHp)) monster.maxHp = override.maxHp;
+      act1ApplyMoveOverrides(monster.moves, override.moves);
+      act1ApplyPhaseOverrides(monster, override);
+      const rest = { ...override };
+      delete rest.maxHp;
+      delete rest.moves;
+      delete rest.phaseConfig;
+      act1MergePatch(monster, rest);
+    });
+    return monsters;
+  }
+  window.ACT1_APPLY_PACKAGE_BALANCE_OVERRIDES = act1ApplyPackageBalanceOverrides;
+
   /* 패키지로 몬스터 목록 반환, 실패 시 폴백 */
   function getMonsFromPackage(pkg, type) {
     if (!pkg) return null;
     const mons = d.getMonstersByIds(pkg.monsterIds);
-    return mons.length ? mons : null;
+    return mons.length ? act1ApplyPackageBalanceOverrides(pkg, mons) : null;
   }
 
   function resolveStagePackage(stage, options = {}) {
