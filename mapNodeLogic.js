@@ -275,6 +275,16 @@ window.ACT1_MAP_GENERATE = function(setMapData) {
          이번 층의 휴식 가중치를 0으로 만들어 후보에서 제외한다. */
       if (prevFloorHasRest || isFloorBeforeFinalRest) weights.rest = 0;
 
+      /* 끝없는 여정 심도 효과: 엘리트 노드 가중치 보정 (심도 1: x1.35, 심도 16: 추가 x1.20)
+         원래 엘리트 가중치가 0인 구간(early_low 등)은 그대로 0으로 유지한다. */
+      if (weights.elite > 0 && typeof window.getEndlessEliteNodeWeightMultiplierForIds === "function") {
+        const endlessJourney = (typeof RUN_STATE !== "undefined" && RUN_STATE) ? RUN_STATE.journey : null;
+        if (endlessJourney && endlessJourney.mode === "endless") {
+          const eliteMultiplier = window.getEndlessEliteNodeWeightMultiplierForIds(endlessJourney.activeDebuffIds);
+          weights.elite = weights.elite * eliteMultiplier;
+        }
+      }
+
       /* 타입 배정 */
       types = [];
       for (let ni = 0; ni < nodeCount; ni++) {

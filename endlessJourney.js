@@ -64,6 +64,8 @@ window.APPLY_START_ENDLESS_LEVEL_TO_NEW_RUN = function(requestedLevel){
   journey.endlessLevel = level;
   journey.totalDisplayFloorOffset = level * 16;
   journey.activeDebuffIds = [];
+  journey.appliedOneShotDepthEffectIds = [];
+  journey.unremovableIntrusiveThoughtCount = 0;
   // 직접 시작한 끝없는 여정 N의 첫 보스 승리에서만 신령 승리 연출을 보여준다.
   journey.firstVictoryPresentationEndlessLevel = level;
   journey.firstVictoryPresentationShown = false;
@@ -74,6 +76,11 @@ window.APPLY_START_ENDLESS_LEVEL_TO_NEW_RUN = function(requestedLevel){
       journey.activeDebuffIds.push(debuff.id);
     }
   }
+
+  // 여정 N을 직접 시작하는 경우, 1~N 심도의 1회성 효과(정신력 압박/잠념 침투)를
+  // 순서대로 모두 적용한다. 이 시점에는 아직 S(전투 상태)가 없을 수 있으므로
+  // RUN_STATE 기준으로 동작한다.
+  if(typeof applyEndlessOneShotDepthEffects === "function") applyEndlessOneShotDepthEffects(journey);
 
   if(typeof S !== "undefined" && S) S.journey = cloneJourneyState(journey);
 
@@ -166,7 +173,21 @@ window.START_INFINITE_JOURNEY = function(){
   if(!Number.isFinite(RUN_STATE.player.maxHp) || RUN_STATE.player.maxHp <= 0){
     RUN_STATE.player.maxHp = fallbackMaxHp;
   }
-  RUN_STATE.player.hp = RUN_STATE.player.maxHp;
+
+  /* 보스 처치 후 정신력 회복: 기본은 잃은 정신력을 전부 회복하지만,
+     심도 5/18("보스 후 회복 감소")이 활성화되어 있으면 잃은 정신력의
+     75%/50%만 회복한다. 두 효과는 합산하지 않고 더 가혹한(낮은) 비율만 적용한다. */
+  const maxHp = RUN_STATE.player.maxHp;
+  const lostHp = Math.max(0, maxHp - (RUN_STATE.player.hp || 0));
+  const healRatio = typeof getEndlessBossAfterHealRatioForIds === "function"
+    ? getEndlessBossAfterHealRatioForIds(journey.activeDebuffIds)
+    : 1;
+  const healAmount = Math.round(lostHp * healRatio);
+  RUN_STATE.player.hp = Math.max(0, Math.min(maxHp, (RUN_STATE.player.hp || 0) + healAmount));
+
+  // 이번에 새로 도달한 심도의 1회성 효과(정신력 압박/잠념 침투)를 적용한다.
+  if(typeof applyEndlessOneShotDepthEffects === "function") applyEndlessOneShotDepthEffects(journey);
+
   if(typeof S !== "undefined" && S && S.player){
     S.player.maxHp = RUN_STATE.player.maxHp;
     S.player.hp = RUN_STATE.player.hp;
