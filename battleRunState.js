@@ -27,6 +27,46 @@ function createRunRewardId(){
   return "act1-run-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
 }
 
+function createDefaultJourneyState(){
+  // 끝없는 여정 1차 상태 모델: 이번 작업에서는 저장/복원용 데이터만 만들고 전투에는 적용하지 않는다.
+  return {
+    mode: "first",
+    actName: "최초의 여정",
+    endlessLevel: 0,
+    activeDebuffIds: [],
+    clearedBossPackageIds: [],
+    totalDisplayFloorOffset: 0
+  };
+}
+
+function cloneJourneyState(journey){
+  const defaults = createDefaultJourneyState();
+  const source = journey && typeof journey === "object" ? journey : defaults;
+
+  // 과거 세이브나 부분 저장 데이터가 들어와도 배열 필드는 항상 새 배열로 보정한다.
+  return {
+    mode: source.mode === "endless" ? "endless" : defaults.mode,
+    actName: typeof source.actName === "string" && source.actName ? source.actName : defaults.actName,
+    endlessLevel: Number.isFinite(source.endlessLevel) ? source.endlessLevel : defaults.endlessLevel,
+    activeDebuffIds: Array.isArray(source.activeDebuffIds) ? source.activeDebuffIds.slice() : [],
+    clearedBossPackageIds: Array.isArray(source.clearedBossPackageIds) ? source.clearedBossPackageIds.slice() : [],
+    totalDisplayFloorOffset: Number.isFinite(source.totalDisplayFloorOffset)
+      ? source.totalDisplayFloorOffset
+      : defaults.totalDisplayFloorOffset
+  };
+}
+
+function ensureJourneyState(runState){
+  if(!runState || typeof runState !== "object"){
+    console.warn("[EndlessJourney] RUN_STATE가 없어 기본 journey 상태를 반환합니다.");
+    return createDefaultJourneyState();
+  }
+
+  // 기존 저장 데이터에는 journey가 없으므로 로드 직후 여기에서 기본값을 채운다.
+  runState.journey = cloneJourneyState(runState.journey);
+  return runState.journey;
+}
+
 function createFreshRunState(){
   const player = LIFE.createPlayer(PLAYER_DEF);
   player.block = 0;
@@ -41,6 +81,7 @@ function createFreshRunState(){
     nextBattleStartBlock: 0,
     selectedSpiritPathDeckIds: getInitialSpiritPathSelection(),
     alwaysIncludeGenericItems: true,
+    journey: createDefaultJourneyState(),
     // 기도터 "정리하기"(주문 제거)를 이번 런에서 사용한 횟수 - 새 런 시작 시 0으로 초기화
     cleanseCount: 0,
     // 전투 요약/상세 화면(runResult.js)에서 사용하는 이번 여정 누적 기록 (기획서 §5-1)
@@ -516,5 +557,10 @@ function syncRunStateFromCombat(){
     ? S.selectedSpiritPathDeckIds.slice()
     : RUN_STATE.selectedSpiritPathDeckIds;
   RUN_STATE.alwaysIncludeGenericItems = true;
+  RUN_STATE.journey = cloneJourneyState(S.journey || RUN_STATE.journey);
+  S.journey = cloneJourneyState(RUN_STATE.journey);
 }
 
+window.createDefaultJourneyState = createDefaultJourneyState;
+window.cloneJourneyState = cloneJourneyState;
+window.ensureJourneyState = ensureJourneyState;

@@ -333,7 +333,9 @@
       /* S는 배틀 시작 전까지 초기값이 없어(let S;) typeof S가 항상 "undefined"이므로,
          기존 typeof 가드로는 새로고침 직후 복원이 절대 실행되지 않았다. */
       S = saved.state;
+      if(typeof ensureJourneyState === "function") ensureJourneyState(S);
       if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
+      if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
       if(window.MAP_STATE && saved.mapState){
         window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
         window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
@@ -370,6 +372,11 @@
 
     const state = JSON.parse(JSON.stringify(S));
     state.busy = pauseState ? pauseState.busy : !!S.busy;
+    if(typeof RUN_STATE !== "undefined" && RUN_STATE && typeof ensureJourneyState === "function"){
+      state.journey = cloneJourneyState(ensureJourneyState(RUN_STATE));
+    } else if(typeof ensureJourneyState === "function") {
+      ensureJourneyState(state);
+    }
     const starterDeck = typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
     const mapState = window.MAP_STATE ? {
       currentStage: window.MAP_STATE.currentStage || 0,

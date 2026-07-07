@@ -199,6 +199,9 @@ function newGame(options={}){
 
   const stageIdx = window.MAP_STATE ? window.MAP_STATE.currentStage : 0;
   const curStage = window.ACT1_MAP_STAGES && window.ACT1_MAP_STAGES[stageIdx];
+  const journey = typeof ensureJourneyState === "function"
+    ? cloneJourneyState(ensureJourneyState(RUN_STATE))
+    : (RUN_STATE.journey || null);
   const runPlayer = RUN_STATE.player || LIFE.createPlayer(PLAYER_DEF);
   const player = LIFE.createPlayer(PLAYER_DEF);
   player.maxHp = runPlayer.maxHp || player.maxHp;
@@ -220,6 +223,7 @@ function newGame(options={}){
       ? RUN_STATE.selectedSpiritPathDeckIds.slice()
       : ["barrier", "memory", "soul_mark"],
     alwaysIncludeGenericItems: true,
+    journey,
     battleRuntimeId: Date.now() + ":" + Math.random(),
     scoreRuntime: {
       startHp: player.hp,
@@ -401,4 +405,3 @@ function createCombatEnemy(def, index, options = {}){
   ensureEnemyStatus(e);
   return e;
 }
-

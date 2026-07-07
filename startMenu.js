@@ -83,6 +83,7 @@ function continueGameFromMenu(){
 
   S = saved.state;
   normalizeRunResources();
+  if(typeof ensureJourneyState === "function") ensureJourneyState(S);
   STARTER_DECK = [...saved.starterDeck];
   if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
   S.busy = false;
