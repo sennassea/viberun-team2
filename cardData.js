@@ -232,6 +232,12 @@ const CARD_REWARD_POOL = Object.keys(CARD_DB).filter(key => {
   return card && !card.excludeFromRewards && !card.generatedOnly && !["starter", "status"].includes(card.rarity);
 });
 
+function isCardRemovableFromDeck(key){
+  const card = CARD_DB[key];
+  return !(card && card.unremovableFromDeck === true);
+}
+window.IS_CARD_REMOVABLE_FROM_DECK = isCardRemovableFromDeck;
+
 // 법구/영맥 데이터는 equipment.js / potion.js에서 관리합니다.
 // cardData.js는 주문 데이터만 담당합니다.
 

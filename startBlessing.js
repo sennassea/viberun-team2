@@ -309,7 +309,12 @@ function getSbStarterTargets(){
   if(!run || typeof CARD_DB === "undefined") return [];
   return run.deck
     .map((key, index) => ({ key, index, card: CARD_DB[key] }))
-    .filter(item => item.card && (item.card.rarity === "starter" || item.card.rarity === "basic"));
+    .filter(item => item.card && (item.card.rarity === "starter" || item.card.rarity === "basic") && isSbDeckCardRemovable(item.key));
+}
+
+function isSbDeckCardRemovable(key){
+  return typeof window.IS_CARD_REMOVABLE_FROM_DECK !== "function" ||
+    window.IS_CARD_REMOVABLE_FROM_DECK(key);
 }
 
 function pickSbRandom(list){
@@ -338,7 +343,12 @@ function removeSbRandomCards(count){
   const nextDeck = [...run.deck];
   const removedKeys = [];
   for(let i = 0; i < count && nextDeck.length > 0; i++){
-    const index = Math.floor(Math.random() * nextDeck.length);
+    const removableIndexes = nextDeck
+      .map((key, index) => ({ key, index }))
+      .filter(item => isSbDeckCardRemovable(item.key))
+      .map(item => item.index);
+    if(removableIndexes.length === 0) break;
+    const index = pickSbRandom(removableIndexes);
     const removed = nextDeck.splice(index, 1)[0];
     if(removed) removedKeys.push(removed);
   }
@@ -360,11 +370,11 @@ function chooseSbStarterCardToRemove(){
   return window.OPEN_DECK_VIEWER_CARD_PICK({
     title: "제거할 카드 선택",
     confirmText: "제거",
-    isSelectable: key => !!(CARD_DB[key] && (CARD_DB[key].rarity === "starter" || CARD_DB[key].rarity === "basic")),
+    isSelectable: key => !!(CARD_DB[key] && (CARD_DB[key].rarity === "starter" || CARD_DB[key].rarity === "basic") && isSbDeckCardRemovable(key)),
     disabledText: "기본 카드만 제거할 수 있습니다.",
     onConfirm: key => {
       const run = getSbRunState();
-      const index = run ? run.deck.findIndex(deckKey => deckKey === key && CARD_DB[deckKey] && (CARD_DB[deckKey].rarity === "starter" || CARD_DB[deckKey].rarity === "basic")) : -1;
+      const index = run ? run.deck.findIndex(deckKey => deckKey === key && CARD_DB[deckKey] && (CARD_DB[deckKey].rarity === "starter" || CARD_DB[deckKey].rarity === "basic") && isSbDeckCardRemovable(deckKey)) : -1;
       const removed = removeSbDeckCardAt(index);
       if(removed && typeof toast === "function") toast("카드 제거: " + (CARD_DB[removed]?.name || removed));
     }

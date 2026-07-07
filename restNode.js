@@ -33,14 +33,8 @@ window.getCardRemoveCost = getCardRemoveCost;
    덱은 카드 키 배열이라 개별 인스턴스를 구분하지 못하므로, 덱에 남은
    "잠념" 수가 저주로 보호된 수량을 초과할 때만 제거를 허용한다. ── */
 function isEndlessRestCardRemovable(key){
-  if(key !== "intrusive_thought") return true;
-  const protectedCount = typeof getEndlessUnremovableIntrusiveThoughtCount === "function"
-    ? getEndlessUnremovableIntrusiveThoughtCount()
-    : 0;
-  if(protectedCount <= 0) return true;
-  const deck = typeof STARTER_DECK !== "undefined" ? STARTER_DECK : [];
-  const currentCount = deck.filter(k => k === "intrusive_thought").length;
-  return currentCount > protectedCount;
+  return typeof window.IS_CARD_REMOVABLE_FROM_DECK !== "function" ||
+    window.IS_CARD_REMOVABLE_FROM_DECK(key);
 }
 window.isEndlessRestCardRemovable = isEndlessRestCardRemovable;
 

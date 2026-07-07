@@ -29,7 +29,8 @@
       rarity: "status",
       desc: "사용 불가\n덱에 남아 손패 자리를 차지합니다",
       fx: [],
-      unplayable: true
+      unplayable: true,
+      unremovableFromDeck: true
     },
     regret: {
       name: "후회",
