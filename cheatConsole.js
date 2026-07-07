@@ -298,7 +298,7 @@
   /* =========================================================================
      BM 계정 달빛조각(wallet.moonShards) 치트
      - 전투 상태 S.moonShards는 절대 건드리지 않고, accountId 기준
-       wallet.moonShards만 서버(local-mock-server.js `/wallet/cheat`)에 반영한다.
+       wallet.moonShards만 Supabase에 반영한다.
      - 서버 반영 후 window.VIBERUN_WALLET.setCachedWallet()을 호출해
        viberun:wallet-changed 이벤트를 발행, 메인/선물함/월영당 UI를 동기화한다.
      ========================================================================= */
@@ -316,38 +316,6 @@
     const v = Number(n);
     if(!Number.isFinite(v)){ cheatWarn("수량은 숫자여야 합니다."); return null; }
     return v;
-  }
-
-  function requestWalletCheat(op, amount){
-    const account = requireLoggedInAccount();
-    if(!account) return Promise.resolve(null);
-
-    const token = String(account.accessToken || "");
-    const base = (window.VIBERUN_WALLET_API_BASE || window.VIBERUN_AUTH_API_BASE || "").replace(/\/$/, "");
-    if(typeof fetch !== "function" || !token){
-      cheatWarn("wallet 치트 API를 사용할 수 없는 환경입니다.");
-      return Promise.resolve(null);
-    }
-
-    return fetch(base + "/wallet/cheat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-      body: JSON.stringify({ op, amount })
-    }).then(response => response.text().then(text => {
-      let body = {};
-      try { body = text ? JSON.parse(text) : {}; } catch(error) { body = {}; }
-      if(!response.ok || !body.ok || !body.wallet){
-        cheatWarn("wallet 치트 요청이 실패했습니다: " + (body.message || response.statusText));
-        return null;
-      }
-      if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.setCachedWallet === "function"){
-        window.VIBERUN_WALLET.setCachedWallet(body.wallet);
-      }
-      return body.wallet;
-    })).catch(error => {
-      cheatWarn("wallet 치트 요청 중 오류가 발생했습니다: " + error);
-      return null;
-    });
   }
 
   function requestWalletCheatSupabase(op, amount){
