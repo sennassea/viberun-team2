@@ -5,6 +5,7 @@
    - Keeps the same public API used by rankingUI.js and runResult.js.
    ========================================================================= */
 (function(){
+  const DEFAULT_NICKNAME = "빛솔이";
   const RANKING_PERIODS = ["all", "weekly", "daily"];
   const RANKING_LIMIT = 100;
   const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -79,8 +80,6 @@
       if(profile && profile.nickname) return String(profile.nickname).trim();
     }
 
-    const account = getAccountInfo();
-    if(account && account.displayName) return String(account.displayName).trim();
     return "";
   }
 
@@ -89,7 +88,7 @@
     if(cachedNickname) return cachedNickname;
 
     const client = getClient();
-    if(!client || !userId) return "Player";
+    if(!client || !userId) return DEFAULT_NICKNAME;
 
     const result = await client.from("profiles")
       .select("nickname")
@@ -98,11 +97,11 @@
 
     if(result && result.error){
       console.warn("[Ranking] profile nickname load failed:", result.error);
-      return "Player";
+      return DEFAULT_NICKNAME;
     }
 
     const row = Array.isArray(result.data) ? result.data[0] : result.data;
-    return row && row.nickname ? String(row.nickname).trim() : "Player";
+    return row && row.nickname ? String(row.nickname).trim() : DEFAULT_NICKNAME;
   }
 
   async function fetchRanking(period){
