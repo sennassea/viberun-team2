@@ -6,6 +6,8 @@
    - Keeps table access out of UI/auth modules.
    ========================================================================= */
 (function(){
+  const DEFAULT_NICKNAME = "빛솔이";
+
   let cachedProfile = null;
   let cachedWallet = null;
   let isGrantingTestGem = false;
@@ -35,10 +37,6 @@
     };
   }
 
-  function makeRandomNickname(){
-    return "Player_" + String(Math.floor(1000 + Math.random() * 9000));
-  }
-
   function isNoRowsError(error){
     return !!(error && (error.code === "PGRST116" || String(error.message || "").includes("0 rows")));
   }
@@ -65,7 +63,7 @@
     return Object.assign({}, cachedWallet);
   }
 
-  function getOrCreateProfile(userId, fallbackName){
+  function getOrCreateProfile(userId){
     const client = getClient();
     const id = String(userId || "").trim();
     if(!client || !id){
@@ -83,7 +81,7 @@
         return { ok: false, error: result.error, message: result.error.message || "유저 정보를 불러오지 못했습니다." };
       }
 
-      const nickname = String(fallbackName || "").trim() || makeRandomNickname();
+      const nickname = DEFAULT_NICKNAME;
       return client.from("profiles").insert({ id, nickname }).select("*").single().then(insertResult => {
         if(insertResult && insertResult.error){
           return { ok: false, error: insertResult.error, message: insertResult.error.message || "유저 정보를 생성하지 못했습니다." };
@@ -160,7 +158,7 @@
     }
 
     return Promise.all([
-      getOrCreateProfile(userId, source.displayName),
+      getOrCreateProfile(userId),
       getOrCreateWallet(userId)
     ]).then(results => {
       const profileResult = results[0];
