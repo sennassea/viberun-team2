@@ -9,6 +9,24 @@
 (function(){
   const MAILBOX_API_BASE = (window.VIBERUN_MAILBOX_API_BASE || window.VIBERUN_AUTH_API_BASE || "").replace(/\/$/, "");
 
+  function getCachedWallet(){
+    const userData = window.VIBERUN_USER_DATA;
+    if(userData && typeof userData.getCachedWallet === "function"){
+      return userData.getCachedWallet() || { gem: 0, moonShards: 0 };
+    }
+
+    const wallet = window.VIBERUN_WALLET;
+    if(wallet && typeof wallet.getCachedWallet === "function"){
+      return wallet.getCachedWallet() || { gem: 0, moonShards: 0 };
+    }
+
+    return { gem: 0, moonShards: 0 };
+  }
+
+  function isMailboxApiConfigured(){
+    return !!MAILBOX_API_BASE;
+  }
+
   function getAccessToken(){
     const auth = window.VIBERUN_AUTH;
     if(!auth || typeof auth.getAccountInfo !== "function") return "";
@@ -17,6 +35,14 @@
   }
 
   function requestMailboxJson(path, options){
+    if(!isMailboxApiConfigured()){
+      return Promise.resolve({
+        ok: false,
+        code: "MAILBOX_API_UNAVAILABLE",
+        message: "선물함 서버가 아직 연결되지 않았습니다."
+      });
+    }
+
     const token = getAccessToken();
     if(!token){
       return Promise.resolve({
@@ -75,6 +101,15 @@
 
   /* GET /mailbox → { items, wallet } */
   function fetchMailboxList(){
+    if(!isMailboxApiConfigured()){
+      return Promise.resolve({
+        ok: true,
+        items: [],
+        wallet: getCachedWallet(),
+        offline: true
+      });
+    }
+
     return requestMailboxJson("/mailbox", { method: "GET" });
   }
 

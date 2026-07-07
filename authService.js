@@ -745,7 +745,6 @@
   };
 
   function restoreSupabaseSessionOnLoad(){
-    if(readSession()) return;
     checkSession().then(result => {
       if(result && result.ok){
         emitAuthChanged({
