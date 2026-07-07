@@ -53,6 +53,14 @@
   font-size:3.22cqh;
   font-weight:900;
   color:#245b87;
+  overflow:hidden;
+}
+
+.monthly-pass-claim-emblem img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  pointer-events:none;
 }
 
 .monthly-pass-claim-dday{
