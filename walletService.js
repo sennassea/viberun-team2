@@ -2,22 +2,31 @@
 
 /* =========================================================================
    Wallet Service
-   - accountId 기준 계정 wallet 값을 서버에서 조회하고 메모리에 캐시합니다.
-   - RUN_STATE/S.moonShards/hudMoonShard와 연결하지 않아 전투 재화와 계정 BM 재화가
-     섞이지 않도록 경계를 유지합니다.
-   - wallet 값이 바뀌면 viberun:wallet-changed 이벤트를 발행해 UI들이 같은 값을
-     즉시 갱신할 수 있게 합니다.
+   - Keeps account BM currency separate from run currency.
+   - Reads Supabase wallets through userDataService so wallet creation stays
+     in one place.
    ========================================================================= */
 (function(){
-  const WALLET_API_BASE = (window.VIBERUN_WALLET_API_BASE || window.VIBERUN_AUTH_API_BASE || "").replace(/\/$/, "");
   let cachedWallet = null;
 
-  function getAccessToken(){
+  function getAccount(){
     const auth = window.VIBERUN_AUTH;
-    if(!auth || typeof auth.getAccountInfo !== "function") return "";
-
+    if(!auth || typeof auth.getAccountInfo !== "function") return null;
     const account = auth.getAccountInfo();
-    return account && account.isLoggedIn ? String(account.accessToken || "") : "";
+    return account && account.isLoggedIn ? account : null;
+  }
+
+  function getSupabaseUserId(){
+    const bridge = window.VIBERUN_SUPABASE;
+    const client = bridge && typeof bridge.getClient === "function" ? bridge.getClient() : null;
+    if(!client || !client.auth || typeof client.auth.getUser !== "function"){
+      return Promise.resolve("");
+    }
+
+    return client.auth.getUser().then(result => {
+      const user = result && result.data ? result.data.user : null;
+      return user && user.id ? String(user.id) : "";
+    }).catch(() => "");
   }
 
   function normalizeWallet(wallet){
@@ -33,67 +42,34 @@
         detail: { wallet: wallet ? normalizeWallet(wallet) : null }
       }));
     } catch(error) {
-      console.warn("[Wallet] wallet 변경 이벤트 발행에 실패했습니다.", error);
+      console.warn("[Wallet] Failed to emit wallet change event.", error);
     }
-  }
-
-  function requestWalletJson(){
-    const token = getAccessToken();
-    if(!token){
-      return Promise.resolve({
-        ok: false,
-        code: "NOT_LOGGED_IN",
-        message: "로그인이 필요합니다."
-      });
-    }
-
-    if(typeof fetch !== "function"){
-      return Promise.resolve({
-        ok: false,
-        code: "FETCH_UNAVAILABLE",
-        message: "네트워크 요청을 사용할 수 없는 환경입니다."
-      });
-    }
-
-    return fetch(WALLET_API_BASE + "/wallet", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
-      }
-    }).then(response => response.text().then(text => {
-      let body = {};
-      if(text){
-        try {
-          body = JSON.parse(text);
-        } catch(error) {
-          console.warn("[Wallet] 서버 응답 JSON 파싱에 실패했습니다.", error);
-          body = { message: text };
-        }
-      }
-
-      if(response.ok) return Object.assign({ ok: true }, body);
-      return {
-        ok: false,
-        status: response.status,
-        code: body.code || body.errorCode || "",
-        message: body.message || "wallet 조회에 실패했습니다.",
-        body
-      };
-    })).catch(error => {
-      console.warn("[Wallet] 서버 wallet 조회 중 네트워크 오류가 발생했습니다.", error);
-      return {
-        ok: false,
-        code: "NETWORK_ERROR",
-        error,
-        message: "서버와 연결할 수 없습니다. 네트워크 상태를 확인해 주세요."
-      };
-    });
   }
 
   function fetchWallet(){
-    return requestWalletJson().then(result => {
-      if(!result || !result.ok) return result;
+    const account = getAccount();
+    if(!account){
+      return Promise.resolve({
+        ok: false,
+        code: "NOT_LOGGED_IN",
+        message: "Login is required."
+      });
+    }
+
+    const userData = window.VIBERUN_USER_DATA;
+    if(!userData || typeof userData.fetchWallet !== "function"){
+      return Promise.resolve({
+        ok: false,
+        code: "USER_DATA_UNAVAILABLE",
+        message: "Wallet service is unavailable."
+      });
+    }
+
+    return getSupabaseUserId().then(supabaseUserId => {
+      const userId = supabaseUserId || account.accountId || account.uid;
+      return userData.fetchWallet(userId);
+    }).then(result => {
+      if(!result || !result.ok) return result || { ok: false, message: "Failed to load wallet." };
 
       const wallet = normalizeWallet(result.wallet);
       setCachedWallet(wallet);
