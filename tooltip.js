@@ -558,7 +558,12 @@
     ".bsp-face .card-name-text{position:absolute;left:12%;right:8%;top:5.9%;height:10%;" +
       "display:grid;place-items:center;text-align:center;font-size:1cqh;line-height:1.05;overflow:hidden;}" +
     ".bsp-face .card-desc-text{position:absolute;left:8%;right:8%;top:77.8%;bottom:7.4%;" +
-      "text-align:center;font-size:.85cqh;line-height:1.2;overflow:hidden;white-space:pre-line;}";
+      "text-align:center;font-size:.85cqh;line-height:1.2;overflow:hidden;white-space:pre-line;}" +
+    "#battle-subcard-preview.spirit-path-card-preview-large{z-index:100002;filter:drop-shadow(0 .8cqh 1.5cqh rgba(0,0,0,.55));}" +
+    "#battle-subcard-preview.spirit-path-card-preview-large .bsp-face{border:.26cqh solid rgba(255,225,140,.95);box-shadow:0 .9cqh 2.4cqh rgba(0,0,0,.58),0 0 0 .36cqh rgba(255,220,120,.26);}" +
+    "#battle-subcard-preview.spirit-path-card-preview-large .bsp-face .card-cost-text{font-size:3.15cqh;text-shadow:0 .08cqh 0 rgba(255,255,255,.95);}" +
+    "#battle-subcard-preview.spirit-path-card-preview-large .bsp-face .card-name-text{font-size:2.05cqh;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}" +
+    "#battle-subcard-preview.spirit-path-card-preview-large .bsp-face .card-desc-text{font-size:1.52cqh;line-height:1.32;}";
 
   document.head.appendChild(styleEl);
 
@@ -1195,6 +1200,48 @@
 
   function hideSubCardPreview() {
     subCardPreview.classList.remove("show");
+    subCardPreview.classList.remove("spirit-path-card-preview-large");
+  }
+
+  function isSpiritPathMiniCard(cardEl) {
+    return !!(cardEl && cardEl.classList && cardEl.classList.contains("spirit-path-mini-card"));
+  }
+
+  function isLockedSpiritPathCard(cardEl) {
+    return !!(cardEl && cardEl.closest && cardEl.closest(".spirit-path-card.is-locked"));
+  }
+
+  function positionSpiritPathCardPreview(cardEl) {
+    var gRect = getPositionOrigin(isCardOutsideGame(cardEl));
+    var cRect = cardEl.getBoundingClientRect();
+    var pad = 10;
+    var previewWidth = Math.max(220, Math.min(window.innerWidth * 0.22, window.innerHeight * 0.32, 360));
+
+    subCardPreview.style.width = previewWidth + "px";
+    var pRect = subCardPreview.getBoundingClientRect();
+    var cardLeft = cRect.left - gRect.left;
+    var cardRight = cRect.right - gRect.left;
+    var cardMid = (cRect.left + cRect.right) / 2 - gRect.left;
+    var tx = cardMid > gRect.width / 2
+      ? cardLeft - pRect.width - pad
+      : cardRight + pad;
+    var ty = cRect.top - gRect.top - (pRect.height - cRect.height) / 2;
+
+    tx = Math.max(pad, Math.min(gRect.width - pRect.width - pad, tx));
+    ty = Math.max(pad, Math.min(gRect.height - pRect.height - pad, ty));
+
+    subCardPreview.style.left = tx + "px";
+    subCardPreview.style.top = ty + "px";
+  }
+
+  function showSpiritPathCardPreview(cardEl, cardEntry) {
+    if (!cardEntry || typeof cardFaceHtml !== "function") return false;
+    syncTooltipLayer(isCardOutsideGame(cardEl));
+    subCardPreview.innerHTML = '<div class="bsp-face">' + cardFaceHtml(cardEntry) + '</div>';
+    subCardPreview.classList.add("show");
+    subCardPreview.classList.add("spirit-path-card-preview-large");
+    positionSpiritPathCardPreview(cardEl);
+    return true;
   }
 
   /* ── 주문 툴팁 위치 ───────────────────────────────────────────────────── */
@@ -1251,11 +1298,26 @@
   function showCardTooltip(cardEl) {
     /* 드래그 중에는 주문 용어 툴팁을 표시하지 않음 */
     if (typeof dragState !== "undefined" && dragState !== null) return;
+    if (isLockedSpiritPathCard(cardEl)) return;
 
     var descEl = cardEl.querySelector(".desc, .card-desc-text");
     if (!descEl) return;
 
     var cardEntry = getCardDbEntryFromCardEl(cardEl);
+    if (isSpiritPathMiniCard(cardEl)) {
+      activeId = null;
+      activeItemSlotEl = null;
+      activeEnergyEl = null;
+      activeHudEl = null;
+      activeProgressEl = null;
+      activeMenuEl = null;
+      activeDockEl = null;
+      cardActiveEl = cardEl;
+      tooltip.classList.remove("tt-show");
+      showSpiritPathCardPreview(cardEl, cardEntry);
+      return;
+    }
+
     var subCardEntry = getSubCardEntry(cardEntry);
 
     var html = buildCardTermHtml(descEl.textContent.trim(), subCardEntry ? subCardEntry.desc : null);
@@ -1319,7 +1381,7 @@
   /*  document.body 모달이라 이 game 레벨 위임이 닿지 않는다 — 아래 별도  */
   /*  document 레벨 위임(BM_DECK_PREVIEW_CARD_SELECTOR)에서 처리한다)     */
   var DECK_OR_REWARD_CARD_SELECTOR =
-    ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card,.random-item-result-card-frame";
+    ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card,.random-item-result-card-frame,.spirit-path-mini-card";
 
   game.addEventListener("mouseover", function (e) {
     var dvCard = e.target.closest(DECK_OR_REWARD_CARD_SELECTOR);
