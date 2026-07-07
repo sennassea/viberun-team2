@@ -407,7 +407,7 @@ function renderCanvas(currentNodeId) {
     const charW = charH * (markerDims.w / markerDims.h);
     // 발이 노드 원 안쪽으로 더 깊이 겹치도록 해서 원을 밟고 선 느낌을 강조함
     const feetY = y - curNodeR + 20;
-    svgPin = `<g transform="translate(${x | 0},${(feetY - charH) | 0}) scale(-1,1)">
+    svgPin = `<g transform="translate(${x | 0},${(feetY - charH) | 0})">
       <image href="${markerImage}"
         x="${-charW / 2 | 0}" y="0"
         width="${charW | 0}" height="${charH | 0}"
