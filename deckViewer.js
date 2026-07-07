@@ -39,6 +39,7 @@
     { id: "attack", label: "정화(공격)" },
     { id: "defense", label: "결계(방어)" },
     { id: "skill", label: "스킬(강화)" },
+    { id: "status", label: "상태이상" },
   ];
 
   const filterState = {
@@ -63,14 +64,14 @@
 
   const EMPTY_TEXT = {
     all: "보유 중인 주문이 없습니다.",
-    hand: "손패가 없습니다.",
+    hand: "뽑을 주문이 없습니다.",
     discard: "버린 주문이 없습니다.",
     exhaust: "소멸된 주문이 없습니다.",
   };
 
   const TABS = [
     { id: "all", label: "전체 주문", getCards: () => getDeck() },
-    { id: "hand", label: "손패", getCards: () => getHandPool() },
+    { id: "hand", label: "뽑을 주문", getCards: () => getHandPool() },
     { id: "discard", label: "버린 주문", getCards: () => getDiscard() },
     { id: "exhaust", label: "소멸된 주문", getCards: () => getExhaust() },
   ];
@@ -905,6 +906,7 @@
     if(type === "attack" || type === "purify" || type === "정화" || type === "공격") return "attack";
     if(type === "defense" || type === "barrier" || type === "결계" || type === "방어") return "defense";
     if(type === "skill" || type === "boost" || type === "스킬" || type === "강화") return "skill";
+    if(type === "status" || type === "상태이상") return "status";
     return "";
   }
 
