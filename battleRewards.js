@@ -42,6 +42,9 @@ function openCardReward(){
   if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function"){
     window.VIBERUN_SOUND.play("rewardOpen");
   }
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmReward");
+  }
 }
 
 function openBattleVictoryReward(){
@@ -50,6 +53,9 @@ function openBattleVictoryReward(){
   updateEndBtn();
   if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function"){
     window.VIBERUN_SOUND.play("battleVictory");
+  }
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmReward");
   }
 }
 
@@ -149,6 +155,42 @@ function randomItemResultIconHtml(icon, name){
   return escapeHtml(icon || "?");
 }
 
+function randomItemResultSourceItem(item){
+  if(!item || !item.key) return null;
+  if(item.type === "relic"){
+    const db = Array.isArray(window.RELIC_DB) ? window.RELIC_DB : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
+    return db.find(relic => relic && relic.id === item.key) || null;
+  }
+  if(item.type === "potion"){
+    const db = Array.isArray(window.POTION_DB) ? window.POTION_DB : (typeof POTION_DB !== "undefined" ? POTION_DB : []);
+    return db.find(potion => potion && potion.id === item.key) || null;
+  }
+  return null;
+}
+
+function randomItemResultFramePath(item){
+  const source = randomItemResultSourceItem(item);
+  const rarity = String((item && item.rarity) || (source && source.rarity) || "common").toLowerCase();
+  if(rarity === "blessing" || rarity === "starter" || rarity === "start") return "assets/ui_panels/relic_potion_frame_start.png";
+  if(rarity === "rare" || rarity === "special" || rarity === "legendary") return "assets/ui_panels/relic_potion_frame_legendary.png";
+  if(rarity === "uncommon") return "assets/ui_panels/relic_potion_frame_rare.png";
+  return "assets/ui_panels/relic_potion_frame_common.png";
+}
+
+function randomItemResultFaceHtml(item){
+  const source = randomItemResultSourceItem(item);
+  const icon = (item && item.icon) || (source && (source.iconImage || source.icon || source.emoji)) || (item && item.type === "relic" ? "🏺" : item && item.type === "potion" ? "🧪" : "?");
+  const name = (item && item.name) || (source && source.name) || "";
+  const desc = (item && item.desc) || (source && (source.desc || source.effectText || source.valueText)) || "";
+  return '<div class="item-art-layer">' + randomItemResultIconHtml(icon, name) + '</div>' +
+    '<img class="item-frame-layer" src="' + escapeHtml(randomItemResultFramePath(item)) + '" alt="" aria-hidden="true" draggable="false">' +
+    '<div class="item-text-layer">' +
+      '<div class="item-name-text">' + escapeHtml(name) + '</div>' +
+      '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(desc).replace(/\n/g, "<br>")) + '</div>' +
+    '</div>' +
+    '<div class="item-hit-layer" aria-hidden="true"></div>';
+}
+
 function randomItemResultCardHtml(item){
   const actionText = item.action === "remove" ? "제거됨" : "획득";
 
@@ -163,6 +205,15 @@ function randomItemResultCardHtml(item){
         '</div>'
       );
     }
+  }
+
+  if(item.type === "relic" || item.type === "potion"){
+    return (
+      '<div class="random-item-result-card random-item-result-card-frame ' + escapeHtml(item.action || "gain") + '">' +
+        '<div class="random-item-result-card-face item-frame-card">' + randomItemResultFaceHtml(item) + '</div>' +
+        '<div class="random-item-result-tag">' + escapeHtml(actionText) + '</div>' +
+      '</div>'
+    );
   }
 
   const icon = item.icon || (item.type === "relic" ? "🏺" : item.type === "potion" ? "🧪" : "?");
@@ -852,4 +903,3 @@ function closeRewardOverlay(){
   const victoryOv = document.querySelector("#battleVictoryOverlay");
   if(victoryOv) victoryOv.classList.remove("show");
 }
-

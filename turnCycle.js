@@ -186,6 +186,9 @@ function endGame(result){
     S.giveUpToStartOnly = false;
   }
   saveCompletedRunRecord(result);
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function"){
+    window.VIBERUN_SOUND.play(result === "win" ? "battleVictory" : "battleDefeat");
+  }
 
   // 보스 처치(승리) 시 신령의 은혜 신령 출현 연출을 먼저 보여준다.
   // runResult.js가 처리하지 못하는 결과(패배 등)는 기존 종료 UI로 폴백한다.
@@ -230,4 +233,3 @@ function updateRestartButtonForEndGame(removeRestart){
   });
   returnStartButton.parentNode.insertBefore(restoredButton, returnStartButton);
 }
-

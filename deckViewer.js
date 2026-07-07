@@ -381,6 +381,19 @@
       ".codex-item-card .art{height:16cqh;font-size:8cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);}" +
       ".codex-item-card .art img{width:80%;height:80%;object-fit:contain;display:block;}" +
       ".codex-item-card .art img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.18));}" +
+      ".deck-viewer-card.codex-item-frame-card,.card-detail-card.codex-item-frame-card{position:relative;aspect-ratio:2/3;padding:0;border:0;overflow:hidden;background:transparent;box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18);}" +
+      ".deck-viewer-card.codex-item-frame-card{min-height:25cqh;}" +
+      ".card-detail-card.codex-item-frame-card{height:45cqh;}" +
+      ".codex-item-frame-card .item-art-layer{position:absolute;inset:0;z-index:1;display:grid;place-items:center;overflow:hidden;pointer-events:none;font-size:8cqh;}" +
+      ".card-detail-card.codex-item-frame-card .item-art-layer{font-size:11cqh;}" +
+      ".codex-item-frame-card .item-art-layer img{width:62%;height:48%;object-fit:contain;display:block;filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.22));user-select:none;-webkit-user-drag:none;}" +
+      ".codex-item-frame-card .item-frame-layer{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:fill;pointer-events:none;}" +
+      ".codex-item-frame-card .item-text-layer{position:absolute;inset:0;z-index:2;pointer-events:none;font-weight:900;color:#10243f;}" +
+      ".codex-item-frame-card .item-name-text{position:absolute;left:12%;right:12%;top:6.1%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.35cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}" +
+      ".codex-item-frame-card .item-desc-text{position:absolute;left:9%;right:9%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.02cqh;line-height:1.34;white-space:pre-line;overflow:hidden;color:#10243f;}" +
+      ".card-detail-card.codex-item-frame-card .item-name-text{font-size:2.15cqh;}" +
+      ".card-detail-card.codex-item-frame-card .item-desc-text{font-size:1.7cqh;}" +
+      ".codex-item-frame-card .item-hit-layer{position:absolute;inset:0;z-index:4;background:transparent;cursor:inherit;}" +
       ".deck-viewer.codex-mode .deck-viewer-card .deck-viewer-count{display:none;}" +
       ".deck-viewer-card.codex-locked{aspect-ratio:2/3;min-height:25cqh;padding:0;border:0;background:transparent;box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18);overflow:hidden;cursor:default;}" +
       ".deck-viewer-card.codex-locked:hover,.deck-viewer-card.codex-locked:focus-visible{transform:none;box-shadow:0 .5cqh 1.1cqh rgba(40,70,120,.18);}" +
@@ -979,11 +992,9 @@
   function deckCardHtml(entry, index){
     if(entry.kind && entry.kind !== "card"){
       const item = entry.item || {};
-      return '<button type="button" class="deck-viewer-card codex-item-card" data-card-key="' + escapeAttr(entry.key) + '" data-card-index="' + index + '" data-card-count="1">' +
+      return '<button type="button" class="deck-viewer-card codex-item-card codex-item-frame-card item-frame-card" data-card-key="' + escapeAttr(entry.key) + '" data-card-index="' + index + '" data-card-count="1">' +
         '<div class="deck-viewer-count">x1</div>' +
-        '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
-        '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
-        '<div class="desc">' + colorizeRarityLabels(escapeHtml(item.desc || "")) + '</div>' +
+        itemFaceHtml(item) +
       '</button>';
     }
     const card = entry.card;
@@ -1004,10 +1015,8 @@
     return '<button type="button" class="card-detail-nav card-detail-prev" data-card-detail-nav="prev" aria-label="이전 항목">‹</button>' +
       '<div class="card-detail-spread">' +
         '<div class="card-detail-front">' +
-          '<div class="card-detail-card codex-item-card">' +
-            '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
-            '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
-            '<div class="desc">' + colorizeRarityLabels(escapeHtml(item.desc || "")) + '</div>' +
+          '<div class="card-detail-card codex-item-card codex-item-frame-card item-frame-card">' +
+            itemFaceHtml(item) +
           '</div>' +
         '</div>' +
         '<div class="card-detail-back">' +
@@ -1188,6 +1197,25 @@
     const type = card && ["attack", "defense", "skill"].includes(card.type) ? card.type : "skill";
     const rarity = card && card.rarity ? card.rarity : "common";
     return "assets/card_frames/card-frame-" + type + "-" + rarity + ".png";
+  }
+
+  function itemFramePath(item){
+    const rarity = String(item && item.rarity ? item.rarity : "common").toLowerCase();
+    if(rarity === "blessing" || rarity === "starter" || rarity === "start") return "assets/ui_panels/relic_potion_frame_start.png";
+    if(rarity === "rare" || rarity === "special" || rarity === "legendary") return "assets/ui_panels/relic_potion_frame_legendary.png";
+    if(rarity === "uncommon") return "assets/ui_panels/relic_potion_frame_rare.png";
+    return "assets/ui_panels/relic_potion_frame_common.png";
+  }
+
+  function itemFaceHtml(item){
+    const safeItem = item || {};
+    return '<div class="item-art-layer">' + itemIconHtml(safeItem.iconImage || safeItem.emoji || "?") + '</div>' +
+      '<img class="item-frame-layer" src="' + escapeAttr(itemFramePath(safeItem)) + '" alt="" aria-hidden="true" draggable="false">' +
+      '<div class="item-text-layer">' +
+        '<div class="item-name-text">' + escapeHtml(safeItem.name || "") + '</div>' +
+        '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(safeItem.desc || "")) + '</div>' +
+      '</div>' +
+      '<div class="item-hit-layer" aria-hidden="true"></div>';
   }
 
   function cardFaceHtml(card){

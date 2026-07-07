@@ -90,6 +90,9 @@ function openPrayerNode(){
   renderPrayerOverlay();
   prayerOverlayEl.classList.add("show");
   prayerOverlayEl.setAttribute("aria-hidden", "false");
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmPrayer");
+  }
 }
 
 function closePrayerNode(){

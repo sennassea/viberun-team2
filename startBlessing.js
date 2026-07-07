@@ -96,6 +96,9 @@ window.OPEN_START_BLESSING = function(){
   renderSbOverlay();
   sbOverlayEl.classList.add("show");
   sbOverlayEl.setAttribute("aria-hidden", "false");
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmSpiritBlessing");
+  }
 };
 
 function closeSbOverlay(){
@@ -516,7 +519,9 @@ function sbPopupRelicItem(relic, action){
   if(!relic) return null;
   return {
     type: "relic", action, key: relic.id, name: relic.name,
-    icon: relic.iconImage || relic.icon || relic.emoji || "🏺"
+    icon: relic.iconImage || relic.icon || relic.emoji || "🏺",
+    desc: relic.desc || relic.effectText || relic.valueText || "",
+    rarity: relic.rarity || ""
   };
 }
 
@@ -524,7 +529,9 @@ function sbPopupPotionItem(potion, action){
   if(!potion) return null;
   return {
     type: "potion", action, key: potion.id, name: potion.name,
-    icon: potion.iconImage || potion.icon || potion.emoji || "🧪"
+    icon: potion.iconImage || potion.icon || potion.emoji || "🧪",
+    desc: potion.desc || potion.effectText || potion.valueText || "",
+    rarity: potion.rarity || ""
   };
 }
 
@@ -648,10 +655,8 @@ function sbOverlayHtml(){
 
 function sbChoiceHtml(blessing, index){
   return (
-    '<button type="button" class="sb-card" data-id="' + blessing.id + '">' +
-      '<div class="sb-card-icon">' + sbIconHtml(blessing.icon) + '</div>' +
-      '<div class="sb-card-name">' + blessing.name + '</div>' +
-      '<div class="sb-card-desc">' + colorizeRarityLabels(blessing.desc) + '</div>' +
+    '<button type="button" class="sb-card item-frame-card" data-id="' + blessing.id + '">' +
+      sbBlessingFaceHtml(blessing) +
     '</button>'
   );
 }
@@ -661,6 +666,25 @@ function sbIconHtml(icon){
     return '<img src="' + icon + '" alt="" aria-hidden="true">';
   }
   return icon || "";
+}
+
+function sbItemFramePath(item){
+  const rarity = String(item && item.rarity ? item.rarity : "blessing").toLowerCase();
+  if(rarity === "blessing" || rarity === "starter" || rarity === "start") return "assets/ui_panels/relic_potion_frame_start.png";
+  if(rarity === "rare" || rarity === "special" || rarity === "legendary") return "assets/ui_panels/relic_potion_frame_legendary.png";
+  if(rarity === "uncommon") return "assets/ui_panels/relic_potion_frame_rare.png";
+  return "assets/ui_panels/relic_potion_frame_common.png";
+}
+
+function sbBlessingFaceHtml(blessing){
+  const safeBlessing = blessing || {};
+  return '<div class="item-art-layer">' + sbIconHtml(safeBlessing.icon) + '</div>' +
+    '<img class="item-frame-layer" src="' + sbItemFramePath(safeBlessing) + '" alt="" aria-hidden="true" draggable="false">' +
+    '<div class="item-text-layer">' +
+      '<div class="item-name-text">' + (safeBlessing.name || "") + '</div>' +
+      '<div class="item-desc-text">' + colorizeRarityLabels(safeBlessing.desc || "") + '</div>' +
+    '</div>' +
+    '<div class="item-hit-layer" aria-hidden="true"></div>';
 }
 
 /* ── 화면 값 렌더링 (열 때마다 최신 상태 반영) ────────────────────────────── */
@@ -747,11 +771,15 @@ function ensureSbStyles(){
       "box-sizing:border-box;gap:.55cqh;padding:3.1cqh 2.15cqw 3cqh;background:transparent url(\"assets/ui_panels/start_blessing_choice_panel.png\") center/100% 100% no-repeat;" +
       "border:0;border-radius:0;cursor:pointer;font:inherit;color:#4a2b07;" +
       "box-shadow:none;overflow:hidden;transition:transform .14s ease,filter .14s ease;}" +
+    ".sb-card.item-frame-card{display:block;min-height:39cqh;background:transparent;}" +
+    ".sb-card.item-frame-card .item-art-layer{font-size:9cqh;}" +
+    ".sb-card.item-frame-card .item-name-text{font-size:1.55cqh;}" +
+    ".sb-card.item-frame-card .item-desc-text{font-size:1.12cqh;}" +
     ".sb-card:hover{transform:translateY(-.6cqh);filter:brightness(1.05) drop-shadow(0 .9cqh 1.2cqh rgba(90,65,25,.24));}" +
     ".sb-card-icon{height:12cqh;font-size:12cqh;display:flex;align-items:flex-start;justify-content:center;}" +
     ".sb-card-icon img{width:12cqh;height:12cqh;object-fit:contain;display:block;}" +
     ".sb-card-name{max-width:100%;margin-top:.35cqh;padding:0 .25cqw;font-size:1.75cqh;font-weight:900;text-align:center;line-height:1.14;word-break:keep-all;overflow-wrap:anywhere;text-shadow:0 .08cqh 0 rgba(255,255,255,.8);}" +
     ".sb-card-desc{flex:1;width:100%;box-sizing:border-box;margin-top:.25cqh;padding:0 .35cqw;font-size:1.08cqh;color:#5c3c10;text-align:center;line-height:1.44;font-weight:800;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty;text-shadow:0 .06cqh 0 rgba(255,255,255,.65);}" +
-    "@media (max-width:900px){.sb-choices{flex-direction:column;align-items:stretch;}.sb-card{max-width:none;min-height:auto;padding:2.4cqh 2.8cqw;}.sb-card-icon{height:8cqh;font-size:8cqh;}.sb-card-icon img{width:8cqh;height:8cqh;}.sb-card-desc{font-size:1.2cqh;}}";
+    "@media (max-width:900px){.sb-choices{flex-direction:column;align-items:center;}.sb-card{max-width:none;min-height:auto;padding:2.4cqh 2.8cqw;}.sb-card.item-frame-card{width:min(44cqw,21cqh);min-height:0;padding:0;}.sb-card-icon{height:8cqh;font-size:8cqh;}.sb-card-icon img{width:8cqh;height:8cqh;}.sb-card-desc{font-size:1.2cqh;}}";
   document.head.appendChild(style);
 }

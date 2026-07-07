@@ -257,16 +257,37 @@ function showTreasureRelicPopup(){
 }
 
 function treasureRelicItemHtml(relic){
-  const icon = relic.iconImage || relic.icon || relic.emoji || "🏺";
-  const iconHtml = (typeof icon === "string" && icon.indexOf("assets/") === 0)
-    ? '<img src="' + icon + '" alt="">'
-    : icon;
-  const desc = relic.desc || "";
+  const desc = relic.desc || relic.effectText || relic.valueText || "";
   return (
-    '<div class="treasure-relic-icon">' + iconHtml + '</div>' +
-    '<div class="treasure-relic-name">' + (relic.name || "") + '</div>' +
-    '<div class="treasure-relic-desc">' + (typeof colorizeRarityLabels === "function" ? colorizeRarityLabels(desc) : desc) + '</div>'
+    '<div class="treasure-relic-item item-frame-card">' +
+      treasureRelicFaceHtml(relic, desc) +
+    '</div>'
   );
+}
+
+function treasureItemFramePath(item){
+  const rarity = String(item && item.rarity ? item.rarity : "common").toLowerCase();
+  if(rarity === "blessing" || rarity === "starter" || rarity === "start") return "assets/ui_panels/relic_potion_frame_start.png";
+  if(rarity === "rare" || rarity === "special" || rarity === "legendary") return "assets/ui_panels/relic_potion_frame_legendary.png";
+  if(rarity === "uncommon") return "assets/ui_panels/relic_potion_frame_rare.png";
+  return "assets/ui_panels/relic_potion_frame_common.png";
+}
+
+function treasureRelicIconHtml(relic){
+  const icon = relic.iconImage || relic.icon || relic.emoji || "🏺";
+  return (typeof icon === "string" && icon.indexOf("assets/") === 0)
+    ? '<img src="' + icon + '" alt="" aria-hidden="true">'
+    : icon;
+}
+
+function treasureRelicFaceHtml(relic, desc){
+  return '<div class="item-art-layer">' + treasureRelicIconHtml(relic) + '</div>' +
+    '<img class="item-frame-layer" src="' + treasureItemFramePath(relic) + '" alt="" aria-hidden="true" draggable="false">' +
+    '<div class="item-text-layer">' +
+      '<div class="item-name-text">' + (relic.name || "") + '</div>' +
+      '<div class="item-desc-text">' + (typeof colorizeRarityLabels === "function" ? colorizeRarityLabels(desc || "") : (desc || "")) + '</div>' +
+    '</div>' +
+    '<div class="item-hit-layer" aria-hidden="true"></div>';
 }
 
 function closeTreasureRelicPopup(){
@@ -310,7 +331,9 @@ function onTreasureRelicTake(){
       title: "법구 획득",
       items: [{
         type: "relic", action: "gain", key: relic.id, name: relic.name,
-        icon: relic.iconImage || relic.icon || relic.emoji || "🏺"
+        icon: relic.iconImage || relic.icon || relic.emoji || "🏺",
+        desc: relic.desc || relic.effectText || relic.valueText || "",
+        rarity: relic.rarity || ""
       }]
     }).then(finishTreasureNode);
     return;
@@ -359,6 +382,7 @@ function ensureTreasureStyles(){
       "background:linear-gradient(180deg,rgba(255,250,235,.98),rgba(239,224,193,.98));box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.4);" +
       "display:flex;flex-direction:column;align-items:center;gap:1.4cqh;text-align:center;}" +
     ".treasure-relic-title{font-size:2cqh;font-weight:900;color:#4a3a24;}" +
+    ".treasure-relic-item.item-frame-card{width:21cqh;min-height:0;box-shadow:0 .45cqh 1.2cqh rgba(65,45,25,.16);}" +
     ".treasure-relic-icon{width:9cqh;height:9cqh;display:grid;place-items:center;font-size:5cqh;" +
       "background:linear-gradient(160deg,#fff8e6,#f0dcb0);border-radius:1.2cqh;border:.16cqh solid #d9bd85;overflow:hidden;}" +
     ".treasure-relic-icon img{width:100%;height:100%;object-fit:contain;}" +

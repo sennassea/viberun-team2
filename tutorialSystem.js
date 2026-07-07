@@ -19,6 +19,7 @@
     bindTutorialButton();
     wrapCombatFlowOnce();
     if(typeof updateStartScreenMode === "function") updateStartScreenMode();
+    openFirstLaunchLogin();
   }
 
   function bindTutorialButton(){
@@ -34,6 +35,20 @@
     ensureTutorialGuidePopup();
     const popup = document.getElementById("tutorialGuidePopup");
     if(popup) popup.classList.add("show");
+  }
+
+  function openFirstLaunchLogin(){
+    if(!shouldShowNewbieStart()) return;
+    if(!window.VIBERUN_AUTH || typeof window.VIBERUN_AUTH.isLoggedIn !== "function") return;
+    if(window.VIBERUN_AUTH.isLoggedIn()) return;
+    if(!window.VIBERUN_LOGIN_MODAL || typeof window.VIBERUN_LOGIN_MODAL.open !== "function") return;
+
+    window.VIBERUN_LOGIN_MODAL.open({
+      required: true,
+      onSuccess(){
+        showTutorialGuidePopup();
+      }
+    });
   }
 
   function getTutorialGuideDialogue(id, fallback){

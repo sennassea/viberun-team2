@@ -18,6 +18,7 @@
 
     if(!modal) modal = createModal();
     clearLoginMessage();
+    modal.classList.toggle("is-required", !!config.required);
     modal.classList.add("show");
     modal.setAttribute("aria-hidden", "false");
     const guestButton = modal.querySelector(".auth-login-guest");
@@ -26,7 +27,7 @@
 
   function close(wasCancelled){
     if(!modal) return;
-    modal.classList.remove("show");
+    modal.classList.remove("show", "is-required");
     modal.setAttribute("aria-hidden", "true");
 
     if(wasCancelled && cancelCallback) cancelCallback();
@@ -59,6 +60,7 @@
       '</div>';
 
     overlay.addEventListener("click", event => {
+      if(overlay.classList.contains("is-required")) return;
       if(event.target === overlay) close(true);
     });
     overlay.querySelector(".auth-login-close").addEventListener("click", () => close(true));
@@ -67,6 +69,7 @@
     overlay.querySelector(".auth-login-facebook").addEventListener("click", signInFacebook);
     document.addEventListener("keydown", event => {
       if(event.key !== "Escape" || !overlay.classList.contains("show")) return;
+      if(overlay.classList.contains("is-required")) return;
       close(true);
     });
 

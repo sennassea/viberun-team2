@@ -57,6 +57,9 @@ function openEventNode(eventId){
   renderEventOverlay();
   eventOverlayEl.classList.add("show");
   eventOverlayEl.setAttribute("aria-hidden", "false");
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmEvent");
+  }
 }
 
 function getEventAutoChoice(ev){
@@ -453,14 +456,31 @@ function eventPotionArtHtml(potion){
   return escapeEventHtml(icon);
 }
 
+function eventItemFramePath(item){
+  const rarity = String(item && item.rarity ? item.rarity : "common").toLowerCase();
+  if(rarity === "blessing" || rarity === "starter" || rarity === "start") return "assets/ui_panels/relic_potion_frame_start.png";
+  if(rarity === "rare" || rarity === "special" || rarity === "legendary") return "assets/ui_panels/relic_potion_frame_legendary.png";
+  if(rarity === "uncommon") return "assets/ui_panels/relic_potion_frame_rare.png";
+  return "assets/ui_panels/relic_potion_frame_common.png";
+}
+
+function eventPotionFaceHtml(potion){
+  const safePotion = potion || {};
+  return '<div class="item-art-layer">' + eventPotionArtHtml(safePotion) + '</div>' +
+    '<img class="item-frame-layer" src="' + escapeEventHtml(eventItemFramePath(safePotion)) + '" alt="" aria-hidden="true" draggable="false">' +
+    '<div class="item-text-layer">' +
+      '<div class="item-name-text">' + escapeEventHtml(safePotion.name || "") + '</div>' +
+      '<div class="item-desc-text">' + colorizeRarityLabels(escapeEventHtml(safePotion.desc || "").replace(/\n/g, "<br>")) + '</div>' +
+    '</div>' +
+    '<div class="item-hit-layer" aria-hidden="true"></div>';
+}
+
 function eventPotionHtml(potion){
   if(!potion) return "";
   const selected = eventState.potionSelected === potion.id ? " selected" : "";
   return (
-    '<button type="button" class="event-card' + selected + '" data-potion-id="' + escapeEventHtml(potion.id) + '">' +
-      '<div class="event-card-art">' + eventPotionArtHtml(potion) + '</div>' +
-      '<div class="event-card-name">' + escapeEventHtml(potion.name) + '</div>' +
-      '<div class="event-card-desc">' + colorizeRarityLabels(escapeEventHtml(potion.desc || "")) + '</div>' +
+    '<button type="button" class="event-card event-card-frame event-item-frame item-frame-card' + selected + '" data-potion-id="' + escapeEventHtml(potion.id) + '">' +
+      eventPotionFaceHtml(potion) +
     '</button>'
   );
 }
@@ -727,7 +747,9 @@ function eventPopupRelicItem(relic, action){
   if(!relic) return null;
   return {
     type: "relic", action, key: relic.id, name: relic.name,
-    icon: relic.iconImage || relic.icon || relic.emoji || "🏺"
+    icon: relic.iconImage || relic.icon || relic.emoji || "🏺",
+    desc: relic.desc || relic.effectText || relic.valueText || "",
+    rarity: relic.rarity || ""
   };
 }
 
@@ -735,7 +757,9 @@ function eventPopupPotionItem(potion, action){
   if(!potion) return null;
   return {
     type: "potion", action, key: potion.id, name: potion.name,
-    icon: potion.iconImage || potion.icon || potion.emoji || "🧪"
+    icon: potion.iconImage || potion.icon || potion.emoji || "🧪",
+    desc: potion.desc || potion.effectText || potion.valueText || "",
+    rarity: potion.rarity || ""
   };
 }
 

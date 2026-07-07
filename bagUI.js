@@ -54,6 +54,25 @@
   }
 
   /* ── 스타일 주입 ────────────────────────────────────────────────────── */
+  function bagItemFramePath(item) {
+    const rarity = String(item && item.rarity ? item.rarity : "common").toLowerCase();
+    if (rarity === "blessing" || rarity === "starter" || rarity === "start") return "assets/ui_panels/relic_potion_frame_start.png";
+    if (rarity === "rare" || rarity === "special" || rarity === "legendary") return "assets/ui_panels/relic_potion_frame_legendary.png";
+    if (rarity === "uncommon") return "assets/ui_panels/relic_potion_frame_rare.png";
+    return "assets/ui_panels/relic_potion_frame_common.png";
+  }
+
+  function bagItemFaceHtml(item, fallbackIcon) {
+    const safeItem = item || {};
+    return '<div class="item-art-layer">' + bagItemIconHtml(safeItem.iconImage || safeItem.icon || safeItem.emoji || fallbackIcon || "?") + '</div>' +
+      '<img class="item-frame-layer" src="' + escapeHtml(bagItemFramePath(safeItem)) + '" alt="" aria-hidden="true" draggable="false">' +
+      '<div class="item-text-layer">' +
+        '<div class="item-name-text">' + escapeHtml(safeItem.name || "") + '</div>' +
+        '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(safeItem.desc || safeItem.effectText || safeItem.valueText || "")) + '</div>' +
+      '</div>' +
+      '<div class="item-hit-layer" aria-hidden="true"></div>';
+  }
+
   function ensureStyles() {
     if (document.getElementById("bagUIStyles")) return;
 
@@ -79,6 +98,7 @@
       ".bag-relic-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:.8cqh;min-height:0;}" +
       ".bag-relic-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;padding:.5cqh;" +
         "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
+      ".bag-relic-card.item-frame-card{width:100%;height:100%;min-height:0;}" +
       ".bag-relic-card:hover{border-color:var(--bg-gold);}" +
       ".bag-relic-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
       ".bag-relic-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
@@ -100,6 +120,7 @@
       ".bag-potion-slots{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;}" +
       ".bag-potion-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
         "min-height:9cqh;background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
+      ".bag-potion-card.item-frame-card{width:100%;min-height:15cqh;}" +
       ".bag-potion-card:hover{border-color:var(--bg-gold);}" +
       ".bag-potion-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
       ".bag-potion-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
@@ -193,9 +214,8 @@
       if (!relic) { html += '<div class="bag-relic-card empty"></div>'; continue; }
       const idx = start + i;
       html +=
-        '<button type="button" class="bag-relic-card' + (idx === selectedRelicIdx ? " selected" : "") + '" data-relic-idx="' + idx + '">' +
-          '<div class="bag-relic-icon">' + bagItemIconHtml(getBagRelicIcon(relic)) + '</div>' +
-          '<div class="bag-relic-name">' + escapeHtml(relic.name || "") + '</div>' +
+        '<button type="button" class="bag-relic-card item-frame-card' + (idx === selectedRelicIdx ? " selected" : "") + '" data-relic-idx="' + idx + '">' +
+          bagItemFaceHtml(relic, getBagRelicIcon(relic)) +
         '</button>';
     }
     els.relicGrid.innerHTML = html;
@@ -237,10 +257,9 @@
         continue;
       }
       html +=
-        '<button type="button" class="bag-potion-card' + (i === selectedPotionIdx ? " selected" : "") + '" data-potion-idx="' + i + '">' +
+        '<button type="button" class="bag-potion-card item-frame-card' + (i === selectedPotionIdx ? " selected" : "") + '" data-potion-idx="' + i + '">' +
           '<span class="bag-potion-num">' + (i + 1) + '</span>' +
-          '<div class="bag-potion-icon">' + bagItemIconHtml(getBagPotionIcon(potion)) + '</div>' +
-          '<div class="bag-potion-name">' + escapeHtml(potion.name || "") + '</div>' +
+          bagItemFaceHtml(potion, getBagPotionIcon(potion)) +
         '</button>';
     }
     els.potionSlots.innerHTML = html;

@@ -561,6 +561,25 @@ function shopItemTypeLabel(item) {
   return "지속";
 }
 
+function shopItemFramePath(item) {
+  const rarity = String(item && item.rarity ? item.rarity : "common").toLowerCase();
+  if (rarity === "blessing" || rarity === "starter" || rarity === "start") return "assets/ui_panels/relic_potion_frame_start.png";
+  if (rarity === "rare" || rarity === "special" || rarity === "legendary") return "assets/ui_panels/relic_potion_frame_legendary.png";
+  if (rarity === "uncommon") return "assets/ui_panels/relic_potion_frame_rare.png";
+  return "assets/ui_panels/relic_potion_frame_common.png";
+}
+
+function shopItemFaceHtml(item) {
+  const safeItem = item || {};
+  return '<div class="item-art-layer">' + shopItemArtHtml(safeItem) + '</div>' +
+    '<img class="item-frame-layer" src="' + escapeShopHtml(shopItemFramePath(safeItem)) + '" alt="" aria-hidden="true" draggable="false">' +
+    '<div class="item-text-layer">' +
+      '<div class="item-name-text">' + escapeShopHtml(safeItem.name || "") + '</div>' +
+      '<div class="item-desc-text">' + colorizeRarityLabels(escapeShopHtml(safeItem.desc || "").replace(/\n/g, "<br>")) + '</div>' +
+    '</div>' +
+    '<div class="item-hit-layer" aria-hidden="true"></div>';
+}
+
 function shopProductCardHtml(item) {
   const selected = item.id === SHOP_STATE.selectedId;
   const typeCls  = item.category === "card" ? item.cardType : "";
@@ -575,6 +594,15 @@ function shopProductCardHtml(item) {
         '</button>'
       );
     }
+  }
+  if (item.category === "potion" || item.category === "relic") {
+    return (
+      '<button type="button" class="shop-product shop-product-item-frame item-frame-card' +
+        (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + escapeShopHtml(item.id) + '">' +
+        shopItemFaceHtml(item) +
+        '<div class="shop-card-price-badge">' + (item.soldOut ? "?덉젅" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>' +
+      '</button>'
+    );
   }
   return (
     '<button type="button" class="shop-product' + (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + item.id + '">' +
@@ -613,10 +641,19 @@ function renderShopDetail() {
   else if (goldShort) buyLabel = "골드 부족";
 
   const card = item.category === "card" && typeof cardFaceHtml === "function" ? CARD_DB[item.sourceKey] : null;
+  const framedItem = !card && (item.category === "potion" || item.category === "relic");
   host.innerHTML = card
     ? (
       '<div class="shop-detail-card-preview card-frame-card cost-' + escapeShopHtml(card.type) + '">' +
         cardFaceHtml(card) +
+      '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(displayPrice)) + '</div>' +
+      '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
+    )
+    : framedItem
+    ? (
+      '<div class="shop-detail-item-preview item-frame-card">' +
+        shopItemFaceHtml(item) +
       '</div>' +
       '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(displayPrice)) + '</div>' +
       '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
@@ -752,7 +789,10 @@ function ensureShopStyles() {
     ".shop-price-icon{width:1.8cqh;height:1.8cqh;flex:none;display:inline-block;font-size:0;line-height:1;background-position:center;background-size:contain;background-repeat:no-repeat;}" +
     ".shop-product.shop-product-card-frame{position:relative;display:block;justify-self:center;width:min(13.5cqw,22cqh);height:auto;aspect-ratio:2/3;" +
       "min-height:0;padding:0;gap:0;border:0;border-radius:0;overflow:hidden;background:#f5efe4;}" +
+    ".shop-product.shop-product-item-frame{position:relative;display:block;justify-self:center;width:min(13.5cqw,22cqh);height:auto;aspect-ratio:2/3;" +
+      "min-height:0;padding:0;gap:0;border:0;border-radius:0;overflow:hidden;background:transparent;}" +
     ".shop-product.shop-product-card-frame.selected{box-shadow:0 0 0 .28cqh rgba(63,143,224,.55),0 .5cqh 1cqh rgba(90,65,25,.14);}" +
+    ".shop-product.shop-product-item-frame.selected{box-shadow:0 0 0 .28cqh rgba(63,143,224,.55),0 .5cqh 1cqh rgba(90,65,25,.14);}" +
     ".shop-card-price-badge{position:absolute;right:.55cqw;bottom:.55cqh;z-index:5;padding:.28cqh .55cqw;border-radius:.75cqh;" +
       "background:rgba(255,251,240,.94);border:.14cqh solid rgba(178,140,80,.58);color:#a97a1f;font-size:1.15cqh;font-weight:900;box-shadow:0 .25cqh .6cqh rgba(90,65,25,.18);}" +
 
@@ -766,6 +806,7 @@ function ensureShopStyles() {
     ".shop-detail-desc{font-size:1.2cqh;font-weight:700;color:#6b4a20;text-align:center;line-height:1.4;}" +
     ".shop-detail-price{font-size:1.6cqh;font-weight:900;color:#a97a1f;}" +
     ".shop-detail-card-preview{position:relative;width:min(14cqw,25cqh);height:auto;aspect-ratio:2/3;flex:none;}" +
+    ".shop-detail-item-preview{position:relative;width:min(14cqw,25cqh);height:auto;aspect-ratio:2/3;flex:none;}" +
     ".shop-buy-btn{width:100%;height:5cqh;border-radius:1.1cqh;font-size:1.9cqh;font-weight:900;cursor:pointer;" +
       "font:inherit;border:.2cqh solid #3f7c4e;background:linear-gradient(180deg,#7fbf8a,#4f9c62);color:#fff;margin-top:auto;}" +
     ".shop-buy-btn:disabled{filter:grayscale(.5) brightness(.92);cursor:default;opacity:.7;}" +
