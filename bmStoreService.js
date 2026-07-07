@@ -185,6 +185,57 @@
     return !!(product && product.rewardType === "moon_shard");
   }
 
+  function getKstDateKey(time){
+    const date = new Date((Number(time) || Date.now()) + 9 * 60 * 60 * 1000);
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    return year + "-" + month + "-" + day;
+  }
+
+  function normalizeMonthlyPass(row){
+    const source = row && typeof row === "object" ? row : {};
+    const expiresAtTime = source.expires_at ? Date.parse(source.expires_at) : 0;
+    const active = !!source.active && expiresAtTime > Date.now();
+    const dailyRewardAmount = Math.max(0, Math.floor(Number(source.daily_reward_amount) || 15));
+    const durationDays = Math.max(1, Math.floor(Number(source.duration_days) || 30));
+    const claimedDays = Math.max(0, Math.floor(Number(source.claimed_days) || 0));
+    const todayKey = getKstDateKey(Date.now());
+    const lastClaimDate = source.last_claim_date ? String(source.last_claim_date) : "";
+    const daysRemaining = active ? Math.max(0, Math.ceil((expiresAtTime - Date.now()) / 86400000)) : durationDays;
+
+    return {
+      active,
+      productId: source.product_id || "monthly_moon_promise",
+      startedAt: source.started_at ? Date.parse(source.started_at) : 0,
+      expiresAt: expiresAtTime,
+      lastClaimDate,
+      claimedDays,
+      durationDays,
+      dailyRewardAmount,
+      todayRewardAmount: dailyRewardAmount,
+      daysRemaining,
+      canClaimToday: active && lastClaimDate !== todayKey && claimedDays < durationDays
+    };
+  }
+
+  function emptyMonthlyPassStatus(){
+    return {
+      active: false,
+      daysRemaining: 30,
+      dailyRewardAmount: 15,
+      todayRewardAmount: 15,
+      canClaimToday: false
+    };
+  }
+
+  function emitMonthlyPassChanged(monthlyPass){
+    if(typeof window.dispatchEvent !== "function") return;
+    window.dispatchEvent(new CustomEvent("viberun:monthly-pass-changed", {
+      detail: { monthlyPass }
+    }));
+  }
+
   function createPurchaseMail(product, ready){
     const rewards = toReward(product);
     const now = Date.now();
@@ -496,39 +547,136 @@
   }
 
   function fetchMonthlyPassStatus(){
-    return fetchClaimedPurchaseMails().then(result => {
-      if(!result || !result.ok){
-        return { ok: false, monthlyPass: { active: false, daysRemaining: 30, dailyRewardAmount: 15, todayRewardAmount: 15, canClaimToday: false } };
-      }
+    const ready = requireReady();
+    if(!ready.ok) return Promise.resolve(Object.assign({}, ready, { monthlyPass: emptyMonthlyPassStatus() }));
 
-      const activeMail = result.mails.find(mail => rewardsContain(mail, "monthly_pass"));
-      if(!activeMail){
-        return { ok: true, monthlyPass: { active: false, daysRemaining: 30, dailyRewardAmount: 15, todayRewardAmount: 15, canClaimToday: false } };
-      }
-
-      const purchasedAt = Date.parse(activeMail.purchased_at || activeMail.created_at || "");
-      const expiresAt = Number.isFinite(purchasedAt) ? purchasedAt + 30 * 24 * 60 * 60 * 1000 : 0;
-      const daysRemaining = expiresAt ? Math.max(0, Math.ceil((expiresAt - Date.now()) / 86400000)) : 30;
-      return {
-        ok: true,
-        monthlyPass: {
-          active: true,
-          expiresAt,
-          daysRemaining,
-          dailyRewardAmount: 15,
-          todayRewardAmount: 15,
-          canClaimToday: false
+    return ready.client.from("monthly_passes")
+      .select("*")
+      .eq("user_id", ready.userId)
+      .limit(1)
+      .then(result => {
+        if(result && result.error){
+          return { ok: false, error: result.error, message: result.error.message || "Failed to load monthly pass.", monthlyPass: emptyMonthlyPassStatus() };
         }
-      };
-    });
+
+        const row = firstRow(result.data);
+        const monthlyPass = row ? normalizeMonthlyPass(row) : emptyMonthlyPassStatus();
+        return { ok: true, monthlyPass };
+      }).catch(error => {
+        console.warn("[BMStore] Failed to load monthly pass.", error);
+        return { ok: false, error, message: "Failed to load monthly pass.", monthlyPass: emptyMonthlyPassStatus() };
+      });
+  }
+
+  function activateMonthlyPass(productId){
+    const ready = requireReady();
+    if(!ready.ok) return Promise.resolve(ready);
+
+    const product = findMonthlyPassProduct(productId) || findMonthlyPassProduct("monthly_moon_promise") || {};
+    const durationDays = Math.max(1, Math.floor(Number(product.durationDays) || 30));
+    const dailyRewardAmount = Math.max(0, Math.floor(Number(product.dailyRewardAmount) || 15));
+    const now = Date.now();
+
+    return ready.client.from("monthly_passes")
+      .select("*")
+      .eq("user_id", ready.userId)
+      .limit(1)
+      .then(result => {
+        if(result && result.error){
+          return { ok: false, error: result.error, message: result.error.message || "Failed to load monthly pass." };
+        }
+
+        const existing = firstRow(result.data);
+        const existingExpiry = existing && existing.expires_at ? Date.parse(existing.expires_at) : 0;
+        const startTime = Math.max(now, Number.isFinite(existingExpiry) ? existingExpiry : 0);
+        const expiresAt = new Date(startTime + durationDays * 86400000).toISOString();
+        const startedAt = existing && existing.started_at ? existing.started_at : new Date(now).toISOString();
+        const row = {
+          user_id: ready.userId,
+          product_id: product.id || productId || "monthly_moon_promise",
+          active: true,
+          started_at: startedAt,
+          expires_at: expiresAt,
+          duration_days: durationDays,
+          daily_reward_amount: dailyRewardAmount
+        };
+
+        const request = existing
+          ? ready.client.from("monthly_passes").update(row).eq("user_id", ready.userId).select("*").single()
+          : ready.client.from("monthly_passes").insert(row).select("*").single();
+
+        return request.then(saveResult => {
+          if(saveResult && saveResult.error){
+            return { ok: false, error: saveResult.error, message: saveResult.error.message || "Failed to activate monthly pass." };
+          }
+
+          const monthlyPass = normalizeMonthlyPass(saveResult.data);
+          emitMonthlyPassChanged(monthlyPass);
+          return { ok: true, monthlyPass };
+        });
+      }).catch(error => {
+        console.warn("[BMStore] Failed to activate monthly pass.", error);
+        return { ok: false, error, message: "Failed to activate monthly pass." };
+      });
   }
 
   function claimMonthlyPassDailyReward(){
-    return Promise.resolve({
-      ok: false,
-      code: "DAILY_REWARD_UNAVAILABLE",
-      message: "Daily monthly pass reward is not connected yet."
-    });
+    const ready = requireReady();
+    if(!ready.ok) return Promise.resolve(ready);
+
+    return ready.client.from("monthly_passes")
+      .select("*")
+      .eq("user_id", ready.userId)
+      .limit(1)
+      .then(result => {
+        if(result && result.error){
+          return { ok: false, error: result.error, message: result.error.message || "Failed to load monthly pass." };
+        }
+
+        const row = firstRow(result.data);
+        const monthlyPass = row ? normalizeMonthlyPass(row) : emptyMonthlyPassStatus();
+        if(!monthlyPass.active){
+          return { ok: false, code: "MONTHLY_PASS_INACTIVE", message: "Monthly pass is not active.", monthlyPass };
+        }
+        if(!monthlyPass.canClaimToday){
+          return { ok: false, code: "ALREADY_CLAIMED_TODAY", message: "Daily reward has already been claimed.", monthlyPass };
+        }
+
+        return fetchWalletIfNeeded().then(wallet => {
+          const amount = monthlyPass.dailyRewardAmount;
+          const nextGem = Math.max(0, Math.floor(Number(wallet.moonShards) || 0)) + amount;
+          return updateWalletGem(ready.client, ready.userId, nextGem).then(walletResult => {
+            if(!walletResult || !walletResult.ok) return walletResult;
+
+            const nextClaimedDays = monthlyPass.claimedDays + 1;
+            return ready.client.from("monthly_passes")
+              .update({
+                last_claim_date: getKstDateKey(Date.now()),
+                claimed_days: nextClaimedDays
+              })
+              .eq("user_id", ready.userId)
+              .select("*")
+              .single()
+              .then(updateResult => {
+                if(updateResult && updateResult.error){
+                  return { ok: false, error: updateResult.error, message: updateResult.error.message || "Failed to save monthly pass reward." };
+                }
+
+                const nextMonthlyPass = normalizeMonthlyPass(updateResult.data);
+                emitMonthlyPassChanged(nextMonthlyPass);
+                return {
+                  ok: true,
+                  monthlyPass: nextMonthlyPass,
+                  wallet: walletResult.wallet,
+                  reward: { type: "moon_shard", amount }
+                };
+              });
+          });
+        });
+      }).catch(error => {
+        console.warn("[BMStore] Failed to claim monthly pass reward.", error);
+        return { ok: false, error, message: "Failed to claim monthly pass reward." };
+      });
   }
 
   function fetchDummyInventory(){
@@ -560,6 +708,7 @@
     getRecommendedProducts,
     purchaseProduct,
     fetchMonthlyPassStatus,
+    activateMonthlyPass,
     claimMonthlyPassDailyReward,
     fetchCharacterSkinProfileState,
     equipCharacterSkinProfile,
