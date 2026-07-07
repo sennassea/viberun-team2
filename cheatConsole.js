@@ -351,11 +351,70 @@
     });
   }
 
+  function requestWalletCheatSupabase(op, amount){
+    const account = requireLoggedInAccount();
+    if(!account) return Promise.resolve(null);
+
+    const bridge = window.VIBERUN_SUPABASE;
+    const client = bridge && typeof bridge.getClient === "function" ? bridge.getClient() : null;
+    const userData = window.VIBERUN_USER_DATA;
+    if(!client || !userData || typeof userData.getOrCreateWallet !== "function"){
+      cheatWarn("wallet cheat API is unavailable.");
+      return Promise.resolve(null);
+    }
+
+    const userId = String(account.accountId || account.uid || "").trim();
+    if(!userId){
+      cheatWarn("wallet cheat failed: accountId missing");
+      return Promise.resolve(null);
+    }
+
+    return Promise.resolve(userData.getOrCreateWallet(userId)).then(result => {
+      if(!result || !result.ok || !result.wallet){
+        cheatWarn("wallet cheat failed: " + ((result && result.message) || "wallet load failed"));
+        return null;
+      }
+
+      const currentGem = Math.max(0, Math.floor(Number(result.wallet.gem ?? result.wallet.moonShards) || 0));
+      const safeAmount = Math.max(0, Math.floor(Number(amount) || 0));
+      let nextGem = currentGem;
+      if(op === "add") nextGem = currentGem + safeAmount;
+      else if(op === "take") nextGem = Math.max(0, currentGem - safeAmount);
+      else if(op === "set") nextGem = safeAmount;
+      else {
+        cheatWarn("wallet cheat failed: unknown op");
+        return null;
+      }
+
+      return client.from("wallets")
+        .update({ gem: nextGem, updated_at: new Date().toISOString() })
+        .eq("user_id", userId)
+        .select("*")
+        .single();
+    }).then(updateResult => {
+      if(!updateResult) return null;
+      if(updateResult.error){
+        cheatWarn("wallet cheat failed: " + updateResult.error.message);
+        return null;
+      }
+
+      const gem = Math.max(0, Math.floor(Number(updateResult.data && updateResult.data.gem) || 0));
+      const wallet = { gem, moonShards: gem };
+      if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.setCachedWallet === "function"){
+        window.VIBERUN_WALLET.setCachedWallet(wallet);
+      }
+      return wallet;
+    }).catch(error => {
+      cheatWarn("wallet cheat failed: " + error);
+      return null;
+    });
+  }
+
   function cheatWalletMoonAdd(amount){
     const v = requireFiniteAmount(amount);
     if(v === null || v <= 0){ cheatWarn("수량은 0보다 커야 합니다."); return; }
     const delta = Math.floor(v);
-    requestWalletCheat("add", delta).then(wallet => {
+    requestWalletCheatSupabase("add", delta).then(wallet => {
       if(wallet) cheatLog("계정 달빛조각 " + delta + " 증가 → 현재 " + wallet.moonShards);
     });
   }
@@ -364,7 +423,7 @@
     const v = requireFiniteAmount(amount);
     if(v === null || v <= 0){ cheatWarn("수량은 0보다 커야 합니다."); return; }
     const delta = Math.floor(v);
-    requestWalletCheat("take", delta).then(wallet => {
+    requestWalletCheatSupabase("take", delta).then(wallet => {
       if(wallet) cheatLog("계정 달빛조각 " + delta + " 감소 → 현재 " + wallet.moonShards);
     });
   }
@@ -373,7 +432,7 @@
     const v = requireFiniteAmount(amount);
     if(v === null){ return; }
     const target = Math.max(0, Math.floor(v));
-    requestWalletCheat("set", target).then(wallet => {
+    requestWalletCheatSupabase("set", target).then(wallet => {
       if(wallet) cheatLog("계정 달빛조각을 " + target + "로 설정 → 현재 " + wallet.moonShards);
     });
   }

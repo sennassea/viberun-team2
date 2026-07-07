@@ -17,7 +17,7 @@ window.BOHYUN_RUN_RESULT_DATA = {
       {
         id: "GENERAL_CHOE",
         name: "장군신 / 최영",
-        image: "assets/spirits/guardian_spirit.png",
+        image: "assets/spirits/spirit_guardian_large.png",
         emoji: "👻",
         blessingDialogue: "물러서지 않는 각오가 네 길을 지킬 것이다.",
         lines: [
@@ -29,7 +29,7 @@ window.BOHYUN_RUN_RESULT_DATA = {
       {
         id: "CHILSEONG",
         name: "칠성신 / 치성광여래",
-        image: "assets/spirits/bond_spirit.png",
+        image: "assets/spirits/spirit_bond_large.png",
         emoji: "🧿",
         blessingDialogue: "별빛은 어둔 길에서도 네 걸음을 잊지 않는다.",
         lines: [
@@ -41,7 +41,7 @@ window.BOHYUN_RUN_RESULT_DATA = {
       {
         id: "OGU_BARI",
         name: "오구신 / 바리데기",
-        image: "assets/spirits/guide_spirit.png",
+        image: "assets/spirits/spirit_guide_large.png",
         emoji: "🏮",
         blessingDialogue: "떠도는 한을 건너게 할 마음을 잃지 말거라.",
         lines: [
