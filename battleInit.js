@@ -234,7 +234,7 @@ function newGame(options={}){
     nextBattleStartBlock: RUN_STATE.nextBattleStartBlock || 0,
     // 노드 컨텍스트 (기획서 §2)
     battleStage: curStage || null,
-    tutorialMode: !!options.tutorial,
+    tutorialMode: !!options.tutorial || !!(curStage && curStage.type === "tutorial"),
     battleNodeType:  options.tutorial ? "tutorial" : (curStage ? (curStage.type      || "enemy") : "enemy"),
     battlePackageId: options.tutorial ? (options.tutorialEncounterId || "stage_tutorial_child_spirit") : (curStage ? (curStage.packageId || null)    : null),
     battleBackground: null,

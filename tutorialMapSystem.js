@@ -50,8 +50,10 @@
 
   function generateTutorialMap(){
     const originalMapGenerator = window.ACT1_MAP_GENERATE;
+    let generatedStages = null;
     window.ACT1_MAP_GENERATE = function tutorialMapGenerate(setMapData){
       const tutorialMapData = createTutorialMapData();
+      generatedStages = tutorialMapData.stages;
       setMapData(
         tutorialMapData.floors,
         tutorialMapData.paths,
@@ -63,6 +65,10 @@
 
     try {
       generateMap();
+      /* battleInit.js가 전투 시작 시 window.ACT1_MAP_STAGES[stageIdx]로 스테이지 타입/패키지를
+         참조하므로, 실제 ACT1 맵 생성(mapNodeLogic.js)과 동일하게 이 전역도 갱신해야
+         튜토리얼 전투가 이전 ACT1 스테이지 데이터로 잘못 연결되지 않는다. */
+      if(generatedStages) window.ACT1_MAP_STAGES = generatedStages;
     } finally {
       window.ACT1_MAP_GENERATE = originalMapGenerator;
     }
@@ -204,7 +210,12 @@
         filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.78));
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend{
-        position:relative;
+        /* position은 절대 건드리지 않는다: .dmap-legend는 mapUI.css에서
+           position:absolute + transform으로 고정 배치되어 있는데, 여기서
+           position:relative를 주면 그 배치가 깨져서 범례가 화면 좌상단으로
+           튀어나가는 버그가 있었다. isolation은 position:static이 아니기만
+           하면(이미 absolute) 새 스태킹 컨텍스트를 만들므로 position 재지정이
+           필요 없다. */
         z-index:13;
         isolation:isolate;
         opacity:1 !important;
@@ -214,7 +225,6 @@
         box-shadow:none !important;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-panel{
-        position:relative;
         z-index:13;
         isolation:isolate;
         opacity:1 !important;

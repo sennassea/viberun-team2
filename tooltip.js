@@ -1232,9 +1232,10 @@
   /* 신령의 은혜·전투 보상 등 "카드 N장 중 1장 선택" 팝업의 .reward-card, */
   /* 상점의 주문 상품 카드(.shop-product-card-frame)와 상세 패널 카드     */
   /* 미리보기(.shop-detail-card-preview), 이벤트 노드 주문 보상          */
-  /* 선택창의 .event-card                                               */
+  /* 선택창의 .event-card, 신령의 은혜/보물 등 결과 팝업의 카드형 항목    */
+  /* .random-item-result-card-frame                                     */
   var DECK_OR_REWARD_CARD_SELECTOR =
-    ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card";
+    ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card,.random-item-result-card-frame";
 
   game.addEventListener("mouseover", function (e) {
     var dvCard = e.target.closest(DECK_OR_REWARD_CARD_SELECTOR);
