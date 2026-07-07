@@ -354,12 +354,14 @@
         '<p class="spirit-path-desc">당신을 인도할 길을 선택하세요.<br>당신이 선택한 길에 따라 이번 정화 여정 운명이 정해집니다</p>' +
         '<div class="spirit-path-count">' + selectedDeckIds.length + '/' + REQUIRED_SELECTION_COUNT + ' 선택 완료</div>' +
         '<div class="spirit-path-card-list">' + cardsHtml + '</div>' +
-        '<p class="spirit-path-note">※ 범용 주문, 약병, 법구는 항상 이번 여정에 포함됩니다.</p>' +
-        renderActSection() +
-        '<div class="spirit-path-actions">' +
-          '<button type="button" class="spirit-path-back">뒤로가기</button>' +
-          '<span class="spirit-path-wallet">🌙 보유 달빛 조각 <strong>' + formatMoonShards(walletMoonShards) + '</strong></span>' +
-          '<button type="button" class="spirit-path-start"' + (canStart ? "" : " disabled") + '>여정 시작</button>' +
+        '<div class="spirit-path-journey-panel">' +
+          '<p class="spirit-path-note">※ 범용 주문, 약병, 법구는 항상 이번 여정에 포함됩니다.</p>' +
+          renderActSection() +
+          '<div class="spirit-path-actions">' +
+            '<button type="button" class="spirit-path-back">뒤로가기</button>' +
+            '<span class="spirit-path-wallet">🌙 보유 달빛 조각 <strong>' + formatMoonShards(walletMoonShards) + '</strong></span>' +
+            '<button type="button" class="spirit-path-start"' + (canStart ? "" : " disabled") + '>여정 시작</button>' +
+          '</div>' +
         '</div>' +
       '</section>';
 

@@ -23,13 +23,14 @@
 .spirit-path-panel{
   position:relative;
   width:min(176cqh, 98vw);
+  aspect-ratio:1600 / 887;
   max-height:98cqh;
   overflow:hidden;
   box-sizing:border-box;
-  padding:1.45cqh 1.7cqh 1.35cqh;
+  padding:3.2cqh 4.1cqh 2.8cqh;
   border:0;
   border-radius:0;
-  background:transparent;
+  background:transparent url("assets/ui/spirit_path/background_pannel.png") center/100% 100% no-repeat;
   box-shadow:none;
   color:#f8e7ba;
   text-align:center;
@@ -107,11 +108,11 @@
 
 .spirit-path-selected-ribbon{
   position:absolute;
-  right:-.08cqh;
-  top:.08cqh;
+  right:-.28cqh;
+  top:-.16cqh;
   z-index:8;
-  width:11.8cqh;
-  aspect-ratio:2.9;
+  width:15cqh;
+  aspect-ratio:1092 / 619;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -120,11 +121,13 @@
 }
 
 .spirit-path-selected-ribbon span{
-  transform:translate(.55cqh, -.01cqh);
+  transform:translate(1.1cqh, -1.05cqh) rotate(15deg);
+  transform-origin:center;
   color:#3a260d;
-  font-size:1.18cqh;
+  font-size:1.45cqh;
   line-height:1;
   font-weight:900;
+  white-space:nowrap;
   text-shadow:0 .08cqh 0 rgba(255,255,255,.65);
 }
 
@@ -495,8 +498,20 @@
   color:#fff;
 }
 
+.spirit-path-journey-panel{
+  position:relative;
+  margin-top:.45cqh;
+  padding:1.15cqh 2.2cqh 1.05cqh;
+  aspect-ratio:2121 / 451;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  background:transparent url("assets/ui/spirit_path/start_journey_panel.png") center/100% 100% no-repeat;
+}
+
 .spirit-path-note{
-  margin:.55cqh 0 0;
+  margin:0;
   font-size:1.02cqh;
   color:#d5bd8a;
   font-weight:700;
