@@ -210,7 +210,12 @@
         filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.78));
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend{
-        position:relative;
+        /* position은 절대 건드리지 않는다: .dmap-legend는 mapUI.css에서
+           position:absolute + transform으로 고정 배치되어 있는데, 여기서
+           position:relative를 주면 그 배치가 깨져서 범례가 화면 좌상단으로
+           튀어나가는 버그가 있었다. isolation은 position:static이 아니기만
+           하면(이미 absolute) 새 스태킹 컨텍스트를 만들므로 position 재지정이
+           필요 없다. */
         z-index:13;
         isolation:isolate;
         opacity:1 !important;
@@ -220,7 +225,6 @@
         box-shadow:none !important;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-panel{
-        position:relative;
         z-index:13;
         isolation:isolate;
         opacity:1 !important;

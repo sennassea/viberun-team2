@@ -5,6 +5,7 @@
 
 /* ── 패널 크기 오버라이드 ────────────────────────────────────────────────── */
 .dmap-panel {
+  position: relative;
   width: min(74cqw, 110cqh);
   height: 76cqh;
   max-width: none;
@@ -30,9 +31,11 @@
 }
 
 .dmap-loc-badge {
+  /* 배경 아트(둥근 알약 모양 플레이트) 위에 얹히는 텍스트라 자체 배경/테두리는
+     그리지 않는다. 플레이트 중앙에 오도록 오른쪽/아래로 살짝 이동만 준다. */
   display: flex;
   align-items: center;
-  gap: 0.5cqw;
+  gap: 0.6cqw;
   background: transparent;
   border: 0;
   border-radius: 3cqh;
@@ -42,7 +45,7 @@
   color: #3b2a0a;
   white-space: nowrap;
   flex-shrink: 0;
-  transform: translate(3.1cqw, 1cqh);
+  transform: translate(2.6cqw, 2cqh);
 }
 .dmap-loc-icon { display: none; }
 .dmap-loc-floor {
@@ -71,7 +74,7 @@
 }
 .dmap-title-char {
   position: absolute;
-  top: 1.25cqh;
+  top: 2.1cqh;
   display: block;
   width: 4.8cqh;
   height: 4.8cqh;
@@ -139,7 +142,9 @@
      맞춘 값입니다. 기존 값(우측 94%, 하단 92%)은 실제 프레임의 범례 구분선(약 91.7%)·
      하단 테두리(약 91.8%)보다 바깥까지 허용되어 있어, 축소했을 때 노드가 구분선/테두리
      위에 그대로 걸쳐 보이는 문제가 있었습니다. */
-  clip-path: polygon(22% 5%, 78% 5%, 89% 33%, 89% 70%, 70% 90%, 30% 90%, 3% 66%, 3% 27%);
+  /* 상단(5%)이 실제로는 부족해서 노드가 헤더 쪽으로 삐져나갔던 것을 다시 실측해
+     10%로 더 안쪽으로 당김 */
+  clip-path: polygon(22% 10%, 78% 10%, 89% 33%, 89% 70%, 70% 90%, 30% 90%, 3% 66%, 3% 27%);
 }
 .dmap-canvas-wrap:active { cursor: grabbing; }
 
@@ -173,25 +178,28 @@
   width: var(--dmap-legend-width);
   min-width: 0;
   max-width: 100%;
-  padding: 4.9cqh 0.45cqw 1.2cqh 2.25cqw;
+  padding: 1.6cqh 1.4cqw;
   display: flex;
   flex-direction: column;
-  gap: 0.5cqh;
+  /* 항목들을 위쪽에 몰아두지 않고 패널 세로 중앙에 오도록 한다 */
+  justify-content: center;
+  gap: 0.95cqh;
   overflow: hidden auto;
   background: transparent;
   border-left: 0;
-  transform: translate(0, 1.2cqh);
   contain: layout paint;
+  /* 중앙보다 아주 살짝 위로, 왼쪽으로 많이 이동했던 것을 아주아주 살짝만 오른쪽으로 */
+  transform: translate(-2.6cqw, -2.4cqh);
 }
 
 .dmap-legend-title {
-  font-size:2.01cqh;
+  font-size:2.3cqh;
   font-weight: 900;
   color: #3b2a0a;
   text-align: center;
   border-bottom: 0;
-  padding-bottom: 0.45cqh;
-  margin-bottom: 0.25cqh;
+  padding-bottom: 0.5cqh;
+  margin-bottom: 0.5cqh;
   letter-spacing: 0.06em;
 }
 
@@ -199,8 +207,8 @@
   box-sizing: border-box;
   display: flex !important;
   align-items: center;
-  gap: 0.22cqw;
-  padding: 0.32cqh 0 !important;
+  gap: 0.55cqw;
+  padding: 0.5cqh 0.2cqw !important;
   width: 100% !important;
   max-width: 100%;
   min-width: 0;
@@ -214,17 +222,17 @@
 .dmap-legend-item.active { background: rgba(255, 245, 215, 0.38); }
 
 .dmap-leg-ico {
-  width: 2.1cqh !important;
-  height: 2.1cqh !important;
-  min-width: 2.1cqh !important;
-  max-width: 2.1cqh !important;
+  width: 2.7cqh !important;
+  height: 2.7cqh !important;
+  min-width: 2.7cqh !important;
+  max-width: 2.7cqh !important;
   box-sizing: border-box;
   overflow: hidden;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size:1.38cqh !important;
+  font-size:1.7cqh !important;
   line-height: 1;
   flex-shrink: 0;
   border: 0.18cqh solid rgba(255, 255, 255, 0.4);
@@ -245,7 +253,7 @@
 
 .dmap-leg-label {
   min-width: 0;
-  font-size:1.67cqh;
+  font-size:2cqh;
   font-weight: 700;
   color: #3b2a0a;
   line-height: 1.15;
@@ -256,13 +264,23 @@
 
 /* ── 범례 툴팁 박스 ──────────────────────────────────────────────────────── */
 .dmap-tip-box {
+  /* margin-top:auto였던 이전 방식은 부모(.dmap-legend)의 justify-content:center와
+     충돌해서 툴팁이 표시될 때마다 위쪽 제목/아이콘 목록이 패널 상단으로 쏠렸었다.
+     그 다음 시도(고정 margin-top)는 목록 흐름 안에 그대로 남아 있어, 항목마다
+     툴팁 글자 줄 수가 달라 높이가 바뀔 때마다 목록 전체가 위아래로 흔들리는
+     문제가 있었다. 이제 flex 흐름에서 완전히 빼고, 좁은 범례 칸(overflow:hidden)
+     안이 아니라 .dmap-body 기준으로 배치해서 목록 위치와 무관하게, 범례 목록
+     바로 아래 여백에 뜨도록 한다. */
+  position: absolute;
+  right: 3cqw;
+  bottom: 6cqh;
+  width: var(--dmap-legend-width);
+  max-width: calc(100% - 2.8cqw);
   box-sizing: border-box;
-  width: 100%;
-  max-width: 100%;
-  margin-top: auto;
   padding-top: 0.6cqh;
   display: none;
   overflow: hidden;
+  pointer-events: none;
 }
 .dmap-tip-box:not(:empty) { display: block; }
 .dmap-tip-inner {
