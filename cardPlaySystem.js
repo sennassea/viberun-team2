@@ -53,7 +53,7 @@ function chooseCardFromCandidates(options={}){
         '<div class="battle-card-choice-cards"></div>' +
         '<button type="button" class="battle-card-choice-cancel">취소</button>' +
       '</div>';
-    document.body.appendChild(ov);
+    (document.querySelector("#game") || document.body).appendChild(ov);
   }
   const title = ov.querySelector("h2");
   const desc = ov.querySelector("p");

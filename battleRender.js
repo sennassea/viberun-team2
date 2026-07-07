@@ -190,7 +190,7 @@ function renderItemSlots(selector, items, maxSlots, fallbackIcon){
     if(isPotionSlots && !filled){
       slot.innerHTML = '<span class="side-empty-potion-icon" aria-hidden="true"></span>';
     } else if(filled && item && item.iconImage){
-      slot.innerHTML = '<img class="side-item-icon" src="' + escapeHtml(item.iconImage) + '" alt="" aria-hidden="true">';
+      slot.innerHTML = '<img class="side-item-icon" src="' + escapeHtml(item.iconImage) + '" alt="" aria-hidden="true" draggable="false">';
     } else {
       slot.textContent = filled && item && item.emoji ? item.emoji : fallbackIcon;
     }

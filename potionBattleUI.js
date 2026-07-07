@@ -743,7 +743,7 @@ function chooseCardsMultiFromCandidates(options={}){
           '<button type="button" class="battle-card-multi-choice-confirm">확인</button>' +
         '</div>' +
       '</div>';
-    document.body.appendChild(ov);
+    (document.querySelector("#game") || document.body).appendChild(ov);
   }
   const title = ov.querySelector("h2");
   const desc = ov.querySelector("p");
