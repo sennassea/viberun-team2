@@ -24,7 +24,7 @@ const DMAP_SPREAD  = 170;   // 같은 층 노드 간 간격 (가상 좌표)
 /* ── 2D 스크롤 / 줌 상태 ──────────────────────────────────────────────────── */
 // mapScrollY 는 mapSystem.js 에서 let 으로 선언됨 – 공유 가능
 let mapScrollX = 0;
-let mapZoom    = 1.0;   // >1 = 확대, <1 = 축소
+let mapZoom    = 1.2;   // >1 = 확대, <1 = 축소
 
 /* 전체 노드 가로가 딱 맞는 축소값(820/1470=0.558)이었으나, 그 값 그대로는 우측 끝
    보스 노드(DMAP_END_X=1340, 전체 폭의 약 91.2%)가 clip-path 안전 영역(약 89%)보다
@@ -77,8 +77,8 @@ function getDiagNodePos(floors) {
 
 /* ── centerScrollOnFloor 오버라이드 (2D) ────────────────────────────────── */
 function centerScrollOnFloor(fi) {
-  // 맵 열 때 기본 줌 1.0 (최소줌 0.558에서 휠 5번 확대한 수준)
-  mapZoom = 1.0;
+  // 맵 열 때 기본 줌 1.2 (최소줌 0.558에서 휠 5번 확대한 수준보다 조금 더 확대)
+  mapZoom = 1.2;
 
   const pos   = getDiagNodePos(MAP_FLOORS);
   const floor = MAP_FLOORS[fi];
