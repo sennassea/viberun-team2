@@ -223,6 +223,48 @@
 
   const THEMES = ["hospital", "park", "school"];
 
+  const QUESTION_TAGS_BY_ID = {
+    HN01:["RHYTHM","STATUS_LINK"], HN02:["PROTECT","RHYTHM"], HN03:["SUPPORT","STATUS_LINK"],
+    HN04:["STATUS_LINK","RHYTHM"], HN05:["PROTECT","SUPPORT","RHYTHM"], HN06:["SCALING","STATUS_LINK","RHYTHM"],
+    HN07:["SUPPORT","STATUS_LINK","RHYTHM"], HN08:["PROTECT","SCALING","STATUS_LINK","RHYTHM"], HN09:["PROTECT","SUPPORT","STATUS_LINK","RHYTHM"],
+    HE02:["STATUS_LINK","BURST"], HE04:["RULE","STATUS_LINK"], HE05:["STATUS_LINK","BURST"], HE06:["HAND_PRESSURE","SUPPORT","BURST"], HE08:["STATUS_LINK","HAND_PRESSURE","BURST"],
+    HB01:["SUMMON","PHASE","STATUS_LINK"],
+    PN01:["ATTENTION","CHARGE"], PN02:["WEAK_LINK","ATTENTION"], PN03:["MEMORY_CLOG","ATTENTION"], PN04:["SUMMON","ATTENTION"],
+    PN05:["WEAK_LINK","MEMORY_CLOG","ATTENTION"], PN06:["CHARGE","SUMMON","MEMORY_LINK"], PN07:["WEAK_LINK","MEMORY_LINK","CHARGE"],
+    PN08:["ATTENTION","CHARGE","SUMMON","WEAK_LINK"], PN09:["MEMORY_CLOG","SUMMON","CHARGE","ATTENTION"],
+    PE02:["REFLECTION","BURST"], PE04:["SCALING","MEMORY_CLOG"], PE06:["EMPTY_SEAT","SUMMON","SUPPORT"], PE07:["EMPTY_SEAT","CHARGE","SUPPORT"], PE08:["SCALING","REFLECTION","BURST"],
+    PB01:["LAP","INTERRUPT","PHASE"],
+    SN01:["ANXIETY_LINK","RESOURCE_RULE"], SN02:["RHYTHM","ANXIETY_LINK"], SN03:["WEAK_LINK","RHYTHM"], SN04:["HAND_LOCK","SUPPORT"],
+    SN05:["HAND_LOCK","RESOURCE_RULE","RHYTHM"], SN06:["RHYTHM","SUPPORT","WEAK_LINK"], SN07:["HAND_LOCK","RHYTHM","RESOURCE_RULE"],
+    SN08:["ANXIETY_LINK","WEAK_LINK","HAND_LOCK","RESOURCE_RULE"], SN09:["RHYTHM","SUPPORT","HAND_LOCK","ANXIETY_LINK"],
+    SE01:["QUESTION","REGRET","BURST"], SE04:["QUESTION","ANXIETY_LINK","WEAK_LINK"], SE06:["DISCIPLINE","SUPPORT"], SE07:["DISCIPLINE","RHYTHM","RESOURCE_RULE"], SE08:["ECHO","DISCIPLINE","WEAK_LINK"],
+    SB01:["EXAM","PHASE","STATUS_PRESSURE"]
+  };
+
+  const DECK_CHECK_TAGS_BY_ID = {
+    HE02:["STATUS_RESILIENCE","DECK_CYCLE","SPEED_CHECK"], HE04:["HIGH_ACTION","TYPE_DIVERSITY"], HE05:["STATUS_RESILIENCE","SPEED_CHECK"],
+    HE06:["HAND_RESILIENCE","DECK_CYCLE"], HE08:["STATUS_RESILIENCE","HAND_RESILIENCE","LONG_FIGHT"],
+    HB01:["MULTI_TARGET","SUMMON_CONTROL","STATUS_RESILIENCE","PHASE_PLANNING","LONG_FIGHT"],
+    PE02:["ATTACK_ORDER","BURST_CHECK"], PE04:["SPEED_CHECK","STATUS_RESILIENCE","LONG_FIGHT"], PE06:["KILL_ORDER","SUMMON_CONTROL","MULTI_TARGET"],
+    PE07:["KILL_ORDER","BURST_CHECK"], PE08:["ATTACK_ORDER","SPEED_CHECK","LONG_FIGHT"],
+    PB01:["BURST_CHECK","SPEED_CHECK","PHASE_PLANNING","LONG_FIGHT"],
+    SE01:["TYPE_DIVERSITY","DECK_CYCLE"], SE04:["TYPE_DIVERSITY","STATUS_RESILIENCE","MULTI_TARGET"], SE06:["HIGH_ACTION","KILL_ORDER"],
+    SE07:["HIGH_ACTION","RESOURCE_EFFICIENCY","TYPE_DIVERSITY"], SE08:["HIGH_ACTION","LONG_FIGHT","HAND_RESILIENCE"],
+    SB01:["TYPE_DIVERSITY","DECK_CYCLE","STATUS_RESILIENCE","PHASE_PLANNING","LONG_FIGHT"]
+  };
+
+  const PHASE_TAGS_BY_ID = {
+    HN01:["early_low","early_high"], HN02:["early_low","early_high"], HN03:["early_low","early_high","mid"], HN04:["early_low","early_high","mid"],
+    HN05:["mid","late_low"], HN06:["early_high","mid","late_low"], HN07:["early_high","mid","late_low"], HN08:["mid","late_low","late_high"], HN09:["late_low","late_high"],
+    HE02:["early_high","mid","late_low"], HE04:["mid","late_low"], HE05:["mid","late_low"], HE06:["mid","late_low"], HE08:["late_low","late_high"], HB01:["boss"],
+    PN01:["early_high","mid"], PN02:["early_low","early_high"], PN03:["early_high","mid"], PN04:["early_high","mid"], PN05:["mid","late_low"],
+    PN06:["mid","late_low"], PN07:["mid","late_low"], PN08:["late_low","late_high"], PN09:["late_low","late_high"],
+    PE02:["early_high","mid","late_low"], PE04:["mid","late_low"], PE06:["mid","late_low"], PE07:["mid","late_low"], PE08:["late_low","late_high"], PB01:["boss"],
+    SN01:["early_low","early_high"], SN02:["early_high","mid"], SN03:["early_high","mid"], SN04:["early_high","mid"], SN05:["mid","late_low"],
+    SN06:["mid","late_low"], SN07:["mid","late_low"], SN08:["late_low","late_high"], SN09:["late_low","late_high"],
+    SE01:["early_high","mid","late_low"], SE04:["mid","late_low"], SE06:["mid","late_low"], SE07:["late_low","late_high"], SE08:["late_low","late_high"], SB01:["boss"]
+  };
+
   const PACKAGES = [
     buildTutorialPackage(TUTORIAL_ROW[1], TUTORIAL_ROW[0], TUTORIAL_ROW[2], TUTORIAL_ROW[3]),
   ];
@@ -238,6 +280,13 @@
     PACKAGES.push(buildBossPackage(theme, bossId, bossMonsterIds));
   });
 
+  PACKAGES.forEach(pkg => {
+    pkg.baseWeight = 1;
+    pkg.questionTags = (QUESTION_TAGS_BY_ID[pkg.id] || []).slice();
+    pkg.deckCheckTags = (DECK_CHECK_TAGS_BY_ID[pkg.id] || []).slice();
+    if(PHASE_TAGS_BY_ID[pkg.id]) pkg.phaseTags = PHASE_TAGS_BY_ID[pkg.id].slice();
+  });
+
   /* ── 구간 태그 (floor 기준) ─────────────────────────────────────────── */
   function getPhaseTag(floor){
     if(floor <= 3)  return "early_low";
@@ -248,21 +297,28 @@
     return "boss";
   }
 
-  /* ── 일반 적 크기 가중치 (지시서 9장) : 2~4체 중심으로 조정 ─────────── */
-  const ENEMY_SIZE_WEIGHTS = {
-    early_low:  { 2:70, 3:30, 4:0  },
-    early_high: { 2:45, 3:45, 4:10 },
-    mid:        { 2:15, 3:55, 4:30 },
-    late_low:   { 2:0,  3:45, 4:55 },
-    late_high:  { 2:0,  3:30, 4:70 },
+  const NORMAL_DIFFICULTY_WEIGHTS = {
+    early_low:  { easy:70, medium:30, high:0,  extreme:0  },
+    early_high: { easy:35, medium:60, high:5,  extreme:0  },
+    mid:        { easy:10, medium:55, high:35, extreme:0  },
+    late_low:   { easy:0,  medium:25, high:65, extreme:10 },
+    late_high:  { easy:0,  medium:0,  high:75, extreme:25 },
   };
 
-  /* ── 엘리트 유형 가중치 ─────────────────────────────────────────────── */
-  const ELITE_TYPE_WEIGHTS = {
-    early_high: { solo:100, plus_normal:0,  plus_elite:0   },
-    mid:        { solo:50,  plus_normal:40, plus_elite:10  },
-    late_low:   { solo:20,  plus_normal:50, plus_elite:30  },
-    late_high:  { solo:0,   plus_normal:0,  plus_elite:100 },
+  const SIZE_FIT_MULTIPLIERS = {
+    early_low:  { 2:1.25, 3:0.65, 4:0    },
+    early_high: { 2:1.10, 3:1.00, 4:0.35 },
+    mid:        { 2:0.65, 3:1.20, 4:0.80 },
+    late_low:   { 2:0.25, 3:1.05, 4:1.15 },
+    late_high:  { 2:0,    3:0.85, 4:1.20 },
+  };
+
+  const ELITE_DIFFICULTY_WEIGHTS = {
+    early_low:  { medium:0,   high:0,  extreme:0  },
+    early_high: { medium:100, high:0,  extreme:0  },
+    mid:        { medium:45,  high:50, extreme:5  },
+    late_low:   { medium:15,  high:70, extreme:15 },
+    late_high:  { medium:0,   high:60, extreme:40 },
   };
 
   /* ── 가중치 랜덤 선택 ───────────────────────────────────────────────── */
@@ -275,23 +331,164 @@
     return entries[entries.length-1][0];
   }
 
-  /* ── danger 기반 가중치 (지시서 9장) : 고위험/초고위험 패키지 과다 출현 방지 ── */
-  function getDangerWeight(pkg, phase){
-    if(pkg.difficulty === "extreme") return phase === "late_high" ? 20 : 5;
-    if(pkg.difficulty === "high")    return phase === "late_high" ? 60 : 35;
-    if(pkg.difficulty === "medium")  return 70;
-    return 90;
+  function intersects(a, b){
+    if(!Array.isArray(a) || !Array.isArray(b)) return false;
+    return a.some(item => b.includes(item));
   }
 
-  function weightedPackagePick(candidates, phase){
-    const total = candidates.reduce((sum, pkg) => sum + getDangerWeight(pkg, phase), 0);
+  function hasNewTag(candidateTags, recentEntries, key){
+    if(!Array.isArray(candidateTags) || !candidateTags.length) return false;
+    const recentTags = new Set();
+    recentEntries.forEach(entry => (entry[key] || []).forEach(tag => recentTags.add(tag)));
+    return candidateTags.some(tag => !recentTags.has(tag));
+  }
+
+  function normalizeRecentHistory(recentHistory){
+    if(Array.isArray(recentHistory)) return recentHistory.slice(-3);
+    return getActualCombatHistory();
+  }
+
+  function getActualCombatHistory(){
+    global.ACT1_COMBAT_HISTORY = Array.isArray(global.ACT1_COMBAT_HISTORY) ? global.ACT1_COMBAT_HISTORY : [];
+    return global.ACT1_COMBAT_HISTORY.slice(-3);
+  }
+
+  function packageHistoryEntry(pkg, nodeType){
+    return {
+      packageId: pkg.id,
+      theme: pkg.theme,
+      nodeType: nodeType || pkg.nodeType,
+      questionTags: (pkg.questionTags || []).slice(),
+      deckCheckTags: (pkg.deckCheckTags || []).slice()
+    };
+  }
+
+  global.ACT1_RECORD_PACKAGE_HISTORY = function(pkgOrId, nodeType){
+    const pkg = typeof pkgOrId === "string" ? PACKAGES.find(item => item.id === pkgOrId) : pkgOrId;
+    if(!pkg || !pkg.id) return null;
+    global.ACT1_COMBAT_HISTORY = Array.isArray(global.ACT1_COMBAT_HISTORY) ? global.ACT1_COMBAT_HISTORY : [];
+    const last = global.ACT1_COMBAT_HISTORY[global.ACT1_COMBAT_HISTORY.length - 1];
+    if(last && last.packageId === pkg.id && last.nodeType === (nodeType || pkg.nodeType)) return last;
+    const entry = packageHistoryEntry(pkg, nodeType);
+    global.ACT1_COMBAT_HISTORY.push(entry);
+    if(global.ACT1_COMBAT_HISTORY.length > 3) global.ACT1_COMBAT_HISTORY = global.ACT1_COMBAT_HISTORY.slice(-3);
+    return entry;
+  };
+
+  global.ACT1_RESET_COMBAT_HISTORY = function(){
+    global.ACT1_COMBAT_HISTORY = [];
+  };
+
+  global.ACT1_GET_COMBAT_HISTORY = getActualCombatHistory;
+
+  function getQuestionMultiplier(pkg, recent){
+    const tags = pkg.questionTags || [];
+    if(!tags.length) return 1;
+    const prev1 = recent[recent.length - 1];
+    const prev2 = recent[recent.length - 2];
+    let value = 1;
+    if(prev1 && intersects(tags, prev1.questionTags)) value *= 0.55;
+    if(prev2 && intersects(tags, prev2.questionTags)) value *= 0.75;
+    if(hasNewTag(tags, recent.slice(-2), "questionTags")) value *= 1.20;
+    return value;
+  }
+
+  function getDeckCheckMultiplier(pkg, recent){
+    const tags = pkg.deckCheckTags || [];
+    if(!tags.length) return 1;
+    const prev1 = recent[recent.length - 1];
+    const prev2 = recent[recent.length - 2];
+    let value = 1;
+    if(prev1 && intersects(tags, prev1.deckCheckTags)) value *= 0.70;
+    if(prev2 && intersects(tags, prev2.deckCheckTags)) value *= 0.85;
+    if(hasNewTag(tags, recent.slice(-2), "deckCheckTags")) value *= 1.10;
+    return value;
+  }
+
+  function getPackageWeight(pkg, phase, nodeType, recent, options){
+    options = options || {};
+    let weight = pkg.baseWeight || 1;
+    if(!options.ignorePackageRepeat && recent.slice(-3).some(entry => entry.packageId === pkg.id)) return 0;
+    if(nodeType === "enemy"){
+      const diffMap = NORMAL_DIFFICULTY_WEIGHTS[phase] || NORMAL_DIFFICULTY_WEIGHTS.mid;
+      const sizeMap = SIZE_FIT_MULTIPLIERS[phase] || SIZE_FIT_MULTIPLIERS.mid;
+      weight *= diffMap[pkg.difficulty] || 0;
+      weight *= sizeMap[pkg.size] === undefined ? 1 : sizeMap[pkg.size];
+    } else if(nodeType === "elite"){
+      const diffMap = ELITE_DIFFICULTY_WEIGHTS[phase] || ELITE_DIFFICULTY_WEIGHTS.mid;
+      weight *= diffMap[pkg.difficulty] || 0;
+    }
+    if(!options.ignoreQuestion) weight *= getQuestionMultiplier(pkg, recent);
+    if(!options.ignoreDeckCheck) weight *= getDeckCheckMultiplier(pkg, recent);
+    return weight;
+  }
+
+  function weightedPackagePick(candidates, phase, nodeType, recent, options){
+    const weights = candidates.map(pkg => getPackageWeight(pkg, phase, nodeType, recent, options));
+    const total = weights.reduce((sum, weight) => sum + weight, 0);
     if(total <= 0) return candidates[Math.floor(Math.random() * candidates.length)];
     let r = Math.random() * total;
-    for(const pkg of candidates){
-      r -= getDangerWeight(pkg, phase);
-      if(r <= 0) return pkg;
+    for(let i = 0; i < candidates.length; i++){
+      r -= weights[i];
+      if(r <= 0) return candidates[i];
     }
     return candidates[candidates.length - 1];
+  }
+
+  /* ── 끝없는 여정 보스 중복 방지 헬퍼 ───────────────────────────────────
+     끝없는 여정에서는 직전에 등장했던 보스 패키지를 가능한 한 피하고,
+     3개 보스가 모두 소진되면 가장 오래전에 나온 보스부터 재허용한다.
+     최초의 여정(mode !== "endless")에서는 아무 영향을 주지 않는다. */
+  function getCurrentJourney(){
+    if(typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.journey) return RUN_STATE.journey;
+    if(typeof S !== "undefined" && S && S.journey) return S.journey;
+    return null;
+  }
+
+  function getClearedBossPackageIds(){
+    const journey = getCurrentJourney();
+    return (journey && Array.isArray(journey.clearedBossPackageIds)) ? journey.clearedBossPackageIds : [];
+  }
+
+  function getBossHistory(){
+    const journey = getCurrentJourney();
+    return (journey && Array.isArray(journey.bossHistory)) ? journey.bossHistory : [];
+  }
+
+  function isEndlessJourneyMode(){
+    const journey = getCurrentJourney();
+    return !!(journey && journey.mode === "endless");
+  }
+
+  /* 보스 후보 목록(candidates)에서 끝없는 여정 규칙에 맞게 걸러낸다.
+     - 끝없는 여정이 아니거나 보스 후보가 없으면 원본을 그대로 반환한다.
+     - 아직 클리어하지 않은 보스가 있으면 그 보스만 남긴다.
+     - 모두 클리어했다면 bossHistory 기준 가장 오래전에 등장한 보스만 남긴다.
+     - 어떤 경우에도 필터 결과가 비면(맵 생성이 막히면 안 되므로) 원본을 반환한다. */
+  function filterEndlessBossCandidates(candidates){
+    if(!Array.isArray(candidates) || !candidates.length) return candidates;
+    if(!isEndlessJourneyMode()) return candidates;
+
+    const bossCandidates = candidates.filter(pkg => pkg && pkg.nodeType === "boss");
+    if(!bossCandidates.length) return candidates;
+
+    const cleared = getClearedBossPackageIds();
+    const uncleared = bossCandidates.filter(pkg => cleared.indexOf(pkg.id) === -1);
+    const others = candidates.filter(pkg => !(pkg && pkg.nodeType === "boss"));
+
+    if(uncleared.length) return others.concat(uncleared);
+
+    const history = getBossHistory();
+    if(!history.length) return candidates;
+
+    let minLastSeen = Infinity;
+    bossCandidates.forEach(pkg => {
+      const idx = history.lastIndexOf(pkg.id);
+      if(idx < minLastSeen) minLastSeen = idx;
+    });
+    const oldestGroup = bossCandidates.filter(pkg => history.lastIndexOf(pkg.id) === minLastSeen);
+    if(!oldestGroup.length) return candidates;
+    return others.concat(oldestGroup);
   }
 
   /* ── stageTheme 자동 선택 함수 (지시서 8장) ─────────────────────────────
@@ -299,6 +496,40 @@
      지금까지 가장 적게 나온 테마를 우선 선택한다. */
   global.ACT1_PICK_STAGE_THEME = function(nodeType, floor, themeCounts){
     themeCounts = themeCounts || {};
+
+    /* 끝없는 여정의 보스 스테이지: 아직 안 나온 보스 테마를 우선하고,
+       모두 소진됐으면 bossHistory상 가장 오래된 보스의 테마를 우선한다.
+       최초의 여정에서는 이 분기를 타지 않고 기존 로직을 그대로 사용한다. */
+    if(nodeType === "boss" && isEndlessJourneyMode()){
+      const bossPkgs = PACKAGES.filter(pkg => pkg.nodeType === "boss");
+      const cleared = getClearedBossPackageIds();
+      const uncleared = bossPkgs.filter(pkg => cleared.indexOf(pkg.id) === -1);
+
+      let pickedTheme = null;
+      if(uncleared.length){
+        pickedTheme = uncleared[Math.floor(Math.random() * uncleared.length)].theme;
+      } else {
+        const history = getBossHistory();
+        if(history.length){
+          let minLastSeen = Infinity;
+          bossPkgs.forEach(pkg => {
+            const idx = history.lastIndexOf(pkg.id);
+            if(idx < minLastSeen) minLastSeen = idx;
+          });
+          const oldestBosses = bossPkgs.filter(pkg => history.lastIndexOf(pkg.id) === minLastSeen);
+          if(oldestBosses.length){
+            pickedTheme = oldestBosses[Math.floor(Math.random() * oldestBosses.length)].theme;
+          }
+        }
+      }
+
+      if(pickedTheme){
+        themeCounts[pickedTheme] = (themeCounts[pickedTheme] || 0) + 1;
+        return pickedTheme;
+      }
+      /* 판단 불가 시(데이터 누락 등) 아래 기존 로직으로 폴백한다. */
+    }
+
     const minCount = Math.min(...THEMES.map(t => themeCounts[t] || 0));
     const candidates = THEMES.filter(t => (themeCounts[t] || 0) === minCount);
     const picked = candidates[Math.floor(Math.random() * candidates.length)];
@@ -312,47 +543,34 @@
     usedIds     : 이번 맵 생성에서 이미 사용된 패키지 ID Set (in-place 업데이트)
     stageTheme  : "hospital" | "park" | "school" - 이 테마의 패키지 풀만 사용한다.
                   절대 다른 테마 몬스터를 섞지 않는다. */
-  global.ACT1_PICK_PACKAGE = function(nodeType, floor, usedIds, stageTheme){
+  global.ACT1_PICK_PACKAGE = function(nodeType, floor, usedIds, stageTheme, recentHistory){
     usedIds = usedIds instanceof Set ? usedIds : new Set(usedIds || []);
     const phase = getPhaseTag(floor);
+    const recent = normalizeRecentHistory(recentHistory);
 
-    /* 후보 필터: 노드타입 + 구간태그 + 테마 일치 + 미사용 */
+    /* 후보 필터: 노드타입 + 구간태그 + 테마 일치 */
     let candidates = PACKAGES.filter(pkg =>
       pkg.nodeType === nodeType &&
       pkg.phaseTags.includes(phase) &&
-      pkg.theme === stageTheme &&
-      !usedIds.has(pkg.id)
+      pkg.theme === stageTheme
     );
 
-    /* 후보가 없을 때만 반복 제한을 완화한다. 테마 조건은 절대 풀지 않는다. */
-    if(!candidates.length){
-      candidates = PACKAGES.filter(pkg =>
-        pkg.nodeType === nodeType &&
-        pkg.phaseTags.includes(phase) &&
-        pkg.theme === stageTheme
-      );
-    }
     if(!candidates.length) return null;
 
-    let pick;
+    /* 끝없는 여정 보스 중복 방지 안전장치. ACT1_PICK_STAGE_THEME에서 이미
+       테마를 걸러내지만, 이 단계에서도 한 번 더 필터링해 이중으로 방지한다.
+       필터 결과가 비면(막힘 방지) 원래 candidates를 그대로 사용한다. */
+    if(nodeType === "boss"){
+      const filtered = filterEndlessBossCandidates(candidates);
+      if(Array.isArray(filtered) && filtered.length) candidates = filtered;
+    }
 
-    if(nodeType === "enemy"){
-      const sizeMap = ENEMY_SIZE_WEIGHTS[phase] || ENEMY_SIZE_WEIGHTS.mid;
-      const targetSize = parseInt(weightedPick(sizeMap), 10);
-      let pool = candidates.filter(p => p.size === targetSize);
-      if(!pool.length) pool = candidates;
-      pick = weightedPackagePick(pool, phase);
+    let pick = weightedPackagePick(candidates, phase, nodeType, recent, {});
+    if(!pick || getPackageWeight(pick, phase, nodeType, recent, {}) <= 0){
+      pick = weightedPackagePick(candidates, phase, nodeType, recent, { ignorePackageRepeat:true });
     }
-    else if(nodeType === "elite"){
-      const typeMap = ELITE_TYPE_WEIGHTS[phase] || ELITE_TYPE_WEIGHTS.mid;
-      const targetType = weightedPick(typeMap);
-      let pool = candidates.filter(p => p.eliteType === targetType);
-      if(!pool.length) pool = candidates;
-      pick = weightedPackagePick(pool, phase);
-    }
-    else {
-      /* boss / tutorial: 테마당 1개뿐이므로 단순 랜덤 */
-      pick = candidates[Math.floor(Math.random() * candidates.length)];
+    if(!pick || getPackageWeight(pick, phase, nodeType, recent, { ignorePackageRepeat:true }) <= 0){
+      pick = weightedPackagePick(candidates, phase, nodeType, recent, { ignorePackageRepeat:true, ignoreQuestion:true, ignoreDeckCheck:true });
     }
 
     if(pick) usedIds.add(pick.id);
@@ -360,5 +578,7 @@
   };
 
   global.ACT1_ENCOUNTER_PACKAGES = PACKAGES;
+  global.ACT1_GET_PACKAGE_WEIGHT = getPackageWeight;
+  global.ACT1_GET_PHASE_TAG = getPhaseTag;
 
 })(window);

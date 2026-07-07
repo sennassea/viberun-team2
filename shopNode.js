@@ -84,6 +84,9 @@ function openShopNode() {
   switchShopTab("card");
   shopOverlayEl.classList.add("show");
   shopOverlayEl.setAttribute("aria-hidden", "false");
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmShop");
+  }
 }
 
 function closeShopNode() {
@@ -95,6 +98,12 @@ function closeShopNode() {
 
 /* 나가기: 상점 종료 후 맵으로 복귀 (기획서 8장 순서 7) */
 function exitShopNode() {
+  if(typeof recordCompletedNodeScore === "function"){
+    recordCompletedNodeScore("shop", {
+      reason: "상점 방문 완료"
+    });
+  }
+
   closeShopNode();
   if (typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
   window.MAP_STATE.proceedMode = true;
@@ -128,6 +137,7 @@ function ensureShopState() {
     selectedId: null,
     refreshCost: SHOP_REFRESH_COST,
     stock: { card: [], potion: [], relic: [] },
+    firstPurchaseDone: false,
   };
   generateShopStock();
 }
@@ -163,8 +173,39 @@ function pickShopItems(list, count) {
     .slice(0, count);
 }
 
+/**
+ * 상점 판매 후보(법구/약병처럼 rarity를 가진 객체)에서 등급 우선 추첨(60/30/10)으로
+ * 지정 개수만큼 중복 없이 뽑습니다. 원본 배열은 변경하지 않습니다.
+ */
+function pickShopItemsByRarity(list, count) {
+  if (!Array.isArray(list)) {
+    console.warn("[Shop] 판매 후보 목록이 배열이 아닙니다.", list);
+    return [];
+  }
+  const pool = list.slice();
+  const picked = [];
+  for (let i = 0; i < count && pool.length; i++) {
+    const item = typeof window.pickRewardItemByRarity === "function"
+      ? window.pickRewardItemByRarity(pool, { context: "shop" })
+      : pool[Math.floor(Math.random() * pool.length)];
+    if (!item) break;
+    const idx = pool.indexOf(item);
+    if (idx >= 0) pool.splice(idx, 1);
+    picked.push(item);
+  }
+  return picked;
+}
+
 function buildCardStock() {
-  return pickShopItems(CARD_REWARD_POOL, SHOP_CARD_STOCK_COUNT).map((key) => {
+  const cardPool =
+    window.VIBERUN_SPIRIT_PATH_FILTER &&
+    typeof window.VIBERUN_SPIRIT_PATH_FILTER.filterCardKeysBySpiritPath === "function"
+      ? window.VIBERUN_SPIRIT_PATH_FILTER.filterCardKeysBySpiritPath(CARD_REWARD_POOL)
+      : CARD_REWARD_POOL;
+  const keys = typeof window.getWeightedCardRewardKeys === "function"
+    ? window.getWeightedCardRewardKeys(SHOP_CARD_STOCK_COUNT, cardPool, { context: "shop" })
+    : pickShopItems(cardPool, SHOP_CARD_STOCK_COUNT);
+  return keys.map((key) => {
     const card = CARD_DB[key];
 
     if (!card) {
@@ -191,7 +232,7 @@ function buildPotionStock() {
     ? window.getPotionCandidatesBySource("shop")
     : SHOP_POTION_DB;
 
-  return pickShopItems(db, SHOP_POTION_STOCK_COUNT).map((p) => ({
+  return pickShopItemsByRarity(db, SHOP_POTION_STOCK_COUNT).map((p) => ({
     ...p,
     category: "potion",
     price: p.shopPrice || p.price || 0,
@@ -206,7 +247,7 @@ function buildRelicStock() {
 
   if (!db.length) db = getShopRelicMasterCandidates();
 
-  return pickShopItems(db, SHOP_RELIC_STOCK_COUNT).map((r) => ({
+  return pickShopItemsByRarity(db, SHOP_RELIC_STOCK_COUNT).map((r) => ({
     ...r,
     category: "relic",
     price: r.shopPrice || r.price || SHOP_RELIC_PRICE[r.rarity] || 100,
@@ -258,6 +299,15 @@ function canAfford(price) {
   return typeof S !== "undefined" && S && typeof S.gold === "number" && S.gold >= price;
 }
 
+function getEffectiveShopPrice(item) {
+  const base = Math.max(0, item && Number.isFinite(item.price) ? item.price : 0);
+  let price = base;
+  if (SHOP_STATE && !SHOP_STATE.firstPurchaseDone && typeof hasRelic === "function" && hasRelic("peddler_abacus")) {
+    price = Math.max(0, Math.floor(base * 0.85));
+  }
+  return typeof scaleEndlessShopPrice === "function" ? scaleEndlessShopPrice(price) : price;
+}
+
 function isRelicOwned(id) {
   return typeof S !== "undefined" && S && Array.isArray(S.relics) && S.relics.some((r) => r && r.id === id);
 }
@@ -284,34 +334,56 @@ function buyCurrentItem() {
 }
 
 function buyCard(item) {
-  if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
-  STARTER_DECK.push(item.sourceKey);
-  S.gold -= item.price;
+  const price = getEffectiveShopPrice(item);
+  if (!canAfford(price)) {
+    if (typeof toast === "function") toast("골드가 부족합니다.");
+    if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuyFail");
+    return;
+  }
+  if (typeof addPermanentCard === "function") addPermanentCard(item.sourceKey, { source:"shop" });
+  else STARTER_DECK.push(item.sourceKey);
+  S.gold -= price;
+  SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
+  if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuy");
   finalizeShopChange();
 }
 
 function buyPotion(item) {
   if (getPotionCount() >= SHOP_POTION_SLOT_LIMIT) { if (typeof toast === "function") toast("약병 슬롯이 가득 찼습니다."); return; }
-  if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
+  const price = getEffectiveShopPrice(item);
+  if (!canAfford(price)) {
+    if (typeof toast === "function") toast("골드가 부족합니다.");
+    if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuyFail");
+    return;
+  }
   if (!Array.isArray(S.potions)) S.potions = [];
   S.potions.push({ ...item, soldOut: undefined, category: undefined });
-  S.gold -= item.price;
+  S.gold -= price;
+  SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
+  if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuy");
   finalizeShopChange();
 }
 
 function buyRelic(item) {
   if (isRelicOwned(item.id)) { if (typeof toast === "function") toast("이미 보유한 법구입니다."); return; }
-  if (!canAfford(item.price)) { if (typeof toast === "function") toast("골드가 부족합니다."); return; }
+  const price = getEffectiveShopPrice(item);
+  if (!canAfford(price)) {
+    if (typeof toast === "function") toast("골드가 부족합니다.");
+    if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuyFail");
+    return;
+  }
   if (!Array.isArray(S.relics)) S.relics = [];
   // 효과 배열(fx)까지 보존해야 전투 시작/턴 종료/조건부 법구 효과가 정상 발동됩니다.
   S.relics.push({ ...item });
-  S.gold -= item.price;
+  S.gold -= price;
+  SHOP_STATE.firstPurchaseDone = true;
   item.soldOut = true;
   if (typeof toast === "function") toast(item.name + " 구매 완료");
+  if (window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("shopBuy");
   finalizeShopChange();
 }
 
@@ -499,7 +571,7 @@ function shopProductCardHtml(item) {
         '<button type="button" class="shop-product shop-product-card-frame card-frame-card cost-' + escapeShopHtml(card.type) +
           (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + escapeShopHtml(item.id) + '">' +
           cardFaceHtml(card) +
-          '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : shopGoldCostHtml(item.price)) + '</div>' +
+          '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>' +
         '</button>'
       );
     }
@@ -509,8 +581,8 @@ function shopProductCardHtml(item) {
       '<div class="shop-product-name">' + escapeShopHtml(item.name) + '</div>' +
       '<div class="shop-product-art">' + shopItemArtHtml(item) + '</div>' +
       '<div class="shop-product-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
-      '<div class="shop-product-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
-      '<div class="shop-product-price">' + (item.soldOut ? "품절" : shopGoldCostHtml(item.price)) + '</div>' +
+      '<div class="shop-product-desc">' + colorizeRarityLabels(escapeShopHtml(item.desc || "").replace(/\n/g, "<br>")) + '</div>' +
+      '<div class="shop-product-price">' + (item.soldOut ? "품절" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>' +
     '</button>'
   );
 }
@@ -530,7 +602,8 @@ function renderShopDetail() {
 
   const potionFull  = item.category === "potion" && getPotionCount() >= SHOP_POTION_SLOT_LIMIT;
   const relicOwned  = item.category === "relic"  && isRelicOwned(item.id);
-  const goldShort   = !canAfford(item.price);
+  const displayPrice = getEffectiveShopPrice(item);
+  const goldShort   = !canAfford(displayPrice);
   const disabled    = item.soldOut || goldShort || potionFull || relicOwned;
 
   let buyLabel = "구매";
@@ -545,15 +618,15 @@ function renderShopDetail() {
       '<div class="shop-detail-card-preview card-frame-card cost-' + escapeShopHtml(card.type) + '">' +
         cardFaceHtml(card) +
       '</div>' +
-      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(item.price)) + '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(displayPrice)) + '</div>' +
       '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
     )
     : (
       '<div class="shop-detail-name">' + escapeShopHtml(item.name) + '</div>' +
       '<div class="shop-detail-art">' + shopItemArtHtml(item) + '</div>' +
       '<div class="shop-detail-type type ' + typeCls + '">' + escapeShopHtml(shopItemTypeLabel(item)) + '</div>' +
-      '<div class="shop-detail-desc">' + escapeShopHtml(item.desc || "").replace(/\n/g, "<br>") + '</div>' +
-      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(item.price)) + '</div>' +
+      '<div class="shop-detail-desc">' + colorizeRarityLabels(escapeShopHtml(item.desc || "").replace(/\n/g, "<br>")) + '</div>' +
+      '<div class="shop-detail-price">' + (item.soldOut ? "" : shopGoldCostHtml(displayPrice)) + '</div>' +
       '<button type="button" class="shop-buy-btn" id="shopBuyBtn"' + (disabled ? " disabled" : "") + '>' + escapeShopHtml(buyLabel) + '</button>'
     );
 
@@ -611,7 +684,7 @@ function ensureShopStyles() {
     ".shop-hp-row{display:flex;align-items:center;gap:.8cqw;font-size:1.55cqh;font-weight:800;color:var(--c-ink);}" +
     ".shop-hp-row span:first-child{color:var(--c-red-deep);}" +
     ".shop-hp-bar{position:relative;width:calc(100% - 2cqw);height:1.45cqh;border-radius:.8cqh;overflow:hidden;background:rgba(95,95,95,.58);border:0;}" +
-    ".shop-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#ff8079,var(--c-hp));transition:width .35s ease;border-radius:.8cqh;}" +
+    ".shop-hp-fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(180deg,#ff6f67 0%,#e33434 58%,#a6171f 100%);transition:width .35s ease;border-radius:.8cqh;}" +
     "#shopHpText{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.15cqh;font-weight:900;line-height:1;text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}" +
     ".shop-resource-row{display:flex;align-items:center;gap:.65cqw;font-size:1.45cqh;font-weight:900;color:var(--c-ink);transform:translateX(2cqw);width:calc(100% - 2cqw);}" +
     ".shop-resource{display:inline-flex;align-items:center;gap:.22cqw;color:var(--c-ink);font-size:1.45cqh;}" +

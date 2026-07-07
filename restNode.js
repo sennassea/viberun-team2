@@ -21,11 +21,28 @@ const PRAYER_REST_HEAL_RATIO = 0.25;
 const PRAYER_CARD_REMOVE_COST_TABLE = [60, 100, 150];
 
 function getCardRemoveCost(){
+  if(typeof hasRelic === "function" && hasRelic("empty_spirit_tablet") &&
+     typeof S !== "undefined" && S && (S.cleanseCount || 0) === 0) return 0;
   const count = (typeof S !== "undefined" && S && typeof S.cleanseCount === "number") ? S.cleanseCount : 0;
   const idx = Math.min(count, PRAYER_CARD_REMOVE_COST_TABLE.length - 1);
   return PRAYER_CARD_REMOVE_COST_TABLE[idx];
 }
 window.getCardRemoveCost = getCardRemoveCost;
+
+/* ── 끝없는 여정 잠념 침투(심도 13/20)로 추가된 카드는 일정 수량만큼 제거할 수 없다.
+   덱은 카드 키 배열이라 개별 인스턴스를 구분하지 못하므로, 덱에 남은
+   "잠념" 수가 저주로 보호된 수량을 초과할 때만 제거를 허용한다. ── */
+function isEndlessRestCardRemovable(key){
+  if(key !== "intrusive_thought") return true;
+  const protectedCount = typeof getEndlessUnremovableIntrusiveThoughtCount === "function"
+    ? getEndlessUnremovableIntrusiveThoughtCount()
+    : 0;
+  if(protectedCount <= 0) return true;
+  const deck = typeof STARTER_DECK !== "undefined" ? STARTER_DECK : [];
+  const currentCount = deck.filter(k => k === "intrusive_thought").length;
+  return currentCount > protectedCount;
+}
+window.isEndlessRestCardRemovable = isEndlessRestCardRemovable;
 
 let prayerOverlayEl   = null;
 let prayerSelected    = null;
@@ -52,14 +69,14 @@ function startStage(stageIdx){
     updateHudFloor();
     renderCanvas(getCurrentNodeId());
     const footer = document.getElementById("mapFooter");
-    if(footer) footer.textContent = "⬆️ 다음 스테이지를 클릭하여 진행하세요";
+    if(footer) footer.textContent = "⬆️ 다음 구역을 클릭하여 진행하세요";
     return;
   }
 
   window.MAP_STATE.currentStage = stageIdx;
   window.MAP_STATE.proceedMode  = false;
   window.MAP_STATE.startMapMode = false;
-  loadStageMonsters(stageIdx);
+  loadStageMonsters(stageIdx, { recordHistory:true });
   updateHudFloor();
   closeMap();
   if(typeof newGame === "function") newGame();
@@ -84,6 +101,13 @@ function closePrayerNode(){
 
 /* 기도터를 마치고 다음 노드를 고를 수 있도록 맵으로 복귀 (주문 보상 흐름과 동일 패턴) */
 function resolvePrayerNode(){
+  if(typeof recordCompletedNodeScore === "function"){
+    recordCompletedNodeScore("rest", {
+      reason: "휴식/신당 이용"
+    });
+  }
+
+  if(typeof applyRelicTrigger === "function") applyRelicTrigger("onPrayerActionComplete", { action:prayerSelected });
   closePrayerNode();
   window.MAP_STATE.proceedMode = true;
   if(typeof openMap === "function") openMap();
@@ -153,7 +177,8 @@ function openRestCardAdd(){
     if(typeof toast === "function") toast("주문 추가 기능을 불러올 수 없습니다.");
     return;
   }
-  const keys = typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(3) : [];
+  const offerCount = (typeof hasRelic === "function" && hasRelic("tricolor_ritual_bowl")) ? 4 : 3;
+  const keys = typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(offerCount, "prayer") : [];
   if(keys.length === 0){
     if(typeof toast === "function") toast("추가할 수 있는 주문이 없습니다.");
     return;
@@ -163,8 +188,20 @@ function openRestCardAdd(){
     title: "받아들이기",
     desc: "추가할 주문 1장을 선택하세요.",
     onChoose: key => {
-      if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
-      if(typeof S !== "undefined" && S && Array.isArray(S.discard)) S.discard.push(key);
+      if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"prayerAccept" });
+      else {
+        if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
+        if(typeof S !== "undefined" && S && Array.isArray(S.discard)){
+          if(typeof pushDiscardCard === "function") pushDiscardCard(key, typeof createCardInstance === "function" ? createCardInstance(key) : undefined);
+          else {
+            S.discard.push(key);
+            if(!Array.isArray(S.discardInstances)) S.discardInstances = [];
+            S.discardInstances.push(typeof createCardInstance === "function"
+              ? createCardInstance(key)
+              : { key, runtime:{ hanpuriGrowth:0 } });
+          }
+        }
+      }
       if(typeof renderHud === "function") renderHud();
     }
   }).then(() => {
@@ -183,13 +220,15 @@ function openRestCardRemove(){
     if(typeof toast === "function") toast("제거할 주문이 없습니다.");
     return;
   }
-  const cost = getCardRemoveCost();
+  const cost = (typeof hasRelic === "function" && hasRelic("empty_spirit_tablet") && S && (S.cleanseCount || 0) === 0) ? 0 : getCardRemoveCost();
   window.OPEN_DECK_VIEWER_CARD_PICK({
-    title: "정리하기",
+    title: "제거할 카드 선택",
     confirmText: "제거 완료",
     helpText: "제거할 주문 1장을 선택하세요.",
+    disabledText: "끝없는 여정의 잠념은 제거할 수 없습니다.",
     costText: "제거 비용: " + cost + " 복채",
     costHtml: '제거 비용: <span class="inline-resource-icon inline-resource-icon-gold" aria-hidden="true"></span>' + cost + " 복채",
+    isSelectable: key => isEndlessRestCardRemovable(key),
     getConfirmDisabled: () => {
       const gold = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
       return gold < cost;
@@ -200,12 +239,24 @@ function openRestCardRemove(){
         if(typeof toast === "function") toast("복채가 부족합니다.");
         return;
       }
+      if(!isEndlessRestCardRemovable(key)){
+        if(typeof toast === "function") toast("끝없는 여정의 잠념은 제거할 수 없습니다.");
+        return;
+      }
       const idx = STARTER_DECK.indexOf(key);
       if(idx === -1) return;
       const card = typeof CARD_DB !== "undefined" ? CARD_DB[key] : null;
       STARTER_DECK.splice(idx, 1);
       S.gold -= cost;
       S.cleanseCount = (typeof S.cleanseCount === "number" ? S.cleanseCount : 0) + 1;
+
+      if(typeof recordJourneyActionScore === "function"){
+        recordJourneyActionScore("cardRemove", {
+          type: "rest",
+          reason: "기도터 카드 제거"
+        });
+      }
+
       if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
       if(typeof renderHud === "function") renderHud();
       if(typeof toast === "function" && card) toast(card.name + " 주문을 덱에서 제거했습니다. (" + cost + " 복채 사용)");
@@ -218,7 +269,8 @@ function openRestCardRemove(){
 function applyPrayerRest(){
   if(typeof S === "undefined" || !S || !S.player) return;
   const player     = S.player;
-  const healAmount = Math.max(0, Math.round(player.maxHp * PRAYER_REST_HEAL_RATIO));
+  const ratio = (typeof hasRelic === "function" && hasRelic("mugwort_bundle")) ? 0.35 : PRAYER_REST_HEAL_RATIO;
+  const healAmount = Math.max(0, Math.round(player.maxHp * ratio));
   const healed     = (typeof LIFE !== "undefined" && LIFE) ? LIFE.heal(player, healAmount) : 0;
   if(typeof renderHud === "function") renderHud();
   if(typeof toast === "function"){
@@ -359,7 +411,8 @@ function renderPrayerCardPreviews(){
   const restCard  = prayerOverlayEl.querySelector('.prayer-card[data-choice="rest"]');
   if(restExtra && typeof S !== "undefined" && S && S.player){
     const p          = S.player;
-    const healAmount = Math.max(0, Math.round(p.maxHp * PRAYER_REST_HEAL_RATIO));
+    const restHealRatio = (typeof hasRelic === "function" && hasRelic("mugwort_bundle")) ? 0.35 : PRAYER_REST_HEAL_RATIO;
+    const healAmount = Math.max(0, Math.round(p.maxHp * restHealRatio));
     const isFull     = p.hp >= p.maxHp;
     restExtra.className = "prayer-card-extra prayer-card-preview" + (isFull ? " full" : "");
     restExtra.textContent = isFull
@@ -377,7 +430,7 @@ function renderPrayerCardPreviews(){
   const cleanseExtra = prayerOverlayEl.querySelector('[data-extra="cleanse"]');
   const cleanseCard  = prayerOverlayEl.querySelector('.prayer-card[data-choice="cleanse"]');
   if(cleanseExtra){
-    const cost         = getCardRemoveCost();
+    const cost         = (typeof hasRelic === "function" && hasRelic("empty_spirit_tablet") && typeof S !== "undefined" && S && (S.cleanseCount || 0) === 0) ? 0 : getCardRemoveCost();
     const currentGold  = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
     const notEnough    = currentGold < cost;
     cleanseExtra.className = "prayer-card-extra prayer-card-pill" + (notEnough ? " insufficient" : "");

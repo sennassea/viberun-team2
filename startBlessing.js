@@ -34,15 +34,15 @@ const START_BLESSING_SPIRITS = (START_BLESSING_ENDING_DATA && Array.isArray(STAR
 /* ── 시작 전용 은혜 법구 15종 (엑셀 지시서 기준) ───────────────────────── */
 const START_BLESSINGS = [
   { id:"blessing_relic_01", icon:"🌒", name:"길잃은 방울",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.", effect:"gainRandomRelicLoseHp" },
-  { id:"blessing_relic_02", icon:"🃏", name:"금단의 서낭부",  spirit:"길잡이 신령", desc:"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", effect:"chooseRareCardAddStatus" },
+  { id:"blessing_relic_02", icon:"🃏", name:"금단의 서낭부",  spirit:"길잡이 신령", desc:"유일 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", effect:"chooseRareCardAddStatus" },
   { id:"blessing_relic_03", icon:"assets/ui/resource_icons/gold.png", name:"깨진 복주머니",  spirit:"길잡이 신령", desc:"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.", effect:"gainGoldLoseMaxHp" },
   { id:"blessing_relic_04", icon:"⚗️", name:"흔들리는 약향로",  spirit:"길잡이 신령", desc:"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.", effect:"gainPotionsFirstBattleAnxiety" },
   { id:"blessing_relic_05", icon:"🏺", name:"빈 복채함",  spirit:"길잡이 신령", desc:"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.", effect:"gainRandomRelicLoseAllGold" },
   { id:"blessing_relic_06", icon:"✂️", name:"인연 끊는 가위",  spirit:"인연 신령", desc:"기본 카드 1장을 선택하여 제거합니다.", effect:"chooseRemoveStarterCard" },
-  { id:"blessing_relic_07", icon:"🔀", name:"뒤섞인 인연패",  spirit:"인연 신령", desc:"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.", effect:"randomRemoveStarterGainCommon" },
+  { id:"blessing_relic_07", icon:"🔀", name:"뒤섞인 인연패",  spirit:"인연 신령", desc:"기본 카드 1장을 무작위로 제거하고, 무작위 일반 카드 1장을 얻습니다.", effect:"randomRemoveStarterGainCommon" },
   { id:"blessing_relic_08", icon:"🧹", name:"망각의 매듭",  spirit:"인연 신령", desc:"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.", effect:"removeTwoCardsLoseAllGold" },
-  { id:"blessing_relic_09", icon:"📜", name:"새 인연의 부적",  spirit:"인연 신령", desc:"Common 카드 3장 중 1장을 선택해 얻습니다.", effect:"chooseCommonCard" },
-  { id:"blessing_relic_10", icon:"🍃", name:"가벼운 첫 매듭", spirit:"인연 신령", desc:"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", effect:"gainRandomCommonCostDownRun" },
+  { id:"blessing_relic_09", icon:"📜", name:"새 인연의 부적",  spirit:"인연 신령", desc:"일반 카드 3장 중 1장을 선택해 얻습니다.", effect:"chooseCommonCard" },
+  { id:"blessing_relic_10", icon:"🍃", name:"가벼운 첫 매듭", spirit:"인연 신령", desc:"무작위 일반 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", effect:"gainRandomCommonCostDownRun" },
   { id:"blessing_relic_11", icon:"🕯️", name:"수호의 첫 종소리", spirit:"수호 신령", desc:"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.", effect:"nextThreeNormalFirstEnemyHpOne" },
   { id:"blessing_relic_12", icon:"🛡️", name:"첫 결계의 연꽃", spirit:"수호 신령", desc:"첫 전투 시작 시 결계 10을 얻습니다.", effect:"firstBattleBlock", value:10 },
   { id:"blessing_relic_13", icon:"💗", name:"맑은 혼의 옥패", spirit:"수호 신령", desc:"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.", effect:"gainMaxHpAndHeal", value:8 },
@@ -151,8 +151,8 @@ function openSbMapPreview(){
   const footer = document.getElementById("mapFooter");
   if(footer){
     footer.textContent = sbResolved
-      ? "⬆️ 다음 스테이지를 클릭하여 진행하세요"
-      : "은혜를 선택하면 다음 노드를 고를 수 있습니다.";
+      ? "⬆️ 다음 구역을 클릭하여 진행하세요"
+      : "은혜를 선택하면 다음 구역을 고를 수 있습니다.";
   }
 }
 
@@ -228,14 +228,15 @@ function applySbBlessing(blessing){
   if(!run || typeof CARD_DB === "undefined") return;
 
   switch(blessing.effect){
-    case "gainRandomRelicLoseHp":
-      addSbRandomRelic();
+    case "gainRandomRelicLoseHp": {
+      const relic = addSbRandomRelic();
       run.player.hp = Math.max(1, (run.player.hp || 1) - 12);
-      break;
+      return openSbRandomResultPopup([sbPopupRelicItem(relic, "gain")], "법구 획득");
+    }
     case "chooseRareCardAddStatus":
       return chooseSbCardRewardByRarity("rare", {
         title: "정화 보상",
-        desc: "Rare 카드 3장 중 1장을 선택해 덱에 추가하세요.",
+        desc: "유일 카드 3장 중 1장을 선택해 덱에 추가하세요.",
         afterChoose: addSbRandomStatusCard
       });
     case "gainGoldLoseMaxHp":
@@ -243,32 +244,43 @@ function applySbBlessing(blessing){
       run.player.maxHp = Math.max(1, (run.player.maxHp || 1) - 8);
       run.player.hp = Math.max(1, Math.min(run.player.hp || 1, run.player.maxHp));
       break;
-    case "gainPotionsFirstBattleAnxiety":
-      addSbRandomPotion(2);
+    case "gainPotionsFirstBattleAnxiety": {
+      const potions = addSbRandomPotion(2);
       setSbBattleEffect("firstBattleAnxiety", { used:false, value:1 });
-      break;
-    case "gainRandomRelicLoseAllGold":
-      addSbRandomRelic();
+      return openSbRandomResultPopup(potions.map(p => sbPopupPotionItem(p, "gain")), "약병 획득");
+    }
+    case "gainRandomRelicLoseAllGold": {
+      const relic = addSbRandomRelic();
       run.gold = 0;
-      break;
+      return openSbRandomResultPopup([sbPopupRelicItem(relic, "gain")], "법구 획득");
+    }
     case "chooseRemoveStarterCard":
       return chooseSbStarterCardToRemove();
-    case "randomRemoveStarterGainCommon":
-      removeSbRandomStarterCard();
-      addSbRandomCardByRarity("common");
-      break;
-    case "removeTwoCardsLoseAllGold":
-      removeSbRandomCards(2);
+    case "randomRemoveStarterGainCommon": {
+      const removedKey = removeSbRandomStarterCard();
+      const gainedKey = addSbRandomCardByRarity("common");
+      return openSbRandomResultPopup(
+        [sbPopupCardItem(removedKey, "remove"), sbPopupCardItem(gainedKey, "gain")],
+        "주문 변경"
+      );
+    }
+    case "removeTwoCardsLoseAllGold": {
+      const removedKeys = removeSbRandomCards(2);
       run.gold = 0;
-      break;
+      return openSbRandomResultPopup(
+        removedKeys.map(key => sbPopupCardItem(key, "remove")),
+        "주문 제거"
+      );
+    }
     case "chooseCommonCard":
       return chooseSbCardRewardByRarity("common", {
         title: "정화 보상",
-        desc: "Common 카드 3장 중 1장을 선택해 덱에 추가하세요."
+        desc: "일반 카드 3장 중 1장을 선택해 덱에 추가하세요."
       });
-    case "gainRandomCommonCostDownRun":
-      addSbDiscountedCommonCard();
-      break;
+    case "gainRandomCommonCostDownRun": {
+      const gainedKey = addSbDiscountedCommonCard();
+      return openSbRandomResultPopup([sbPopupCardItem(gainedKey, "gain")], "주문 획득");
+    }
     case "nextThreeNormalFirstEnemyHpOne":
       setSbBattleEffect("nextThreeNormalFirstEnemyHpOne", { remaining:3 });
       break;
@@ -282,9 +294,10 @@ function applySbBlessing(blessing){
     case "gainGold":
       run.gold = (run.gold || 0) + (blessing.value || 80);
       break;
-    case "gainRandomPotion":
-      addSbRandomPotion(1);
-      break;
+    case "gainRandomPotion": {
+      const potions = addSbRandomPotion(1);
+      return openSbRandomResultPopup(potions.map(p => sbPopupPotionItem(p, "gain")), "약병 획득");
+    }
   }
 }
 
@@ -318,13 +331,16 @@ function removeSbRandomStarterCard(){
 
 function removeSbRandomCards(count){
   const run = getSbRunState();
-  if(!run) return;
+  if(!run) return [];
   const nextDeck = [...run.deck];
+  const removedKeys = [];
   for(let i = 0; i < count && nextDeck.length > 0; i++){
     const index = Math.floor(Math.random() * nextDeck.length);
-    nextDeck.splice(index, 1);
+    const removed = nextDeck.splice(index, 1)[0];
+    if(removed) removedKeys.push(removed);
   }
   sbSetDeck(nextDeck);
+  return removedKeys;
 }
 
 function chooseSbStarterCardToRemove(){
@@ -334,12 +350,12 @@ function chooseSbStarterCardToRemove(){
     return null;
   }
   if(typeof window.OPEN_DECK_VIEWER_CARD_PICK !== "function"){
-    console.warn("[StartBlessing] 덱 뷰어 선택 모드를 찾지 못해 기본 카드 1장을 무작위로 제거합니다.");
-    removeSbRandomStarterCard();
-    return null;
+    console.error("[StartBlessing] 카드 선택 제거 UI를 찾을 수 없습니다.");
+    if(typeof toast === "function") toast("카드 선택 제거 UI를 불러올 수 없습니다.");
+    return Promise.resolve(null);
   }
   return window.OPEN_DECK_VIEWER_CARD_PICK({
-    title: "제거할 기본 카드 선택",
+    title: "제거할 카드 선택",
     confirmText: "제거",
     isSelectable: key => !!(CARD_DB[key] && (CARD_DB[key].rarity === "starter" || CARD_DB[key].rarity === "basic")),
     disabledText: "기본 카드만 제거할 수 있습니다.",
@@ -352,9 +368,15 @@ function chooseSbStarterCardToRemove(){
   });
 }
 
+function isSbCardAllowedBySpiritPath(card){
+  return !window.VIBERUN_SPIRIT_PATH_FILTER ||
+    typeof window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath !== "function" ||
+    window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath(card);
+}
+
 function addSbRandomCardByRarity(rarity){
   if(typeof CARD_DB === "undefined") return null;
-  const keys = Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity);
+  const keys = Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity && isSbCardAllowedBySpiritPath(CARD_DB[key]));
   const key = pickSbRandom(keys);
   if(!key) return null;
   const run = getSbRunState();
@@ -364,16 +386,15 @@ function addSbRandomCardByRarity(rarity){
 
 function chooseSbCardRewardByRarity(rarity, options = {}){
   if(typeof CARD_DB === "undefined") return null;
-  const keys = shuffleSbList(Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity)).slice(0, 3);
+  const keys = shuffleSbList(Object.keys(CARD_DB).filter(key => CARD_DB[key] && CARD_DB[key].rarity === rarity && isSbCardAllowedBySpiritPath(CARD_DB[key]))).slice(0, 3);
   if(keys.length === 0){
     console.warn("[StartBlessing] 선택 가능한 " + rarity + " 카드가 없어 카드 보상을 건너뜁니다.");
     return null;
   }
   if(typeof window.OPEN_CARD_REWARD_PICK !== "function"){
-    console.warn("[StartBlessing] 정화 보상 UI를 찾지 못해 무작위 " + rarity + " 카드 1장을 지급합니다.");
-    addSbRandomCardByRarity(rarity);
-    if(typeof options.afterChoose === "function") options.afterChoose();
-    return null;
+    console.error("[StartBlessing] 카드 선택 보상 UI를 찾을 수 없습니다.", rarity);
+    if(typeof toast === "function") toast("카드 선택 보상 UI를 불러올 수 없습니다.");
+    return Promise.resolve(null);
   }
   return window.OPEN_CARD_REWARD_PICK({
     keys,
@@ -420,11 +441,31 @@ function addSbDiscountedCommonCard(){
 function getSbRegularRelicPool(){
   const db = (typeof RELIC_DB !== "undefined" && Array.isArray(RELIC_DB)) ? RELIC_DB : [];
   const run = getSbRunState();
-  const ownedIds = new Set((run && Array.isArray(run.relics) ? run.relics : []).map(relic => relic && relic.id).filter(Boolean));
-  return db.filter(relic =>
-    relic && relic.category !== "blessingRelic" && relic.source !== "startBlessing" &&
-    relic.dropWeight !== 0 && !ownedIds.has(relic.id)
+
+  const ownedIds = new Set(
+    (run && Array.isArray(run.relics) ? run.relics : [])
+      .map(relic => relic && relic.id)
+      .filter(Boolean)
   );
+
+  // 신령의 은혜 보상은 현재 런타임에 반영된 일반 법구(RELIC_DB) 전체에서 균등 랜덤으로 뽑는다.
+  // 주의: 신령의 은혜 선택 결과로 지급되는 은혜 전용 법구는 여기서 다시 뽑히면 안 된다.
+  // 현재 dropWeight는 최종 밸런스 조정 전이며 0으로 등록된 법구도 있으므로 후보 제외 조건으로 사용하지 않는다.
+  return db.filter(relic => {
+    if (!relic) return false;
+
+    // 이미 보유 중인 법구는 중복 지급하지 않는다.
+    if (ownedIds.has(relic.id)) return false;
+
+    // 신령의 은혜 전용 법구는 무작위 법구 후보에서 제외한다.
+    if (relic.category === "blessingRelic") return false;
+    if (relic.source === "startBlessing") return false;
+    if (typeof relic.id === "string" && relic.id.indexOf("blessing_relic_") === 0) return false;
+
+    if (!isSbCardAllowedBySpiritPath(relic)) return false;
+
+    return true;
+  });
 }
 
 function addSbRandomRelic(){
@@ -432,7 +473,9 @@ function addSbRandomRelic(){
   if(!run) return null;
   if(!Array.isArray(run.relics)) run.relics = [];
   const pool = getSbRegularRelicPool();
-  const relic = pickSbRandom(pool);
+  const relic = typeof window.pickRewardItemByRarity === "function"
+    ? window.pickRewardItemByRarity(pool, { context:"blessing" })
+    : pickSbRandom(pool);
   if(!relic) return null;
   run.relics.push({ ...relic });
   return relic;
@@ -440,13 +483,59 @@ function addSbRandomRelic(){
 
 function addSbRandomPotion(count){
   const run = getSbRunState();
-  if(!run || typeof POTION_DB === "undefined" || !Array.isArray(POTION_DB)) return;
+  if(!run || typeof POTION_DB === "undefined" || !Array.isArray(POTION_DB)) return [];
   if(!Array.isArray(run.potions)) run.potions = [];
   const limit = typeof POTION_SLOT_LIMIT === "number" ? POTION_SLOT_LIMIT : 3;
+  const potionPool = POTION_DB.filter(potion => potion && isSbCardAllowedBySpiritPath(potion));
+  const added = [];
   for(let i = 0; i < count && run.potions.length < limit; i++){
-    const potion = pickSbRandom(POTION_DB);
-    if(potion) run.potions.push({ ...potion });
+    const potion = typeof window.pickRewardItemByRarity === "function"
+      ? window.pickRewardItemByRarity(potionPool, { context:"blessing" })
+      : pickSbRandom(potionPool);
+    if(potion){
+      const cloned = { ...potion };
+      run.potions.push(cloned);
+      added.push(cloned);
+    }
   }
+  return added;
+}
+
+/* ── 무작위 결과 팝업 연결 (선택 획득/선택 제거에는 사용하지 않는다) ─────── */
+function sbPopupCardItem(key, action){
+  if(!key) return null;
+  const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
+  return {
+    type: "card", action, key,
+    name: card ? card.name : key,
+    icon: card && (card.art || card.emoji)
+  };
+}
+
+function sbPopupRelicItem(relic, action){
+  if(!relic) return null;
+  return {
+    type: "relic", action, key: relic.id, name: relic.name,
+    icon: relic.iconImage || relic.icon || relic.emoji || "🏺"
+  };
+}
+
+function sbPopupPotionItem(potion, action){
+  if(!potion) return null;
+  return {
+    type: "potion", action, key: potion.id, name: potion.name,
+    icon: potion.iconImage || potion.icon || potion.emoji || "🧪"
+  };
+}
+
+function openSbRandomResultPopup(items, title){
+  const safeItems = (items || []).filter(Boolean);
+  if(!safeItems.length) return Promise.resolve();
+  if(typeof window.OPEN_RANDOM_ITEM_RESULT_POPUP !== "function") return Promise.resolve();
+  return window.OPEN_RANDOM_ITEM_RESULT_POPUP({
+    title: title || "결과 확인",
+    items: safeItems
+  });
 }
 
 function setSbBattleEffect(type, data){
@@ -467,7 +556,7 @@ function grantSbBlessingRelic(blessing){
   if(!run || !blessing) return;
   if(!Array.isArray(run.relics)) run.relics = [];
   if(run.relics.some(relic => relic && relic.id === blessing.id)) return;
-  // EquipmentData(RELIC_DB)에 같은 id로 등록된 은혜 전용 법구 데이터를 그대로 사용한다
+  // equipment.js의 RELIC_DB에 같은 id로 등록된 은혜 전용 법구 데이터를 그대로 사용한다
   // (법구 도감에도 노출되도록). DB를 찾지 못하는 예외 상황에서만 최소 데이터로 대체한다.
   const master = (typeof RELIC_DB !== "undefined" && Array.isArray(RELIC_DB))
     ? RELIC_DB.find(item => item && item.id === blessing.id)
@@ -562,7 +651,7 @@ function sbChoiceHtml(blessing, index){
     '<button type="button" class="sb-card" data-id="' + blessing.id + '">' +
       '<div class="sb-card-icon">' + sbIconHtml(blessing.icon) + '</div>' +
       '<div class="sb-card-name">' + blessing.name + '</div>' +
-      '<div class="sb-card-desc">' + blessing.desc + '</div>' +
+      '<div class="sb-card-desc">' + colorizeRarityLabels(blessing.desc) + '</div>' +
     '</button>'
   );
 }

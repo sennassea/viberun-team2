@@ -33,6 +33,16 @@ function nextMailId() {
   return "purchase_mail_" + Date.now() + "_" + mailIdCounter;
 }
 
+/* 로컬 날짜(YYYY-MM-DD) 기준입니다. UTC로 비교하면 한국 시간 기준 자정과 어긋나므로
+   월영의 약속 일일 수령 판정은 서버(Mock)의 로컬 시각 기준 날짜로 처리합니다. */
+function getLocalDateKey(timestamp) {
+  const date = new Date(timestamp || Date.now());
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -55,6 +65,66 @@ const MIME_TYPES = {
 const accounts = new Map();      // accountId -> { mailbox: [...], wallet: {...}, dummyInventory: [...] }
 const tokenToAccount = new Map(); // accessToken -> accountId
 
+/* ------------------------------------------------------------------------
+   랭킹 Mock 저장소
+   - 서버 재시작 시 초기화되며, 실제 삭제 없이 achievedAt 기준으로 기간 필터링만 한다.
+   - accountId + runId 조합으로 중복 제출을 막는다 (클라이언트 submittedRunIds는 보조 방어용).
+   ------------------------------------------------------------------------ */
+const rankingRuns = [];
+const rankingSubmittedKeys = new Map(); // "accountId:runId" -> true
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+function getDailyRankingPeriodStart(now) {
+  const kst = new Date(now + KST_OFFSET_MS);
+  const y = kst.getUTCFullYear(), m = kst.getUTCMonth(), d = kst.getUTCDate();
+  let start = Date.UTC(y, m, d, 9, 0, 0, 0) - KST_OFFSET_MS;
+  if (now < start) start -= 24 * 60 * 60 * 1000;
+  return start;
+}
+
+function getWeeklyRankingPeriodStart(now) {
+  const kst = new Date(now + KST_OFFSET_MS);
+  const y = kst.getUTCFullYear(), m = kst.getUTCMonth(), d = kst.getUTCDate();
+  const dayOfWeek = kst.getUTCDay(); // 0=Sun ... 6=Sat
+  const daysSinceMonday = (dayOfWeek + 6) % 7;
+  let start = Date.UTC(y, m, d - daysSinceMonday, 9, 0, 0, 0) - KST_OFFSET_MS;
+  if (now < start) start -= 7 * 24 * 60 * 60 * 1000;
+  return start;
+}
+
+function getRankingPeriodStart(period, now) {
+  if (period === "daily") return getDailyRankingPeriodStart(now);
+  if (period === "weekly") return getWeeklyRankingPeriodStart(now);
+  return null;
+}
+
+function isBetterRankingRun(a, b) {
+  if (a.score !== b.score) return a.score > b.score;
+  if (a.playTimeMs !== b.playTimeMs) return a.playTimeMs < b.playTimeMs;
+  return a.achievedAt < b.achievedAt;
+}
+
+/* 계정당 최고 기록 1개만 남기고, 점수 내림차순 → 플레이타임 오름차순 → 먼저 달성한 순으로 정렬한다. */
+function buildRankingRows(period) {
+  const now = Date.now();
+  const start = getRankingPeriodStart(period, now);
+  const filtered = rankingRuns.filter((run) => start === null || run.achievedAt >= start);
+
+  const bestByAccount = new Map();
+  filtered.forEach((run) => {
+    const existing = bestByAccount.get(run.accountId);
+    if (!existing || isBetterRankingRun(run, existing)) {
+      bestByAccount.set(run.accountId, run);
+    }
+  });
+
+  return Array.from(bestByAccount.values()).sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.playTimeMs !== b.playTimeMs) return a.playTimeMs - b.playTimeMs;
+    return a.achievedAt - b.achievedAt;
+  });
+}
+
 /* 월영당 로컬 Mock 검증용 상품 테이블입니다.
    UI 표시 데이터는 bmStoreData.js가 관리하며, 이 테이블은 서버 차감/지급 검증만 담당합니다. */
 const BM_PACKAGE_PRODUCTS = [
@@ -62,22 +132,145 @@ const BM_PACKAGE_PRODUCTS = [
   { id: "growth_package", name: "성장 패키지", price: 2980, rewardId: "dummy_growth_package", category: "package", description: "성장에 필요한 물품이 담긴 패키지입니다." },
   { id: "rare_package", name: "희귀 장신 패키지", price: 6500, rewardId: "dummy_rare_package", category: "package", description: "희귀한 장신구가 담긴 패키지입니다." },
   { id: "spring_blessing_box", name: "봄날의 축복 상자", price: 2400, rewardId: "dummy_spring_blessing_box", category: "package", description: "계절 한정 축복 상자입니다." },
-  { id: "order_pack_summon_charm", name: "소환 부적 팩", price: 1000, rewardId: "dummy_summon_charm_pack", category: "order_pack", description: "소환을 바꾸는 주문 부적" },
-  { id: "order_pack_soul_charm", name: "영혼 부적 팩", price: 2000, rewardId: "dummy_soul_charm_pack", category: "order_pack", description: "영혼을 모으는 주문 부적" },
-  { id: "order_pack_divine_charm", name: "신력 부적 팩", price: 3000, rewardId: "dummy_divine_charm_pack", category: "order_pack", description: "강력한 인연 소환 주문 부적" },
-  { id: "order_pack_legend_support", name: "전설 보조 팩", price: 10000, rewardId: "dummy_legend_support_pack", category: "order_pack", description: "전설 등급 신력 확정 소환" }
 ];
+
+/* 주문 덱 BM 임시 구현: 한풀이 덱 / 굿판 덱 확장덱 구매 검증 테이블입니다.
+   실제 게임 콘텐츠 풀 필터링은 이 단계에서 구현하지 않으며, 계정 소유권(ownedDeckPackIds)만 저장합니다. */
+const BM_DECK_PACK_PRODUCTS = [
+  {
+    id: "deck_pack_hanpuri",
+    name: "한풀이 덱",
+    deckPackId: "hanpuri",
+    unlockKeyword: "한풀이 덱",
+    price: 1200,
+    category: "deck_pack"
+  },
+  {
+    id: "deck_pack_gutpan",
+    name: "굿판 덱",
+    deckPackId: "gutpan",
+    unlockKeyword: "굿판 덱",
+    price: 1200,
+    category: "deck_pack"
+  }
+];
+
+/* 스킨 탭 캐릭터 스킨 구매 서버 검증 테이블입니다. 달빛서약☆마법무녀만 saleStartAt/saleEndAt
+   기간 제한이 있으며, saleEndAt은 exclusive로 처리합니다(해당 시각부터 판매 종료). */
+const BM_CHARACTER_SKIN_PRODUCTS = [
+  {
+    id: "skin_limited_moonlight_vow_magic_maiden",
+    name: "달빛서약☆마법무녀",
+    skinId: "moonlight_vow_magic_maiden",
+    grade: "limited",
+    price: 1500,
+    saleStartAt: "2026-07-06T00:00:00+09:00",
+    saleEndAt: "2026-08-20T00:00:00+09:00",
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
+    battleProfileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
+    battleStandingImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png"
+  },
+  {
+    id: "skin_premium_wolyeong_academy_transfer",
+    name: "월영학당 전학생",
+    skinId: "wolyeong_academy_transfer",
+    grade: "premium",
+    price: 1000,
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+    battleProfileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+    battleStandingImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png"
+  },
+  {
+    id: "skin_common_prayer_robe",
+    name: "백성의 기도복",
+    skinId: "common_prayer_robe",
+    grade: "common",
+    price: 700,
+    category: "character_skin",
+    profileIcon: "assets/profile/profile_common_prayer_robe.png",
+    battleProfileIcon: "assets/profile/profile_common_prayer_robe.png",
+    battleStandingImage: "assets/skins/skin_common_prayer_robe.png"
+  }
+];
+
+/* 메인메뉴 프로필 UI 전용 상수입니다. 기본 프로필은 상품 데이터가 아니므로
+   구매 검증 테이블과 별도로 여기서만 관리합니다. */
+const DEFAULT_PROFILE_ICON = "assets/profile/profile_default.png";
+const DEFAULT_DISPLAY_NAME = "빛솔이";
+
+function resolveProfileIconBySkinId(skinId) {
+  if (!skinId) return DEFAULT_PROFILE_ICON;
+  const product = BM_CHARACTER_SKIN_PRODUCTS.find((item) => item.skinId === skinId);
+  return (product && product.profileIcon) || DEFAULT_PROFILE_ICON;
+}
 
 /* 달빛조각 충전(테스트 구매) 검증 테이블입니다. 실제 결제 검증 없이 rewardAmount만큼
    wallet.moonShards를 증가시키며, 차감/잔액 확인은 하지 않습니다. */
 const BM_MOON_CHARGE_PRODUCTS = [
-  { id: "moon_charge_60", name: "달빛조각 60", price: 1200, rewardAmount: 60 },
-  { id: "moon_charge_300", name: "달빛조각 300", price: 5900, rewardAmount: 300 },
-  { id: "moon_charge_980", name: "달빛조각 980", price: 19000, rewardAmount: 980 },
-  { id: "moon_charge_1980", name: "달빛조각 1,980", price: 37000, rewardAmount: 1980 },
-  { id: "moon_charge_3280", name: "달빛조각 3,280", price: 59000, rewardAmount: 3280 },
-  { id: "moon_charge_6480", name: "달빛조각 6,480", price: 119000, rewardAmount: 6480 }
+  { id: "moon_charge_100", name: "달빛조각 100개", price: 1200, rewardAmount: 100 },
+  { id: "moon_charge_500", name: "달빛조각 500개", price: 5500, rewardAmount: 500 },
+  { id: "moon_charge_1200", name: "달빛조각 1,200개", price: 12000, rewardAmount: 1200 },
+  { id: "moon_charge_3000", name: "달빛조각 3,000개", price: 27000, rewardAmount: 3000 }
 ];
+
+/* 월영의 약속(30일 출석 상품) 검증 테이블입니다. 구매는 test_cash이며,
+   즉시/매일 지급 모두 선물함 구매 메일 수령 시점에만 이뤄집니다. */
+const BM_MONTHLY_PASS_PRODUCTS = [
+  {
+    id: "monthly_moon_promise",
+    name: "월영의 약속",
+    price: 5900,
+    durationDays: 30,
+    immediateRewardAmount: 100,
+    dailyRewardAmount: 15
+  }
+];
+
+function buildDefaultMonthlyPass() {
+  return {
+    active: false,
+    startedAt: null,
+    expiresAt: null,
+    lastClaimDate: null,
+    claimedDays: 0,
+    durationDays: 30,
+    dailyRewardAmount: 15
+  };
+}
+
+/* 월영의 약속 상태를 조회/수령 응답에 쓰기 좋은 형태로 계산합니다.
+   active는 expiresAt이 지나면 자동으로 false가 되며, canClaimToday는
+   활성 + 오늘 미수령 + 잔여 일수가 남아있을 때만 true입니다. */
+function normalizeMonthlyPass(pass) {
+  const now = Date.now();
+  const safePass = pass || buildDefaultMonthlyPass();
+
+  const expiresAt = Number(safePass.expiresAt) || 0;
+  const active = !!safePass.active && expiresAt > now;
+  const todayKey = getLocalDateKey(now);
+  const lastClaimDate = safePass.lastClaimDate || null;
+  const durationDays = Math.max(1, Number(safePass.durationDays) || 30);
+  const claimedDays = Math.max(0, Number(safePass.claimedDays) || 0);
+  const dailyRewardAmount = Math.max(0, Number(safePass.dailyRewardAmount) || 15);
+  const daysRemaining = active
+    ? Math.max(0, Math.ceil((expiresAt - now) / (24 * 60 * 60 * 1000)))
+    : 0;
+
+  return {
+    active,
+    startedAt: safePass.startedAt || null,
+    expiresAt: safePass.expiresAt || null,
+    lastClaimDate,
+    claimedDays,
+    durationDays,
+    dailyRewardAmount,
+    daysRemaining,
+    canClaimToday: active && lastClaimDate !== todayKey && claimedDays < durationDays,
+    todayRewardAmount: dailyRewardAmount
+  };
+}
 
 function buildDefaultMailbox() {
   return [
@@ -92,15 +285,113 @@ function buildDefaultMailbox() {
   ];
 }
 
+function buildDefaultCharacterSkins() {
+  return {
+    ownedSkinIds: [],
+    equippedSkinId: null
+  };
+}
+
+/* 주문 덱 BM 임시 구현: 계정이 보유 중인 확장덱 ID 목록입니다.
+   이번 단계에서는 저장만 하며, script.js의 실제 콘텐츠 풀 필터링에는 아직 사용하지 않습니다. */
+function buildDefaultDeckPackUnlocks() {
+  return {
+    ownedDeckPackIds: []
+  };
+}
+
+/* 계정 프로필(닉네임) 기본값입니다. accountId와 nickname은 별도로 관리하며,
+   nickname은 추후 랭킹 표시에만 노출됩니다. */
+function buildDefaultProfile() {
+  return {
+    nickname: DEFAULT_DISPLAY_NAME,
+    nicknameChangedAt: null
+  };
+}
+
+const NICKNAME_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+function countNicknameLength(nickname) {
+  return Array.from(String(nickname || "").trim()).length;
+}
+
+function sanitizeNickname(rawNickname) {
+  return String(rawNickname || "").trim().replace(/\s+/g, " ");
+}
+
+/* 닉네임 중복 검사는 하지 않으며, 길이만 검증합니다. */
+function validateNickname(rawNickname) {
+  const nickname = sanitizeNickname(rawNickname);
+  const length = countNicknameLength(nickname);
+
+  if (length < 2) {
+    return { ok: false, code: "NICKNAME_TOO_SHORT", message: "닉네임은 최소 2글자 이상이어야 합니다." };
+  }
+  if (length > 8) {
+    return { ok: false, code: "NICKNAME_TOO_LONG", message: "닉네임은 최대 8글자까지 가능합니다." };
+  }
+  return { ok: true, nickname };
+}
+
+function buildProfileResponse(account) {
+  const now = Date.now();
+  const changedAt = Number(account.profile.nicknameChangedAt) || null;
+  const nextNicknameChangeAt = changedAt ? changedAt + NICKNAME_CHANGE_COOLDOWN_MS : null;
+
+  return {
+    nickname: account.profile.nickname || DEFAULT_DISPLAY_NAME,
+    nicknameChangedAt: changedAt,
+    nextNicknameChangeAt,
+    canChangeNickname: !nextNicknameChangeAt || now >= nextNicknameChangeAt
+  };
+}
+
 function ensureAccount(accountId) {
   if (!accounts.has(accountId)) {
     accounts.set(accountId, {
       mailbox: buildDefaultMailbox(),
       wallet: { moonShards: INITIAL_MOCK_MOON_SHARDS },
-      dummyInventory: []
+      dummyInventory: [],
+      monthlyPass: buildDefaultMonthlyPass(),
+      characterSkins: buildDefaultCharacterSkins(),
+      profile: buildDefaultProfile(),
+      deckPackUnlocks: buildDefaultDeckPackUnlocks(),
+      claimedRunRewards: {}
     });
   }
-  return accounts.get(accountId);
+
+  const account = accounts.get(accountId);
+  if (!account.claimedRunRewards) {
+    account.claimedRunRewards = {};
+  }
+  if (!account.monthlyPass) {
+    account.monthlyPass = buildDefaultMonthlyPass();
+  }
+  if (!account.characterSkins) {
+    account.characterSkins = buildDefaultCharacterSkins();
+  }
+  if (!Array.isArray(account.characterSkins.ownedSkinIds)) {
+    account.characterSkins.ownedSkinIds = [];
+  }
+  if (!("equippedSkinId" in account.characterSkins)) {
+    account.characterSkins.equippedSkinId = null;
+  }
+  if (!account.deckPackUnlocks) {
+    account.deckPackUnlocks = buildDefaultDeckPackUnlocks();
+  }
+  if (!Array.isArray(account.deckPackUnlocks.ownedDeckPackIds)) {
+    account.deckPackUnlocks.ownedDeckPackIds = [];
+  }
+  if (!account.profile) {
+    account.profile = buildDefaultProfile();
+  }
+  if (!account.profile.nickname) {
+    account.profile.nickname = DEFAULT_DISPLAY_NAME;
+  }
+  if (!("nicknameChangedAt" in account.profile)) {
+    account.profile.nicknameChangedAt = null;
+  }
+  return account;
 }
 
 function registerAccessToken(accountId, accessToken) {
@@ -196,6 +487,45 @@ function applyMailRewards(account, mail) {
         category: mail.productCategory || "package",
         obtainedAt: Date.now()
       });
+    } else if (reward.type === "monthly_pass") {
+      const now = Date.now();
+      const durationDays = Math.max(1, Number(reward.durationDays) || 30);
+      const dailyRewardAmount = Math.max(0, Number(reward.dailyRewardAmount) || 15);
+      const immediateRewardAmount = Math.max(0, Number(reward.immediateRewardAmount) || 100);
+
+      account.monthlyPass = {
+        active: true,
+        startedAt: now,
+        expiresAt: now + durationDays * 24 * 60 * 60 * 1000,
+        lastClaimDate: null,
+        claimedDays: 0,
+        durationDays,
+        dailyRewardAmount
+      };
+
+      account.wallet.moonShards = (Number(account.wallet.moonShards) || 0) + immediateRewardAmount;
+    } else if (reward.type === "character_skin") {
+      if (!account.characterSkins) {
+        account.characterSkins = buildDefaultCharacterSkins();
+      }
+
+      const skinId = String(reward.skinId || "");
+      if (skinId && !account.characterSkins.ownedSkinIds.includes(skinId)) {
+        account.characterSkins.ownedSkinIds.push(skinId);
+      }
+    } else if (reward.type === "deck_pack") {
+      /* 주문 덱 BM 임시 구현: 선물함 수령 시에만 계정 소유권을 저장합니다. */
+      if (!account.deckPackUnlocks) {
+        account.deckPackUnlocks = buildDefaultDeckPackUnlocks();
+      }
+      if (!Array.isArray(account.deckPackUnlocks.ownedDeckPackIds)) {
+        account.deckPackUnlocks.ownedDeckPackIds = [];
+      }
+
+      const deckPackId = String(reward.deckPackId || "");
+      if (deckPackId && !account.deckPackUnlocks.ownedDeckPackIds.includes(deckPackId)) {
+        account.deckPackUnlocks.ownedDeckPackIds.push(deckPackId);
+      }
     }
   });
 }
@@ -343,6 +673,217 @@ function handleWalletCheat(req, res, body) {
 }
 
 /* ------------------------------------------------------------------------
+   /run-result/act1/moon-reward Mock 핸들러
+   - ACT1 완주 점수 구간에 따른 달빛조각을 계정 wallet.moonShards에 실제 지급합니다.
+   - 클라이언트가 보낸 score는 참고용이며, 서버는 result/score 기준으로 직접 보상량을
+     계산합니다(실제 운영 서버에서는 런 로그 기반 검증이 추가로 필요합니다).
+   - claimKey 기준으로 계정별 중복 지급을 막습니다.
+   ------------------------------------------------------------------------ */
+function calculateAct1MoonRewardByScore(score, result) {
+  if (result !== "win") return { moonShards: 0, label: "미완주" };
+
+  const safeScore = Math.max(0, Math.floor(Number(score) || 0));
+
+  if (safeScore >= 1100) return { moonShards: 95, label: "극상위" };
+  if (safeScore >= 950) return { moonShards: 75, label: "상위권" };
+  if (safeScore >= 850) return { moonShards: 62, label: "숙련 완주" };
+  if (safeScore >= 750) return { moonShards: 55, label: "평균 완주" };
+  if (safeScore >= 650) return { moonShards: 48, label: "하위 완주" };
+  return { moonShards: 40, label: "간신히 완주" };
+}
+
+function handleAct1MoonRewardClaim(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_JSON", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const claimKey = String(payload.claimKey || "").trim();
+  const result = String(payload.result || "");
+  const score = Math.max(0, Math.floor(Number(payload.score) || 0));
+  const isTemporary = !!payload.isTemporary;
+
+  if (!claimKey) {
+    sendJson(res, 400, { ok: false, code: "MISSING_CLAIM_KEY", message: "claimKey가 없습니다." });
+    return;
+  }
+
+  if (isTemporary) {
+    sendJson(res, 400, { ok: false, code: "TEMPORARY_SCORE", message: "임시 점수로는 달빛조각을 수령할 수 없습니다." });
+    return;
+  }
+
+  if (result !== "win") {
+    sendJson(res, 400, { ok: false, code: "NOT_WIN_RUN", message: "완주한 런만 달빛조각을 수령할 수 있습니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  if (account.claimedRunRewards[claimKey]) {
+    const previous = account.claimedRunRewards[claimKey];
+    sendJson(res, 200, {
+      ok: true,
+      alreadyClaimed: true,
+      code: "ALREADY_CLAIMED",
+      reward: previous.reward,
+      score: previous.score,
+      claimedAt: previous.claimedAt,
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  const reward = calculateAct1MoonRewardByScore(score, result);
+
+  if (reward.moonShards <= 0) {
+    sendJson(res, 400, { ok: false, code: "NO_REWARD", message: "수령할 달빛조각이 없습니다.", wallet: account.wallet });
+    return;
+  }
+
+  account.wallet.moonShards =
+    Math.max(0, Math.floor(Number(account.wallet.moonShards) || 0)) + reward.moonShards;
+
+  const record = {
+    claimKey,
+    score,
+    result,
+    reward,
+    claimedAt: Date.now()
+  };
+
+  account.claimedRunRewards[claimKey] = record;
+
+  sendJson(res, 200, {
+    ok: true,
+    alreadyClaimed: false,
+    reward,
+    score,
+    claimedAt: record.claimedAt,
+    wallet: account.wallet
+  });
+}
+
+/* ------------------------------------------------------------------------
+   /ranking Mock 핸들러
+   - 실제 랭킹 서버를 흉내낸다. 점수 제출은 로그인 필요, runId 필수, 임시 점수(scoreBreakdown.isTemporary) 거부.
+   - GET /ranking, /ranking/me는 항상 최신 데이터를 즉시 계산해서 반환한다 (캐시 없음).
+   ------------------------------------------------------------------------ */
+function handleRankingSubmit(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_JSON", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const runId = String(payload.runId || "").trim();
+  if (!runId) {
+    sendJson(res, 400, { ok: false, code: "MISSING_RUN_ID", message: "runId가 없습니다." });
+    return;
+  }
+
+  const score = Number(payload.score);
+  if (!Number.isFinite(score)) {
+    sendJson(res, 400, { ok: false, code: "INVALID_SCORE", message: "score가 올바르지 않습니다." });
+    return;
+  }
+
+  const playTimeMs = Number(payload.playTimeMs);
+  if (!Number.isFinite(playTimeMs)) {
+    sendJson(res, 400, { ok: false, code: "INVALID_PLAYTIME", message: "playTimeMs가 올바르지 않습니다." });
+    return;
+  }
+
+  const scoreBreakdown = payload.scoreBreakdown && typeof payload.scoreBreakdown === "object" ? payload.scoreBreakdown : {};
+  if (scoreBreakdown.isTemporary) {
+    sendJson(res, 400, { ok: false, code: "TEMPORARY_SCORE", message: "임시 점수는 랭킹에 제출할 수 없습니다." });
+    return;
+  }
+
+  const dedupeKey = accountId + ":" + runId;
+  if (rankingSubmittedKeys.has(dedupeKey)) {
+    sendJson(res, 200, { ok: true, skipped: true, code: "ALREADY_SUBMITTED" });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const record = {
+    accountId,
+    nickname: account.profile.nickname || DEFAULT_DISPLAY_NAME,
+    runId,
+    result: String(payload.result || ""),
+    score: Math.floor(score),
+    playTimeMs: Math.max(0, Math.floor(playTimeMs)),
+    scoreBreakdown,
+    achievedAt: Date.now()
+  };
+
+  rankingRuns.push(record);
+  rankingSubmittedKeys.set(dedupeKey, true);
+
+  sendJson(res, 200, { ok: true, run: record });
+}
+
+function handleRankingList(req, res, period) {
+  const safePeriod = ["all", "weekly", "daily"].includes(period) ? period : "all";
+  const rows = buildRankingRows(safePeriod).map((run) => ({
+    nickname: run.nickname,
+    score: run.score,
+    playTimeMs: run.playTimeMs,
+    achievedAt: run.achievedAt
+  }));
+
+  sendJson(res, 200, { ok: true, period: safePeriod, rows });
+}
+
+function handleRankingMe(req, res, period) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const safePeriod = ["all", "weekly", "daily"].includes(period) ? period : "all";
+  const rows = buildRankingRows(safePeriod);
+  const rankIndex = rows.findIndex((run) => run.accountId === accountId);
+
+  if (rankIndex === -1) {
+    sendJson(res, 200, { ok: true, period: safePeriod, myRank: null });
+    return;
+  }
+
+  const myRun = rows[rankIndex];
+  sendJson(res, 200, {
+    ok: true,
+    period: safePeriod,
+    myRank: {
+      rank: rankIndex + 1,
+      nickname: myRun.nickname,
+      score: myRun.score,
+      playTimeMs: myRun.playTimeMs,
+      achievedAt: myRun.achievedAt
+    }
+  });
+}
+
+/* ------------------------------------------------------------------------
    /bm-store Mock 핸들러
    - 구매는 즉시 dummyInventory/wallet.moonShards를 지급하지 않고 선물함 구매 메일만 생성합니다.
    - 실제 지급은 /mailbox/{mailId}/claim에서만 이뤄지며, 수령 전 상품은 /mailbox/{mailId}/refund로
@@ -421,6 +962,228 @@ function handleBMPackagePurchase(req, res, productId) {
   });
 }
 
+/* 주문 덱 BM 임시 구현: 한풀이 덱 / 굿판 덱 구매입니다. 달빛조각을 즉시 차감하지만,
+   실제 소유권 부여는 하지 않고 선물함 구매 메일만 생성합니다.
+   실제 지급(ownedDeckPackIds 저장)은 선물함에서 "수령하기"를 눌렀을 때만 이뤄집니다. */
+function handleBMDeckPackPurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+
+  if (!accountId) {
+    sendJson(res, 401, {
+      ok: false,
+      code: "NOT_LOGGED_IN",
+      message: "로그인이 필요합니다."
+    });
+    return;
+  }
+
+  const product = BM_DECK_PACK_PRODUCTS.find((item) => item.id === productId);
+
+  if (!product) {
+    sendJson(res, 404, {
+      ok: false,
+      code: "UNKNOWN_PRODUCT",
+      message: "존재하지 않는 주문 덱 상품입니다."
+    });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  if (account.deckPackUnlocks.ownedDeckPackIds.includes(product.deckPackId)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "DECK_PACK_ALREADY_OWNED",
+      message: "이미 보유 중인 주문 덱입니다.",
+      wallet: account.wallet,
+      deckPackUnlocks: account.deckPackUnlocks
+    });
+    return;
+  }
+
+  const hasUnclaimedDeckPackMail = account.mailbox.some(
+    (mail) => mail.productId === product.id && mail.status === "PURCHASED_UNCLAIMED"
+  );
+
+  if (hasUnclaimedDeckPackMail) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "DECK_PACK_UNCLAIMED_MAIL_EXISTS",
+      message: "선물함에 아직 수령하지 않은 주문 덱이 있습니다.",
+      wallet: account.wallet,
+      deckPackUnlocks: account.deckPackUnlocks
+    });
+    return;
+  }
+
+  const currentMoonShards = Number(account.wallet.moonShards) || 0;
+  if (currentMoonShards < product.price) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "INSUFFICIENT_MOON_SHARDS",
+      message: "달빛조각이 부족합니다.",
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  account.wallet.moonShards = currentMoonShards - product.price;
+
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productCategory: "deck_pack",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "moon_shard",
+    paidAmount: product.price,
+    rewards: [
+      {
+        type: "deck_pack",
+        deckPackId: product.deckPackId,
+        unlockKeyword: product.unlockKeyword,
+        productId: product.id,
+        name: product.name
+      }
+    ]
+  };
+
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    mail,
+    wallet: account.wallet,
+    deckPackUnlocks: account.deckPackUnlocks
+  });
+}
+
+/* 주문 덱 BM 임시 구현: 계정이 보유 중인 확장덱 ID 목록 조회입니다. */
+function handleBMDeckPackUnlocks(req, res) {
+  const accountId = resolveAccountId(req);
+
+  if (!accountId) {
+    sendJson(res, 401, {
+      ok: false,
+      code: "NOT_LOGGED_IN",
+      message: "로그인이 필요합니다."
+    });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  sendJson(res, 200, {
+    ok: true,
+    deckPackUnlocks: account.deckPackUnlocks || buildDefaultDeckPackUnlocks()
+  });
+}
+
+/* 캐릭터 스킨 구매입니다. 패키지 구매와 동일하게 달빛조각을 즉시 차감하지만,
+   보유 처리는 하지 않고 선물함 구매 메일만 생성합니다. 한정 스킨은 saleStartAt/saleEndAt
+   기간을 벗어나면 구매를 막습니다(saleEndAt은 exclusive). */
+function handleBMCharacterSkinPurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_CHARACTER_SKIN_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, code: "UNKNOWN_PRODUCT", message: "존재하지 않는 스킨 상품입니다." });
+    return;
+  }
+
+  const now = Date.now();
+
+  if (product.saleStartAt && now < Date.parse(product.saleStartAt)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_SALE_NOT_STARTED",
+      message: "아직 판매가 시작되지 않은 스킨입니다."
+    });
+    return;
+  }
+
+  if (product.saleEndAt && now >= Date.parse(product.saleEndAt)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_SALE_ENDED",
+      message: "판매 기간이 종료된 스킨입니다."
+    });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+
+  if (account.characterSkins.ownedSkinIds.includes(product.skinId)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_ALREADY_OWNED",
+      message: "이미 보유 중인 스킨입니다.",
+      wallet: account.wallet,
+      characterSkins: account.characterSkins
+    });
+    return;
+  }
+
+  const currentMoonShards = Number(account.wallet.moonShards) || 0;
+  if (currentMoonShards < product.price) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "INSUFFICIENT_MOON_SHARDS",
+      message: "달빛조각이 부족합니다.",
+      wallet: account.wallet
+    });
+    return;
+  }
+
+  account.wallet.moonShards = currentMoonShards - product.price;
+
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productCategory: "character_skin",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "moon_shard",
+    paidAmount: product.price,
+    rewards: [
+      {
+        type: "character_skin",
+        skinId: product.skinId,
+        grade: product.grade,
+        productId: product.id,
+        name: product.name
+      }
+    ]
+  };
+
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    mail,
+    wallet: account.wallet,
+    characterSkins: account.characterSkins
+  });
+}
+
 /* 달빛조각 충전 테스트 구매입니다. 실제 결제 검증이 없고 wallet.moonShards도 즉시 증가시키지 않으며,
    충전될 달빛조각은 선물함 구매 메일로만 생성됩니다. */
 function handleBMMoonChargePurchase(req, res, productId) {
@@ -462,6 +1225,160 @@ function handleBMMoonChargePurchase(req, res, productId) {
     rewardAmount: product.rewardAmount,
     mail,
     wallet: account.wallet
+  });
+}
+
+/* 월영의 약속(30일 출석 상품) 구매입니다. 결제는 test_cash이며 즉시 지급하지 않고,
+   기존 청약철회 정책을 유지하기 위해 선물함 구매 메일만 생성합니다.
+   실제 활성화/즉시 100 지급은 선물함에서 수령할 때만 이뤄집니다. */
+function handleBMMonthlyPassPurchase(req, res, productId) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const product = BM_MONTHLY_PASS_PRODUCTS.find((item) => item.id === productId);
+  if (!product) {
+    sendJson(res, 404, { ok: false, code: "UNKNOWN_PRODUCT", message: "존재하지 않는 상품입니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const now = Date.now();
+  const pass = account.monthlyPass || buildDefaultMonthlyPass();
+
+  if (pass.active && Number(pass.expiresAt) > now) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "MONTHLY_PASS_ALREADY_ACTIVE",
+      message: "이미 월영의 약속이 활성화되어 있습니다."
+    });
+    return;
+  }
+
+  const hasUnclaimedMonthlyPassMail = account.mailbox.some(
+    (mail) => mail.productId === product.id && mail.status === "PURCHASED_UNCLAIMED"
+  );
+
+  if (hasUnclaimedMonthlyPassMail) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "MONTHLY_PASS_UNCLAIMED_MAIL_EXISTS",
+      message: "선물함에 아직 수령하지 않은 월영의 약속이 있습니다."
+    });
+    return;
+  }
+
+  const purchasedAt = Date.now();
+  const mail = {
+    mailId: nextMailId(),
+    source: "bm_purchase",
+    productId: product.id,
+    productName: product.name,
+    productCategory: "monthly_pass",
+    status: "PURCHASED_UNCLAIMED",
+    purchasedAt,
+    refundUntil: purchasedAt + REFUND_WINDOW_MS,
+    claimedAt: null,
+    refundedAt: null,
+    priceType: "test_cash",
+    paidAmount: product.price,
+    rewards: [
+      {
+        type: "monthly_pass",
+        productId: product.id,
+        durationDays: product.durationDays,
+        immediateRewardAmount: product.immediateRewardAmount,
+        dailyRewardAmount: product.dailyRewardAmount
+      }
+    ]
+  };
+
+  account.mailbox.unshift(mail);
+
+  sendJson(res, 200, {
+    ok: true,
+    product,
+    mail,
+    wallet: account.wallet,
+    monthlyPass: account.monthlyPass
+  });
+}
+
+/* 월영의 약속 상태 조회입니다. 메인메뉴 좌하단 일일 보상 UI가 이 응답으로
+   노출 여부/D-day/오늘 수령 가능 여부를 판단합니다. */
+function handleMonthlyPassStatus(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const monthlyPass = normalizeMonthlyPass(account.monthlyPass);
+
+  sendJson(res, 200, {
+    ok: true,
+    monthlyPass,
+    wallet: account.wallet
+  });
+}
+
+/* 월영의 약속 일일 보상 수령입니다. 하루 1회만 허용하며, account.wallet.moonShards만
+   증가시킵니다(전투용 S.moonShards와는 절대 연결하지 않습니다). */
+function handleMonthlyPassClaimDaily(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const pass = account.monthlyPass || buildDefaultMonthlyPass();
+  const status = normalizeMonthlyPass(pass);
+
+  if (!status.active) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "MONTHLY_PASS_NOT_ACTIVE",
+      message: "월영의 약속이 활성화되어 있지 않습니다."
+    });
+    return;
+  }
+
+  if (!status.canClaimToday) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "MONTHLY_PASS_ALREADY_CLAIMED",
+      message: "오늘 보상은 이미 수령했습니다."
+    });
+    return;
+  }
+
+  const now = Date.now();
+  const todayKey = getLocalDateKey(now);
+  const rewardAmount = Math.max(0, Number(pass.dailyRewardAmount) || 15);
+
+  account.wallet.moonShards = (Number(account.wallet.moonShards) || 0) + rewardAmount;
+
+  account.monthlyPass = Object.assign({}, pass, {
+    active: true,
+    lastClaimDate: todayKey,
+    claimedDays: Math.min(
+      Math.max(0, Number(pass.claimedDays) || 0) + 1,
+      Math.max(1, Number(pass.durationDays) || 30)
+    )
+  });
+
+  const monthlyPass = normalizeMonthlyPass(account.monthlyPass);
+
+  sendJson(res, 200, {
+    ok: true,
+    reward: { type: "moon_shard", amount: rewardAmount },
+    monthlyPass,
+    wallet: account.wallet,
+    message: "달빛조각 " + rewardAmount + "개를 받았습니다."
   });
 }
 
@@ -510,6 +1427,156 @@ function handleMailboxRefund(req, res, mailId) {
     refundedMailId: mail.mailId,
     mail,
     wallet: account.wallet
+  });
+}
+
+/* ------------------------------------------------------------------------
+   메인메뉴 프로필 아이콘 (캐릭터 스킨 적용) Mock 핸들러
+   - 실소유 여부는 characterSkins.ownedSkinIds만 기준으로 판단합니다.
+   - 전투/카드/보상/상점 로직에는 관여하지 않고 equippedSkinId만 저장합니다.
+   ------------------------------------------------------------------------ */
+function handleProfileCharacterSkinsGet(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  let equippedSkinId = account.characterSkins.equippedSkinId || null;
+
+  /* equippedSkinId가 ownedSkinIds에 없는 비정상 상태라면 기본 외형으로 되돌립니다. */
+  if (equippedSkinId && !account.characterSkins.ownedSkinIds.includes(equippedSkinId)) {
+    equippedSkinId = null;
+    account.characterSkins.equippedSkinId = null;
+  }
+
+  sendJson(res, 200, {
+    ok: true,
+    profile: {
+      displayName: account.profile.nickname || DEFAULT_DISPLAY_NAME,
+      equippedSkinId,
+      currentProfileIcon: resolveProfileIconBySkinId(equippedSkinId)
+    },
+    characterSkins: account.characterSkins
+  });
+}
+
+function handleProfileCharacterSkinsEquip(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_REQUEST", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const skinId = payload.skinId === undefined ? null : payload.skinId;
+  const account = ensureAccount(accountId);
+
+  if (skinId !== null && !account.characterSkins.ownedSkinIds.includes(skinId)) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "CHARACTER_SKIN_NOT_OWNED",
+      message: "보유하지 않은 스킨입니다."
+    });
+    return;
+  }
+
+  account.characterSkins.equippedSkinId = skinId;
+
+  sendJson(res, 200, {
+    ok: true,
+    message: "스킨이 적용되었습니다.",
+    profile: {
+      displayName: account.profile.nickname || DEFAULT_DISPLAY_NAME,
+      equippedSkinId: skinId,
+      currentProfileIcon: resolveProfileIconBySkinId(skinId)
+    },
+    characterSkins: account.characterSkins
+  });
+}
+
+/* ------------------------------------------------------------------------
+   /profile/status, /profile/nickname - 닉네임 조회/변경
+   - accountId와 nickname은 서버 내부에서 별도로 관리하며, 닉네임 중복은 허용합니다.
+   - 추후 랭킹 시스템에는 nickname만 노출하고, 내부 식별은 accountId로 합니다.
+   ------------------------------------------------------------------------ */
+function handleProfileStatus(req, res) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  sendJson(res, 200, { ok: true, profile: buildProfileResponse(account) });
+}
+
+function handleProfileNicknameChange(req, res, body) {
+  const accountId = resolveAccountId(req);
+  if (!accountId) {
+    sendJson(res, 401, { ok: false, code: "NOT_LOGGED_IN", message: "로그인이 필요합니다." });
+    return;
+  }
+
+  let payload = {};
+  try {
+    payload = body ? JSON.parse(body) : {};
+  } catch (error) {
+    sendJson(res, 400, { ok: false, code: "INVALID_REQUEST", message: "요청 형식이 올바르지 않습니다." });
+    return;
+  }
+
+  const account = ensureAccount(accountId);
+  const validation = validateNickname(payload.nickname);
+
+  if (!validation.ok) {
+    sendJson(res, 400, validation);
+    return;
+  }
+
+  const nextNickname = validation.nickname;
+  const currentNickname = account.profile.nickname || DEFAULT_DISPLAY_NAME;
+
+  /* 같은 닉네임 재입력은 변경으로 처리하지 않으며, 쿨다운을 소비하지 않습니다. */
+  if (nextNickname === currentNickname) {
+    sendJson(res, 200, {
+      ok: true,
+      message: "현재 사용 중인 닉네임입니다.",
+      profile: buildProfileResponse(account)
+    });
+    return;
+  }
+
+  const now = Date.now();
+  const changedAt = Number(account.profile.nicknameChangedAt) || null;
+  const nextNicknameChangeAt = changedAt ? changedAt + NICKNAME_CHANGE_COOLDOWN_MS : null;
+
+  if (nextNicknameChangeAt && now < nextNicknameChangeAt) {
+    sendJson(res, 409, {
+      ok: false,
+      code: "NICKNAME_CHANGE_COOLDOWN",
+      message: "닉네임은 1일에 한 번만 변경할 수 있습니다.",
+      nextNicknameChangeAt,
+      profile: buildProfileResponse(account)
+    });
+    return;
+  }
+
+  account.profile.nickname = nextNickname;
+  account.profile.nicknameChangedAt = now;
+
+  sendJson(res, 200, {
+    ok: true,
+    message: "닉네임이 변경되었습니다.",
+    profile: buildProfileResponse(account)
   });
 }
 
@@ -576,6 +1643,26 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (method === "POST" && pathname === "/run-result/act1/moon-reward/claim") {
+    readRequestBody(req).then((body) => handleAct1MoonRewardClaim(req, res, body));
+    return;
+  }
+
+  if (method === "POST" && pathname === "/ranking/submit") {
+    readRequestBody(req).then((body) => handleRankingSubmit(req, res, body));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/ranking/me") {
+    handleRankingMe(req, res, url.searchParams.get("period"));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/ranking") {
+    handleRankingList(req, res, url.searchParams.get("period"));
+    return;
+  }
+
   if (method === "POST" && pathname === "/mailbox/claim-all") {
     handleMailboxClaimAll(req, res);
     return;
@@ -592,9 +1679,42 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const bmDeckPackPurchaseMatch = pathname.match(/^\/bm-store\/deck-pack\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmDeckPackPurchaseMatch) {
+    readRequestBody(req).then(() => handleBMDeckPackPurchase(req, res, decodeURIComponent(bmDeckPackPurchaseMatch[1])));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/bm-store/deck-pack/unlocks") {
+    handleBMDeckPackUnlocks(req, res);
+    return;
+  }
+
+  const bmCharacterSkinPurchaseMatch = pathname.match(/^\/bm-store\/character-skin\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmCharacterSkinPurchaseMatch) {
+    readRequestBody(req).then(() => handleBMCharacterSkinPurchase(req, res, decodeURIComponent(bmCharacterSkinPurchaseMatch[1])));
+    return;
+  }
+
   const bmMoonChargePurchaseMatch = pathname.match(/^\/bm-store\/moon-charge\/([^/]+)\/purchase$/);
   if (method === "POST" && bmMoonChargePurchaseMatch) {
     readRequestBody(req).then(() => handleBMMoonChargePurchase(req, res, decodeURIComponent(bmMoonChargePurchaseMatch[1])));
+    return;
+  }
+
+  const bmMonthlyPassPurchaseMatch = pathname.match(/^\/bm-store\/monthly-pass\/([^/]+)\/purchase$/);
+  if (method === "POST" && bmMonthlyPassPurchaseMatch) {
+    readRequestBody(req).then(() => handleBMMonthlyPassPurchase(req, res, decodeURIComponent(bmMonthlyPassPurchaseMatch[1])));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/bm-store/monthly-pass/status") {
+    handleMonthlyPassStatus(req, res);
+    return;
+  }
+
+  if (method === "POST" && pathname === "/bm-store/monthly-pass/claim-daily") {
+    readRequestBody(req).then(() => handleMonthlyPassClaimDaily(req, res));
     return;
   }
 
@@ -607,6 +1727,26 @@ const server = http.createServer((req, res) => {
   const refundMatch = pathname.match(/^\/mailbox\/([^/]+)\/refund$/);
   if (method === "POST" && refundMatch) {
     handleMailboxRefund(req, res, decodeURIComponent(refundMatch[1]));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/profile/character-skins") {
+    handleProfileCharacterSkinsGet(req, res);
+    return;
+  }
+
+  if (method === "POST" && pathname === "/profile/character-skins/equip") {
+    readRequestBody(req).then((body) => handleProfileCharacterSkinsEquip(req, res, body));
+    return;
+  }
+
+  if (method === "GET" && pathname === "/profile/status") {
+    handleProfileStatus(req, res);
+    return;
+  }
+
+  if (method === "POST" && pathname === "/profile/nickname") {
+    readRequestBody(req).then((body) => handleProfileNicknameChange(req, res, body));
     return;
   }
 

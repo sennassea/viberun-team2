@@ -431,14 +431,40 @@
     safeToast("약병 획득: " + (potion.emoji || "🧪") + " " + potion.name);
     safeRenderHud();
   }
-  function cheatGivePotionTest(){
-    cheatGivePotionObject({ id: "cheat_test_potion", name: "테스트 약병", emoji: "🧪", desc: "치트로 지급한 테스트용 약병" });
-  }
   function cheatGivePotion(id){
-    const db = typeof window.POTION_DB !== "undefined" ? window.POTION_DB : null;
-    const found = db ? db.find(p => p.id === id) : null;
-    const potion = found ? { ...found } : { id, name: id, emoji: "🧪", desc: "치트로 지급한 테스트용 약병(" + id + ")" };
-    cheatGivePotionObject(potion);
+    const db = typeof window.POTION_DB !== "undefined" ? window.POTION_DB : [];
+    const found = db.find(p => p.id === id);
+    if(!found){ cheatWarn("존재하지 않는 약병 ID입니다. CHEAT.give.potionList()로 목록을 확인하세요."); return; }
+    cheatGivePotionObject({ ...found });
+  }
+
+  function cheatRelicFind(query){
+    const db = Array.isArray(window.RELIC_DB) ? window.RELIC_DB : [];
+    const q = String(query || "").toLowerCase();
+    const results = db.filter(r => r.id.toLowerCase().includes(q) || (r.name && r.name.includes(query)))
+      .map(r => ({ id: r.id, name: r.name }));
+    console.table(results);
+    return results;
+  }
+  function cheatRelicList(){
+    const db = Array.isArray(window.RELIC_DB) ? window.RELIC_DB : [];
+    const results = db.map(r => ({ id: r.id, name: r.name }));
+    console.table(results);
+    return results;
+  }
+  function cheatPotionFind(query){
+    const db = Array.isArray(window.POTION_DB) ? window.POTION_DB : [];
+    const q = String(query || "").toLowerCase();
+    const results = db.filter(p => p.id.toLowerCase().includes(q) || (p.name && p.name.includes(query)))
+      .map(p => ({ id: p.id, name: p.name }));
+    console.table(results);
+    return results;
+  }
+  function cheatPotionList(){
+    const db = Array.isArray(window.POTION_DB) ? window.POTION_DB : [];
+    const results = db.map(p => ({ id: p.id, name: p.name }));
+    console.table(results);
+    return results;
   }
 
   function cheatTakeRelic(indexOrAll){
@@ -737,6 +763,7 @@
     console.log([
       "── 기획자용 필수 명령어 10개 ──",
       "CHEAT.node.boss()                              보스전으로 이동",
+      "CHEAT.node.treasure()                          보물 노드로 이동",
       "CHEAT.node.goto(10)                             10층으로 이동",
       'CHEAT.node.type("shop")                         상점 노드로 이동',
       'CHEAT.node.type("rest")                         휴식 노드로 이동',
@@ -745,6 +772,8 @@
       "CHEAT.hp.player(999, 999)                       체력/정신력 최대로",
       "CHEAT.give.gold(999)                            골드 999 획득",
       'CHEAT.card.hand("soul_passing", 1)              손패에 주문 추가',
+      'CHEAT.give.relic("bronze_incense_burner")       실전 법구 지급 (CHEAT.give.relicList()로 목록 확인)',
+      'CHEAT.give.potion("cheongsim_pill")             실전 약병 지급 (CHEAT.give.potionList()로 목록 확인)',
       'CHEAT.status.clear("player")                    플레이어 상태이상 제거',
       'CHEAT.toast.success("성공 테스트")                전역 토스트 레이어 테스트',
       "",
@@ -753,7 +782,7 @@
       "CHEAT.kill   몬스터/플레이어 즉사 (enemy/player)",
       "CHEAT.hp     체력/정신력 변경 (player/enemy)",
       "CHEAT.atk    공격력/피해량 변경 (player.add|mul|set|reset, enemy(i).set)",
-      "CHEAT.give   돈/아이템 획득 (gold/moon[deprecated]/relicRandom/relic/potionTest/potion)",
+      "CHEAT.give   돈/아이템 획득 (gold/moon[deprecated]/relicRandom/relic/relicFind/relicList/potion/potionFind/potionList)",
       "CHEAT.take   돈/아이템 제거 (gold/moon[deprecated]/relic/potion)",
       "CHEAT.status 상태이상 부여/제거 (add/remove/clear)",
       "CHEAT.card   주문 추가/제거/검색 (hand/deck/draw/discard/find/list/remove/removeAll/clear)",
@@ -778,6 +807,7 @@
       goto: cheatNodeGoto,
       type: cheatNodeType,
       boss: () => cheatNodeType("boss"),
+      treasure: () => cheatNodeType("treasure"),
       lobby: cheatNodeLobby,
       map: cheatNodeMap
     },
@@ -803,8 +833,11 @@
       moon: cheatGiveMoon,
       relicRandom: cheatGiveRelicRandom,
       relic: cheatGiveRelic,
-      potionTest: cheatGivePotionTest,
-      potion: cheatGivePotion
+      relicFind: cheatRelicFind,
+      relicList: cheatRelicList,
+      potion: cheatGivePotion,
+      potionFind: cheatPotionFind,
+      potionList: cheatPotionList
     },
     take: {
       gold: cheatTakeGold,

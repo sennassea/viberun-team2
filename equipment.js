@@ -40,15 +40,15 @@ const RELIC_MASTER_DB = [
   { id:"reversed_talisman_book", dataId:"RE036", name:"뒤집힌 부적첩", emoji:"📒", category:"고위험 특수", deck:"고위험 특수", rarity:"special", desc:"매 턴 시작 시 주문 1장 추가로 뽑기. 뽑기 더미에서 손패로 들어오는 주문의 비용이 그 턴 동안 무작위 0~3", effectText:"매 턴 시작 시 주문 1장 추가로 뽑기. 뽑기 더미에서 손패로 들어오는 주문의 비용이 그 턴 동안 무작위 0~3", valueText:"턴 시작 드로우 +1, 드로우 카드 비용 0~3", synergy:"고비용 회상·성불", coreFun:"고비용 주문 대박과 저비용 주문 역폭탄", balanceStatus:"경미 하향", balanceRisk:"P1", implementationDifficulty:"최상", obtainFrom:[], obtainFromProposal:["특수 이벤트"], runtimeEnabled:false, implementationStatus:"dataOnly", implementationType:"custom", implementationKey:"relic_reversed_talisman_book", plannedTrigger:"onCardDrawnFromDrawPile", plannedConditions:{duration:"currentTurn", randomCostRange:[0,3]}, plannedEffects:{turnStartDraw:1, randomizeDrawnCardCost:true}, trigger:"none", target:"self", dropWeight:0, price:0, shopPrice:0, fx:[] },
 
   { "id":"blessing_relic_01", "dataId":"BR001", "name":"길잃은 방울", "emoji":"🌒", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 법구 1개를 얻습니다. 대신 정신력 12를 잃습니다.", "valueText":"신령의 은혜: 법구 획득, 정신력 -12", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
-  { "id":"blessing_relic_02", "dataId":"BR002", "name":"금단의 서낭부", "emoji":"🃏", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"Rare 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", "valueText":"신령의 은혜: Rare 카드 획득, 상태 카드 추가", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_02", "dataId":"BR002", "name":"금단의 서낭부", "emoji":"🃏", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"유일 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"유일 카드 3장 중 1장을 선택합니다. 대신 상태 카드 1장을 덱에 추가합니다.", "valueText":"신령의 은혜: 유일 카드 획득, 상태 카드 추가", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
   { "id":"blessing_relic_03", "dataId":"BR003", "name":"깨진 복주머니", "emoji":"🪙", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"복채 120을 얻습니다. 대신 최대 정신력 8을 잃습니다.", "valueText":"신령의 은혜: 복채 +120, 최대 정신력 -8", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
   { "id":"blessing_relic_04", "dataId":"BR004", "name":"흔들리는 약향로", "emoji":"⚗️", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 약병 2개를 얻습니다. 대신 첫 전투 시작 시 플레이어에게 불안 1을 부여합니다.", "valueText":"신령의 은혜: 약병 +2, 첫 전투 불안 1", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
   { "id":"blessing_relic_05", "dataId":"BR005", "name":"빈 복채함", "emoji":"🏺", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 법구 1개를 얻습니다. 대신 보유 복채를 모두 잃습니다.", "valueText":"신령의 은혜: 법구 획득, 복채 0", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
   { "id":"blessing_relic_06", "dataId":"BR006", "name":"인연 끊는 가위", "emoji":"✂️", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"기본 카드 1장을 선택하여 제거합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"기본 카드 1장을 선택하여 제거합니다.", "valueText":"신령의 은혜: 기본 카드 선택 제거", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
-  { "id":"blessing_relic_07", "dataId":"BR007", "name":"뒤섞인 인연패", "emoji":"🔀", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"기본 카드 1장을 무작위로 제거하고, 무작위 Common 카드 1장을 얻습니다.", "valueText":"신령의 은혜: 기본 카드 제거, Common 카드 획득", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_07", "dataId":"BR007", "name":"뒤섞인 인연패", "emoji":"🔀", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"기본 카드 1장을 무작위로 제거하고, 무작위 일반 카드 1장을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"기본 카드 1장을 무작위로 제거하고, 무작위 일반 카드 1장을 얻습니다.", "valueText":"신령의 은혜: 기본 카드 제거, 일반 카드 획득", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
   { "id":"blessing_relic_08", "dataId":"BR008", "name":"망각의 매듭", "emoji":"🧹", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"카드 2장을 제거합니다. 대신 보유 복채를 모두 잃습니다.", "valueText":"신령의 은혜: 카드 2장 제거, 복채 0", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
-  { "id":"blessing_relic_09", "dataId":"BR009", "name":"새 인연의 부적", "emoji":"📜", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"Common 카드 3장 중 1장을 선택해 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"Common 카드 3장 중 1장을 선택해 얻습니다.", "valueText":"신령의 은혜: Common 카드 획득", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
-  { "id":"blessing_relic_10", "dataId":"BR010", "name":"가벼운 첫 매듭", "emoji":"🍃", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 Common 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", "valueText":"신령의 은혜: Common 카드 비용 -1", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_09", "dataId":"BR009", "name":"새 인연의 부적", "emoji":"📜", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"일반 카드 3장 중 1장을 선택해 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"일반 카드 3장 중 1장을 선택해 얻습니다.", "valueText":"신령의 은혜: 일반 카드 획득", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
+  { "id":"blessing_relic_10", "dataId":"BR010", "name":"가벼운 첫 매듭", "emoji":"🍃", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"무작위 일반 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"무작위 일반 카드 1장을 얻습니다. 그 카드는 이번 런 동안 비용이 1 감소합니다.", "valueText":"신령의 은혜: 일반 카드 비용 -1", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
   { "id":"blessing_relic_11", "dataId":"BR011", "name":"수호의 첫 종소리", "emoji":"🕯️", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"다음 3번의 일반 전투에서 첫 번째 적의 정신력을 1로 만듭니다.", "valueText":"신령의 은혜: 일반 전투 3회 첫 적 정신력 1", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
   { "id":"blessing_relic_12", "dataId":"BR012", "name":"첫 결계의 연꽃", "emoji":"🛡️", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"첫 전투 시작 시 결계 10을 얻습니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"첫 전투 시작 시 결계 10을 얻습니다.", "valueText":"신령의 은혜: 첫 전투 결계 +10", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
   { "id":"blessing_relic_13", "dataId":"BR013", "name":"맑은 혼의 옥패", "emoji":"💗", "deck":"은혜", "rarity":"blessing", "obtainFrom":[], "source":"startBlessing", "category":"blessingRelic", "trigger":"none", "target":"self", "desc":"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.\n여정을 떠나기 전 신령에게 받은 은혜의 증표.", "effectText":"최대 정신력이 8 증가하고, 현재 정신력도 8 회복합니다.", "valueText":"신령의 은혜: 최대 정신력 +8, 회복 +8", "dropWeight":0, "price":0, "shopPrice":0, "fx":[] },
@@ -113,6 +113,52 @@ const RELIC_ICON_PATHS = {
 RELIC_MASTER_DB.forEach(item => {
   if (!item || !RELIC_ICON_PATHS[item.id]) return;
   item.iconImage = RELIC_ICON_PATHS[item.id];
+});
+
+const IMPLEMENTED_RELIC_IDS = new Set([
+  "bronze_incense_burner",
+  "moon_spirit_tablet",
+  "lizard_tail_charm",
+  "broken_rosary",
+  "leftover_candle_wax",
+  "tricolor_cotton_fan",
+  "old_hairpin",
+  "ash_smeared_mirror",
+  "paper_crane_bundle",
+  "threshold_salt",
+  "demon_sealing_tablet",
+  "red_golden_rope",
+  "ink_line_spool",
+  "damp_letter_tie",
+  "ward_pocket_watch",
+  "tear_catcher_gourd",
+  "lotus_lamp",
+  "lotus_seed_bead",
+  "cheondo_bell",
+  "old_letter_box",
+  "broken_red_thread",
+  "unsealed_letter",
+  "gilt_bell_clapper",
+  "sevenstar_knot",
+  "torn_gut_fan",
+  "mugwort_bundle",
+  "empty_spirit_tablet",
+  "tricolor_ritual_bowl",
+  "prayer_knot",
+  "empty_lucky_pouch",
+  "peddler_abacus",
+  "twin_marriage_tablet",
+  "inverted_bell",
+  "cracked_divine_tablet",
+  "closed_sutra_box",
+  "reversed_talisman_book"
+]);
+
+RELIC_MASTER_DB.forEach(item => {
+  if (!item || !/^RE\d{3}$/.test(item.dataId || "")) return;
+  if (!IMPLEMENTED_RELIC_IDS.has(item.id)) return;
+  item.runtimeEnabled = true;
+  item.implementationStatus = "implemented";
 });
 
 /* =========================================================================

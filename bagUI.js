@@ -43,6 +43,16 @@
     return escapeHtml(icon || "");
   }
 
+  function getBagRelicIcon(relic) {
+    if (!relic) return "🏺";
+    return relic.iconImage || relic.icon || relic.emoji || "🏺";
+  }
+
+  function getBagPotionIcon(potion) {
+    if (!potion) return "🧪";
+    return potion.iconImage || potion.icon || potion.emoji || "🧪";
+  }
+
   /* ── 스타일 주입 ────────────────────────────────────────────────────── */
   function ensureStyles() {
     if (document.getElementById("bagUIStyles")) return;
@@ -67,14 +77,16 @@
         "border:0.14cqh solid rgba(178,140,80,.36);border-radius:1cqh;padding:1.2cqh 1cqw;}" +
       ".bag-ui-col-title{font-size:1.7cqh;font-weight:900;}" +
       ".bag-relic-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:.8cqh;min-height:0;}" +
-      ".bag-relic-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;" +
+      ".bag-relic-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;padding:.5cqh;" +
         "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
       ".bag-relic-card:hover{border-color:var(--bg-gold);}" +
       ".bag-relic-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
       ".bag-relic-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
       ".bag-relic-card.empty:hover{border-color:var(--bg-beige-deep);}" +
-      ".bag-relic-icon{font-size:3cqh;line-height:1;}" +
-      ".bag-relic-icon img,.bag-potion-icon img,.bag-detail-name img{width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.22em;}" +
+      ".bag-relic-icon{font-size:3cqh;line-height:1;flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;}" +
+      ".bag-detail-name img{width:1.25em;height:1.25em;object-fit:contain;vertical-align:-.22em;}" +
+      ".bag-potion-card .bag-potion-icon img{width:2.6em;height:2.6em;object-fit:contain;display:block;}" +
+      ".bag-relic-icon img{width:100%;height:100%;object-fit:contain;display:block;}" +
       ".bag-relic-name{font-size:1.15cqh;font-weight:800;text-align:center;}" +
       ".bag-empty-msg{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--bg-ink-soft);font-size:1.4cqh;font-weight:700;}" +
       ".bag-page-nav{flex:none;display:flex;align-items:center;justify-content:center;gap:.8cqw;font-size:1.3cqh;font-weight:800;}" +
@@ -182,7 +194,7 @@
       const idx = start + i;
       html +=
         '<button type="button" class="bag-relic-card' + (idx === selectedRelicIdx ? " selected" : "") + '" data-relic-idx="' + idx + '">' +
-          '<div class="bag-relic-icon">' + bagItemIconHtml(relic.emoji || "🏺") + '</div>' +
+          '<div class="bag-relic-icon">' + bagItemIconHtml(getBagRelicIcon(relic)) + '</div>' +
           '<div class="bag-relic-name">' + escapeHtml(relic.name || "") + '</div>' +
         '</button>';
     }
@@ -206,8 +218,8 @@
     if (selectedRelicIdx !== null && relics[selectedRelicIdx]) {
       const relic = relics[selectedRelicIdx];
       els.relicDetail.innerHTML =
-        '<div class="bag-detail-name">' + bagItemIconHtml(relic.emoji || "🏺") + ' ' + escapeHtml(relic.name || "") + '</div>' +
-        '<div class="bag-detail-desc">' + escapeHtml(relic.desc || relic.effectText || relic.valueText || "") + '</div>';
+        '<div class="bag-detail-name">' + escapeHtml(relic.name || "") + '</div>' +
+        '<div class="bag-detail-desc">' + colorizeRarityLabels(escapeHtml(relic.desc || relic.effectText || relic.valueText || "")) + '</div>';
     } else {
       els.relicDetail.innerHTML = '<div class="bag-detail-placeholder">법구를 선택하면 효과를 확인할 수 있어요.</div>';
     }
@@ -227,7 +239,7 @@
       html +=
         '<button type="button" class="bag-potion-card' + (i === selectedPotionIdx ? " selected" : "") + '" data-potion-idx="' + i + '">' +
           '<span class="bag-potion-num">' + (i + 1) + '</span>' +
-          '<div class="bag-potion-icon">' + bagItemIconHtml(potion.emoji || "🧪") + '</div>' +
+          '<div class="bag-potion-icon">' + bagItemIconHtml(getBagPotionIcon(potion)) + '</div>' +
           '<div class="bag-potion-name">' + escapeHtml(potion.name || "") + '</div>' +
         '</button>';
     }
@@ -242,8 +254,8 @@
     if (selectedPotionIdx !== null && potions[selectedPotionIdx]) {
       const potion = potions[selectedPotionIdx];
       els.potionDetail.innerHTML =
-        '<div class="bag-detail-name">' + bagItemIconHtml(potion.emoji || "🧪") + ' ' + escapeHtml(potion.name || "") + '</div>' +
-        '<div class="bag-detail-desc">' + escapeHtml(potion.desc || potion.effectText || potion.valueText || "") + '</div>';
+        '<div class="bag-detail-name">' + bagItemIconHtml(getBagPotionIcon(potion)) + ' ' + escapeHtml(potion.name || "") + '</div>' +
+        '<div class="bag-detail-desc">' + colorizeRarityLabels(escapeHtml(potion.desc || potion.effectText || potion.valueText || "")) + '</div>';
     } else {
       els.potionDetail.innerHTML = '<div class="bag-detail-placeholder">약병을 선택하면 효과를 확인할 수 있어요.</div>';
     }

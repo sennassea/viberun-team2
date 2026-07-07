@@ -84,6 +84,29 @@ function closeEventOverlayOnly(){
 
 /* 이벤트 종료 → 맵으로 복귀 (기도터/상점과 동일 패턴) */
 function finishEventNode(){
+  const completedEvent = eventState && eventState.event;
+  const resultDetails = eventState && Array.isArray(eventState.resultDetails)
+    ? eventState.resultDetails
+    : [];
+
+  if(typeof recordCompletedNodeScore === "function"){
+    recordCompletedNodeScore("event", {
+      reason: "이벤트 완료"
+    });
+  }
+
+  const isHighRiskSuccess =
+    completedEvent &&
+    completedEvent.category === "high_risk_high_reward" &&
+    resultDetails.some(detail => detail && detail.kind === "positive");
+
+  if(isHighRiskSuccess && typeof recordJourneyActionScore === "function"){
+    recordJourneyActionScore("highRiskEventSuccess", {
+      type: "event",
+      reason: "고위험 이벤트 성공"
+    });
+  }
+
   restoreEventMapOverrides();
   closeEventOverlayOnly();
   eventState = null;
@@ -153,7 +176,7 @@ function eventShellHtml(){
       '<div class="event-topbar-spacer"></div>' +
       '<div class="event-menu" aria-label="이벤트 중 공통 메뉴">' +
         '<button type="button" class="event-menu-btn ui-asset-button ui-map-button" id="eventMapBtn"><span class="ico">🗺️</span><span>여정</span></button>' +
-        '<button type="button" class="event-menu-btn ui-asset-button ui-codex-button" id="eventDeckBtn"><span class="ico">📖</span><span>보유 의식</span></button>' +
+        '<button type="button" class="event-menu-btn ui-asset-button ui-codex-button" id="eventDeckBtn"><span class="ico">📖</span><span>보유 주문</span></button>' +
         '<button type="button" class="event-menu-btn ui-asset-button ui-bag-button" id="eventBagBtn"><span class="ico">🎒</span><span>가방</span></button>' +
         '<button type="button" class="event-menu-btn ui-asset-button ui-settings-button" id="eventSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
@@ -225,7 +248,7 @@ function restoreEventMapOverrides(){
 function openEventDeckPreview(){
   const deckBtn = document.getElementById("deckViewerButton");
   if(deckBtn){ deckBtn.click(); return; }
-  if(typeof toast === "function") toast("보유 의식 확인 기능을 불러올 수 없습니다.");
+  if(typeof toast === "function") toast("보유 주문 확인 기능을 불러올 수 없습니다.");
 }
 
 function openEventBagPreview(){
@@ -318,7 +341,7 @@ function eventChoiceRowHtml(choice, idx){
       '<div class="event-choice-icon">' + icon + '</div>' +
       '<div class="event-choice-body">' +
         '<div class="event-choice-label">' + escapeEventHtml(choice.label || "") + '</div>' +
-        '<div class="event-choice-desc">' + escapeEventHtml(choice.desc || "") + '</div>' +
+        '<div class="event-choice-desc">' + colorizeRarityLabels(escapeEventHtml(choice.desc || "")) + '</div>' +
         lockHtml +
       '</div>' +
       outcomesHtml +
@@ -347,12 +370,12 @@ function eventOutcomeChipHtml(outcome){
   const kind = outcome.kind === "positive" ? "positive" : (outcome.kind === "negative" ? "negative" : "neutral");
   const symbol = kind === "positive" ? "✦" : (kind === "negative" ? "⊖" : "◇");
   const chance = typeof outcome.chance === "number" ? " (확률 " + outcome.chance + "%)" : "";
-  return '<span class="event-outcome-chip ' + kind + '">' + symbol + ' ' + escapeEventHtml(outcome.text || "") + chance + '</span>';
+  return '<span class="event-outcome-chip ' + kind + '">' + symbol + ' ' + colorizeRarityLabels(escapeEventHtml(outcome.text || "")) + chance + '</span>';
 }
 
 function eventResultHtml(){
   const rows = (eventState.resultDetails || []).map(detail =>
-    '<div class="event-result-row ' + (detail.kind || "neutral") + '">' + escapeEventHtml(detail.text) + '</div>'
+    '<div class="event-result-row ' + (detail.kind || "neutral") + '">' + colorizeRarityLabels(escapeEventHtml(detail.text)) + '</div>'
   ).join("");
   return (
     '<div class="event-panel event-panel-result">' +
@@ -371,8 +394,8 @@ function eventCardPickHtml(){
   const cards = (eventState.cardCandidates || []).map(eventCardHtml).join("");
   return (
     '<div class="event-panel event-panel-cardpick">' +
-      '<div class="event-title">의식 보상</div>' +
-      '<div class="event-guide">추가할 의식 1장을 선택하세요.</div>' +
+      '<div class="event-title">주문 보상</div>' +
+      '<div class="event-guide">추가할 주문 1장을 선택하세요.</div>' +
       '<div class="event-cards">' + cards + '</div>' +
       '<div class="event-actions">' +
         '<button type="button" class="event-btn event-btn-skip" id="eventCardSkip">건너뛰기</button>' +
@@ -401,7 +424,7 @@ function eventCardHtml(key){
       '<div class="event-card-name">' + escapeEventHtml(c.name) + '</div>' +
       '<div class="event-card-art">' + escapeEventHtml(c.emoji) + '</div>' +
       '<div class="event-card-type ' + c.type + '">' + escapeEventHtml(label) + '</div>' +
-      '<div class="event-card-desc">' + escapeEventHtml(c.desc) + '</div>' +
+      '<div class="event-card-desc">' + colorizeRarityLabels(escapeEventHtml(c.desc)) + '</div>' +
     '</button>'
   );
 }
@@ -422,14 +445,22 @@ function eventPotionPickHtml(){
   );
 }
 
+function eventPotionArtHtml(potion){
+  const icon = potion.iconImage || potion.icon || potion.emoji || "🧪";
+  if(typeof icon === "string" && icon.indexOf("assets/") === 0){
+    return '<img src="' + escapeEventHtml(icon) + '" alt="" aria-hidden="true">';
+  }
+  return escapeEventHtml(icon);
+}
+
 function eventPotionHtml(potion){
   if(!potion) return "";
   const selected = eventState.potionSelected === potion.id ? " selected" : "";
   return (
     '<button type="button" class="event-card' + selected + '" data-potion-id="' + escapeEventHtml(potion.id) + '">' +
-      '<div class="event-card-art">' + escapeEventHtml(potion.emoji || "🧪") + '</div>' +
+      '<div class="event-card-art">' + eventPotionArtHtml(potion) + '</div>' +
       '<div class="event-card-name">' + escapeEventHtml(potion.name) + '</div>' +
-      '<div class="event-card-desc">' + escapeEventHtml(potion.desc || "") + '</div>' +
+      '<div class="event-card-desc">' + colorizeRarityLabels(escapeEventHtml(potion.desc || "")) + '</div>' +
     '</button>'
   );
 }
@@ -529,7 +560,7 @@ function applyEventEffect(effect){
     case "gold": return applyEventGold(effect.value);
     case "goldOrSpiritPenalty": return applyEventGoldOrSpiritPenalty(effect);
     case "relicRandom": return applyEventRelicGrant(null, "");
-    case "relicRare": return applyEventRelicGrant("rare", "Rare ");
+    case "relicRare": return applyEventRelicGrant("rare", "유일 ");
     case "addStatusCard": return applyEventAddStatusCard(effect);
     case "cardRemove": return applyEventCardRemove(effect);
     case "cardDuplicate": return applyEventCardDuplicate(effect);
@@ -584,17 +615,12 @@ function pickEventRelic(rarityFilter){
   const candidates = typeof window.getRelicCandidatesBySource === "function"
     ? window.getRelicCandidatesBySource("event")
     : (typeof RELIC_DB !== "undefined" ? RELIC_DB : []);
-  const pool = (candidates || []).filter(r =>
-    r && !ownedIds.includes(r.id) && (!rarityFilter || r.rarity === rarityFilter)
-  );
+  const pool = (candidates || []).filter(r => r && !ownedIds.includes(r.id));
   if(!pool.length) return null;
-  const total = pool.reduce((sum, r) => sum + (r.dropWeight || 1), 0);
-  let roll = Math.random() * total;
-  for(const r of pool){
-    roll -= (r.dropWeight || 1);
-    if(roll <= 0) return { ...r };
-  }
-  return { ...pool[0] };
+  const picked = typeof window.pickRewardItemByRarity === "function"
+    ? window.pickRewardItemByRarity(pool, rarityFilter ? { rarity:rarityFilter } : { context:"event" })
+    : pool[Math.floor(Math.random() * pool.length)];
+  return picked ? { ...picked } : null;
 }
 
 function applyEventRelicGrant(rarityFilter, labelPrefix){
@@ -615,35 +641,56 @@ function applyEventRelicGrant(rarityFilter, labelPrefix){
     kind: "positive",
     text: labelPrefix + "법구 획득: " + (relic.emoji || "🏺") + " " + relic.name
   });
+  openEventRandomResultPopup(
+    [eventPopupRelicItem(relic, "gain")],
+    labelPrefix + "법구 획득"
+  );
 }
 
 function applyEventAddStatusCard(effect){
   const candidates = Array.isArray(effect.candidates) ? effect.candidates.filter(Boolean) : [];
   if(!candidates.length) return;
   const count = effect.count || 1;
+  const addedKeys = [];
   for(let i = 0; i < count; i++){
     const key = candidates[Math.floor(Math.random() * candidates.length)];
-    if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
+    if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"eventStatus", addToDiscard:false });
+    else if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(key);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
-    eventState.resultDetails.push({ kind: "negative", text: "상태 의식 추가: " + (card ? card.name : key) });
+    eventState.resultDetails.push({ kind: "negative", text: "상태 주문 추가: " + (card ? card.name : key) });
+    addedKeys.push(key);
   }
+  openEventRandomResultPopup(
+    addedKeys.map(key => eventPopupCardItem(key, "gain")),
+    "상태 주문 추가"
+  );
 }
 
 /* 덱에서 무작위 주문을 count장 삭제한다. 덱이 1장 이하로 남을 정도로는
    삭제하지 않는다 (전투 진행 불가 방지). */
 function applyEventCardRemove(effect){
   if(typeof STARTER_DECK === "undefined" || STARTER_DECK.length <= 1){
-    eventState.resultDetails.push({ kind: "neutral", text: "덱이 너무 적어 의식을 삭제하지 못했습니다." });
+    eventState.resultDetails.push({ kind: "neutral", text: "덱이 너무 적어 주문을 삭제하지 못했습니다." });
     return;
   }
   const count = Math.min(effect.count || 1, STARTER_DECK.length - 1);
+  const removedKeys = [];
   for(let i = 0; i < count && STARTER_DECK.length > 1; i++){
-    const idx = Math.floor(Math.random() * STARTER_DECK.length);
+    const removableIdxs = STARTER_DECK
+      .map((_, idx) => idx)
+      .filter(idx => typeof isEndlessRestCardRemovable !== "function" || isEndlessRestCardRemovable(STARTER_DECK[idx]));
+    if(!removableIdxs.length) break;
+    const idx = removableIdxs[Math.floor(Math.random() * removableIdxs.length)];
     const key = STARTER_DECK[idx];
     STARTER_DECK.splice(idx, 1);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;
-    eventState.resultDetails.push({ kind: "neutral", text: "의식 삭제: " + (card ? card.name : key) });
+    eventState.resultDetails.push({ kind: "neutral", text: "주문 삭제: " + (card ? card.name : key) });
+    removedKeys.push(key);
   }
+  openEventRandomResultPopup(
+    removedKeys.map(key => eventPopupCardItem(key, "remove")),
+    "주문 제거"
+  );
 }
 
 function applyEventCardDuplicate(effect){
@@ -655,19 +702,100 @@ function applyEventCardDuplicate(effect){
   });
   if(!pool.length) return;
   const key = pool[Math.floor(Math.random() * pool.length)];
-  STARTER_DECK.push(key);
+  if(typeof addPermanentCard === "function") addPermanentCard(key, { source:"eventDuplicate", addToDiscard:false });
+  else STARTER_DECK.push(key);
   const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
-  eventState.resultDetails.push({ kind: "positive", text: "의식 복제: " + (card ? card.name : key) });
+  eventState.resultDetails.push({ kind: "positive", text: "주문 복제: " + (card ? card.name : key) });
+  openEventRandomResultPopup(
+    [eventPopupCardItem(key, "gain")],
+    "주문 복제"
+  );
+}
+
+/* ── 무작위 결과 팝업 연결 (선택 획득/선택 제거 UI에는 사용하지 않는다) ─── */
+function eventPopupCardItem(key, action){
+  if(!key) return null;
+  const card = (typeof CARD_DB !== "undefined") ? CARD_DB[key] : null;
+  return {
+    type: "card", action, key,
+    name: card ? card.name : key,
+    icon: card && (card.art || card.emoji)
+  };
+}
+
+function eventPopupRelicItem(relic, action){
+  if(!relic) return null;
+  return {
+    type: "relic", action, key: relic.id, name: relic.name,
+    icon: relic.iconImage || relic.icon || relic.emoji || "🏺"
+  };
+}
+
+function eventPopupPotionItem(potion, action){
+  if(!potion) return null;
+  return {
+    type: "potion", action, key: potion.id, name: potion.name,
+    icon: potion.iconImage || potion.icon || potion.emoji || "🧪"
+  };
+}
+
+function openEventRandomResultPopup(items, title){
+  const safeItems = (items || []).filter(Boolean);
+  if(!safeItems.length) return;
+  if(typeof window.OPEN_RANDOM_ITEM_RESULT_POPUP !== "function") return;
+  window.OPEN_RANDOM_ITEM_RESULT_POPUP({
+    title: title || "결과 확인",
+    items: safeItems
+  });
+}
+
+/* eventData.js의 attr 표기(예: "동요")는 CARD_DB의 실제 덱 속성 문자열과 다를 수 있어
+   여기서 실제 덱 속성으로 정규화한다. */
+function normalizeEventCardAttr(attr){
+  const aliases = {
+    "동요": "회상 덱",
+    "회상": "회상 덱",
+    "결계": "결계 덱",
+    "성불": "성불 표식 덱",
+    "성불 표식": "성불 표식 덱",
+    "한풀이": "한풀이 덱",
+    "굿판": "굿판 덱"
+  };
+  return aliases[attr] || attr;
 }
 
 function buildTaggedCardPool(attr){
   if(typeof CARD_DB === "undefined") return [];
-  return Object.keys(CARD_DB).filter(k => CARD_DB[k].attr === attr && !["starter", "status"].includes(CARD_DB[k].rarity));
+  const normalizedAttr = normalizeEventCardAttr(attr);
+  return Object.keys(CARD_DB).filter(k => {
+    const card = CARD_DB[k];
+    if(!card || card.excludeFromRewards || card.generatedOnly) return false;
+    if(["starter", "status"].includes(card.rarity)) return false;
+    const cardAttr = card.attr || "";
+    const attrMatches = cardAttr === normalizedAttr ||
+      cardAttr === attr ||
+      cardAttr.includes(normalizedAttr) ||
+      (attr && cardAttr.includes(attr));
+    if(!attrMatches) return false;
+    const allowedBySpiritPath =
+      !window.VIBERUN_SPIRIT_PATH_FILTER ||
+      typeof window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath !== "function" ||
+      window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath(card);
+    return allowedBySpiritPath;
+  });
 }
 
 function buildRareCardPool(){
   if(typeof CARD_DB === "undefined") return [];
-  return Object.keys(CARD_DB).filter(k => CARD_DB[k].rarity === "rare");
+  return Object.keys(CARD_DB).filter(k => {
+    const card = CARD_DB[k];
+    if(!card || card.rarity !== "rare" || card.excludeFromRewards || card.generatedOnly) return false;
+    const allowedBySpiritPath =
+      !window.VIBERUN_SPIRIT_PATH_FILTER ||
+      typeof window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath !== "function" ||
+      window.VIBERUN_SPIRIT_PATH_FILTER.isItemAllowedBySpiritPath(card);
+    return allowedBySpiritPath;
+  });
 }
 
 /* 현재 덱(STARTER_DECK)에서 가장 많이 보유한 attr 계열을 계산한다.
@@ -695,16 +823,29 @@ function pickEventPotion(rarityFilter){
   const db = typeof window.getPotionCandidatesBySource === "function"
     ? window.getPotionCandidatesBySource("event")
     : (typeof POTION_DB !== "undefined" ? POTION_DB : []);
-  let pool = (db || []).filter(Boolean);
-  if(rarityFilter) pool = pool.filter(p => p.rarity === rarityFilter);
+  const pool = (db || []).filter(Boolean);
   if(!pool.length) return null;
-  const total = pool.reduce((sum, p) => sum + (p.dropWeight || 1), 0);
-  let roll = Math.random() * total;
-  for(const p of pool){
-    roll -= (p.dropWeight || 1);
-    if(roll <= 0) return { ...p };
+  const picked = typeof window.pickRewardItemByRarity === "function"
+    ? window.pickRewardItemByRarity(pool, rarityFilter ? { rarity:rarityFilter } : { context:"event" })
+    : pool[Math.floor(Math.random() * pool.length)];
+  return picked ? { ...picked } : null;
+}
+
+/* potionChoice 후보 count개를 등급 우선 추첨(context:"event")으로 중복 없이 뽑는다. */
+function pickEventPotionCandidatesByRarity(pool, count){
+  const remaining = (pool || []).slice();
+  const picked = [];
+  const amount = Math.max(0, count || 0);
+  for(let i = 0; i < amount && remaining.length; i++){
+    const item = typeof window.pickRewardItemByRarity === "function"
+      ? window.pickRewardItemByRarity(remaining, { context:"event" })
+      : remaining[Math.floor(Math.random() * remaining.length)];
+    if(!item) break;
+    const idx = remaining.indexOf(item);
+    if(idx >= 0) remaining.splice(idx, 1);
+    picked.push(item);
   }
-  return { ...pool[0] };
+  return picked;
 }
 
 /* 약병 슬롯(POTION_SLOT_LIMIT, 기본 3개) 초과 시 지급하지 않고 결과에만 남긴다. */
@@ -723,6 +864,10 @@ function grantEventPotion(potion){
   }
   S.potions.push(potion);
   eventState.resultDetails.push({ kind: "positive", text: "약병 획득: " + (potion.emoji || "🧪") + " " + potion.name });
+  openEventRandomResultPopup(
+    [eventPopupPotionItem(potion, "gain")],
+    "약병 획득"
+  );
   return true;
 }
 
@@ -749,17 +894,27 @@ function applyEventPotionSpecific(effect){
 function buildEventCardCandidates(effect){
   const count = effect.count || effect.rewardCount || 3;
   if(effect.type === "cardRewardTagged"){
-    return shuffle([...buildTaggedCardPool(effect.attr)]).slice(0, count);
+    const pool = buildTaggedCardPool(effect.attr);
+    if(!pool.length){
+      console.warn("[Event] cardRewardTagged 후보가 없어 일반 카드 보상으로 대체합니다.", effect.attr);
+      return typeof getRandomRewardKeys === "function" ? getRandomRewardKeys(count, "event") : [];
+    }
+    return typeof getWeightedCardRewardKeys === "function"
+      ? getWeightedCardRewardKeys(count, pool, { context:"event" })
+      : shuffle([...pool]).slice(0, count);
   }
   if(effect.type === "cardRewardDominantAttr"){
-    return shuffle([...buildTaggedCardPool(computeDominantDeckAttr())]).slice(0, count);
+    const pool = buildTaggedCardPool(computeDominantDeckAttr());
+    return typeof getWeightedCardRewardKeys === "function"
+      ? getWeightedCardRewardKeys(count, pool, { context:"event" })
+      : shuffle([...pool]).slice(0, count);
   }
   if(effect.type === "cardRewardRare"){
     return shuffle([...buildRareCardPool()]).slice(0, count);
   }
   /* cardReward / cardRewardOptional / cardTransform */
   return typeof getRandomRewardKeys === "function"
-    ? getRandomRewardKeys(count)
+    ? getRandomRewardKeys(count, "event")
     : (typeof CARD_REWARD_POOL !== "undefined" && typeof shuffle === "function"
         ? shuffle([...CARD_REWARD_POOL]).slice(0, count)
         : []);
@@ -785,15 +940,27 @@ function confirmEventCard(){
   if(!eventState || !eventState.cardSelected) return;
   const card = (typeof CARD_DB !== "undefined") ? CARD_DB[eventState.cardSelected] : null;
   if(card){
-    if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(eventState.cardSelected);
-    if(typeof S !== "undefined" && S && Array.isArray(S.discard)) S.discard.push(eventState.cardSelected);
-    if(typeof toast === "function") toast(card.name + " 의식을 덱에 추가했습니다.");
+    if(typeof addPermanentCard === "function") addPermanentCard(eventState.cardSelected, { source:"eventReward" });
+    else {
+      if(typeof STARTER_DECK !== "undefined") STARTER_DECK.push(eventState.cardSelected);
+      if(typeof S !== "undefined" && S && Array.isArray(S.discard)){
+        if(typeof pushDiscardCard === "function") pushDiscardCard(eventState.cardSelected, typeof createCardInstance === "function" ? createCardInstance(eventState.cardSelected) : undefined);
+        else {
+          S.discard.push(eventState.cardSelected);
+          if(!Array.isArray(S.discardInstances)) S.discardInstances = [];
+          S.discardInstances.push(typeof createCardInstance === "function"
+            ? createCardInstance(eventState.cardSelected)
+            : { key:eventState.cardSelected, runtime:{ hanpuriGrowth:0 } });
+        }
+      }
+    }
+    if(typeof toast === "function") toast(card.name + " 주문을 덱에 추가했습니다.");
   }
   finishEventNode();
 }
 
 function skipEventCard(){
-  if(typeof toast === "function") toast("의식 보상을 건너뛰었습니다.");
+  if(typeof toast === "function") toast("주문 보상을 건너뛰었습니다.");
   finishEventNode();
 }
 
@@ -803,11 +970,12 @@ function openEventPotionPick(effect){
   const db = typeof window.getPotionCandidatesBySource === "function"
     ? window.getPotionCandidatesBySource("event")
     : (typeof POTION_DB !== "undefined" ? POTION_DB : []);
-  let pool = (db || []).filter(Boolean);
-  if(effect.rarity) pool = pool.filter(p => p.rarity === effect.rarity);
+  const pool = (db || []).filter(Boolean);
 
   eventState.step = "potionPick";
-  eventState.potionCandidates = shuffle([...pool]).slice(0, count);
+  eventState.potionCandidates = effect.rarity
+    ? shuffle(pool.filter(p => p.rarity === effect.rarity)).slice(0, count)
+    : pickEventPotionCandidatesByRarity(pool, count);
   eventState.potionSelected = null;
   renderEventOverlay();
 }
@@ -833,6 +1001,7 @@ function skipEventPotion(){
 /* ── 전투 전환 ───────────────────────────────────────────────────────────── */
 function triggerEventCombat(combatEffect){
   const combatType = combatEffect && combatEffect.combatType;
+  const isHighRiskEvent = !!(eventState && eventState.event && eventState.event.category === "high_risk_high_reward");
   restoreEventMapOverrides();
   closeEventOverlayOnly();
   eventState = null;
@@ -851,8 +1020,11 @@ function triggerEventCombat(combatEffect){
   const stageTheme = typeof window.ACT1_PICK_STAGE_THEME === "function"
     ? window.ACT1_PICK_STAGE_THEME(nodeType, floor, {})
     : null;
+  const recentHistory = typeof window.ACT1_GET_COMBAT_HISTORY === "function"
+    ? window.ACT1_GET_COMBAT_HISTORY()
+    : [];
   const pkg = typeof window.ACT1_PICK_PACKAGE === "function"
-    ? window.ACT1_PICK_PACKAGE(nodeType, floor, new Set(), stageTheme)
+    ? window.ACT1_PICK_PACKAGE(nodeType, floor, new Set(), stageTheme, recentHistory)
     : null;
 
   let mons = (pkg && typeof d.getMonstersByIds === "function") ? d.getMonstersByIds(pkg.monsterIds) : null;
@@ -868,6 +1040,17 @@ function triggerEventCombat(combatEffect){
   }
 
   d.monsters.splice(0, d.monsters.length, ...mons);
+  if(pkg && typeof window.ACT1_RECORD_PACKAGE_HISTORY === "function"){
+    window.ACT1_RECORD_PACKAGE_HISTORY(pkg, nodeType);
+  }
+  if(typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.runStats){
+    RUN_STATE.runStats.pendingEventCombat = {
+      stageIndex: window.MAP_STATE && Number.isFinite(window.MAP_STATE.currentStage)
+        ? window.MAP_STATE.currentStage
+        : -1,
+      highRisk: isHighRiskEvent
+    };
+  }
   if(typeof newGame === "function") newGame();
   if(typeof S !== "undefined" && S){
     S.battleNodeType = nodeType;

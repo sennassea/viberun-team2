@@ -35,9 +35,12 @@
       maxHp: 28,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "attention", counterId: "neglect", maxStack: 2, hitFlag: "hitThisPlayerTurn" },
+      counters: { neglect: 0 },
       moves: [
         { t: "attack", v: 5, name: "작은 훌쩍임", role: "normalAttack" },
-        { t: "attack", v: 6, name: "모래 묻은 손", role: "normalAttack" },
+        { t: "attack", v: 6, name: "모래 묻은 손", role: "normalAttack", counterDamage: { id: "neglect", per: 2, resetAfterUse: true } }, // TEMP_BALANCE
         { t: "defend", v: 3, name: "미끄럼틀 뒤 숨기", role: "defense" }
       ]
     },
@@ -51,10 +54,12 @@
       maxHp: 28,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "anxietyLink" },
       moves: [
         { t: "attack", v: 4, name: "분필 긁는 소리", role: "normalAttack" },
         { t: "debuff", v: 1, name: "꺼진 교실등", role: "anxiety" },
-        { t: "attack", v: 6, name: "차가운 손 내밀기", role: "normalAttack" },
+        { t: "attack", v: 6, name: "차가운 손 내밀기", role: "normalAttack", conditionalDamage: { ifPlayerStatus: "anxiety", v: 8 } }, // TEMP_BALANCE
         { t: "defend", v: 3, name: "책상 뒤 숨기", role: "defense" }
       ]
     },
@@ -68,11 +73,12 @@
       maxHp: 36,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
-        { t: "defend", v: 8, name: "침대 밑 숨기", role: "defense" },
+        { t: "defend", v: 8, name: "침대 밑 숨기", role: "defense", targetPolicy: "lowestHpRatioAlly", fallbackTarget: "self", fallbackValue: 5 },
         { t: "attack", v: 4, name: "병실 끝 발소리", role: "normalAttack" },
-        { t: "attack", v: 7, name: "갑작스런 울음", role: "specialAttack" },
-        { t: "defend", v: 5, name: "담요 끌어당기기", role: "defense" }
+        { t: "defend", v: 5, name: "담요 끌어당기기", role: "defense", targetPolicy: "lowestHpRatioAlly", fallbackTarget: "self", fallbackValue: 5 },
+        { t: "attack", v: 7, name: "갑작스런 울음", role: "specialAttack" }
       ]
     },
     {
@@ -85,10 +91,13 @@
       maxHp: 32,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "charge", counterId: "patience", maxStack: 3, blockBreakReduction: 1 },
+      counters: { patience: 0 },
       moves: [
         { t: "attack", v: 3, name: "참은 훌쩍임", role: "normalAttack" },
-        { t: "defend", v: 5, name: "그네줄 붙잡기", role: "defense" },
-        { t: "attack", v: 10, name: "터져 나온 울음", role: "specialAttack" }
+        { t: "defend", v: 5, name: "그네줄 붙잡기", role: "defense", afterActionCounter: { id: "patience", op: "add", v: 1 } },
+        { t: "attack", v: 10, name: "터져 나온 울음", role: "specialAttack", counterDamage: { id: "patience", per: 2, resetAfterUse: true } } // TEMP_BALANCE
       ]
     },
     {
@@ -101,10 +110,13 @@
       maxHp: 52,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "question", sequence: ["attack", "nonAttack"], failStatusCard: "regret", failStatusCount: 1, burstCounterId: "wrongAnswer", burstPerStack: 2, maxStack: 2 }, // TEMP_BALANCE
+      counters: { questionIndex: 0, wrongAnswer: 0 },
       moves: [
         { t: "attack", v: 9, name: "작은 울음", role: "normalAttack" },
         { t: "attack", v: 10, name: "공책 찢기", role: "normalAttack" },
-        { t: "attack", v: 15, name: "창밖을 부르는 손", role: "specialAttack", statusCard: "regret" },
+        { t: "attack", v: 15, name: "창밖을 부르는 손", role: "specialAttack", statusCard: "regret", counterDamage: { id: "wrongAnswer", per: 2 } }, // TEMP_BALANCE
         { t: "defend", v: 6, name: "커튼 뒤 숨기", role: "defense" }
       ]
     },
@@ -118,11 +130,12 @@
       maxHp: 50,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
         { t: "debuff", v: 1, name: "잊혀진 이름", role: "weak" },
         { t: "attack", v: 5, name: "오래된 자장가", role: "normalAttack" },
         { t: "attack", v: 8, name: "그리움의 빛", role: "specialAttack" },
-        { t: "defend", v: 9, name: "빛바랜 사진", role: "defense" }
+        { t: "defend", v: 9, name: "빛바랜 사진", role: "defense", conditionalTargetPolicy: { ifPlayerStatus: "weak", targetPolicy: "lowestHpRatioAlly", fallbackTarget: "self" } }
       ]
     },
     {
@@ -135,11 +148,13 @@
       maxHp: 40,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "memoryClog", statusCard: "intrusive_thought", maxCount: 3 },
       moves: [
         { t: "debuff", v: 1, name: "낡은 사진 건네기", role: "anxiety" },
         { t: "attack", v: 5, name: "오래된 자장가", role: "normalAttack" },
-        { t: "attack", v: 7, name: "잊힌 장면", role: "specialAttack", statusCard: "intrusive_thought" },
-        { t: "defend", v: 6, name: "사진 속으로 숨기", role: "defense" }
+        { t: "attack", v: 7, name: "잊힌 장면", role: "specialAttack", statusCard: "intrusive_thought", statusCardDamage: { statusCard: "intrusive_thought", per: 2, maxCount: 3 } }, // TEMP_BALANCE
+        { t: "defend", v: 6, name: "사진 속으로 숨기", role: "defense", statusCardBlock: { statusCard: "intrusive_thought", per: 1, maxCount: 3 } } // TEMP_BALANCE
       ]
     },
     {
@@ -152,11 +167,12 @@
       maxHp: 44,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
         { t: "debuff", v: 1, name: "잊혀진 이름", role: "weak" },
         { t: "attack", v: 6, name: "느린 등교길", role: "normalAttack" },
         { t: "attack", v: 9, name: "그리움의 종소리", role: "specialAttack" },
-        { t: "defend", v: 7, name: "교문에 기대기", role: "defense" }
+        { t: "defend", v: 7, name: "교문에 기대기", role: "defense", conditionalTargetPolicy: { ifPlayerStatus: "weak", targetPolicy: "lowestHpRatioAlly", fallbackTarget: "self" } }
       ]
     },
     {
@@ -169,11 +185,14 @@
       maxHp: 39,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "scaling", counterId: "waiting", maxStack: 3 },
+      counters: { waiting: 0 },
       moves: [
         { t: "debuff", v: 1, name: "오지 않는 발걸음", role: "anxiety" },
-        { t: "attack", v: 5, name: "낮은 한숨", role: "normalAttack" },
-        { t: "attack", v: 7, name: "외로운 손짓", role: "specialAttack" },
-        { t: "defend", v: 5, name: "병실 문에 기대기", role: "defense" }
+        { t: "attack", v: 5, name: "낮은 한숨", role: "normalAttack", afterActionCounter: { id: "waiting", op: "add", v: 1 } },
+        { t: "defend", v: 5, name: "병실 문에 기대기", role: "defense" },
+        { t: "attack", v: 7, name: "외로운 손짓", role: "specialAttack", counterDamage: { id: "waiting", per: 2 }, afterActionCounter: { id: "waiting", op: "add", v: 1 } } // TEMP_BALANCE
       ]
     },
     {
@@ -186,6 +205,8 @@
       maxHp: 66,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "echo", ratio: 0.5, minValue: 1, repeatStatusCard: false }, // TEMP_BALANCE
       moves: [
         { t: "debuff", v: 1, name: "잊혀진 이름", role: "weak" },
         { t: "attack", v: 8, name: "오래된 교가", role: "normalAttack" },
@@ -203,6 +224,7 @@
       maxHp: 36,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
         { t: "attack", v: 7, name: "분주한 호출", role: "normalAttack" },
         { t: "attack", v: 6, name: "조심스런 처치", role: "normalAttack" },
@@ -220,11 +242,12 @@
       maxHp: 44,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
-        { t: "defend", v: 8, name: "차트 정리", role: "defense" },
+        { t: "defend", v: 8, name: "차트 정리", role: "defense", targetPolicy: "lowestHpRatioAlly", fallbackTarget: "self" },
         { t: "attack", v: 6, name: "조심스런 처치", role: "normalAttack" },
         { t: "attack", v: 9, name: "긴급 돌봄", role: "specialAttack", statusCard: "hesitation" },
-        { t: "defend", v: 9, name: "스테이션 정비", role: "defense" }
+        { t: "defend", v: 6, name: "스테이션 정비", role: "defense" }
       ]
     },
     {
@@ -237,11 +260,12 @@
       maxHp: 38,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
         { t: "debuff", v: 1, name: "망설이는 출석 확인", role: "anxiety" },
         { t: "attack", v: 6, name: "조심스런 훈계", role: "normalAttack" },
         { t: "attack", v: 9, name: "보건실 호출", role: "specialAttack" },
-        { t: "defend", v: 6, name: "출석부 정리", role: "defense" }
+        { t: "defend", v: 6, name: "출석부 정리", role: "defense", targetPolicy: "lowestHpRatioAlly", fallbackTarget: "self", conditionalValueBonus: { ifPlayerStatus: "anxiety", v: 2 } } // TEMP_BALANCE
       ]
     },
     {
@@ -254,6 +278,8 @@
       maxHp: 34,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      summonConfig: { summonMonsterId: "lost_item_echo", summonGroup: "lost_item_echo", maxLivingSummons: 1, count: 1 },
       moves: [
         { t: "summon", v: 1, name: "분실물 종 울리기", role: "summon" },
         { t: "defend", v: 5, name: "벤치 아래 살피기", role: "defense" },
@@ -271,6 +297,9 @@
       maxHp: 58,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "discipline", threshold: 4, counterId: "discipline", maxStack: 2, triggerMoveRole: "normalAttack", burstDamage: 16, statusCard: "regret" }, // TEMP_BALANCE
+      counters: { discipline: 0 },
       moves: [
         { t: "defend", v: 10, name: "복도 순찰", role: "defense" },
         { t: "attack", v: 10, name: "생활지도 손짓", role: "normalAttack" },
@@ -288,10 +317,11 @@
       maxHp: 38,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
-        { t: "attack", v: 6, name: "불안한 중얼거림", role: "normalAttack" },
         { t: "debuff", v: 1, name: "번지는 불안", role: "anxiety" },
-        { t: "attack", v: 8, name: "떨리는 손짓", role: "specialAttack" },
+        { t: "attack", v: 6, name: "불안한 중얼거림", role: "normalAttack" },
+        { t: "attack", v: 8, name: "떨리는 손짓", role: "specialAttack", conditionalDamage: { ifPlayerStatus: "anxiety", v: 10 } },
         { t: "defend", v: 6, name: "담요 끌어안기", role: "defense" }
       ]
     },
@@ -305,10 +335,12 @@
       maxHp: 41,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "memoryLink", statusCard: "intrusive_thought", maxCount: 3 },
       moves: [
         { t: "debuff", v: 1, name: "엉킨 산책줄", role: "anxiety" },
         { t: "attack", v: 6, name: "흔들리는 걸음", role: "normalAttack" },
-        { t: "attack", v: 8, name: "차가운 분수 물결", role: "specialAttack", statusCard: "intrusive_thought" },
+        { t: "attack", v: 8, name: "차가운 분수 물결", role: "specialAttack", statusCard: "intrusive_thought", statusCardDamage: { statusCard: "intrusive_thought", per: 2, maxCount: 3 } }, // TEMP_BALANCE
         { t: "defend", v: 5, name: "분수대 붙잡기", role: "defense" }
       ]
     },
@@ -322,11 +354,13 @@
       maxHp: 56,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "attackRule", threshold: 3, counterId: "violation", maxStack: 2, triggerMoveRole: "normalAttack", triggerMoveName: "애타는 부름", burstDamage: 15, statusCard: "regret" },
+      counters: { violation: 0 },
       moves: [
         { t: "attack", v: 9, name: "애타는 부름", role: "normalAttack" },
-        { t: "attack", v: 10, name: "놓지 못한 손", role: "normalAttack" },
-        { t: "attack", v: 15, name: "못다 한 약속", role: "specialAttack", statusCard: "regret" },
-        { t: "defend", v: 6, name: "병실 앞 기다림", role: "defense" }
+        { t: "defend", v: 6, name: "병실 앞 기다림", role: "defense" },
+        { t: "attack", v: 10, name: "놓지 못한 손", role: "normalAttack" }
       ]
     },
     {
@@ -339,11 +373,14 @@
       maxHp: 68,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "scaling", counterId: "years", maxStack: 3, afterActionAdd: 1, blockBreakReduction: 1 },
+      counters: { years: 0 },
       moves: [
-        { t: "attack", v: 9, name: "추억의 메아리", role: "normalAttack" },
-        { t: "attack", v: 8, name: "오래된 산책 이야기", role: "normalAttack" },
-        { t: "attack", v: 11, name: "가족을 부르는 바람", role: "specialAttack" },
-        { t: "defend", v: 12, name: "나무 그늘의 약속", role: "defense" }
+        { t: "attack", v: 9, name: "추억의 메아리", role: "normalAttack", counterDamage: { id: "years", per: 2 } }, // TEMP_BALANCE
+        { t: "attack", v: 8, name: "오래된 산책 이야기", role: "normalAttack", counterDamage: { id: "years", per: 2 } }, // TEMP_BALANCE
+        { t: "attack", v: 11, name: "가족을 부르는 바람", role: "specialAttack", counterDamage: { id: "years", per: 2 } }, // TEMP_BALANCE
+        { t: "defend", v: 12, name: "나무 그늘의 약속", role: "defense", counterBlock: { id: "years", per: 2 } } // TEMP_BALANCE
       ]
     },
     {
@@ -356,6 +393,7 @@
       maxHp: 36,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
         { t: "attack", v: 7, name: "서툰 호명", role: "normalAttack" },
         { t: "attack", v: 7, name: "빠른 생활기록", role: "normalAttack" },
@@ -373,11 +411,13 @@
       maxHp: 54,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "statusLink", statusCard: "intrusive_accident", maxCount: 3 },
       moves: [
-        { t: "attack", v: 10, name: "다급한 회진", role: "normalAttack" },
-        { t: "attack", v: 9, name: "살피는 손길", role: "normalAttack" },
-        { t: "attack", v: 15, name: "집중 진료", role: "specialAttack", statusCard: "intrusive_thought" },
-        { t: "defend", v: 7, name: "진료 준비", role: "defense" }
+        { t: "attack", v: 6, name: "다급한 회진", role: "normalAttack", statusCard: "intrusive_accident" },
+        { t: "defend", v: 7, name: "진료 준비", role: "defense" },
+        { t: "attack", v: 15, name: "집중 진료", role: "specialAttack", statusCardDamage: { statusCard: "intrusive_accident", per: 2, maxCount: 3 } },
+        { t: "attack", v: 9, name: "살피는 손길", role: "normalAttack" }
       ]
     },
     {
@@ -390,11 +430,12 @@
       maxHp: 37,
       x: 72,
       first: 0,
+      patternMode: "fixed",
       moves: [
         { t: "debuff", v: 1, name: "말라가는 꽃향기", role: "anxiety" },
         { t: "attack", v: 5, name: "조용한 문안", role: "normalAttack" },
-        { t: "defend", v: 6, name: "꽃다발 끌어안기", role: "defense" },
-        { t: "attack", v: 8, name: "놓고 간 편지", role: "specialAttack", statusCard: "hesitation" }
+        { t: "attack", v: 8, name: "놓고 간 편지", role: "specialAttack", conditionalStatusCard: { ifPlayerStatus: "anxiety", statusCard: "hesitation", statusCount: 1 } },
+        { t: "defend", v: 6, name: "꽃다발 끌어안기", role: "defense" }
       ]
     },
     {
@@ -407,11 +448,13 @@
       maxHp: 60,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "handPressure", drawPenalty: 1 },
       moves: [
-        { t: "debuff", v: 1, name: "눈부신 수술등", role: "anxiety" },
+        { t: "drawPenalty", v: 1, name: "눈부신 수술등", role: "drawPenalty" },
         { t: "attack", v: 10, name: "차가운 절개음", role: "normalAttack" },
-        { t: "defend", v: 9, name: "멈춘 수술대", role: "defense" },
-        { t: "attack", v: 15, name: "하얀 빛의 압박", role: "specialAttack", statusCard: "intrusive_thought" }
+        { t: "defend", v: 6, name: "멈춘 수술대", role: "defense" },
+        { t: "attack", v: 17, name: "하얀 빛의 압박", role: "specialAttack", statusCard: "intrusive_accident" }
       ]
     },
     {
@@ -424,6 +467,8 @@
       maxHp: 58,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "reflection", oncePerPlayerTurn: true, block: 6 }, // TEMP_BALANCE
       moves: [
         { t: "debuff", v: 1, name: "물결에 비친 이름", role: "anxiety" },
         { t: "attack", v: 8, name: "젖은 손짓", role: "normalAttack" },
@@ -441,11 +486,14 @@
       maxHp: 62,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "emptySeat", counterId: "emptySeat", maxStack: 2 },
+      counters: { emptySeat: 0 },
       moves: [
-        { t: "defend", v: 10, name: "돗자리 펼치기", role: "defense" },
+        { t: "defend", v: 10, name: "돗자리 펼치기", role: "defense", targetPolicy: "lowestHpAlly", fallbackTarget: "self" },
         { t: "attack", v: 9, name: "식은 도시락", role: "normalAttack" },
         { t: "debuff", v: 1, name: "돌아오지 않는 소풍", role: "anxiety" },
-        { t: "attack", v: 14, name: "남겨진 웃음", role: "specialAttack", statusCard: "regret" }
+        { t: "attack", v: 14, name: "남겨진 웃음", role: "specialAttack", statusCard: "regret", counterDamage: { id: "emptySeat", per: 3, resetAfterUse: true } } // TEMP_BALANCE
       ]
     },
     {
@@ -458,11 +506,14 @@
       maxHp: 35,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "handLock", lockDuration: "nextPlayerTurnEnd" },
       moves: [
         { t: "debuff", v: 1, name: "사물함 속 이름표", role: "anxiety" },
+        { t: "lock", v: 1, name: "철문 잠금", role: "lock" },
         { t: "attack", v: 5, name: "철문 두드림", role: "normalAttack" },
-        { t: "defend", v: 6, name: "닫힌 사물함", role: "defense" },
-        { t: "attack", v: 8, name: "분실된 공책", role: "specialAttack", statusCard: "hesitation" }
+        { t: "attack", v: 8, name: "분실된 공책", role: "specialAttack", statusCard: "hesitation" },
+        { t: "defend", v: 6, name: "닫힌 사물함", role: "defense" }
       ]
     },
     {
@@ -475,10 +526,13 @@
       maxHp: 33,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "resourceRule", counterId: "leftover", maxStack: 2 },
+      counters: { leftover: 0 },
       moves: [
         { t: "attack", v: 6, name: "식판 끌리는 소리", role: "normalAttack" },
         { t: "debuff", v: 1, name: "남겨진 자리", role: "anxiety" },
-        { t: "attack", v: 8, name: "차가운 국그릇", role: "specialAttack" },
+        { t: "attack", v: 8, name: "차가운 국그릇", role: "specialAttack", counterDamage: { id: "leftover", per: 3, resetAfterUse: true } }, // TEMP_BALANCE
         { t: "defend", v: 4, name: "배식대 뒤 숨기", role: "defense" }
       ]
     },
@@ -492,11 +546,42 @@
       maxHp: 92,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      phaseConfig: {
+        mode: "hpThresholdPatterns",
+        thresholds: [64, 36], // TEMP_BALANCE
+        phases: [
+          {
+            moves: [
+              { t: "debuff", v: 1, name: "꺼지지 않는 형광등", role: "anxiety" },
+              { t: "attack", v: 10, name: "커튼 뒤의 인기척", role: "normalAttack" },
+              { t: "summon", v: 1, name: "빈 침대의 그림자", role: "summon" }
+            ],
+            summonConfig: { summonMonsterId: "empty_bed_shadow", summonGroup: "empty_bed_shadow", maxLivingSummons: 1, count: 1 }
+          },
+          {
+            moves: [
+              { t: "attack", v: 14, name: "병실이 닫히는 소리", role: "specialAttack", statusCard: "intrusive_accident" },
+              { t: "debuff", v: 1, name: "꺼지지 않는 형광등", role: "anxiety" },
+              { t: "summon", v: 1, name: "빈 침대의 그림자", role: "summon" }
+            ],
+            summonConfig: { summonMonsterId: "empty_bed_shadow", summonGroup: "empty_bed_shadow", maxLivingSummons: 2, count: 1 }
+          },
+          {
+            moves: [
+              { t: "attack", v: 18, name: "404호의 문", role: "burst", summonDamage: { group: "empty_bed_shadow", per: 2 }, statusCard: "intrusive_accident" }, // TEMP_BALANCE
+              { t: "attack", v: 10, name: "커튼 뒤의 인기척", role: "normalAttack", summonDamage: { group: "empty_bed_shadow", per: 2 }, conditionalStatus: { role: "anxiety", v: 1 } }, // TEMP_BALANCE
+              { t: "defend", v: 8, name: "빈 병상", role: "defense" }
+            ],
+            summonConfig: null
+          }
+        ]
+      },
+      summonConfig: { summonMonsterId: "empty_bed_shadow", summonGroup: "empty_bed_shadow", maxLivingSummons: 1, count: 1 },
       moves: [
         { t: "debuff", v: 1, name: "꺼지지 않는 형광등", role: "anxiety" },
-        { t: "summon", v: 1, name: "빈 침대의 그림자", role: "summon" },
         { t: "attack", v: 10, name: "커튼 뒤의 인기척", role: "normalAttack" },
-        { t: "attack", v: 15, name: "병실이 닫히는 소리", role: "specialAttack", statusCard: "intrusive_thought" }
+        { t: "summon", v: 1, name: "빈 침대의 그림자", role: "summon" }
       ]
     },
     {
@@ -509,24 +594,35 @@
       maxHp: 84,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: { type: "lap", counterId: "speed", maxStack: 3, interruptThreshold: 18, phaseThresholds: [18, 22, 26] }, // TEMP_BALANCE
+      counters: { speed: 0 },
+      phaseConfig: {
+        mode: "hpThresholdPatterns",
+        thresholds: [56, 28], // TEMP_BALANCE
+        phases: [
+          { moves: [
+            { t: "attack", v: 11, name: "멈추지 못한 출발", role: "normalAttack" },
+            { t: "defend", v: 8, name: "숨 고르기", role: "charge" },
+            { t: "attack", v: 15, name: "트랙 끝 질주", role: "specialAttack", speedBurst: { threshold: 3, damage: 22, reset: true } } // TEMP_BALANCE
+          ] },
+          { moves: [
+            { t: "attack", v: 12, name: "비틀린 보폭", role: "normalAttack" },
+            { t: "debuff", v: 1, name: "잃어버린 트랙", role: "anxiety" },
+            { t: "attack", v: 17, name: "트랙 끝 질주", role: "specialAttack", speedBurst: { threshold: 3, damage: 24, reset: true } } // TEMP_BALANCE
+          ] },
+          { moves: [
+            { t: "attack", v: 13, name: "멈추지 못한 출발", role: "normalAttack" },
+            { t: "attack", v: 15, name: "비틀린 보폭", role: "normalAttack" },
+            { t: "attack", v: 20, name: "마지막 질주", role: "burst", statusCard: "regret", speedBurst: { threshold: 3, damage: 28, reset: true } } // TEMP_BALANCE
+          ] }
+        ]
+      },
       moves: [
         { t: "attack", v: 11, name: "멈추지 못한 출발", role: "normalAttack" },
         { t: "defend", v: 8, name: "숨 고르기", role: "charge" },
         { t: "attack", v: 15, name: "트랙 끝 질주", role: "specialAttack" }
-      ],
-      nextPhase: {
-        name: "트랙을 달리던 사람",
-        maxHp: 88,
-        x: 72,
-        first: 0,
-        moves: [
-          { t: "attack", v: 12, name: "멈추지 못한 출발", role: "normalAttack" },
-          { t: "attack", v: 13, name: "비틀린 보폭", role: "normalAttack" },
-          { t: "debuff", v: 1, name: "잃어버린 트랙", role: "anxiety" },
-          { t: "defend", v: 9, name: "다시 서려는 마음", role: "charge" },
-          { t: "attack", v: 20, name: "마지막 질주", role: "burst", requiresPrevious: "defend", statusCard: "regret" }
-        ]
-      }
+      ]
     },
     {
       id: "blank_exam_wraith",
@@ -538,13 +634,83 @@
       maxHp: 90,
       x: 72,
       first: 0,
+      patternMode: "fixed",
+      gimmick: {
+        type: "exam",
+        thresholds: [60, 30], // TEMP_BALANCE
+        sequences: [
+          [{ mode: "require", types: ["attack"], failStatusCards: ["hesitation"] }, { mode: "require", types: ["nonAttack"], failStatusCards: ["hesitation"] }],
+          [{ mode: "forbid", types: ["attack"], failStatusCards: ["regret"] }, { mode: "forbid", types: ["nonAttack"], failStatusCards: ["regret"] }],
+          [{ mode: "require", types: ["attack"], failStatusCards: ["hesitation", "regret"] }, { mode: "require", types: ["nonAttack"], failStatusCards: ["hesitation", "regret"] }, { mode: "requireAll", types: ["attack", "nonAttack"], failStatusCards: ["hesitation", "regret"] }]
+        ],
+        finisherStatusCards: ["hesitation", "regret"],
+        finisherPerStatus: 2,
+        finisherMaxCount: 5
+      },
+      counters: { examIndex: 0 },
+      phaseConfig: {
+        mode: "hpThresholdPatterns",
+        thresholds: [60, 30], // TEMP_BALANCE
+        phases: [
+          { moves: [
+            { t: "exam", name: "시험 시작", role: "exam" },
+            { t: "attack", v: 9, name: "빈칸의 시선", role: "normalAttack", statusCard: "hesitation" },
+            { t: "defend", v: 12, name: "답안지 접기", role: "defense" }
+          ] },
+          { moves: [
+            { t: "exam", name: "금지 문항", role: "exam" },
+            { t: "attack", v: 13, name: "붉은 채점", role: "specialAttack" },
+            { t: "defend", v: 12, name: "답안지 접기", role: "defense" }
+          ] },
+          { moves: [
+            { t: "exam", name: "백지 문항", role: "exam" },
+            { t: "exam", name: "백지 문항", role: "exam" },
+            { t: "attack", v: 17, name: "백지 제출", role: "burst", statusCard: "regret", statusCardDamage: { statusCards: ["hesitation", "regret"], per: 2, maxCount: 5 } } // TEMP_BALANCE
+          ] }
+        ]
+      },
       moves: [
-        { t: "debuff", v: 1, name: "시험 시작", role: "anxiety" },
+        { t: "exam", name: "시험 시작", role: "exam" },
         { t: "attack", v: 9, name: "빈칸의 시선", role: "normalAttack", statusCard: "hesitation" },
         { t: "defend", v: 12, name: "답안지 접기", role: "defense" },
         { t: "attack", v: 13, name: "붉은 채점", role: "specialAttack" },
         { t: "attack", v: 17, name: "백지 제출", role: "burst", statusCard: "regret" }
       ]
+    },
+    {
+      id: "empty_bed_shadow",
+      name: "빈 침대의 그림자",
+      family: "그림자",
+      emoji: "🛏️",
+      grade: "summon",
+      roles: ["summon", "anxietyDebuffer"],
+      maxHp: 12,
+      x: 72,
+      first: 0,
+      patternMode: "fixed",
+      moves: [
+        { t: "attack", v: 4, name: "침대 밑 손짓", role: "normalAttack" },
+        { t: "debuff", v: 1, name: "빈 병상", role: "anxiety" }
+      ]
+      // TODO: 전용 이미지 에셋 확정 전까지 emoji fallback 사용
+    },
+    {
+      id: "lost_item_echo",
+      name: "분실물의 잔상",
+      family: "잔상",
+      emoji: "🎒",
+      grade: "summon",
+      roles: ["summon", "hesitationInjector"],
+      maxHp: 10,
+      x: 72,
+      first: 0,
+      patternMode: "fixed",
+      moves: [
+        { t: "attack", v: 3, name: "작은 흔들림", role: "normalAttack" },
+        { t: "attack", v: 3, name: "망설이는 울림", role: "normalAttack", statusCard: "hesitation" }
+      ],
+      runtimeFlags: { expireAfterActions: 2 }
+      // TODO: 전용 이미지 에셋 확정 전까지 emoji fallback 사용
     }
   ];
 
@@ -605,7 +771,12 @@
     school: "학교"
   };
 
-  const cloneMoveList = moves => Array.isArray(moves) ? moves.map(move => ({ ...move })) : [];
+  const clonePlain = value => {
+    if(Array.isArray(value)) return value.map(clonePlain);
+    if(value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, clonePlain(item)]));
+    return value;
+  };
+  const cloneMoveList = moves => Array.isArray(moves) ? moves.map(move => clonePlain(move)) : [];
   const clonePhase = phase => phase ? ({
     ...phase,
     moves: cloneMoveList(phase.moves)
@@ -616,6 +787,10 @@
     themeLabel: MONSTER_THEME_LABELS[monster.theme || MONSTER_THEME_BY_ID[monster.id] || "hospital"],
     roles: Array.isArray(monster.roles) ? [...monster.roles] : undefined,
     moves: cloneMoveList(monster.moves),
+    gimmick: clonePlain(monster.gimmick),
+    counters: clonePlain(monster.counters),
+    phaseConfig: clonePlain(monster.phaseConfig),
+    summonConfig: clonePlain(monster.summonConfig),
     phases: Array.isArray(monster.phases) ? monster.phases.map(clonePhase) : undefined,
     nextPhase: clonePhase(monster.nextPhase)
   });
@@ -728,6 +903,13 @@
     pickNextIntent(monster){
       if(!monster || monster.hp <= 0 || !Array.isArray(monster.moves) || monster.moves.length === 0){
         return null;
+      }
+
+      if(monster.patternMode === "fixed"){
+        const index = typeof monster.patternIndex === "number" ? monster.patternIndex : 0;
+        const intent = monster.moves[index % monster.moves.length];
+        monster.patternIndex = (index + 1) % monster.moves.length;
+        return intent;
       }
 
       const isBoss = monster.grade === "boss";

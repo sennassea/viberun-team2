@@ -46,7 +46,7 @@
 }
 .map-title {
   font-family: var(--font-title);
-  font-size: 2.6cqh;
+  font-size:2.99cqh;
   font-weight: 800;
   color: #3b2a0a;
 }
@@ -57,7 +57,7 @@
   border: 0.2cqh solid #a07830;
   background: rgba(255,255,255,0.7);
   color: #3b2a0a;
-  font-size: 2cqh;
+  font-size:2.3cqh;
   font-weight: 900;
   cursor: pointer;
   display: grid;
@@ -186,7 +186,7 @@
   fill: #7a5c20;
   font-weight: 700;
   font-family: var(--font-title);
-  font-size: 10px;
+  font-size:12px;
 }
 
 /* ── 범례 ─────────────────────────────────────────────────────────────── */
@@ -206,7 +206,7 @@
 }
 .legend-title {
   font-family: var(--font-title);
-  font-size: 1.8cqh;
+  font-size:2.07cqh;
   font-weight: 800;
   color: #3b2a0a;
   border-bottom: 0.15cqh solid #a07830;
@@ -220,7 +220,7 @@
   gap: 0.7cqw;
   width: 100%;
   min-width: 0;
-  font-size: 1.55cqh;
+  font-size:1.78cqh;
   font-weight: 700;
   color: #3b2a0a;
   overflow: hidden;
@@ -233,7 +233,7 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 1.5cqh;
+  font-size:1.73cqh;
   flex-shrink: 0;
 }
 .leg-ico.enemy    { background: #8b3030; }
@@ -250,7 +250,7 @@
   padding: 0.8cqh 2cqw;
   background: rgba(80, 50, 10, 0.12);
   border-top: 0.2cqh solid #a07830;
-  font-size: 1.8cqh;
+  font-size:2.07cqh;
   font-weight: 700;
   color: #3b2a0a;
   min-height: 3.8cqh;
@@ -274,7 +274,7 @@
 }
 .map-node-popup .popup-title {
   font-family: var(--font-title);
-  font-size: 1.9cqh;
+  font-size:2.18cqh;
   font-weight: 800;
   color: #e7b54a;
   border-bottom: 0.15cqh solid rgba(231,181,74,0.35);
@@ -282,7 +282,7 @@
   margin-bottom: 0.6cqh;
 }
 .map-node-popup .popup-monster {
-  font-size: 1.6cqh;
+  font-size:1.84cqh;
   font-weight: 700;
   padding: 0.3cqh 0;
   display: flex;
@@ -290,7 +290,7 @@
   gap: 0.5cqw;
 }
 .map-node-popup .popup-hp {
-  font-size: 1.35cqh;
+  font-size:1.55cqh;
   color: #e08080;
   font-weight: 600;
 }

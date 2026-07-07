@@ -8,10 +8,30 @@ function startNewGameFromMenu(){
   /* 로그인 이력이 없으면 모달을 먼저 띄우고, 성공 후 이 함수를 다시 호출해 기존 새 게임 흐름을 보존합니다. */
   if(window.VIBERUN_AUTH && !window.VIBERUN_AUTH.requireLogin(startNewGameFromMenu)) return;
 
+  /* 신령의 길 UI(임시 구현, script.js 미수정): 덱 3종 선택 완료 후에만 기존 새 게임 흐름을 실행합니다. */
+  if(window.VIBERUN_SPIRIT_PATH_UI && typeof window.VIBERUN_SPIRIT_PATH_UI.open === "function"){
+    window.VIBERUN_SPIRIT_PATH_UI.open({
+      onComplete(payload){
+        startNewGameAfterSpiritPath(payload || {});
+      }
+    });
+    return;
+  }
+
+  startNewGameAfterSpiritPath();
+}
+
+function startNewGameAfterSpiritPath(options){
+  options = options || {};
+  const startEndlessLevel = Number(options.startEndlessLevel) || 0;
+
   markHasPlayedBefore();
   /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
   if(typeof window.ACT1_START_NEW_GAME === "function"){
-    window.ACT1_START_NEW_GAME();
+    /* 끝없는 여정 직접 시작 분기는 다음 작업에서 구현 예정. 현재는 값만 전달한다. */
+    window.ACT1_START_NEW_GAME({
+      startEndlessLevel
+    });
     return;
   }
 
@@ -67,19 +87,8 @@ function continueGameFromMenu(){
     return;
   }
 
-  S = saved.state;
-  normalizeRunResources();
-  STARTER_DECK = [...saved.starterDeck];
-  if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
-  S.busy = false;
-  if(window.MAP_STATE && saved.mapState){
-    window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
-    window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
-  }
-  if(typeof updateHudFloor === "function") updateHudFloor();
+  if(typeof window.restoreSavedRunState === "function") window.restoreSavedRunState(saved);
   $("#over").classList.remove("show");
-  closeRewardOverlay();
-  renderAll();
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.add("hidden");
   updateContinueButtonInfo();
@@ -169,6 +178,7 @@ function updateStartScreenMode(options={}){
   const tutorial = document.querySelector(".start-tutorial-button");
   const newGame = document.querySelector(".start-new-game");
   const continueGame = document.querySelector(".start-continue-game");
+  const ranking = document.querySelector(".start-ranking-button");
   const codex = document.querySelector(".start-codex-button");
   const record = document.querySelector(".start-record-button");
   const mailbox = document.querySelector(".start-mailbox-button");
@@ -179,12 +189,18 @@ function updateStartScreenMode(options={}){
   setStartMenuVisible(tutorial, isNewbie);
   setStartMenuVisible(newGame, !isNewbie);
   setStartMenuVisible(continueGame, !isNewbie);
+  setStartMenuVisible(ranking, !isNewbie);
   setStartMenuVisible(codex, !isNewbie);
   setStartMenuVisible(record, !isNewbie);
   setStartMenuVisible(codexRecordRow, !isNewbie);
   updateStartMailboxVisibility(mailbox);
   refreshStartWalletUI();
+  refreshStartMonthlyPassUI();
+  refreshStartMenuProfileUI();
   setStartMenuVisible(settings, true);
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmTitle");
+  }
 }
 
 function updateStartMailboxVisibility(button){
@@ -198,6 +214,18 @@ function updateStartMailboxVisibility(button){
 function refreshStartWalletUI(){
   if(window.VIBERUN_WALLET_UI && typeof window.VIBERUN_WALLET_UI.refresh === "function"){
     window.VIBERUN_WALLET_UI.refresh();
+  }
+}
+
+function refreshStartMonthlyPassUI(){
+  if(window.VIBERUN_MONTHLY_PASS_UI && typeof window.VIBERUN_MONTHLY_PASS_UI.refresh === "function"){
+    window.VIBERUN_MONTHLY_PASS_UI.refresh();
+  }
+}
+
+function refreshStartMenuProfileUI(){
+  if(window.VIBERUN_MENU_PROFILE_UI && typeof window.VIBERUN_MENU_PROFILE_UI.refresh === "function"){
+    window.VIBERUN_MENU_PROFILE_UI.refresh();
   }
 }
 
@@ -248,16 +276,31 @@ function updateContinueButtonInfo(options={}){
   }
 
   button.classList.add("has-save");
-  const floor = formatSavedFloor(saved);
+  const label = formatSavedProgressLabel(saved);
   const turn = saved.state && saved.state.turn ? saved.state.turn : 1;
-  status.textContent = floor + " " + turn + "턴";
+  status.textContent = label + " / " + turn + "턴";
 }
 
-function formatSavedFloor(saved){
-  const label = saved.mapState && saved.mapState.floorLabel ? saved.mapState.floorLabel : "";
-  const match = label.match(/(\d+)\s*F/i);
-  if(match) return match[1] + "층";
-  return "신령의 은혜";
+function formatSavedProgressLabel(saved){
+  const mapState = saved.mapState || {};
+  const journey = saved.state && saved.state.journey;
+  const actName = mapState.actName || (journey && journey.actName) || "최초의 여정";
+  const currentStage = Number.isFinite(mapState.currentStage) ? mapState.currentStage : 0;
+
+  // displayAreaLabel(저장 당시 실제 표시 구역)을 우선 사용하고, 구버전 세이브처럼
+  // 값이 없는 경우에만 저장된 floorLabel 텍스트를 파싱해 구역 수를 복원한다.
+  let areaLabel = mapState.displayAreaLabel;
+  if(!areaLabel){
+    if(currentStage < 0){
+      areaLabel = "신령의 은혜";
+    } else {
+      const legacyLabel = mapState.floorLabel || "";
+      const match = legacyLabel.match(/(\d+)\s*(?:F|구역)/i);
+      areaLabel = match ? (match[1] + "구역") : "신령의 은혜";
+    }
+  }
+
+  return actName + " / " + areaLabel;
 }
 
 $("#returnStart").addEventListener("click", returnToStartScreen);
@@ -283,6 +326,8 @@ window.addEventListener("viberun:auth-changed", () => {
   updateContinueButtonInfo();
   updateStartMailboxVisibility();
   refreshStartWalletUI();
+  refreshStartMonthlyPassUI();
+  refreshStartMenuProfileUI();
   if(window.VIBERUN_MAILBOX_UI && typeof window.VIBERUN_MAILBOX_UI.refreshBadge === "function"){
     window.VIBERUN_MAILBOX_UI.refreshBadge();
   }

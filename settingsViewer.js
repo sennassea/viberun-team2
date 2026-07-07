@@ -130,7 +130,7 @@
             '<div class="settings-account-message" role="alert" aria-live="polite"></div>' +
           '</section>' +
           '<div class="settings-viewer-actions">' +
-            '<button type="button" class="settings-viewer-danger">전투 포기</button>' +
+            '<button type="button" class="settings-viewer-danger">여정 포기</button>' +
             '<button type="button" class="settings-viewer-primary">저장하기</button>' +
             '<button type="button" class="settings-viewer-tutorial">튜토리얼 다시 보기</button>' +
             '<button type="button" class="settings-viewer-reset">게임 기록 초기화</button>' +
@@ -138,8 +138,8 @@
         '</div>' +
         '<div class="settings-viewer-confirm" aria-hidden="true">' +
           '<div class="settings-viewer-confirm-panel" role="dialog" aria-modal="true" aria-labelledby="settingsGiveUpTitle">' +
-            '<h3 id="settingsGiveUpTitle">전투를 포기하시겠습니까?</h3>' +
-            '<p>전투 포기 시 패배로 처리되며,<br>현재 런 진행만 종료됩니다.</p>' +
+            '<h3 id="settingsGiveUpTitle">여정을 포기하시겠습니까?</h3>' +
+            '<p>여정 포기 시 패배로 처리되며,<br>현재 런 진행만 종료됩니다.</p>' +
             '<div class="settings-viewer-confirm-actions">' +
               '<button type="button" class="settings-viewer-confirm-yes">예</button>' +
               '<button type="button" class="settings-viewer-confirm-no">아니오</button>' +
@@ -330,15 +330,9 @@
       const saved = JSON.parse(raw);
       if(!saved || !saved.state || !Array.isArray(saved.starterDeck)) return;
       if(!isSavedProgressForCurrentAccount(saved)) return;
-      if(typeof S !== "undefined") S = saved.state;
-      if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
-      if(window.MAP_STATE && saved.mapState){
-        window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
-        window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
-      }
-      if(S) S.busy = false;
-      if(typeof updateHudFloor === "function") updateHudFloor();
-      if(typeof renderAll === "function") renderAll();
+      /* S는 배틀 시작 전까지 초기값이 없어(let S;) typeof S가 항상 "undefined"이므로,
+         기존 typeof 가드로는 새로고침 직후 복원이 절대 실행되지 않았다. */
+      if(typeof window.restoreSavedRunState === "function") window.restoreSavedRunState(saved);
     } catch(error) {
       localStorage.removeItem(SAVE_KEY);
     }
@@ -358,11 +352,32 @@
 
     const state = JSON.parse(JSON.stringify(S));
     state.busy = pauseState ? pauseState.busy : !!S.busy;
+    if(typeof RUN_STATE !== "undefined" && RUN_STATE && typeof ensureJourneyState === "function"){
+      state.journey = cloneJourneyState(ensureJourneyState(RUN_STATE));
+    } else if(typeof ensureJourneyState === "function") {
+      ensureJourneyState(state);
+    }
     const starterDeck = typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
+    const journey = state.journey || null;
+    const displayAreaNumber = typeof getCurrentDisplayAreaNumber === "function"
+      ? getCurrentDisplayAreaNumber()
+      : null;
+    const displayAreaLabel = typeof formatCurrentDisplayArea === "function"
+      ? formatCurrentDisplayArea()
+      : ((document.querySelector("#hudFloor") || {}).textContent || "");
+    const actName = typeof getCurrentActName === "function"
+      ? getCurrentActName()
+      : ((journey && journey.actName) || "최초의 여정");
     const mapState = window.MAP_STATE ? {
       currentStage: window.MAP_STATE.currentStage || 0,
       proceedMode: !!window.MAP_STATE.proceedMode,
+      startMapMode: !!window.MAP_STATE.startMapMode,
       floorLabel: (document.querySelector("#hudFloor") || {}).textContent || "",
+      actName,
+      displayAreaNumber,
+      displayAreaLabel,
+      journeyMode: journey ? journey.mode : "first",
+      endlessLevel: journey ? journey.endlessLevel : 0,
     } : null;
     const account = window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.getAccountInfo === "function"
       ? window.VIBERUN_AUTH.getAccountInfo()

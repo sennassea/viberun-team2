@@ -26,7 +26,11 @@ const DMAP_SPREAD  = 170;   // 같은 층 노드 간 간격 (가상 좌표)
 let mapScrollX = 0;
 let mapZoom    = 1.0;   // >1 = 확대, <1 = 축소
 
-const DMAP_ZOOM_MIN = 0.558; // 전체 노드 가로가 딱 맞는 최대 축소 (820/1470)
+/* 전체 노드 가로가 딱 맞는 축소값(820/1470=0.558)이었으나, 그 값 그대로는 우측 끝
+   보스 노드(DMAP_END_X=1340, 전체 폭의 약 91.2%)가 clip-path 안전 영역(약 89%)보다
+   바깥에 위치해 프레임 테두리에 걸쳐 보였다. 최대 축소를 조금 더 내려 모든 노드가
+   여백을 두고 안전 영역 안에 들어오게 한다 */
+const DMAP_ZOOM_MIN = 0.5;
 const DMAP_ZOOM_MAX = 1.5;   // 이미지1 수준의 적당한 확대까지만 허용
 
 function dmapViewW() { return DMAP_VIEW_W / mapZoom; }
@@ -235,6 +239,7 @@ const DMAP_EMOJI = {
   start:    "🚩",
   unknown:  "❓",
   merchant: "🛍️",
+  treasure: "🎁",
 };
 
 const DMAP_ICON = {
@@ -247,6 +252,7 @@ const DMAP_ICON = {
   boss: "assets/map_icons/boss.png",
   lobby: "assets/map_icons/start.png",
   start: "assets/map_icons/start.png",
+  treasure: "assets/map_icons/treasure.png",
 };
 
 function mapIconPath(type) {
@@ -374,10 +380,21 @@ function renderCanvas(currentNodeId) {
   svg.innerHTML = svgPaths + svgNodes + svgPin;
   svg.setAttribute("viewBox", getViewBox());
 
-  /* ── 현재 위치 배지 ── */
+  /* ── 닫기 버튼: 다음 노드를 반드시 선택해야 하는 상태에서는 숨김 ── */
+  const closeBtn = document.getElementById("mapClose");
+  if (closeBtn) closeBtn.style.display = window.MAP_STATE.proceedMode ? "none" : "";
+
+  /* ── ACT 배지 (좌상단) ── */
+  const actBadge = document.getElementById("mapCurrentAct");
+  if (actBadge) {
+    actBadge.textContent = typeof getCurrentActName === "function" ? getCurrentActName() : "최초의 여정";
+  }
+
+  /* ── 현재 위치 배지 (닫기 버튼 근처) ── */
   const floorBadge = document.getElementById("mapCurrentFloor");
   if (floorBadge) {
-    floorBadge.textContent = tutorialCurrentLabel || (myFloor > 0 ? `${myFloor}층` : "신령의 은혜");
+    floorBadge.textContent = tutorialCurrentLabel ||
+      (typeof formatDisplayAreaByFloorIndex === "function" ? formatDisplayAreaByFloorIndex(myFloor) : "신령의 은혜");
   }
 
   /* ── 푸터 텍스트 ── */
@@ -386,7 +403,7 @@ function renderCanvas(currentNodeId) {
     footer.textContent = tutorialCurrentLabel
       ? "📍 현재 위치: " + tutorialCurrentLabel
       : window.MAP_STATE.proceedMode
-      ? "강조된 다음 노드를 클릭/터치하여 진행하세요"
+      ? "강조된 다음 구역을 클릭/터치하여 진행하세요"
       : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
   }
 
@@ -398,6 +415,8 @@ function renderCanvas(currentNodeId) {
       startStage(+el.dataset.nextstage);
     });
   });
+
+  if (typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
 }
 
 /* ── 범례 데이터 ──────────────────────────────────────────────────────────── */
@@ -438,7 +457,26 @@ const DMAP_LEGEND_DATA = [
     label: "보스",
     tip: "ACT 1의 마지막 전투입니다. 최종 목표를 향해 나아가세요.",
   },
+  {
+    type: "treasure",
+    icon: "🎁",
+    label: "보물",
+    tip: "10층에서만 발견되는 특별한 보상입니다. 복채와 법구를 얻을 수 있습니다.",
+  },
 ];
+
+/* ── 튜토리얼 맵에서는 보물 범례를 노출하지 않는다 (튜토리얼 진행/맵 구조는 그대로 유지) ── */
+function isTutorialMapLegendMode() {
+  const firstStage = Array.isArray(MAP_STAGES) ? MAP_STAGES[0] : null;
+
+  return !!(
+    firstStage &&
+    (
+      firstStage.packageId === "tutorial_battle" ||
+      firstStage.type === "tutorial"
+    )
+  );
+}
 
 /* ── buildOverlay 오버라이드 ────────────────────────────────────────────── */
 function buildOverlay() {
@@ -446,7 +484,11 @@ function buildOverlay() {
   div.id = "mapOverlay";
   div.style.opacity = "0";
 
-  const legendHtml = DMAP_LEGEND_DATA.map(item =>
+  const legendItems = isTutorialMapLegendMode()
+    ? DMAP_LEGEND_DATA.filter(item => item.type !== "treasure")
+    : DMAP_LEGEND_DATA;
+
+  const legendHtml = legendItems.map(item =>
     `<div class="legend-item dmap-legend-item" data-type="${item.type}" data-tip="${item.tip.replace(/"/g, '&quot;')}">
       <span class="leg-ico dmap-leg-ico ${item.type}">${mapLegendIconHtml(item)}</span>
       <span class="dmap-leg-label">${item.label}</span>
@@ -456,16 +498,19 @@ function buildOverlay() {
   div.innerHTML = `
     <div class="map-panel dmap-panel">
       <div class="map-header dmap-header">
-        <div class="dmap-loc-badge">
-          <span class="dmap-loc-icon">📍</span>
-          <span>현재 위치</span>
-          <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
+        <div class="dmap-loc-badge" id="mapCurrentActBadge">
+          <span class="dmap-loc-icon">🚩</span>
+          <span id="mapCurrentAct">최초의 여정</span>
         </div>
         <span class="map-title dmap-title" aria-label="여정">
           <span class="dmap-title-emoji" aria-hidden="true">🗺️</span>
           <span class="dmap-title-char dmap-title-left" aria-hidden="true">여</span>
           <span class="dmap-title-char dmap-title-right" aria-hidden="true">정</span>
         </span>
+        <div class="dmap-cur-badge" id="mapCurLocBadge">
+          <span class="dmap-loc-icon">📍</span>
+          <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
+        </div>
         <button class="map-close dmap-close" id="mapClose" aria-label="닫기">✕</button>
       </div>
       <div class="map-body dmap-body">
@@ -479,13 +524,14 @@ function buildOverlay() {
         <div class="map-legend dmap-legend" id="dMapLegend">
           <div class="legend-title dmap-legend-title">✦ 범례 ✦</div>
           ${legendHtml}
-          <div class="dmap-tip-box" id="dMapTipBox"></div>
         </div>
+        <div class="dmap-tip-box" id="dMapTipBox"></div>
       </div>
       <div class="dmap-bottom">
         <div class="dmap-action-bar">
           <button class="dmap-action-btn ui-asset-button ui-codex-button" id="dMapDeckBtn">📖 보유 주문</button>
           <button class="dmap-action-btn ui-asset-button ui-bag-button" id="dMapItemBtn">🎒 가방</button>
+          <button class="dmap-action-btn ui-depth-button" id="dMapDepthBtn">심도 <span class="depth-button-count" id="dMapDepthCount">0</span></button>
           <button class="dmap-action-btn ui-asset-button ui-settings-button" id="dMapSettingsBtn">⚙️ 설정</button>
         </div>
         <div class="map-footer dmap-footer" id="mapFooter"></div>
@@ -493,8 +539,8 @@ function buildOverlay() {
     </div>`;
 
   /* ── 이벤트 바인딩 ── */
-  div.addEventListener("click", e => { if (e.target === div) closeMap(); });
-  div.querySelector("#mapClose").addEventListener("click", closeMap);
+  div.addEventListener("click", e => { if (e.target === div && !window.MAP_STATE.proceedMode) closeMap(); });
+  div.querySelector("#mapClose").addEventListener("click", () => { if (!window.MAP_STATE.proceedMode) closeMap(); });
 
   /* 덱 확인: 기존 덱뷰어 버튼 트리거 */
   div.querySelector("#dMapDeckBtn").addEventListener("click", () => {
@@ -518,6 +564,12 @@ function buildOverlay() {
     const footer = document.getElementById("mapFooter");
     if (footer) footer.textContent = "가방 기능을 불러올 수 없습니다. bagUI.js 로드 상태를 확인하세요.";
   });
+
+  /* 심도 확인: 끝없는 여정 심도 드롭다운 토글 (endlessDepthUI.js) */
+  const depthBtn = div.querySelector("#dMapDepthBtn");
+  if(depthBtn && typeof window.bindDepthButton === "function"){
+    window.bindDepthButton(depthBtn);
+  }
 
   /* 설정: 기존 설정 버튼 트리거 */
   div.querySelector("#dMapSettingsBtn").addEventListener("click", () => {
@@ -599,6 +651,9 @@ function closeMapPopupViews(except) {
   }
   if (except !== "bag" && typeof window.BAG_UI_CLOSE === "function") {
     window.BAG_UI_CLOSE();
+  }
+  if (except !== "depth" && typeof window.closeDepthDropdown === "function") {
+    window.closeDepthDropdown();
   }
   if (except !== "settings" && typeof window.SETTINGS_VIEWER_CLOSE === "function") {
     window.SETTINGS_VIEWER_CLOSE();

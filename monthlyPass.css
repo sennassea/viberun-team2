@@ -1,0 +1,200 @@
+/* =========================================================================
+   Monthly Pass Claim UI
+   - 메인메뉴 좌하단 월영의 약속 일일 보상 수령 카드 전용 스타일입니다.
+   - 기존 메인메뉴 버튼/배경 스타일은 건드리지 않습니다.
+   ========================================================================= */
+.monthly-pass-claim-card{
+  position:absolute;
+  left:3.2cqh;
+  bottom:4.2cqh;
+  z-index:6;
+
+  width:22.5cqh;
+  min-height:30cqh;
+  padding:2.1cqh 1.7cqh 1.7cqh;
+
+  border:.28cqh solid rgba(204, 151, 70, .85);
+  border-radius:1.4cqh;
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,.92), rgba(255,244,213,.94) 42%, rgba(244,217,165,.96) 100%);
+
+  box-shadow:
+    0 .7cqh 1.4cqh rgba(61, 35, 14, .28),
+    inset 0 0 0 .18cqh rgba(255,255,255,.55);
+
+  color:#2e4771;
+  text-align:center;
+  pointer-events:auto;
+}
+
+.monthly-pass-claim-card[hidden]{
+  display:none;
+}
+
+.monthly-pass-claim-emblem{
+  position:absolute;
+  left:50%;
+  top:-2.4cqh;
+  transform:translateX(-50%);
+
+  width:5.2cqh;
+  height:5.2cqh;
+  border-radius:999px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border:.25cqh solid rgba(211, 158, 76, .9);
+  background:linear-gradient(180deg, #fff6d8, #e9bd62);
+  box-shadow:0 .35cqh .75cqh rgba(54,34,13,.25);
+
+  font-size:3.22cqh;
+  font-weight:900;
+  color:#245b87;
+}
+
+.monthly-pass-claim-dday{
+  position:absolute;
+  right:1.1cqh;
+  top:.9cqh;
+
+  padding:.25cqh .75cqh;
+  border-radius:.55cqh;
+
+  background:#2e4771;
+  color:#fff8dc;
+
+  font-size:1.67cqh;
+  font-weight:900;
+  line-height:1;
+}
+
+.monthly-pass-claim-title{
+  margin-top:2.2cqh;
+
+  font-family:var(--font-title, inherit);
+  font-size:3.05cqh;
+  font-weight:900;
+  line-height:1.1;
+  letter-spacing:-.04em;
+
+  color:#2e4771;
+  text-shadow:0 .12cqh 0 rgba(255,255,255,.85);
+}
+
+.monthly-pass-claim-divider{
+  width:80%;
+  height:.12cqh;
+  margin:1.25cqh auto 1.25cqh;
+
+  background:linear-gradient(90deg, transparent, rgba(178,127,54,.75), transparent);
+}
+
+.monthly-pass-claim-subtitle{
+  font-size:1.78cqh;
+  font-weight:900;
+  color:#77401f;
+}
+
+.monthly-pass-claim-reward{
+  margin:1.3cqh auto 1.7cqh;
+  min-height:6.6cqh;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:.8cqh;
+
+  border:.18cqh solid rgba(164, 116, 48, .7);
+  border-radius:.85cqh;
+  background:rgba(255,255,255,.42);
+}
+
+.monthly-pass-claim-icon{
+  width:4.2cqh;
+  height:4.2cqh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:.65cqh;
+  background:linear-gradient(180deg, #38629d, #213b70);
+  box-shadow:inset 0 .15cqh .35cqh rgba(255,255,255,.35);
+
+  font-size:2.93cqh;
+}
+
+.monthly-pass-claim-text{
+  font-size:2.01cqh;
+  font-weight:900;
+  color:#5b341d;
+}
+
+.monthly-pass-claim-button{
+  width:100%;
+  height:4.7cqh;
+
+  border:0;
+  border-radius:.8cqh;
+
+  background:linear-gradient(180deg, #426ca6 0%, #274678 100%);
+  box-shadow:
+    inset 0 .18cqh .35cqh rgba(255,255,255,.35),
+    0 .32cqh .6cqh rgba(40, 39, 80, .24);
+
+  color:#fff8dc;
+  font-family:var(--font-title, inherit);
+  font-size:2.36cqh;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+.monthly-pass-claim-button:hover:not(:disabled){
+  transform:translateY(-.12cqh);
+  filter:brightness(1.05);
+}
+
+.monthly-pass-claim-button:active:not(:disabled){
+  transform:scale(.98);
+}
+
+.monthly-pass-claim-button:disabled{
+  cursor:default;
+  opacity:.72;
+  filter:grayscale(.25);
+}
+
+.monthly-pass-claim-card.is-claimed{
+  opacity:.88;
+}
+
+.monthly-pass-claim-card.is-not-purchased{
+  opacity:.96;
+}
+
+.monthly-pass-claim-card.is-not-purchased .monthly-pass-claim-dday{
+  background:#6b4a24;
+}
+
+.monthly-pass-claim-card.is-not-purchased .monthly-pass-claim-button{
+  background:linear-gradient(180deg, #b98235 0%, #7b4b1f 100%);
+}
+
+.monthly-pass-claim-card.is-not-purchased .monthly-pass-claim-button:hover:not(:disabled){
+  filter:brightness(1.08);
+}
+
+.monthly-pass-claim-card.is-expired{
+  opacity:.92;
+}
+
+.monthly-pass-claim-card.is-expired .monthly-pass-claim-dday{
+  background:#55301d;
+}
+
+.monthly-pass-claim-card.is-expired .monthly-pass-claim-button{
+  background:linear-gradient(180deg, #9f6a31 0%, #613618 100%);
+}

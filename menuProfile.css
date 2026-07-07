@@ -1,0 +1,243 @@
+/* =========================================================================
+   Menu Profile UI (메인메뉴 좌상단 프로필)
+   - 전투 좌상단 상태 UI(player-info-card)의 동양풍 톤을 참고하되,
+     체력바/재화 표시 없이 프로필 아이콘 + 이름만 다룹니다.
+   ========================================================================= */
+.menu-profile{
+  position:absolute;
+  left:4.2cqw;
+  top:4.6cqh;
+  z-index:5;
+  display:flex;
+  align-items:center;
+  gap:1cqw;
+}
+.menu-profile[hidden]{display:none;}
+
+.menu-profile-avatar-btn{
+  position:relative;
+  width:9.4cqh;
+  height:9.4cqh;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:linear-gradient(160deg,#fff,#dcecff);
+  box-shadow:0 0 1cqh rgba(231,181,74,.6), 0 .4cqh 1.2cqh rgba(60,90,140,.2);
+  cursor:pointer;
+  flex:none;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.menu-profile-avatar-btn::before{
+  content:"";
+  position:absolute;
+  inset:-.3cqh;
+  border-radius:50%;
+  border:.25cqh solid var(--c-gold, #e7b54a);
+  pointer-events:none;
+}
+.menu-profile-avatar-btn:hover{
+  transform:translateY(-.15cqh);
+  box-shadow:0 0 1.3cqh rgba(231,181,74,.75), 0 .5cqh 1.4cqh rgba(60,90,140,.28);
+}
+.menu-profile-avatar-btn:active{transform:scale(.96);}
+
+.menu-profile-avatar{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  display:block;
+}
+
+.menu-profile-info{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  background:var(--c-panel, rgba(255,255,255,.82));
+  border:.2cqh solid var(--c-panel-line, rgba(120,160,210,.45));
+  border-radius:var(--r, 1.4cqh);
+  padding:.6cqh 1.1cqw;
+  backdrop-filter:blur(4px);
+  box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);
+}
+
+.menu-profile-name{
+  font-family:var(--font-title);
+  font-size:2.3cqh;
+  font-weight:900;
+  color:var(--c-ink, #2b3b54);
+  white-space:nowrap;
+  cursor:pointer;
+}
+.menu-profile-name:hover{
+  text-decoration:underline;
+}
+
+/* 전투화면 좌상단 프로필 닉네임(#hudName)도 동일하게 클릭 가능 표시를 합니다. */
+.hud-name-clickable{
+  cursor:pointer;
+}
+.hud-name-clickable:hover{
+  text-decoration:underline;
+}
+
+.menu-profile-popup{
+  position:absolute;
+  left:0;
+  top:calc(100% + .6cqh);
+  z-index:6;
+  display:flex;
+  flex-direction:column;
+  gap:.5cqh;
+  min-width:16cqw;
+  max-width:min(60cqw, calc(100vw - 3cqw));
+  max-height:40cqh;
+  overflow-y:auto;
+  background:var(--c-panel, rgba(255,255,255,.92));
+  border:.2cqh solid var(--c-panel-line, rgba(120,160,210,.45));
+  border-radius:var(--r, 1.4cqh);
+  padding:.8cqh;
+  backdrop-filter:blur(6px);
+  box-shadow:0 .6cqh 1.6cqh rgba(30,50,90,.25);
+}
+.menu-profile-popup[hidden]{display:none;}
+
+.menu-profile-option{
+  display:flex;
+  align-items:center;
+  gap:.8cqw;
+  padding:.5cqh .7cqw;
+  border:.15cqh solid transparent;
+  border-radius:calc(var(--r, 1.4cqh) - .3cqh);
+  background:transparent;
+  cursor:pointer;
+  font:inherit;
+  color:var(--c-ink, #2b3b54);
+  text-align:left;
+  transition:background-color .12s ease, border-color .12s ease;
+}
+.menu-profile-option:hover{background:rgba(120,160,210,.15);}
+
+.menu-profile-option img{
+  width:5.4cqh;
+  height:5.4cqh;
+  border-radius:50%;
+  object-fit:cover;
+  flex:none;
+  border:.15cqh solid var(--c-panel-line, rgba(120,160,210,.45));
+}
+
+.menu-profile-option span{
+  font-size:1.9cqh;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.menu-profile-option.is-selected{
+  border-color:var(--c-gold, #e7b54a);
+  background:rgba(231,181,74,.18);
+}
+
+@media (max-width: 480px){
+  .menu-profile-info{display:none;}
+  .menu-profile-popup{min-width:60vw;}
+}
+
+/* =========================================================================
+   Nickname Modal (메인/전투 공통)
+   ========================================================================= */
+.nickname-modal{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.nickname-modal[hidden]{display:none;}
+
+.nickname-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(20, 14, 10, .48);
+}
+
+.nickname-modal-panel{
+  position:relative;
+  width:min(42cqh, 86vw);
+  padding:2.4cqh;
+  border:.25cqh solid rgba(184, 130, 61, .82);
+  border-radius:1.2cqh;
+  background:rgba(255, 246, 224, .97);
+  box-shadow:0 1cqh 2cqh rgba(41, 23, 10, .34);
+  color:#4d2f1d;
+  text-align:center;
+}
+
+.nickname-modal-title{
+  margin:0 0 1cqh;
+  font-family:var(--font-title, inherit);
+  font-size:2.99cqh;
+  font-weight:900;
+}
+
+.nickname-modal-desc{
+  margin:0 0 1.4cqh;
+  font-size:1.67cqh;
+  color:#6b4a2e;
+}
+
+.nickname-modal-input{
+  width:100%;
+  height:4.6cqh;
+  padding:0 1.2cqh;
+  border:.18cqh solid rgba(151, 100, 44, .6);
+  border-radius:.75cqh;
+  background:#fffaf0;
+  color:#3d2516;
+  font:inherit;
+  font-size:2.07cqh;
+  font-weight:800;
+  text-align:center;
+  box-sizing:border-box;
+}
+
+.nickname-modal-error{
+  min-height:2.2cqh;
+  margin:1cqh 0 0;
+  color:#a5362c;
+  font-size:1.55cqh;
+  font-weight:800;
+}
+
+.nickname-modal-actions{
+  display:flex;
+  gap:1cqh;
+  margin-top:1.5cqh;
+}
+
+.nickname-modal-actions button{
+  flex:1;
+  height:4.2cqh;
+  border:0;
+  border-radius:.75cqh;
+  font:inherit;
+  font-size:1.84cqh;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.nickname-modal-cancel{
+  background:#d8c3a0;
+  color:#4d2f1d;
+}
+
+.nickname-modal-confirm{
+  background:#2f6f6a;
+  color:#fff8dc;
+}
+
+.nickname-modal-actions button:disabled{
+  opacity:.65;
+  cursor:default;
+}

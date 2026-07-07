@@ -202,8 +202,12 @@ function getCurrentNodeId(){
 
 function updateHudFloor(){
   const el = document.getElementById("hudFloor"); if(!el) return;
-  const fi = nodeFloorIdx(getCurrentNodeId());
-  el.textContent = fi > 0 ? fi + "F" : "1F";
+  el.textContent = typeof formatCurrentDisplayArea === "function"
+    ? formatCurrentDisplayArea()
+    : "1구역";
+  const actEl = document.getElementById("hudAct");
+  if(actEl && typeof getCurrentActName === "function") actEl.textContent = getCurrentActName();
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
 }
 
 function hasNextTier(){
@@ -233,11 +237,14 @@ function centerScrollOnFloor(fi){
 }
 
 /* ── 몬스터 배열 in-place 교체 ────────────────────────────────────────── */
-function loadStageMonsters(idx){
+function loadStageMonsters(idx, options={}){
   const d = window.BOHYUN_COMBAT_DATA;
   if(!d || !d.monsters) return;
   if(!d._orig) d._orig = [...d.monsters];
   if(MAP_STAGES[idx]){
+    if(typeof window.ACT1_RESOLVE_STAGE_PACKAGE === "function"){
+      window.ACT1_RESOLVE_STAGE_PACKAGE(MAP_STAGES[idx], { recordHistory:!!options.recordHistory });
+    }
     d.monsters.splice(0, d.monsters.length, ...MAP_STAGES[idx].getMonsters());
   }
 }
@@ -254,33 +261,25 @@ function startStage(stageIdx){
     /* 맵 캔버스 현재 위치 갱신 (이미 열린 맵 오버레이 내에서 리렌더) */
     renderCanvas(getCurrentNodeId());
     const footer = document.getElementById("mapFooter");
-    if(footer) footer.textContent = "⬆️ 다음 스테이지를 클릭하여 진행하세요";
+    if(footer) footer.textContent = "⬆️ 다음 구역을 클릭하여 진행하세요";
     return;
   }
 
   window.MAP_STATE.currentStage = stageIdx;
   window.MAP_STATE.proceedMode  = false;
   window.MAP_STATE.startMapMode = false;
-  loadStageMonsters(stageIdx);
+  loadStageMonsters(stageIdx, { recordHistory:true });
   updateHudFloor();
   closeMap();
   if(typeof newGame === "function") newGame();
 }
 
 /* ── 여정 열기/닫기 ────────────────────────────────────────────────────── */
-function isActiveBattleForMapView(){
-  return !!(
-    typeof S !== "undefined" && S &&
-    !S.over &&
-    !S.encounterCleared &&
-    Array.isArray(S.enemies) &&
-    S.enemies.some(enemy => enemy && enemy.hp > 0)
-  );
-}
-
 function openMap(){
   if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
-  if(!isActiveBattleForMapView() && typeof clearBattleBackground === "function") clearBattleBackground();
+  /* 여정 오버레이는 반투명이라 뒤에 마지막 노드의 최종 화면이 비쳐야 한다.
+     배경을 여기서 미리 지우면 오버레이가 빈 화면 위로 뜨게 되므로,
+     실제로 다음 스테이지에 진입할 때(startStage)만 배경을 갱신/제거한다. */
   let ov = document.getElementById("mapOverlay");
   if(!ov){ ov = buildOverlay(); document.getElementById("game").appendChild(ov); }
   const isStartMap = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
@@ -289,11 +288,16 @@ function openMap(){
   if(fi >= 0) centerScrollOnFloor(fi);
   renderCanvas(getCurrentNodeId());
   ov.style.display = "grid";
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
   requestAnimationFrame(() => requestAnimationFrame(() => { ov.style.opacity = "1"; }));
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm("bgmMap");
+  }
 }
 
 function closeMap(){
   if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
+  if(typeof window.closeDepthDropdown === "function") window.closeDepthDropdown();
   const ov = document.getElementById("mapOverlay"); if(!ov) return;
   const returnToStart = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
   ov.style.opacity = "0";
@@ -336,8 +340,8 @@ function buildOverlay(){
       </div>
       <div class="map-footer" id="mapFooter"></div>
     </div>`;
-  div.addEventListener("click", e => { if(e.target === div) closeMap(); });
-  div.querySelector("#mapClose").addEventListener("click", closeMap);
+  div.addEventListener("click", e => { if(e.target === div && !window.MAP_STATE.proceedMode) closeMap(); });
+  div.querySelector("#mapClose").addEventListener("click", () => { if(!window.MAP_STATE.proceedMode) closeMap(); });
   setupDragScroll(
     div.querySelector("#mapCanvasWrap"),
     div.querySelector("#mapCanvas")
@@ -498,10 +502,14 @@ function renderCanvas(currentNodeId){
   svg.innerHTML = paths + floorLbls + nodes + pin;
   svg.setAttribute("viewBox", getViewBox());
 
+  // 닫기 버튼: 다음 노드를 반드시 선택해야 하는 상태에서는 숨김
+  const closeBtn = document.getElementById("mapClose");
+  if(closeBtn) closeBtn.style.display = window.MAP_STATE.proceedMode ? "none" : "";
+
   // 푸터 업데이트
   const footer = document.getElementById("mapFooter");
   if(footer) footer.textContent = window.MAP_STATE.proceedMode
-    ? "⬆️ 다음 스테이지를 클릭하여 진행하세요"
+    ? "⬆️ 다음 구역을 클릭하여 진행하세요"
     : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
 
   // 다음 스테이지 클릭 이벤트

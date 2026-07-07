@@ -11,6 +11,7 @@
   let showUpgradePreview = false;
   let pickMode = null;
   let selectedPickKey = null;
+  let selectedPickUid = null;
 
   const SORT_OPTIONS = [
     { id: "order", label: "최신순" },
@@ -27,6 +28,7 @@
     all: { type: "order", direction: "desc" },
     hand: { type: "order", direction: "desc" },
     discard: { type: "order", direction: "desc" },
+    exhaust: { type: "order", direction: "desc" },
     codexCards: { type: "order", direction: "desc" },
     codexRelics: { type: "order", direction: "desc" },
     codexPotions: { type: "order", direction: "desc" },
@@ -39,26 +41,21 @@
     { id: "skill", label: "스킬(강화)" },
   ];
 
-  const ATTRIBUTE_FILTERS = [
-    { id: "all", label: "모든 속성" },
-    { id: "spirit", label: "성불" },
-    { id: "hope", label: "희망" },
-    { id: "memory", label: "추억" },
-  ];
-
   const filterState = {
-    all: { type: "all", attribute: "all" },
-    hand: { type: "all", attribute: "all" },
-    discard: { type: "all", attribute: "all" },
-    codexCards: { type: "all", attribute: "all" },
-    codexRelics: { type: "all", attribute: "all" },
-    codexPotions: { type: "all", attribute: "all" },
+    all: { type: "all" },
+    hand: { type: "all" },
+    discard: { type: "all" },
+    exhaust: { type: "all" },
+    codexCards: { type: "all" },
+    codexRelics: { type: "all" },
+    codexPotions: { type: "all" },
   };
 
   const searchState = {
     all: "",
     hand: "",
     discard: "",
+    exhaust: "",
     codexCards: "",
     codexRelics: "",
     codexPotions: "",
@@ -66,14 +63,16 @@
 
   const EMPTY_TEXT = {
     all: "보유 중인 주문이 없습니다.",
-    hand: "손에 든 주문이 없습니다.",
+    hand: "손패가 없습니다.",
     discard: "버린 주문이 없습니다.",
+    exhaust: "소멸된 주문이 없습니다.",
   };
 
   const TABS = [
     { id: "all", label: "전체 주문", getCards: () => getDeck() },
-    { id: "hand", label: "손에 든 주문", getCards: () => getHand() },
+    { id: "hand", label: "손패", getCards: () => getHandPool() },
     { id: "discard", label: "버린 주문", getCards: () => getDiscard() },
+    { id: "exhaust", label: "소멸된 주문", getCards: () => getExhaust() },
   ];
 
   const CODEX_SECTIONS = [
@@ -89,6 +88,7 @@
       { el: document.querySelector("#deckViewerButton"), tab: "all" },
       { el: document.querySelector("#deckPile"), tab: "hand" },
       { el: document.querySelector("#discardPile"), tab: "discard" },
+      { el: document.querySelector("#exhaustPile"), tab: "exhaust" },
     ].filter(trigger => trigger.el);
     const codexTrigger = document.querySelector(".start-codex-button");
 
@@ -129,12 +129,17 @@
     return typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
   }
 
-  function getHand(){
-    return typeof S === "undefined" || !S ? [] : [...S.hand];
+  function getHandPool(){
+    if(typeof S === "undefined" || !S) return [];
+    return [...(S.hand || []), ...(S.draw || [])];
   }
 
   function getDiscard(){
     return typeof S === "undefined" || !S ? [] : [...S.discard];
+  }
+
+  function getExhaust(){
+    return typeof S === "undefined" || !S || !Array.isArray(S.exhaust) ? [] : [...S.exhaust];
   }
 
   function getCard(key){
@@ -194,12 +199,12 @@
         '</div>' +
         '<div class="deck-viewer-filter" aria-label="주문 필터">' +
           '<label>타입 <select class="deck-viewer-filter-type">' + TYPE_FILTERS.map(optionHtml).join("") + '</select></label>' +
-          '<label>속성 <select class="deck-viewer-filter-attribute">' + ATTRIBUTE_FILTERS.map(optionHtml).join("") + '</select></label>' +
         '</div>' +
         '</div>' +
         '<div class="deck-viewer-grid"></div>' +
         '<div class="deck-viewer-pick-footer" hidden>' +
           '<div class="deck-viewer-pick-help">기본 카드 1장을 선택하세요.</div>' +
+          '<button type="button" class="deck-viewer-pick-cancel" hidden>취소</button>' +
           '<button type="button" class="deck-viewer-pick-confirm" disabled>제거</button>' +
         '</div>' +
         '<div class="card-detail-backdrop" aria-hidden="true">' +
@@ -239,15 +244,12 @@
       filterState[activeTab].type = event.target.value;
       renderDeckViewer();
     });
-    overlay.querySelector(".deck-viewer-filter-attribute").addEventListener("change", event => {
-      filterState[activeTab].attribute = event.target.value;
-      renderDeckViewer();
-    });
     overlay.querySelector(".deck-viewer-search-input").addEventListener("input", event => {
       searchState[activeTab] = event.target.value;
       renderDeckViewer();
     });
     overlay.querySelector(".deck-viewer-pick-confirm").addEventListener("click", confirmPickCard);
+    overlay.querySelector(".deck-viewer-pick-cancel").addEventListener("click", cancelPickCard);
     overlay.querySelector(".deck-viewer-grid").addEventListener("click", event => {
       const cardEl = event.target.closest(".deck-viewer-card");
       if(!cardEl) return;
@@ -255,7 +257,7 @@
         handlePickCard(cardEl);
         return;
       }
-      openCardDetail(cardEl.dataset.cardKey);
+      openCardDetail(cardEl.dataset.cardKey, cardEl.dataset.cardIndex);
     });
     overlay.querySelector(".card-detail-backdrop").addEventListener("click", event => {
       const upgrade = event.target.closest("[data-card-detail-upgrade]");
@@ -311,11 +313,11 @@
       sortType: overlay.querySelector(".deck-viewer-sort-type"),
       sortDirection: overlay.querySelector(".deck-viewer-sort-direction"),
       filterType: overlay.querySelector(".deck-viewer-filter-type"),
-      filterAttribute: overlay.querySelector(".deck-viewer-filter-attribute"),
       search: overlay.querySelector(".deck-viewer-search-input"),
       grid: overlay.querySelector(".deck-viewer-grid"),
       pickFooter: overlay.querySelector(".deck-viewer-pick-footer"),
       pickHelp: overlay.querySelector(".deck-viewer-pick-help"),
+      pickCancel: overlay.querySelector(".deck-viewer-pick-cancel"),
       pickConfirm: overlay.querySelector(".deck-viewer-pick-confirm"),
       detailBackdrop: overlay.querySelector(".card-detail-backdrop"),
       detailBody: overlay.querySelector(".card-detail-body"),
@@ -354,8 +356,10 @@
       ".deck-viewer-pick-help{flex:1;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
       ".deck-viewer-pick-confirm{min-width:11cqw;height:4.6cqh;border-radius:1cqh;border:.22cqh solid var(--c-gold);background:linear-gradient(180deg,#fff8d9,#ffe59a);color:#7a5510;font:inherit;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".deck-viewer-pick-confirm:disabled{filter:grayscale(.6);opacity:.55;cursor:not-allowed;}" +
+      ".deck-viewer-pick-cancel{min-width:8cqw;height:4.6cqh;border-radius:1cqh;border:.18cqh solid rgba(90,80,60,.4);background:rgba(255,255,255,.65);color:var(--c-ink);font:inherit;font-size:1.6cqh;font-weight:800;cursor:pointer;}" +
+      ".deck-viewer-pick-cancel[hidden]{display:none!important;}" +
       ".deck-viewer-close,.card-detail-close{background:transparent url(\"assets/ui_buttons/close.png\") center/100% 100% no-repeat;border:0;border-radius:0;color:transparent;font-size:0;box-shadow:none;}" +
-      ".deck-viewer:not(.codex-mode):not(.pick-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
+      ".deck-viewer:not(.codex-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
       ".deck-viewer.codex-mode{z-index:240;}" +
       ".deck-viewer.codex-mode:not(.codex-home-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
       ".deck-viewer.codex-home-mode .deck-viewer-panel{width:min(64cqw,92cqh);aspect-ratio:2.12;max-height:49cqh;background:transparent url(\"assets/ui_panels/codex_popup_frame.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.4cqh 2.8cqh rgba(0,0,0,.22);padding:3.6cqh 3.6cqw 3.2cqh;}" +
@@ -402,6 +406,7 @@
       ".deck-viewer-card.card-frame-card{min-height:25cqh;}" +
       ".card-detail-card.card-frame-card{height:45cqh;}" +
       ".deck-viewer-card.card-frame-card .card-art-layer,.card-detail-card.card-frame-card .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);pointer-events:none;}" +
+      ".deck-viewer-card.cost-status .card-art-layer,.card-detail-card.cost-status .card-art-layer{background:radial-gradient(circle at 50% 32%,#3a1c28,#160a10);}" +
       ".deck-viewer-card.card-frame-card .card-art-layer img,.card-detail-card.card-frame-card .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none;}" +
       ".deck-viewer-card.card-frame-card .card-frame-layer,.card-detail-card.card-frame-card .card-frame-layer{position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:fill;pointer-events:none;}" +
       ".deck-viewer-card.card-frame-card .card-text-layer,.card-detail-card.card-frame-card .card-text-layer{position:absolute;inset:0;z-index:3;pointer-events:none;font-weight:900;color:#10243f;}" +
@@ -413,8 +418,9 @@
       ".card-detail-card.card-frame-card .card-desc-text{position:absolute;left:8%;right:8%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.7cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}" +
       ".deck-viewer-card.card-frame-card .card-hit-layer,.card-detail-card.card-frame-card .card-hit-layer{position:absolute;inset:0;z-index:4;background:transparent;cursor:inherit;}" +
       ".card-detail-upgrade-toggle{height:4.2cqh;min-width:13cqw;border-radius:2.1cqh;border:.22cqh solid var(--c-gold);background:linear-gradient(180deg,#fff8d9,#ffe59a);color:#7a5510;font-size:1.8cqh;font-weight:900;cursor:pointer;box-shadow:0 .5cqh 1cqh rgba(80,60,20,.16);}" +
-      ".card-detail-upgrade-toggle:hover,.card-detail-upgrade-toggle:focus-visible{outline:none;transform:translateY(-.2cqh);box-shadow:0 .7cqh 1.3cqh rgba(80,60,20,.22);}" +
+      ".card-detail-upgrade-toggle:hover:not(:disabled),.card-detail-upgrade-toggle:focus-visible:not(:disabled){outline:none;transform:translateY(-.2cqh);box-shadow:0 .7cqh 1.3cqh rgba(80,60,20,.22);}" +
       ".card-detail-upgrade-toggle.active{background:linear-gradient(180deg,#eaf7ff,#cfe9ff);border-color:var(--c-blue);color:var(--c-blue-deep);}" +
+      ".card-detail-upgrade-toggle:disabled{filter:grayscale(.6);opacity:.55;cursor:not-allowed;box-shadow:none;}" +
       ".card-detail-kicker{font-size:1.5cqh;font-weight:900;color:var(--c-ink-soft);margin-bottom:.4cqh;}" +
       ".card-detail-nav{position:absolute;top:50%;transform:translateY(-50%);width:6.2cqh;height:6.2cqh;border:0;border-radius:0;background:transparent url(\"assets/ui_panels/card_detail_nav_panel.png\") center/100% 100% no-repeat;color:transparent;font-size:0;font-weight:900;line-height:1;display:grid;place-items:center;cursor:pointer;box-shadow:none;}" +
       ".card-detail-nav::before{display:block;color:#8a641a;font-size:4.6cqh;font-weight:900;line-height:1;text-shadow:0 .08cqh 0 rgba(255,255,255,.9),0 .18cqh .28cqh rgba(90,60,20,.24);transform:translateY(-.12cqh);}" +
@@ -454,7 +460,6 @@
     if(els.controls) els.controls.style.display = "";
     if(els.grid) els.grid.style.display = "";
     els.filterType.disabled = false;
-    els.filterAttribute.disabled = false;
     if(els.filterWrap) els.filterWrap.classList.remove("disabled");
     renderDeckViewer();
     els.overlay.classList.add("show");
@@ -466,10 +471,13 @@
     if(!els) return Promise.resolve(null);
     if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
 
+    const usingCandidates = Array.isArray(options.candidates);
+
     return new Promise(resolve => {
       viewerMode = "deck";
-      activeTab = "all";
+      activeTab = usingCandidates ? "candidates" : "all";
       selectedPickKey = null;
+      selectedPickUid = null;
       pickMode = {
         title: options.title || "카드 선택",
         confirmText: options.confirmText || "확인",
@@ -479,6 +487,8 @@
         costText: options.costText || null,
         helpText: options.helpText || "기본 카드 1장을 선택하세요.",
         onConfirm: typeof options.onConfirm === "function" ? options.onConfirm : null,
+        candidates: usingCandidates ? options.candidates : null,
+        allowCancel: options.allowCancel !== undefined ? !!options.allowCancel : usingCandidates,
         resolve
       };
 
@@ -489,7 +499,7 @@
       els.tabsWrap.style.display = "none";
       if(els.codexTabsWrap) els.codexTabsWrap.style.display = "none";
       if(els.codexHome) els.codexHome.style.display = "none";
-      if(els.controls) els.controls.style.display = "";
+      if(els.controls) els.controls.style.display = usingCandidates ? "none" : "";
       if(els.grid) els.grid.style.display = "";
       if(els.pickFooter) els.pickFooter.hidden = false;
       if(els.pickHelp) els.pickHelp.textContent = pickMode.helpText;
@@ -497,6 +507,7 @@
         els.pickConfirm.textContent = pickMode.confirmText;
         els.pickConfirm.disabled = true;
       }
+      if(els.pickCancel) els.pickCancel.hidden = !pickMode.allowCancel;
       if(els.pickCost){
         if(pickMode.costText || pickMode.costHtml){
           els.pickCost.hidden = false;
@@ -509,9 +520,8 @@
           els.pickCost.classList.remove("insufficient");
         }
       }
-      els.filterType.disabled = false;
-      els.filterAttribute.disabled = false;
-      if(els.filterWrap) els.filterWrap.classList.remove("disabled");
+      els.filterType.disabled = usingCandidates;
+      if(els.filterWrap) els.filterWrap.classList.toggle("disabled", usingCandidates);
       closeCardDetail();
       renderDeckViewer();
       els.overlay.classList.add("show");
@@ -565,6 +575,10 @@
   function closeDeckViewer(){
     if(!els) return;
     if(pickMode){
+      if(pickMode.allowCancel){
+        cancelPickCard();
+        return;
+      }
       if(typeof toast === "function") toast("카드를 선택해야 은혜를 완료할 수 있습니다.");
       return;
     }
@@ -579,10 +593,12 @@
   function clearPickMode(){
     pickMode = null;
     selectedPickKey = null;
+    selectedPickUid = null;
     if(!els) return;
     els.overlay.classList.remove("pick-mode");
     if(els.pickFooter) els.pickFooter.hidden = true;
     if(els.pickConfirm) els.pickConfirm.disabled = true;
+    if(els.pickCancel) els.pickCancel.hidden = true;
     if(els.pickCost){
       els.pickCost.hidden = true;
       els.pickCost.textContent = "";
@@ -593,26 +609,41 @@
   function handlePickCard(cardEl){
     if(!pickMode || !cardEl) return;
     const key = cardEl.dataset.cardKey;
-    if(!key || !pickMode.isSelectable(key)){
+    const uid = cardEl.dataset.cardUid || null;
+    const id = pickMode.candidates ? uid : key;
+    if(!id || !pickMode.isSelectable(id)){
       if(typeof toast === "function") toast(pickMode.disabledText);
       return;
     }
     selectedPickKey = key;
+    selectedPickUid = uid;
     if(els.pickHelp){
       const card = getCard(key);
       els.pickHelp.textContent = (card && card.name ? card.name : key) + " 선택됨";
     }
-    const confirmDisabled = !!(pickMode.getConfirmDisabled && pickMode.getConfirmDisabled(key));
+    const confirmDisabled = !!(pickMode.getConfirmDisabled && pickMode.getConfirmDisabled(id));
     if(els.pickConfirm) els.pickConfirm.disabled = confirmDisabled;
     if(els.pickCost) els.pickCost.classList.toggle("insufficient", confirmDisabled);
     renderDeckViewer();
   }
 
+  function cancelPickCard(){
+    if(!pickMode) return;
+    const mode = pickMode;
+    clearPickMode();
+    closeCardDetail();
+    els.overlay.classList.remove("show");
+    els.overlay.setAttribute("aria-hidden", "true");
+    mode.resolve(null);
+  }
+
   function confirmPickCard(){
-    if(!pickMode || !selectedPickKey) return;
+    if(!pickMode) return;
+    const id = pickMode.candidates ? selectedPickUid : selectedPickKey;
+    if(!id) return;
     const mode = pickMode;
     try {
-      if(mode.onConfirm) mode.onConfirm(selectedPickKey);
+      if(mode.onConfirm) mode.onConfirm(id);
     } catch(error) {
       console.warn("[DeckViewer] 카드 선택 처리 중 오류가 발생했습니다.", error);
     }
@@ -620,12 +651,15 @@
     closeCardDetail();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
-    mode.resolve(selectedPickKey);
+    mode.resolve(id);
   }
 
-  function openCardDetail(key){
+  function openCardDetail(key, indexHint){
     if(!els) return;
-    const index = detailEntries.findIndex(entry => entry.key === key);
+    const hinted = Number(indexHint);
+    const index = Number.isInteger(hinted) && detailEntries[hinted] && detailEntries[hinted].key === key
+      ? hinted
+      : detailEntries.findIndex(entry => entry.key === key);
     if(index < 0) return;
     if(detailEntries[index].locked) return;
 
@@ -675,11 +709,28 @@
       renderCodexViewer();
       return;
     }
+    if(pickMode && pickMode.candidates){
+      const entries = buildCandidateEntries(pickMode.candidates);
+      detailEntries = entries;
+      const visibleCount = entries.reduce((total, entry) => total + entry.count, 0);
+      const speciesCount = new Set(entries.map(entry => entry.key)).size;
+      els.tabs.forEach(button => {
+        button.classList.remove("active");
+        button.setAttribute("aria-selected", "false");
+      });
+      els.summary.textContent = pickMode.title + " " + visibleCount + "장 / " + speciesCount + "종류";
+      els.grid.innerHTML = entries.length
+        ? entries.map(deckCardHtml).join("")
+        : '<div class="deck-viewer-empty">선택할 수 있는 주문이 없습니다.</div>';
+      decoratePickCards();
+      return;
+    }
     const tab = TABS.find(item => item.id === activeTab) || TABS[0];
     const cards = tab.getCards();
     const entries = sortEntries(filterEntries(buildCardEntries(cards, tab.id), tab.id), tab.id);
     detailEntries = entries;
     const visibleCount = entries.reduce((total, entry) => total + entry.count, 0);
+    const speciesCount = new Set(entries.map(entry => entry.key)).size;
 
     els.tabs.forEach(button => {
       const selected = button.dataset.tab === tab.id;
@@ -689,9 +740,8 @@
     els.sortType.value = sortState[tab.id].type;
     els.sortDirection.value = sortState[tab.id].direction;
     els.filterType.value = filterState[tab.id].type;
-    els.filterAttribute.value = filterState[tab.id].attribute;
     els.search.value = searchState[tab.id];
-    els.summary.textContent = tab.label + " " + visibleCount + "장 / " + entries.length + "종류";
+    els.summary.textContent = tab.label + " " + visibleCount + "장 / " + speciesCount + "종류";
     els.grid.innerHTML = entries.length
       ? entries.map(deckCardHtml).join("")
       : '<div class="deck-viewer-empty">표시할 주문이 없습니다.</div>';
@@ -707,9 +757,12 @@
     if(!pickMode || !els || !els.grid) return;
     els.grid.querySelectorAll(".deck-viewer-card[data-card-key]").forEach(cardEl => {
       const key = cardEl.dataset.cardKey;
-      const selectable = !!(key && pickMode.isSelectable(key));
+      const uid = cardEl.dataset.cardUid || null;
+      const id = pickMode.candidates ? uid : key;
+      const selectable = !!(id && pickMode.isSelectable(id));
+      const selected = pickMode.candidates ? (selectable && uid === selectedPickUid) : (selectable && key === selectedPickKey);
       cardEl.classList.toggle("pick-disabled", !selectable);
-      cardEl.classList.toggle("pick-selected", selectable && key === selectedPickKey);
+      cardEl.classList.toggle("pick-selected", selected);
       cardEl.setAttribute("aria-disabled", selectable ? "false" : "true");
     });
   }
@@ -732,13 +785,10 @@
     els.sortType.value = sortState[tabId].type;
     els.sortDirection.value = sortState[tabId].direction;
     els.filterType.value = "all";
-    els.filterAttribute.value = "all";
     els.filterType.disabled = filterDisabled;
-    els.filterAttribute.disabled = filterDisabled;
     if(els.filterWrap) els.filterWrap.classList.toggle("disabled", filterDisabled);
     if(!filterDisabled){
       els.filterType.value = filterState[tabId].type;
-      els.filterAttribute.value = filterState[tabId].attribute;
     }
     els.search.value = searchState[tabId];
     els.summary.textContent = getCodexSummaryText(codexSection, entries, sourceItems.length);
@@ -808,27 +858,29 @@
     return "표시할 주문이 없습니다.";
   }
 
+  function buildCandidateEntries(candidates){
+    return candidates.map((candidate, index) => {
+      const key = candidate && candidate.key;
+      const card = key ? getCard(key) : null;
+      if(!card) return null;
+      return { key, count: 1, card, order: index, kind: "card", uid: (candidate && candidate.uid) || null };
+    }).filter(Boolean);
+  }
+
   function buildCardEntries(cards, tabId){
     if(tabId === "codexCards"){
-      const encountered = getEncounteredCardSet();
       return cards.map((key, index) => {
         const card = getCard(key);
         if(!card) return null;
-        return { key, count: 1, card, order: index, kind: "card", locked: !encountered.has(key) };
+        return { key, count: 1, card, order: index, kind: "card", locked: false };
       }).filter(Boolean);
     }
 
-    const entriesByKey = {};
-    cards.forEach((key, index) => {
+    return cards.map((key, index) => {
       const card = getCard(key);
-      if(!card) return;
-      if(!entriesByKey[key]){
-        entriesByKey[key] = { key, count: 0, card, order: index, kind: "card" };
-      }
-      entriesByKey[key].count += 1;
-      entriesByKey[key].order = index;
-    });
-    return Object.keys(entriesByKey).map(key => entriesByKey[key]);
+      if(!card) return null;
+      return { key, count: 1, card, order: index, kind: "card" };
+    }).filter(Boolean);
   }
 
   function filterEntries(entries, tabId){
@@ -840,12 +892,11 @@
         return !query || itemText.includes(query);
       }
       if(entry.locked){
-        return !query && state.type === "all" && state.attribute === "all";
+        return !query && state.type === "all";
       }
       const typeMatches = state.type === "all" || getCardFilterType(entry.card) === state.type;
-      const attributeMatches = state.attribute === "all" || getCardFilterAttribute(entry.card) === state.attribute;
       const nameMatches = !query || String(entry.card.name).toLowerCase().includes(query);
-      return typeMatches && attributeMatches && nameMatches;
+      return typeMatches && nameMatches;
     });
   }
 
@@ -923,23 +974,23 @@
     localStorage.setItem(CODEX_KEY, JSON.stringify([...encountered]));
   }
 
-  function deckCardHtml(entry){
+  function deckCardHtml(entry, index){
     if(entry.kind && entry.kind !== "card"){
       const item = entry.item || {};
-      return '<button type="button" class="deck-viewer-card codex-item-card" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="1">' +
+      return '<button type="button" class="deck-viewer-card codex-item-card" data-card-key="' + escapeAttr(entry.key) + '" data-card-index="' + index + '" data-card-count="1">' +
         '<div class="deck-viewer-count">x1</div>' +
         '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
         '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
-        '<div class="desc">' + escapeHtml(item.desc || "") + '</div>' +
+        '<div class="desc">' + colorizeRarityLabels(escapeHtml(item.desc || "")) + '</div>' +
       '</button>';
     }
     const card = entry.card;
     if(entry.locked){
-      return '<button type="button" class="deck-viewer-card codex-locked cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" aria-label="잠긴 주문">' +
+      return '<button type="button" class="deck-viewer-card codex-locked cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-index="' + index + '" aria-label="잠긴 주문">' +
         '<img class="codex-locked-image" src="assets/ui_buttons/codex_unknown_card.png" alt="" aria-hidden="true">' +
       '</button>';
     }
-    return '<button type="button" class="deck-viewer-card card-frame-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-count="' + entry.count + '">' +
+    return '<button type="button" class="deck-viewer-card card-frame-card cost-' + escapeAttr(card.type) + '" data-card-key="' + escapeAttr(entry.key) + '" data-card-index="' + index + '"' + (entry.uid ? ' data-card-uid="' + escapeAttr(entry.uid) + '"' : '') + ' data-card-count="' + entry.count + '">' +
       '<div class="deck-viewer-count">x' + entry.count + '</div>' +
       cardFaceHtml(card) +
     '</button>';
@@ -954,7 +1005,7 @@
           '<div class="card-detail-card codex-item-card">' +
             '<div class="cname">' + escapeHtml(item.name || "") + '</div>' +
             '<div class="art">' + itemIconHtml(item.iconImage || item.emoji || "?") + '</div>' +
-            '<div class="desc">' + escapeHtml(item.desc || "") + '</div>' +
+            '<div class="desc">' + colorizeRarityLabels(escapeHtml(item.desc || "")) + '</div>' +
           '</div>' +
         '</div>' +
         '<div class="card-detail-back">' +
@@ -962,7 +1013,7 @@
             '<div class="card-detail-kicker">' + escapeHtml(label) + ' ' + escapeHtml(index + 1) + ' / ' + escapeHtml(total) + '</div>' +
             '<h3 id="cardDetailTitle">' + escapeHtml(item.name || "") + '</h3>' +
           '</div>' +
-          '<div class="card-detail-desc">' + escapeHtml(item.desc || "") + '</div>' +
+          '<div class="card-detail-desc">' + colorizeRarityLabels(escapeHtml(item.desc || "")) + '</div>' +
         '</div>' +
       '</div>' +
       '<button type="button" class="card-detail-nav card-detail-next" data-card-detail-nav="next" aria-label="다음 항목">›</button>';
@@ -971,13 +1022,12 @@
   function cardDetailHtml(entry, index, total, isUpgrade){
     const card = isUpgrade ? getUpgradePreviewCard(entry.card) : entry.card;
     const typeId = getCardFilterType(card) || card.type;
-    const attrId = getCardFilterAttribute(card);
     const changeText = getUpgradeChangeText(entry.card, card);
     return '<button type="button" class="card-detail-nav card-detail-prev" data-card-detail-nav="prev" aria-label="이전 주문">‹</button>' +
       '<div class="card-detail-spread">' +
         '<div class="card-detail-front">' +
           detailCardFaceHtml(entry, card, isUpgrade) +
-          '<button type="button" class="card-detail-upgrade-toggle' + (isUpgrade ? ' active' : '') + '" data-card-detail-upgrade="true">' +
+          '<button type="button" class="card-detail-upgrade-toggle' + (isUpgrade ? ' active' : '') + '" data-card-detail-upgrade="true" disabled>' +
             (isUpgrade ? '기본 보기' : '강화 확인') +
           '</button>' +
         '</div>' +
@@ -993,11 +1043,10 @@
               (isUpgrade ? '<span class="card-detail-badge upgrade">강화</span>' : '') +
             '</div>' +
           '</div>' +
-          '<div class="card-detail-desc">' + escapeHtml(card.desc) + '</div>' +
+          '<div class="card-detail-desc">' + colorizeRarityLabels(escapeHtml(card.desc)) + '</div>' +
           '<div class="card-detail-info">' +
             (isUpgrade ? '<section><h4>강화 변화</h4><p>' + escapeHtml(changeText) + '</p></section>' : '') +
             '<section><h4>주문 종류</h4><p>' + escapeHtml(getTypeDescription(card)) + '</p></section>' +
-            '<section><h4>주문 속성</h4><p>' + escapeHtml(getAttributeDescription(attrId)) + '</p></section>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -1107,13 +1156,6 @@
     return card.attribute || card.attr || card.element || card.property || "속성 없음";
   }
 
-  function getAttributeDescription(attribute){
-    if(attribute === "hope") return "상대의 절망을 위로하고 마음을 안정시키는 따뜻한 속성입니다.";
-    if(attribute === "memory") return "잊혀진 기억을 되돌려 인간성을 회복시키는 다정한 속성입니다.";
-    if(attribute === "spirit") return "남아있는 미련을 정화하여 편안히 승천시키는 맑은 속성입니다.";
-    return "아직 자세한 설명이 정해지지 않은 속성입니다.";
-  }
-
   function escapeHtml(value){
     return String(value)
       .replace(/&/g, "&amp;")
@@ -1153,7 +1195,7 @@
       '<div class="card-text-layer">' +
         '<div class="card-cost-text">' + escapeHtml(safeCard.cost ?? "") + '</div>' +
         '<div class="card-name-text">' + escapeHtml(safeCard.name || "") + '</div>' +
-        '<div class="card-desc-text">' + escapeHtml(safeCard.desc || "") + '</div>' +
+        '<div class="card-desc-text">' + colorizeRarityLabels(escapeHtml(safeCard.desc || "")) + '</div>' +
       '</div>' +
       '<div class="card-hit-layer" aria-hidden="true"></div>';
   }

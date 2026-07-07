@@ -5,7 +5,7 @@
    * ACT1 이벤트 DB
    *
    * - 데이터 출처: ACT1_이벤트_컨셉_데이터테이블_복채용어최종수정 (1).xlsx
-   * - 카드/주문 표시 용어는 지시서 기준에 맞춰 "의식"으로 표기한다.
+   * - 카드/주문 표시 용어는 지시서 기준에 맞춰 "주문"으로 표기한다.
    * - 플레이어 자원 gold는 기존 effect_type 호환을 위해 유지하되, UI 텍스트는 "복채"로 표기한다.
    * - effect.type 구현명은 기존 eventNode.js 핸들러와의 연결을 보호하기 위해 변경하지 않는다.
    */
@@ -26,9 +26,9 @@
         {
           id: "A",
           label: "이야기를 들어준다",
-          desc: "새 의식 보상 65% / 정신력 -10 35%",
+          desc: "새 주문 보상 65% / 정신력 -10 35%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "새 의식 보상", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "새 주문 보상", chance: 65,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] },
             { kind: "negative", icon: "minus", text: "정신력 -10", chance: 35,
               effects: [{ type: "spirit", value: -10 }] }
@@ -78,10 +78,10 @@
         {
           id: "B",
           label: "약병을 챙긴다",
-          desc: "이벤트 Common 약병 1개 70% / 정신력 -8 30%",
+          desc: "이벤트 일반 약병 1개 70% / 정신력 -8 30%",
           outcomes: [
-            { kind: "positive", icon: "potion", text: "이벤트 Common 약병 1개", chance: 70,
-              effects: [{ type: "potionRandom", source: "event", rarity: "common" }] },
+            { kind: "positive", icon: "potion", text: "이벤트 일반 약병 1개", chance: 70,
+              effects: [{ type: "potionRandom", source: "event" }] },
             { kind: "negative", icon: "minus", text: "정신력 -8", chance: 30,
               effects: [{ type: "spirit", value: -8 }] }
           ]
@@ -113,9 +113,9 @@
         {
           id: "A",
           label: "공책을 읽는다",
-          desc: "새 의식 보상 55% / 일반 전투 45%",
+          desc: "새 주문 보상 55% / 일반 전투 45%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "새 의식 보상", chance: 55,
+            { kind: "positive", icon: "sparkle", text: "새 주문 보상", chance: 55,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] },
             { kind: "negative", icon: "sword", text: "일반 전투", chance: 45,
               effects: [{ type: "combat", combatType: "normal" }] }
@@ -124,9 +124,9 @@
         {
           id: "B",
           label: "필요한 구절만 베낀다",
-          desc: "의식 후보 확인 후 1장 선택 또는 포기",
+          desc: "주문 후보 확인 후 1장 선택 또는 포기",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "의식 후보 확인 후 선택/포기", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "주문 후보 확인 후 선택/포기", chance: 100,
               effects: [{ type: "cardRewardOptional", count: 3 }] }
           ]
         },
@@ -225,10 +225,10 @@
         },
         {
           id: "B",
-          label: "의식 하나를 덜어낸다",
-          desc: "의식 삭제 1장 / 정신력 -10",
+          label: "주문 하나를 덜어낸다",
+          desc: "주문 삭제 1장 / 정신력 -10",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "의식 삭제 1장 / 정신력 -10", chance: 100,
+            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -10", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -10 }
@@ -238,11 +238,11 @@
         {
           id: "C",
           label: "상자 속 복채를 가져간다",
-          desc: "복채 +60 60% / 상태 의식 1장 추가 40%",
+          desc: "복채 +60 60% / 상태 주문 1장 추가 40%",
           outcomes: [
             { kind: "positive", icon: "coin", text: "복채 +60", chance: 60,
               effects: [{ type: "gold", value: 60 }] },
-            { kind: "negative", icon: "status", text: "상태 의식 1장 추가", chance: 40,
+            { kind: "negative", icon: "status", text: "상태 주문 1장 추가", chance: 40,
               effects: [{ type: "addStatusCard", candidates: ["intrusive_thought", "regret"], count: 1 }] }
           ]
         }
@@ -264,10 +264,10 @@
         {
           id: "A",
           label: "안전한 약봉투를 고른다",
-          desc: "이벤트 Common 약병 2개 중 1개 선택",
+          desc: "이벤트 일반 약병 2개 중 1개 선택",
           outcomes: [
-            { kind: "positive", icon: "potion", text: "이벤트 Common 약병 2개 중 1개 선택", chance: 100,
-              effects: [{ type: "potionChoice", count: 2, source: "event", rarity: "common" }] }
+            { kind: "positive", icon: "potion", text: "이벤트 일반 약병 2개 중 1개 선택", chance: 100,
+              effects: [{ type: "potionChoice", count: 2, source: "event" }] }
           ]
         },
         {
@@ -307,25 +307,25 @@
       phaseTags: ["early", "mid"],
       weight: 8,
       story: [
-        "찢어진 노트에 지금까지의 의식들이 어지럽게 적혀 있다.",
+        "찢어진 노트에 지금까지의 주문들이 어지럽게 적혀 있다.",
         "다시 적거나, 지우거나, 바꿀 수 있을 것 같다."
       ],
       choices: [
         {
           id: "A",
-          label: "새 의식을 적는다",
-          desc: "새 의식 보상 3장 중 1장",
+          label: "새 주문을 적는다",
+          desc: "새 주문 보상 3장 중 1장",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "새 의식 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "새 주문 보상", chance: 100,
               effects: [{ type: "cardReward", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "B",
-          label: "의식 하나를 지운다",
-          desc: "의식 삭제 1장 / 정신력 -8",
+          label: "주문 하나를 지운다",
+          desc: "주문 삭제 1장 / 정신력 -8",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "의식 삭제 1장 / 정신력 -8", chance: 100,
+            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -8", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -8 }
@@ -335,9 +335,9 @@
         {
           id: "C",
           label: "하나를 지우고 새로 적는다",
-          desc: "의식 1장 삭제 후 새 의식 보상 3장 중 1장",
+          desc: "주문 1장 삭제 후 새 주문 보상 3장 중 1장",
           outcomes: [
-            { kind: "neutral", icon: "sparkle", text: "의식 1장 삭제 후 새 의식 보상", chance: 100,
+            { kind: "neutral", icon: "sparkle", text: "주문 1장 삭제 후 새 주문 보상", chance: 100,
               effects: [{ type: "cardTransform", removeCount: 1, rewardCount: 3, pick: 1 }] }
           ]
         }
@@ -353,24 +353,24 @@
       weight: 7,
       story: [
         "칠판에 같은 문장이 계속 반복되어 있다.",
-        "가장 익숙한 의식의 방향이 선명하게 드러난다."
+        "가장 익숙한 주문의 방향이 선명하게 드러난다."
       ],
       choices: [
         {
           id: "A",
           label: "가장 많이 쓴 계열을 따른다",
-          desc: "현재 덱에서 가장 많은 계열 의식 보상",
+          desc: "현재 덱에서 가장 많은 계열 주문 보상",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "주력 계열 의식 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "주력 계열 주문 보상", chance: 100,
               effects: [{ type: "cardRewardDominantAttr", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "B",
-          label: "익숙한 의식을 다시 베낀다",
-          desc: "현재 덱 의식 1장 복제 65% / 정신력 -15 35%",
+          label: "익숙한 주문을 다시 베낀다",
+          desc: "현재 덱 주문 1장 복제 65% / 정신력 -15 35%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "의식 1장 복제", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "주문 1장 복제", chance: 65,
               effects: [{ type: "cardDuplicate", excludeRarity: ["rare"] }] },
             { kind: "negative", icon: "minus", text: "정신력 -15", chance: 35,
               effects: [{ type: "spirit", value: -15 }] }
@@ -402,28 +402,28 @@
       choices: [
         {
           id: "A",
-          label: "동요 의식을 고른다",
-          desc: "동요 의식 3장 중 1장",
+          label: "동요 주문을 고른다",
+          desc: "동요 주문 3장 중 1장",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "동요 의식 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "동요 주문 보상", chance: 100,
               effects: [{ type: "cardRewardTagged", attr: "동요", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "B",
-          label: "결계 의식을 고른다",
-          desc: "결계 의식 3장 중 1장",
+          label: "결계 주문을 고른다",
+          desc: "결계 주문 3장 중 1장",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "결계 의식 보상", chance: 100,
+            { kind: "positive", icon: "sparkle", text: "결계 주문 보상", chance: 100,
               effects: [{ type: "cardRewardTagged", attr: "결계", count: 3, pick: 1 }] }
           ]
         },
         {
           id: "C",
-          label: "성불 의식을 고른다",
-          desc: "성불 의식 3장 중 1장 / 정신력 -8",
+          label: "성불 주문을 고른다",
+          desc: "성불 주문 3장 중 1장 / 정신력 -8",
           outcomes: [
-            { kind: "neutral", icon: "sparkle", text: "성불 의식 보상 / 정신력 -8", chance: 100,
+            { kind: "neutral", icon: "sparkle", text: "성불 주문 보상 / 정신력 -8", chance: 100,
               effects: [
                 { type: "cardRewardTagged", attr: "성불", count: 3, pick: 1 },
                 { type: "spirit", value: -8 }
@@ -492,9 +492,9 @@
         {
           id: "A",
           label: "기록을 확인한다",
-          desc: "Rare 의식 보상 65% / 일반 전투 35%",
+          desc: "유일 주문 보상 65% / 일반 전투 35%",
           outcomes: [
-            { kind: "positive", icon: "sparkle", text: "Rare 의식 보상", chance: 65,
+            { kind: "positive", icon: "sparkle", text: "유일 주문 보상", chance: 65,
               effects: [{ type: "cardRewardRare", count: 3, pick: 1 }] },
             { kind: "negative", icon: "sword", text: "일반 전투", chance: 35,
               effects: [{ type: "combat", combatType: "normal" }] }
@@ -503,9 +503,9 @@
         {
           id: "B",
           label: "봉인 물품을 가져간다",
-          desc: "Rare 이벤트 법구 1개 45% / 정신력 -25 55%",
+          desc: "유일 이벤트 법구 1개 45% / 정신력 -25 55%",
           outcomes: [
-            { kind: "positive", icon: "relic", text: "Rare 이벤트 법구 1개", chance: 45,
+            { kind: "positive", icon: "relic", text: "유일 이벤트 법구 1개", chance: 45,
               effects: [{ type: "relicRare", source: "event" }] },
             { kind: "negative", icon: "minus", text: "정신력 -25", chance: 55,
               effects: [{ type: "spirit", value: -25 }] }
@@ -594,9 +594,9 @@
         {
           id: "AUTO",
           label: "문을 연다",
-          desc: "엘리트급 전투 / 승리 시 이벤트 법구 1개 / 의식 보상 없음",
+          desc: "엘리트급 전투 / 승리 시 이벤트 법구 1개 / 주문 보상 없음",
           outcomes: [
-            { kind: "negative", icon: "sword", text: "엘리트급 전투 / 승리 시 이벤트 법구 1개 / 의식 보상 없음", chance: 100,
+            { kind: "negative", icon: "sword", text: "엘리트급 전투 / 승리 시 이벤트 법구 1개 / 주문 보상 없음", chance: 100,
               effects: [{
                 type: "combatEvent",
                 combatType: "elite",
@@ -637,9 +637,9 @@
         {
           id: "B",
           label: "미련 하나를 묻는다",
-          desc: "의식 삭제 1장 / 정신력 -10",
+          desc: "주문 삭제 1장 / 정신력 -10",
           outcomes: [
-            { kind: "neutral", icon: "minus", text: "의식 삭제 1장 / 정신력 -10", chance: 100,
+            { kind: "neutral", icon: "minus", text: "주문 삭제 1장 / 정신력 -10", chance: 100,
               effects: [
                 { type: "cardRemove", count: 1 },
                 { type: "spirit", value: -10 }
@@ -688,9 +688,9 @@
         {
           id: "C",
           label: "나쁜 기억을 떠안는다",
-          desc: "상태 의식 1장 추가",
+          desc: "상태 주문 1장 추가",
           outcomes: [
-            { kind: "negative", icon: "status", text: "상태 의식 1장 추가", chance: 100,
+            { kind: "negative", icon: "status", text: "상태 주문 1장 추가", chance: 100,
               effects: [{ type: "addStatusCard", candidates: ["intrusive_thought", "regret"], count: 1 }] }
           ]
         }

@@ -202,6 +202,9 @@
       return [];
     }
     const defs = pkg.monsterIds.map(id => d.getMonsterById(id)).filter(Boolean);
+    if(typeof window.ACT1_APPLY_PACKAGE_BALANCE_OVERRIDES === "function"){
+      window.ACT1_APPLY_PACKAGE_BALANCE_OVERRIDES(pkg, defs);
+    }
     return spawnCheatMonsterDefs(defs, { replace: replaceCurrent === true });
   }
 

@@ -38,14 +38,11 @@ function readRunRecords(){
 }
 
 function getRunRecordFloor(){
-  if(typeof getCurrentNodeId === "function" && typeof nodeFloorIdx === "function"){
-    const floorIndex = nodeFloorIdx(getCurrentNodeId());
-    if(floorIndex > 0) return floorIndex + "층";
-  }
+  if(typeof formatCurrentDisplayArea === "function") return formatCurrentDisplayArea();
 
   const hudFloor = document.getElementById("hudFloor");
-  const match = hudFloor ? hudFloor.textContent.match(/(\d+)\s*F/i) : null;
-  if(match) return match[1] + "층";
+  const match = hudFloor ? hudFloor.textContent.match(/(\d+)\s*(?:F|구역)/i) : null;
+  if(match) return match[1] + "구역";
   return "신령의 은혜";
 }
 

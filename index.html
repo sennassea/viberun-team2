@@ -19,6 +19,10 @@
 <link rel="stylesheet" href="mailbox.css">
 <link rel="stylesheet" href="wallet.css">
 <link rel="stylesheet" href="bmStore.css">
+<link rel="stylesheet" href="monthlyPass.css">
+<link rel="stylesheet" href="menuProfile.css">
+<link rel="stylesheet" href="spiritPath.css">
+<link rel="stylesheet" href="globalTooltip.css">
 
 <!-- 반드시 모든 CSS 중 가장 마지막에 로드 -->
 <link rel="stylesheet" href="font-theme.css">
@@ -32,6 +36,23 @@
     <div class="bokeh" style="width:12cqh;height:12cqh;right:18%;top:30%"></div>
 
     <div id="startScreen" class="start-screen">
+      <div class="menu-profile" hidden>
+        <button type="button" class="menu-profile-avatar-btn" aria-label="프로필 아이콘 선택">
+          <img class="menu-profile-avatar" src="assets/profile/profile_default.png" alt="">
+        </button>
+
+        <div class="menu-profile-info">
+          <div class="menu-profile-name">빛솔이</div>
+        </div>
+
+        <div class="menu-profile-popup" hidden>
+          <button type="button" class="menu-profile-option is-default" data-skin-id="">
+            <img src="assets/profile/profile_default.png" alt="">
+            <span>기본</span>
+          </button>
+        </div>
+      </div>
+
       <div class="start-logo" aria-label="혼꽃 - SPIRIT BLOSSOM">
         <div class="start-logo-main">혼꽃</div>
         <div class="start-logo-sub">SPIRIT BLOSSOM</div>
@@ -43,6 +64,7 @@
           <span class="start-menu-label">이어하기</span>
           <span class="continue-status">신령의 은혜</span>
         </button>
+        <button type="button" class="start-menu-button start-ranking-button">랭킹</button>
         <div class="start-menu-row split">
           <button type="button" class="start-menu-button start-codex-button">도감</button>
           <button type="button" class="start-menu-button start-record-button">기록</button>
@@ -59,6 +81,27 @@
         <span class="start-moon-count">0</span>
         <span class="start-moon-plus" aria-hidden="true">＋</span>
       </button>
+
+      <div class="monthly-pass-claim-card" hidden>
+        <div class="monthly-pass-claim-emblem">☾</div>
+
+        <div class="monthly-pass-claim-dday">D-0</div>
+
+        <div class="monthly-pass-claim-title">월영의 약속</div>
+
+        <div class="monthly-pass-claim-divider"></div>
+
+        <div class="monthly-pass-claim-subtitle">오늘의 보상</div>
+
+        <div class="monthly-pass-claim-reward">
+          <span class="monthly-pass-claim-icon">🌙</span>
+          <span class="monthly-pass-claim-text">달빛조각 x15</span>
+        </div>
+
+        <button type="button" class="monthly-pass-claim-button">
+          받기
+        </button>
+      </div>
     </div>
 
     <!-- 상단 HUD -->
@@ -81,15 +124,22 @@
         </div>
         <div id="profileStatusEffects" class="profile-status-effects" aria-label="플레이어 상태이상"></div>
         <div class="progress-center-hud" aria-label="진행 정보">
+          <div class="progress-act" id="hudAct">최초의 여정</div>
+          <div class="progress-separator"></div>
           <div class="progress-region"><span class="progress-icon">🏥</span><span>병원</span></div>
           <div class="progress-separator"></div>
-          <div class="progress-floor" id="hudFloor">1F</div>
+          <div class="progress-floor" id="hudFloor">1구역</div>
           <div class="progress-separator"></div>
           <div class="progress-turn" id="hudTurn"><span id="hudTurnNum">1</span>턴</div>
         </div>
         <div class="spacer"></div>
         <div class="top-right-menu" aria-label="상단 메뉴">
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-map-button">🗺️<span class="sr-only">여정</span></div>
+          <div class="hud-card hud-btn top-menu-button ui-depth-button" id="depthButton">
+            <span class="depth-button-label">심도</span>
+            <span class="depth-button-count" id="depthButtonCount">0</span>
+            <span class="sr-only">심도</span>
+          </div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-codex-button" id="deckViewerButton">📖 <span id="hudDeck">18</span><span class="sr-only">도감</span></div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-bag-button" id="bagViewerButton">🎒<span class="sr-only">가방</span></div>
           <div class="hud-card hud-btn top-menu-button ui-asset-button ui-settings-button">⚙️</div>
@@ -137,6 +187,7 @@
       </div>
       <div class="right-bottom-actions">
         <button id="endTurn">턴 종료</button>
+        <div class="pile exhaust-pile" id="exhaustPile"><div class="stack" id="exhaustCount"></div><div class="plbl">소멸 주문</div></div>
         <div class="pile" id="deckPile"><div class="stack" id="deckCount">18</div><div class="plbl">덱</div></div>
         <div class="pile" id="discardPile"><div class="stack" id="discardCount">0</div><div class="plbl">버린 주문</div></div>
       </div>
@@ -156,6 +207,26 @@
   </div>
 </div>
 
+<!-- 닉네임 변경 모달: 메인화면/전투화면 프로필 공통 사용 -->
+<div class="nickname-modal" hidden>
+  <div class="nickname-modal-backdrop"></div>
+
+  <section class="nickname-modal-panel" role="dialog" aria-modal="true" aria-labelledby="nicknameModalTitle">
+    <h2 id="nicknameModalTitle" class="nickname-modal-title">닉네임 변경</h2>
+
+    <p class="nickname-modal-desc">닉네임은 2~8글자까지 설정할 수 있습니다.</p>
+
+    <input type="text" class="nickname-modal-input" maxlength="16" autocomplete="off" placeholder="닉네임 입력">
+
+    <p class="nickname-modal-error" hidden></p>
+
+    <div class="nickname-modal-actions">
+      <button type="button" class="nickname-modal-cancel">취소</button>
+      <button type="button" class="nickname-modal-confirm">변경</button>
+    </div>
+  </section>
+</div>
+
 <!-- 모바일 세로 안내 -->
 <div id="rotate"><div><div class="ico">📱</div><p>기기를 가로로 돌려주세요</p></div></div>
 
@@ -164,6 +235,8 @@
 
 <!-- 전역 토스트 서비스는 다른 모든 UI 스크립트보다 먼저 로드되어야 합니다 -->
 <script src="toastService.js" defer></script>
+<script src="soundConfig.js" defer></script>
+<script src="soundManager.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="supabaseClient.js" defer></script>
 
@@ -173,25 +246,48 @@
 <script src="mobileAppGuard.js" defer></script>
 <script src="lifeSystem.js" defer></script>
 <script src="balanceData.js" defer></script>
+<script src="endlessJourneyData.js" defer></script>
+<script src="endlessJourneyProgress.js" defer></script>
 <script src="equipment.js" defer></script>
-<script src="potion.js" defer></script>
+<script src="PotionData.js" defer></script>
 <script src="cardData.js" defer></script>
+<script src="spiritPathFilter.js" defer></script>
 <script src="eventData.js" defer></script>
-<script src="script.js" defer></script>
+<script src="rarityLabelColor.js" defer></script>
+<!-- 전투 씬(구 script.js)은 기능별로 분리되어 있으며, 서로 참조하므로 이 순서를 유지해야 합니다 -->
+<script src="battleInit.js" defer></script>
+<script src="battleRunState.js" defer></script>
+<script src="relicSystem.js" defer></script>
+<script src="monsterAI.js" defer></script>
+<script src="statusEffectSystem.js" defer></script>
+<script src="cardPlaySystem.js" defer></script>
+<script src="battleRewards.js" defer></script>
+<script src="turnCycle.js" defer></script>
+<script src="battleRender.js" defer></script>
+<script src="potionBattleUI.js" defer></script>
+<script src="battleDragDrop.js" defer></script>
+<script src="battleFeedback.js" defer></script>
 <script src="runRecord.js" defer></script>
+<script src="rankingService.js" defer></script>
+<script src="rankingUI.js" defer></script>
 <script src="authService.js" defer></script>
 <script src="loginModal.js" defer></script>
 <script src="mailboxService.js" defer></script>
 <script src="walletService.js" defer></script>
 <script src="bmStoreData.js" defer></script>
 <script src="bmStoreService.js" defer></script>
+<script src="nicknameUI.js" defer></script>
 <script src="bmStoreUI.js" defer></script>
 <script src="mailboxUI.js" defer></script>
 <script src="walletUI.js" defer></script>
+<script src="monthlyPassUI.js" defer></script>
+<script src="menuProfileUI.js" defer></script>
+<script src="spiritPathUI.js" defer></script>
 <script src="startMenu.js" defer></script>
 <script src="tutorialDialogueData.js" defer></script>
 <script src="tutorialSystem.js" defer></script>
 <script src="tutorialBattle.js" defer></script>
+<script src="globalTooltip.js" defer></script>
 <script src="tooltip.js" defer></script>
 <script src="deckViewer.js" defer></script>
 <script src="settingsViewer.js" defer></script>
@@ -203,9 +299,15 @@
 <script src="restNode.js" defer></script>
 <script src="bagUI.js" defer></script>
 <script src="shopNode.js" defer></script>
+<script src="endlessJourneyEffects.js" defer></script>
 <script src="eventNode.js" defer></script>
+<script src="treasureNode.js" defer></script>
 <script src="runResultData.js" defer></script>
+<script src="runRewardService.js" defer></script>
 <script src="startBlessing.js" defer></script>
+<script src="endlessJourney.js" defer></script>
+<script src="endlessDepthUI.js" defer></script>
+<script src="journeyDisplay.js" defer></script>
 <script src="runResult.js" defer></script>
 <script src="hand-layout.js" defer></script>
 <script src="cheatConsole.js" defer></script>

@@ -6,50 +6,30 @@
    ========================================================================= */
 
 @font-face {
-  font-family: 'GyeongbokgungSumunjangTitle';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleL.woff2') format('woff2');
-  font-weight: 300;
-  font-display: swap;
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
 }
 
 @font-face {
-  font-family: 'GyeongbokgungSumunjangTitle';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleM.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
 }
 
 @font-face {
-  font-family: 'GyeongbokgungSumunjangTitle';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleB.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GyeongbokgungSumunjangBodyText';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyL.woff2') format('woff2');
-  font-weight: 300;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GyeongbokgungSumunjangBodyText';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyM.woff2') format('woff2');
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'GyeongbokgungSumunjangBodyText';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyB.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
+    font-family: 'GyeongbokgungSumunjangTitle';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_TitleB.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
 }
 
 :root {
-  --font-title: 'GyeongbokgungSumunjangTitle', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
-  --font-body: 'GyeongbokgungSumunjangBodyText', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  --font-title: 'Paperozi', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  --font-body: 'Paperozi', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
+  --font-special-title: 'GyeongbokgungSumunjangTitle', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
 }
 
 /* 게임 전체 기본 본문 폰트 */
@@ -69,33 +49,23 @@ button,
 .start-menu-button,
 .start-mailbox-label,
 .start-moon-count,
-.progress-region,
-.progress-floor,
-.progress-turn,
 .side h3,
 .side-item-title,
 .card .cname,
 .card-frame-card .card-name-text,
-.deck-viewer-head h2,
 .deck-viewer-tab,
 .codex-section-tab,
 .codex-home-label,
 .card-detail-title h3,
 .over-box h2,
 .over-box button,
-.map-title,
-.legend-title,
 .map-node-popup .popup-title,
-.dmap-title-char,
-.dmap-legend-title,
 .dmap-loc-badge,
 .dmap-action-btn,
 .mnode-lbl,
 .mnode-sublbl,
 .mfloor-lbl,
 .mnode-dimmed-badge,
-.event-stage-title-main,
-.event-title,
 .event-choice-label,
 .event-card-name,
 .event-btn,
@@ -113,7 +83,6 @@ button,
 .bm-store-tab,
 .bm-store-product h3,
 .bm-store-buy-btn,
-.bag-ui-title,
 .bag-ui-col-title,
 .settings-viewer-head h2,
 .settings-viewer-section h3,
@@ -123,8 +92,6 @@ button,
 .record-page-main strong,
 .rr-badge span,
 .rr-choice-titlebar span,
-.rr-summary-titlebar span,
-.rr-detail-titlebar span,
 .status-tooltip-title,
 .btt-name {
   font-family: var(--font-title) !important;
@@ -167,5 +134,60 @@ textarea,
 .rr-detail-content,
 .btt-desc {
   font-family: var(--font-body) !important;
-  font-weight: 500;
+  font-weight: 400;
+}
+
+/* =========================================================================
+   포인트 폰트 (경복궁 수문장 제목체)
+   1. 게임 타이틀
+   2. 월영의 약속 UI 제목
+   3. 선물함 UI 제목
+   4. 월영당 UI 제목
+   5. 설정 UI 제목
+   6. 신령의 길 UI 제목
+   7. 신령의 은혜 UI 제목
+   8. 지도 UI '여정' / '범례'
+   9. 전투 화면 닉네임
+   10. 전투 화면 현재 위치 UI (학교/구역/턴)
+   11. 가방 UI 제목
+   12. 보유 주문 UI 제목
+   13. 상점 노드 제목
+   14. 이벤트 노드 제목
+   15. 휴식(기도터) 노드 제목
+   16. 상점 노드 탭 ('주문'/'약병'/'법구')
+   17. 기도터 노드 행동 카드 제목 ('받아들이기'/'정리하기'/'휴식하기')
+   18. 각 노드(전투/상점/이벤트/기도터) 프로필 닉네임
+   19. 이벤트 UI 제목 (예: 열면 안되는 병실 서랍)
+   ========================================================================= */
+.start-logo-main,
+.monthly-pass-claim-title,
+.mailbox-ui-title,
+.bm-store-heading h2,
+.settings-viewer-head h2,
+.spirit-path-title,
+.sb-title,
+.map-title,
+.dmap-title-char,
+.legend-title,
+.dmap-legend-title,
+#hudName,
+.progress-region,
+.progress-floor,
+.progress-turn,
+.progress-act,
+.bag-ui-title,
+.deck-viewer-head h2,
+.shop-stage-title-main,
+.event-stage-title-main,
+.prayer-stage-title-main,
+.shop-tab,
+.prayer-card-title,
+#shopName,
+#eventName,
+#prayerName,
+.event-title,
+.rr-summary-titlebar span,
+.rr-detail-titlebar span {
+  font-family: var(--font-special-title) !important;
+  font-weight: 700;
 }
