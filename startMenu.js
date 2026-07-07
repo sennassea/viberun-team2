@@ -11,8 +11,8 @@ function startNewGameFromMenu(){
   /* 신령의 길 UI(임시 구현, script.js 미수정): 덱 3종 선택 완료 후에만 기존 새 게임 흐름을 실행합니다. */
   if(window.VIBERUN_SPIRIT_PATH_UI && typeof window.VIBERUN_SPIRIT_PATH_UI.open === "function"){
     window.VIBERUN_SPIRIT_PATH_UI.open({
-      onComplete(){
-        startNewGameAfterSpiritPath();
+      onComplete(payload){
+        startNewGameAfterSpiritPath(payload || {});
       }
     });
     return;
@@ -21,11 +21,17 @@ function startNewGameFromMenu(){
   startNewGameAfterSpiritPath();
 }
 
-function startNewGameAfterSpiritPath(){
+function startNewGameAfterSpiritPath(options){
+  options = options || {};
+  const startEndlessLevel = Number(options.startEndlessLevel) || 0;
+
   markHasPlayedBefore();
   /* ACT1 새 게임 시작 오버라이드 (mapNodeLogic.js) */
   if(typeof window.ACT1_START_NEW_GAME === "function"){
-    window.ACT1_START_NEW_GAME();
+    /* 끝없는 여정 직접 시작 분기는 다음 작업에서 구현 예정. 현재는 값만 전달한다. */
+    window.ACT1_START_NEW_GAME({
+      startEndlessLevel
+    });
     return;
   }
 
