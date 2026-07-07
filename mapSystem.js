@@ -202,8 +202,11 @@ function getCurrentNodeId(){
 
 function updateHudFloor(){
   const el = document.getElementById("hudFloor"); if(!el) return;
-  const fi = nodeFloorIdx(getCurrentNodeId());
-  el.textContent = fi > 0 ? fi + "F" : "1F";
+  el.textContent = typeof formatCurrentDisplayArea === "function"
+    ? formatCurrentDisplayArea()
+    : "1구역";
+  const actEl = document.getElementById("hudAct");
+  if(actEl && typeof getCurrentActName === "function") actEl.textContent = getCurrentActName();
 }
 
 function hasNextTier(){

@@ -346,7 +346,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   border-radius:0; backdrop-filter:none; box-shadow:none;
   font-size:2.36cqh; font-weight:900; color:var(--c-ink);}
 .progress-center-hud,.top-right-menu,.player-info-card{z-index:1;}
-.progress-region,.progress-floor,.progress-turn{display:inline-flex; align-items:center; white-space:nowrap; font-family:var(--font-title);}
+.progress-region,.progress-floor,.progress-turn,.progress-act{display:inline-flex; align-items:center; white-space:nowrap; font-family:var(--font-title);}
 .progress-icon{font-size:2.47cqh; line-height:1; margin-right:.25cqw;}
 .progress-separator{width:.18cqh; height:2.6cqh; border-radius:.2cqh; background:var(--c-panel-line);}
 #hudTurn{position:relative; left:auto; top:auto; transform:none;}

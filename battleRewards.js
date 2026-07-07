@@ -458,11 +458,9 @@ function pickBattleVictoryCandidate(list){
 function getBattleVictoryInfo(){
   const stageIdx = window.MAP_STATE ? window.MAP_STATE.currentStage : -1;
   const stage = window.ACT1_MAP_STAGES && stageIdx >= 0 ? window.ACT1_MAP_STAGES[stageIdx] : null;
-  const stageLabel = stage && stage.label ? stage.label : "";
-  const floorMatch = stageLabel.match(/(\d+)\s*층/);
-  const hudFloor = $("#hudFloor") ? $("#hudFloor").textContent.trim() : "";
-  const floorNum = floorMatch ? floorMatch[1] : hudFloor.replace(/F$/, "") || "1";
-  const floor = floorNum + " 구역";
+  const floor = (stage && Number.isFinite(stage.floor) && typeof formatDisplayAreaByFloorIndex === "function")
+    ? formatDisplayAreaByFloorIndex(stage.floor)
+    : (typeof formatCurrentDisplayArea === "function" ? formatCurrentDisplayArea() : "1구역");
   return {
     floor,
     turn: "TURN " + (S.turn || 1),

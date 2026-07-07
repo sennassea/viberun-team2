@@ -72,8 +72,8 @@ window.START_INFINITE_JOURNEY = function(){
   if(nextDebuff && journey.activeDebuffIds.indexOf(nextDebuff.id) === -1){
     journey.activeDebuffIds.push(nextDebuff.id);
   }
-  // 끝없는 여정 1의 첫 전투가 16구역으로 보이도록 ACT1의 15구역만큼 오프셋을 누적한다.
-  journey.totalDisplayFloorOffset = (journey.totalDisplayFloorOffset || 0) + 15;
+  // 끝없는 여정 1의 첫 노드가 17구역으로 보이도록, ACT1 1회 반복 단위(16구역)만큼 오프셋을 계산식으로 대입한다.
+  journey.totalDisplayFloorOffset = nextLevel * 16;
 
   const bossPackageId = (RUN_STATE && RUN_STATE.battlePackageId)
     || (typeof S !== "undefined" && S && S.battlePackageId)

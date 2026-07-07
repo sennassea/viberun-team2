@@ -299,8 +299,8 @@ function updateContinueButtonInfo(options={}){
 
 function formatSavedFloor(saved){
   const label = saved.mapState && saved.mapState.floorLabel ? saved.mapState.floorLabel : "";
-  const match = label.match(/(\d+)\s*F/i);
-  if(match) return match[1] + "층";
+  const match = label.match(/(\d+)\s*(?:F|구역)/i);
+  if(match) return match[1] + "구역";
   return "신령의 은혜";
 }
 

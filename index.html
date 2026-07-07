@@ -124,9 +124,11 @@
         </div>
         <div id="profileStatusEffects" class="profile-status-effects" aria-label="플레이어 상태이상"></div>
         <div class="progress-center-hud" aria-label="진행 정보">
+          <div class="progress-act" id="hudAct">최초의 여정</div>
+          <div class="progress-separator"></div>
           <div class="progress-region"><span class="progress-icon">🏥</span><span>병원</span></div>
           <div class="progress-separator"></div>
-          <div class="progress-floor" id="hudFloor">1F</div>
+          <div class="progress-floor" id="hudFloor">1구역</div>
           <div class="progress-separator"></div>
           <div class="progress-turn" id="hudTurn"><span id="hudTurnNum">1</span>턴</div>
         </div>
@@ -295,6 +297,7 @@
 <script src="runRewardService.js" defer></script>
 <script src="startBlessing.js" defer></script>
 <script src="endlessJourney.js" defer></script>
+<script src="journeyDisplay.js" defer></script>
 <script src="runResult.js" defer></script>
 <script src="hand-layout.js" defer></script>
 <script src="cheatConsole.js" defer></script>

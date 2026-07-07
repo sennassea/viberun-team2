@@ -92,6 +92,26 @@
   right: 1.1cqh;
 }
 
+.dmap-cur-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4cqw;
+  background: transparent;
+  border: 0;
+  font-size: 1.6cqh;
+  font-weight: 800;
+  color: #3b2a0a;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.dmap-cur-badge .dmap-loc-icon { display: inline; font-size: 1.6cqh; }
+.dmap-cur-badge .dmap-loc-floor {
+  color: #a07020;
+  font-weight: 900;
+  font-size: 1.8cqh;
+}
+
 .dmap-close {
   width: 4.6cqh;
   height: 4.6cqh;
