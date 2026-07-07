@@ -475,6 +475,11 @@
   filter: drop-shadow(0 1.2px 1.8px rgba(0,0,0,.28));
 }
 
+.mplayer-marker {
+  pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
+}
+
 /* 경로 선 */
 .mpath {
   stroke: #b09050;

@@ -323,6 +323,7 @@ function renderCanvas(currentNodeId) {
 
   /* ── 노드 그룹 ── */
   let svgNodes = "";
+  let curNodeR = 27;
   MAP_FLOORS.forEach(floor => floor.forEach(node => {
     const p = pos[node.id]; if (!p) return;
     const { x, y } = p;
@@ -332,6 +333,7 @@ function renderCanvas(currentNodeId) {
 
     // 보스는 약간 크게, 현재 위치는 조금 크게
     const r = node.type === "boss" ? 28 : (cur ? 27 : 22);
+    if (cur) curNodeR = r;
 
     const cls = [
       "mnode", `mnode-${node.type}`,
@@ -366,14 +368,18 @@ function renderCanvas(currentNodeId) {
     </g>`;
   }));
 
-  /* ── 플레이어 마커 ── */
+  /* ── 플레이어 마커 (노드 아이콘 위에 서 있는 캐릭터) ── */
   let svgPin = "";
   if (pos[currentNodeId]) {
     const { x, y } = pos[currentNodeId];
-    svgPin = `<g transform="translate(${x | 0},${(y - 47) | 0})">
-      <polygon points="0,-14 12,8 -12,8" fill="#e7b54a" stroke="#b07d1d" stroke-width="2"/>
-      <text text-anchor="middle" y="-1" font-size="14">👼</text>
-    </g>`;
+    const charH = 74;
+    const charW = charH * (193 / 260);
+    // 발이 노드 원 안쪽으로 살짝 겹치도록 해서 원 위에 서 있는 것처럼 보이게 함
+    const feetY = y - curNodeR + 9;
+    svgPin = `<image href="assets/map_icons/player_marker.png"
+      x="${(x - charW / 2) | 0}" y="${(feetY - charH) | 0}"
+      width="${charW | 0}" height="${charH | 0}"
+      class="mplayer-marker" preserveAspectRatio="xMidYMid meet"/>`;
   }
 
   /* ── SVG 업데이트 ── */
