@@ -22,8 +22,9 @@
 
   function normalizeWallet(wallet){
     const source = wallet && typeof wallet === "object" ? wallet : {};
-    const moonShards = Math.max(0, Math.floor(Number(source.moonShards) || 0));
-    return { moonShards };
+    const gemValue = typeof source.gem !== "undefined" ? source.gem : source.moonShards;
+    const gem = Math.max(0, Math.floor(Number(gemValue) || 0));
+    return { gem, moonShards: gem };
   }
 
   function emitWalletChanged(wallet){

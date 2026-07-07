@@ -25,11 +25,9 @@
 
   function normalizeWallet(wallet){
     const source = wallet && typeof wallet === "object" ? wallet : {};
-    const gold = Math.max(0, Math.floor(Number(source.gold) || 0));
     const gem = Math.max(0, Math.floor(Number(source.gem) || 0));
     return {
       user_id: String(source.user_id || "").trim(),
-      gold,
       gem,
       moonShards: gem,
       updated_at: source.updated_at || null
@@ -116,7 +114,7 @@
         return { ok: false, error: result.error, message: result.error.message || "재화 정보를 불러오지 못했습니다." };
       }
 
-      return client.from("wallets").insert({ user_id: id, gold: 0, gem: 0 }).select("*").single().then(insertResult => {
+      return client.from("wallets").insert({ user_id: id, gem: 0 }).select("*").single().then(insertResult => {
         if(insertResult && insertResult.error){
           return { ok: false, error: insertResult.error, message: insertResult.error.message || "재화 정보를 생성하지 못했습니다." };
         }

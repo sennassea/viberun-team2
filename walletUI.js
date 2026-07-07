@@ -62,8 +62,8 @@
     const source = wallet || (window.VIBERUN_WALLET && window.VIBERUN_WALLET.getCachedWallet
       ? window.VIBERUN_WALLET.getCachedWallet()
       : null);
-    const moonShards = source && typeof source.moonShards !== "undefined" ? source.moonShards : 0;
-    countEl.textContent = formatCount(moonShards);
+    const gem = source && typeof source.gem !== "undefined" ? source.gem : (source && source.moonShards);
+    countEl.textContent = formatCount(gem);
   }
 
   function refresh(){
@@ -77,6 +77,14 @@
 
     setVisible(true);
     render();
+
+    if(window.VIBERUN_USER_DATA && typeof window.VIBERUN_USER_DATA.getCachedWallet === "function"){
+      const cachedWallet = window.VIBERUN_USER_DATA.getCachedWallet();
+      if(cachedWallet){
+        render(cachedWallet);
+        return;
+      }
+    }
 
     if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.fetchWallet === "function"){
       Promise.resolve(window.VIBERUN_WALLET.fetchWallet()).then(result => {
@@ -101,6 +109,12 @@
 
   window.addEventListener("viberun:auth-changed", () => {
     refresh();
+  });
+
+  window.addEventListener("viberun:user-data-changed", event => {
+    const wallet = event && event.detail ? event.detail.wallet : null;
+    render(wallet || { gem: 0 });
+    setVisible(isLoggedIn());
   });
 
   if(document.readyState === "loading"){

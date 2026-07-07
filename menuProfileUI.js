@@ -35,6 +35,18 @@
     return window.VIBERUN_BM_STORE_DATA || null;
   }
 
+  function getServerProfile(){
+    const userData = window.VIBERUN_USER_DATA;
+    if(!userData || typeof userData.getCachedProfile !== "function") return null;
+    return userData.getCachedProfile();
+  }
+
+  function getDisplayName(profileState){
+    const serverProfile = getServerProfile();
+    if(serverProfile && serverProfile.nickname) return serverProfile.nickname;
+    return (profileState && profileState.displayName) || "빛솔이";
+  }
+
   function showToastMessage(message, type){
     if(typeof toast === "function"){
       toast(message, type || "info");
@@ -175,7 +187,7 @@
 
     const currentProfileIcon = (profileState && profileState.currentProfileIcon) || DEFAULT_PROFILE_ICON;
     avatarImgEl.src = currentProfileIcon;
-    nameEl.textContent = (profileState && profileState.displayName) || "빛솔이";
+    nameEl.textContent = getDisplayName(profileState);
   }
 
   function handleOptionClick(skinId){
@@ -291,6 +303,11 @@
     const nickname = event.detail && event.detail.nickname;
     if(!ensureElements() || !nickname) return;
     nameEl.textContent = nickname;
+  });
+  window.addEventListener("viberun:user-data-changed", event => {
+    const profile = event.detail && event.detail.profile;
+    if(!ensureElements() || !profile || !profile.nickname) return;
+    nameEl.textContent = profile.nickname;
   });
 
   if(document.readyState === "loading"){
