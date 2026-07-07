@@ -329,7 +329,7 @@ function buildOverlay(){
                style="width:100%;height:100%;display:block"></svg>
         </div>
         <div class="map-legend">
-          <div class="legend-title">범례</div>
+          <div class="legend-title">길목 안내</div>
           <div class="legend-item"><span class="leg-ico enemy">👺</span>미련이 느껴지는 곳</div>
           <div class="legend-item"><span class="leg-ico elite">👹</span>기운이 더 무거워 보이는 곳</div>
           <div class="legend-item"><span class="leg-ico boss">💀</span>기운이 엄청 무거운 곳</div>

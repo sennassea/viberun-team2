@@ -390,21 +390,14 @@ function renderCanvas(currentNodeId) {
     actBadge.textContent = typeof getCurrentActName === "function" ? getCurrentActName() : "최초의 여정";
   }
 
-  /* ── 현재 위치 배지 (닫기 버튼 근처) ── */
-  const floorBadge = document.getElementById("mapCurrentFloor");
-  if (floorBadge) {
-    floorBadge.textContent = tutorialCurrentLabel ||
-      (typeof formatDisplayAreaByFloorIndex === "function" ? formatDisplayAreaByFloorIndex(myFloor) : "신령의 은혜");
-  }
-
   /* ── 푸터 텍스트 ── */
   const footer = document.getElementById("mapFooter");
   if (footer) {
-    footer.textContent = tutorialCurrentLabel
-      ? "📍 현재 위치: " + tutorialCurrentLabel
-      : window.MAP_STATE.proceedMode
+    const areaLabel = tutorialCurrentLabel ||
+      (typeof formatDisplayAreaByFloorIndex === "function" ? formatDisplayAreaByFloorIndex(myFloor) : "신령의 은혜");
+    footer.textContent = window.MAP_STATE.proceedMode
       ? "강조된 다음 구역을 클릭/터치하여 진행하세요"
-      : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
+      : (areaLabel ? "📍 현재 위치: " + areaLabel : "");
   }
 
   /* ── 다음 노드 클릭 이벤트 ── */
@@ -507,10 +500,6 @@ function buildOverlay() {
           <span class="dmap-title-char dmap-title-left" aria-hidden="true">여</span>
           <span class="dmap-title-char dmap-title-right" aria-hidden="true">정</span>
         </span>
-        <div class="dmap-cur-badge" id="mapCurLocBadge">
-          <span class="dmap-loc-icon">📍</span>
-          <span class="dmap-loc-floor" id="mapCurrentFloor">-</span>
-        </div>
         <button class="map-close dmap-close" id="mapClose" aria-label="닫기">✕</button>
       </div>
       <div class="map-body dmap-body">
@@ -522,7 +511,7 @@ function buildOverlay() {
           </div>
         </div>
         <div class="map-legend dmap-legend" id="dMapLegend">
-          <div class="legend-title dmap-legend-title">✦ 범례 ✦</div>
+          <div class="legend-title dmap-legend-title">✦ 길목 안내 ✦</div>
           ${legendHtml}
         </div>
         <div class="dmap-tip-box" id="dMapTipBox"></div>
