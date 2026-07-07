@@ -182,11 +182,18 @@
     });
   }
 
+  function resolveProfileIcon(equippedSkinId){
+    const data = getStoreData();
+    const fallback = (data && typeof data.getDefaultProfileIcon === "function" && data.getDefaultProfileIcon()) || DEFAULT_PROFILE_ICON;
+    if(!equippedSkinId || !data || typeof data.getCharacterSkinBySkinId !== "function") return fallback;
+    const skin = data.getCharacterSkinBySkinId(equippedSkinId);
+    return (skin && skin.profileIcon) || fallback;
+  }
+
   function renderProfile(profileState){
     if(!ensureElements()) return;
 
-    const currentProfileIcon = (profileState && profileState.currentProfileIcon) || DEFAULT_PROFILE_ICON;
-    avatarImgEl.src = currentProfileIcon;
+    avatarImgEl.src = resolveProfileIcon(profileState && profileState.equippedSkinId);
     nameEl.textContent = getDisplayName(profileState);
   }
 
