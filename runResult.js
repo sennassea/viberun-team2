@@ -1133,6 +1133,47 @@ function submitRunRankingIfAvailable(snapshot){
     });
 }
 
+/* ── 끝없는 여정 직접 시작 첫 승리 연출 판별 ────────────────────────────────
+   신령의 길에서 끝없는 여정 N을 직접 시작한 런은 그 N의 첫 보스 승리에서만
+   신령 승리 연출을 보여주고, 이후 진입하는 끝없는 여정에서는 기존처럼
+   연출을 생략한다 (기획서: 직접 시작 ACT의 첫 보스 승리 1회). */
+function shouldShowDirectStartEndlessVictoryPresentation(){
+  const journey = getRrJourneyState();
+  if(!journey || journey.mode !== "endless") return false;
+
+  const targetLevel = Number(journey.firstVictoryPresentationEndlessLevel) || 0;
+  if(targetLevel <= 0) return false;
+  if(journey.firstVictoryPresentationShown) return false;
+
+  return Number(journey.endlessLevel) === targetLevel;
+}
+
+function markDirectStartEndlessVictoryPresentationShown(){
+  const journey = getRrJourneyState();
+  if(!journey) return;
+
+  journey.firstVictoryPresentationShown = true;
+
+  if(typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.journey){
+    RUN_STATE.journey.firstVictoryPresentationShown = true;
+  }
+  if(typeof S !== "undefined" && S && S.journey){
+    S.journey.firstVictoryPresentationShown = true;
+  }
+}
+
+function markEndlessProgressIfNeeded(){
+  const journey = getRrJourneyState();
+  if(!journey || journey.mode !== "endless") return;
+  const level = Number(journey.endlessLevel) || 0;
+  if(level <= 0) return;
+
+  const progress = window.VIBERUN_ENDLESS_PROGRESS;
+  if(progress && typeof progress.markCleared === "function"){
+    progress.markCleared(level);
+  }
+}
+
 function rrOpen(result, onContinue){
   if(result !== "win" && result !== "lose") return false;
 
@@ -1141,7 +1182,18 @@ function rrOpen(result, onContinue){
   submitRunRankingIfAvailable(snapshot);
 
   if(result === "win"){
+    markEndlessProgressIfNeeded();
+
     if(isRrEndlessMode()){
+      if(shouldShowDirectStartEndlessVictoryPresentation()){
+        // 끝없는 여정 N부터 직접 시작한 런의 첫 보스 승리: 신령 승리 연출을 1회만 보여준다.
+        markDirectStartEndlessVictoryPresentationShown();
+        const directStartSpirit = getSavedEndingSpirit();
+        if(directStartSpirit){
+          renderBlessingSpiritAppearance(directStartSpirit, snapshot, onContinue);
+          return true;
+        }
+      }
       // 끝없는 여정 보스 클리어: 신령 출현 승리 연출을 생략하고 바로 동자신 선택지로 이동한다.
       renderEndlessJourneyChoice(NPC_DONGJASEUNG, snapshot, onContinue);
       return true;

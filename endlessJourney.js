@@ -31,6 +31,55 @@ window.getEndlessJourneyDebuffByLevel = getEndlessJourneyDebuffByLevel;
 window.getEndlessJourneyActiveDebuffs = getEndlessJourneyActiveDebuffs;
 window.canEnterEndlessJourney = canEnterEndlessJourney;
 
+/* ── 신령의 길에서 선택한 시작 여정 레벨을 새 런에 적용 ─────────────────
+   ACT1_START_NEW_GAME(mapNodeLogic.js)이 beginNewRun() 직후 호출한다.
+   0(최초의 여정)이면 아무것도 하지 않아 기존 새 게임 흐름과 동일하게 유지된다. */
+window.APPLY_START_ENDLESS_LEVEL_TO_NEW_RUN = function(requestedLevel){
+  const level = Number(requestedLevel) || 0;
+  if(level <= 0) return 0;
+
+  const progress = window.VIBERUN_ENDLESS_PROGRESS;
+  const canStart = progress && typeof progress.canStartFromEndlessLevel === "function"
+    ? progress.canStartFromEndlessLevel(level)
+    : false;
+
+  if(!canStart){
+    console.warn("[EndlessJourney] 아직 시작할 수 없는 끝없는 여정 레벨입니다: " + level);
+    if(typeof toast === "function") toast("아직 선택할 수 없는 여정입니다.");
+    return 0;
+  }
+
+  if(typeof RUN_STATE === "undefined" || !RUN_STATE){
+    console.warn("[EndlessJourney] RUN_STATE가 없어 시작 여정 레벨을 적용할 수 없습니다.");
+    return 0;
+  }
+
+  const journey = typeof ensureJourneyState === "function"
+    ? ensureJourneyState(RUN_STATE)
+    : RUN_STATE.journey;
+  if(!journey) return 0;
+
+  journey.mode = "endless";
+  journey.actName = "끝없는 여정 " + level;
+  journey.endlessLevel = level;
+  journey.totalDisplayFloorOffset = level * 16;
+  journey.activeDebuffIds = [];
+  // 직접 시작한 끝없는 여정 N의 첫 보스 승리에서만 신령 승리 연출을 보여준다.
+  journey.firstVictoryPresentationEndlessLevel = level;
+  journey.firstVictoryPresentationShown = false;
+
+  for(let debuffLevel = 1; debuffLevel <= level; debuffLevel++){
+    const debuff = getEndlessJourneyDebuffByLevel(debuffLevel);
+    if(debuff && journey.activeDebuffIds.indexOf(debuff.id) === -1){
+      journey.activeDebuffIds.push(debuff.id);
+    }
+  }
+
+  if(typeof S !== "undefined" && S) S.journey = cloneJourneyState(journey);
+
+  return level;
+};
+
 window.START_INFINITE_JOURNEY = function(){
   if(typeof S !== "undefined" && S) syncRunStateFromCombat();
 

@@ -468,10 +468,16 @@ window.ACT1_REGENERATE_MAP = function(options = {}) {
 };
 
 /* ── 새 게임 시작: 로비에서 신령의 은혜 화면을 먼저 연다 ─────────────── */
-window.ACT1_START_NEW_GAME = function() {
+window.ACT1_START_NEW_GAME = function(options = {}) {
   try { localStorage.removeItem("viberunSaveState"); } catch (e) {}
 
   if (typeof beginNewRun === "function") beginNewRun();
+
+  /* 신령의 길 UI에서 선택한 시작 여정 레벨(끝없는 여정 N 직접 시작)을 적용한다.
+     0(최초의 여정)이면 아무 것도 하지 않아 기존 흐름과 동일하게 유지된다. */
+  if (typeof window.APPLY_START_ENDLESS_LEVEL_TO_NEW_RUN === "function") {
+    window.APPLY_START_ENDLESS_LEVEL_TO_NEW_RUN(options && options.startEndlessLevel);
+  }
 
   /* ACT1 15층 맵 생성 */
   window.ACT1_REGENERATE_MAP({

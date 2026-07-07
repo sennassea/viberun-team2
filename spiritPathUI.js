@@ -61,6 +61,9 @@
   let deckPackProductsById = {};
   let walletMoonShards = 0;
   let onCompleteCallback = null;
+  const state = {
+    startEndlessLevel: 0
+  };
 
   function showToastMessage(message){
     if(typeof toast === "function"){
@@ -85,6 +88,59 @@
       .map(key => CARD_DB[key])
       .filter(card => card && card.attr === deck.cardAttr)
       .slice(0, 4);
+  }
+
+  function getUnlockedStartLevels(){
+    const progress = window.VIBERUN_ENDLESS_PROGRESS;
+    if(progress && typeof progress.getUnlockedStartLevels === "function"){
+      return progress.getUnlockedStartLevels();
+    }
+    return [{ level: 0, label: "최초의 여정", unlocked: true }];
+  }
+
+  function renderActOption(entry){
+    const level = entry.level;
+    const selected = state.startEndlessLevel === level;
+    const title = level === 0 ? "최초의 여정" : "끝없는 여정 " + level;
+    const subtitle = level === 0 ? "기본 시작" : "심도 1~" + level + " 적용";
+
+    return (
+      '<button type="button" class="spirit-path-act-option' +
+        (selected ? ' selected' : '') +
+      '" data-start-endless-level="' + level + '">' +
+        '<strong>' + title + '</strong>' +
+        '<span>' + subtitle + '</span>' +
+      '</button>'
+    );
+  }
+
+  function renderActSection(){
+    const levels = getUnlockedStartLevels();
+    const optionsHtml = levels.map(renderActOption).join("");
+
+    return (
+      '<div class="spirit-path-act-section">' +
+        '<h2 class="spirit-path-act-title">시작 여정</h2>' +
+        '<p class="spirit-path-act-desc">클리어한 끝없는 여정까지 선택할 수 있습니다.</p>' +
+        '<div class="spirit-path-act-list">' + optionsHtml + '</div>' +
+      '</div>'
+    );
+  }
+
+  function selectStartEndlessLevel(level){
+    const numericLevel = Number(level);
+    const progress = window.VIBERUN_ENDLESS_PROGRESS;
+    const canStart = progress && typeof progress.canStartFromEndlessLevel === "function"
+      ? progress.canStartFromEndlessLevel(numericLevel)
+      : numericLevel === 0;
+
+    if(!canStart){
+      showToastMessage("아직 선택할 수 없는 여정입니다.");
+      return;
+    }
+
+    state.startEndlessLevel = numericLevel;
+    render();
   }
 
   function ensureRoot(){
@@ -159,6 +215,7 @@
         '<div class="spirit-path-count">' + selectedDeckIds.length + '/' + REQUIRED_SELECTION_COUNT + ' 선택 완료</div>' +
         '<div class="spirit-path-card-list">' + cardsHtml + '</div>' +
         '<p class="spirit-path-note">※ 범용 주문, 약병, 법구는 항상 이번 여정에 포함됩니다.</p>' +
+        renderActSection() +
         '<div class="spirit-path-actions">' +
           '<button type="button" class="spirit-path-back">뒤로가기</button>' +
           '<span class="spirit-path-wallet">🌙 보유 달빛 조각 <strong>' + formatMoonShards(walletMoonShards) + '</strong></span>' +
@@ -187,6 +244,12 @@
       btnEl.addEventListener("click", event => {
         event.stopPropagation();
         openDeckPackPurchase(btnEl.dataset.deckPackId);
+      });
+    });
+
+    root.querySelectorAll(".spirit-path-act-option").forEach(btnEl => {
+      btnEl.addEventListener("click", () => {
+        selectStartEndlessLevel(btnEl.dataset.startEndlessLevel);
       });
     });
   }
@@ -284,6 +347,7 @@
       : null;
 
     selectedDeckIds = DEFAULT_SELECTED.slice();
+    state.startEndlessLevel = 0;
     loadDeckPackProducts();
 
     ensureRoot();
@@ -309,7 +373,8 @@
 
     const payload = {
       selectedDeckIds: selectedDeckIds.slice(),
-      alwaysIncludeGeneric: true
+      alwaysIncludeGeneric: true,
+      startEndlessLevel: state.startEndlessLevel || 0
     };
 
     try {
