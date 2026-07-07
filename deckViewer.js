@@ -39,6 +39,7 @@
     { id: "attack", label: "정화(공격)" },
     { id: "defense", label: "결계(방어)" },
     { id: "skill", label: "스킬(강화)" },
+    { id: "status", label: "상태이상" },
   ];
 
   const filterState = {
@@ -905,6 +906,7 @@
     if(type === "attack" || type === "purify" || type === "정화" || type === "공격") return "attack";
     if(type === "defense" || type === "barrier" || type === "결계" || type === "방어") return "defense";
     if(type === "skill" || type === "boost" || type === "스킬" || type === "강화") return "skill";
+    if(type === "status" || type === "상태이상") return "status";
     return "";
   }
 
