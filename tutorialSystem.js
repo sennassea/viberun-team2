@@ -616,6 +616,9 @@
       S.busy = false;
     }
     finishTutorialMode();
+    if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+      window.VIBERUN_SOUND.playBgm("bgmTutorial");
+    }
     showTutorialCompleteOverlay();
   }
 

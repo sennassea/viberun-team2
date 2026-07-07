@@ -26,6 +26,7 @@
   border:0;
   background:transparent url("assets/ui/settings/outer_panel.png") center/100% 100% no-repeat;
   box-shadow:0 1.6cqh 3.8cqh rgba(8,35,68,.28);
+  transform:translateY(6cqh);
 }
 .auth-login-head{
   display:flex;
@@ -56,10 +57,10 @@
 }
 .auth-login-actions{
   display:grid;
-  gap:1.1cqh;
+  gap:.8cqh;
 }
 .auth-login-button{
-  width:84%;
+  width:46%;
   aspect-ratio:1086/362;
   margin:0 auto;
   display:flex;
