@@ -57,6 +57,49 @@ function escapeDepthHtml(value){
 let depthDropdownEl = null;
 let depthDropdownAnchor = null;
 
+/* ── 드래그 스크롤: 스크롤바 대신 마우스/터치로 목록을 끌어서 넘긴다 ── */
+function setupDepthDragScroll(el){
+  let dragging = false, startY = 0, startScroll = 0, moved = false;
+
+  const onMove = clientY => {
+    const dy = clientY - startY;
+    if (Math.abs(dy) > 3) moved = true;
+    el.scrollTop = startScroll - dy;
+  };
+  const endDrag = () => {
+    dragging = false;
+    el.style.cursor = "grab";
+    window.removeEventListener("mousemove", onMouseMove);
+    window.removeEventListener("mouseup", endDrag);
+  };
+  const onMouseMove = e => { if (dragging) onMove(e.clientY); };
+
+  el.style.cursor = "grab";
+  el.addEventListener("mousedown", e => {
+    dragging = true; moved = false;
+    startY = e.clientY; startScroll = el.scrollTop;
+    el.style.cursor = "grabbing";
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", endDrag);
+  });
+  el.addEventListener("touchstart", e => {
+    if (!e.touches.length) return;
+    dragging = true; moved = false;
+    startY = e.touches[0].clientY; startScroll = el.scrollTop;
+  }, { passive: true });
+  el.addEventListener("touchmove", e => {
+    if (!dragging || !e.touches.length) return;
+    onMove(e.touches[0].clientY);
+  }, { passive: true });
+  el.addEventListener("touchend", () => { dragging = false; }, { passive: true });
+
+  /* 드래그로 끌던 중이었으면 클릭으로 오인해 드롭다운이 닫히지 않도록 막는다 */
+  el.addEventListener("click", event => {
+    event.stopPropagation();
+    if (moved) event.preventDefault();
+  });
+}
+
 function ensureDepthDropdown(){
   if(depthDropdownEl && depthDropdownEl.isConnected) return depthDropdownEl;
   const host = document.getElementById("game") || document.body;
@@ -66,7 +109,7 @@ function ensureDepthDropdown(){
   el.innerHTML =
     '<div class="depth-dropdown-title">적용 중인 심도</div>' +
     '<div class="depth-list" id="depthList"></div>';
-  el.addEventListener("click", event => event.stopPropagation());
+  setupDepthDragScroll(el);
   host.appendChild(el);
   depthDropdownEl = el;
   return el;

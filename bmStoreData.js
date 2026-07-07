@@ -123,6 +123,7 @@
 
       battleProfileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
       battleStandingImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png",
+      mapMarkerImage: "assets/map_icons/player_marker_moonlight_vow_magic_maiden.png",
 
       purchasable: true,
       dimmed: false,
@@ -156,6 +157,7 @@
 
       battleProfileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
       battleStandingImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
+      mapMarkerImage: "assets/map_icons/player_marker_wolyeong_academy_transfer.png",
 
       purchasable: true,
       dimmed: false,
@@ -189,6 +191,7 @@
 
       battleProfileIcon: "assets/profile/profile_common_prayer_robe.png",
       battleStandingImage: "assets/skins/skin_common_prayer_robe.png",
+      mapMarkerImage: "assets/map_icons/player_marker_common_prayer_robe.png",
 
       purchasable: true,
       dimmed: false
@@ -199,6 +202,7 @@
      equippedSkinId가 없거나 매핑에 실패했을 때 이 값으로 fallback합니다. */
   const DEFAULT_PROFILE_ICON = "assets/profile/profile_default.png";
   const DEFAULT_BATTLE_STANDING_IMAGE = "assets/characters/player-temp-cutout.png";
+  const DEFAULT_MAP_MARKER_IMAGE = "assets/map_icons/player_marker.png";
 
   /* 주문 팩 탭 임시 구현입니다(작업명: 주문 덱 BM 임시 구현).
      기존 주문 부적 팩 4종 대신 한풀이 덱 / 굿판 덱 확장덱 2종을 임시로 노출합니다.
@@ -470,6 +474,9 @@
     },
     getDefaultBattleStandingImage(){
       return DEFAULT_BATTLE_STANDING_IMAGE;
+    },
+    getDefaultMapMarkerImage(){
+      return DEFAULT_MAP_MARKER_IMAGE;
     },
     getOrderPackProducts(){
       return clone(ORDER_PACK_PRODUCTS);

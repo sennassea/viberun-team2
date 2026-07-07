@@ -371,7 +371,7 @@
       test: function (d) { return /제단의 기운/.test(d); },
       icon: "",
       name: "제단의 기운",
-      desc: "이 위령 동안 매 턴 처음으로 복 주문을 사용하면 마음의 결계를 2 얻습니다."
+      desc: "이 위령 동안 매 턴 처음으로 복 주문을 사용하면 마음의 결계를 1 얻습니다."
     },
     {
       test: function (d) { return /고요한 결계/.test(d); },
@@ -401,7 +401,7 @@
       test: function (d) { return /신명 복/.test(d); },
       icon: "",
       name: "신명 복",
-      desc: "이 위령 동안 방울치기의 정화량이 1 증가합니다."
+      desc: "이 위령 동안 방울치기의 정화량이 3 증가합니다."
     },
     {
       test: function (d) { return /열기 복/.test(d); },

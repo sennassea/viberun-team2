@@ -698,7 +698,7 @@ function applyEventCardRemove(effect){
   for(let i = 0; i < count && STARTER_DECK.length > 1; i++){
     const removableIdxs = STARTER_DECK
       .map((_, idx) => idx)
-      .filter(idx => typeof isEndlessRestCardRemovable !== "function" || isEndlessRestCardRemovable(STARTER_DECK[idx]));
+      .filter(idx => typeof window.IS_CARD_REMOVABLE_FROM_DECK !== "function" || window.IS_CARD_REMOVABLE_FROM_DECK(STARTER_DECK[idx]));
     if(!removableIdxs.length) break;
     const idx = removableIdxs[Math.floor(Math.random() * removableIdxs.length)];
     const key = STARTER_DECK[idx];
