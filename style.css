@@ -508,6 +508,7 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   font-size:2.18cqh; font-weight:700; color:var(--c-ink); background:rgba(255,255,255,.6);
   padding:.3cqh 1.4cqw; border-radius:1cqh; white-space:nowrap;}
 #hint .r{color:var(--c-red-deep);} #hint .b{color:var(--c-blue-deep);}
+#hint.hint-hidden{display:none;}
 
 /* ?좎삤瑜대뒗 ?④낵 ?덉씠???щ젋????吏?뚯?吏 ?딅룄濡?遺꾨━) */
 #fx{position:absolute; inset:0; z-index:60; pointer-events:none;}
