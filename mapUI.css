@@ -176,6 +176,17 @@
      지금은 .dmap-canvas-wrap 자체의 right가 이미 구분선에 맞게 정확히 잡혀 있으므로,
      여기서는 프레임 모서리 장식(구름 문양)만 살짝 가리는 최소한의 여유만 둔다. */
   clip-path: polygon(6% 3%, 96% 3%, 100% 18%, 100% 84%, 95% 97%, 5% 97%, 0% 84%, 0% 18%);
+  /* clip-path 경계가 각지고 또렷해서 드래그 시 노드/경로가 잘리는 라인이 선명하게 보이던
+     문제를 완화하기 위해, 상하좌우 네 면 전체(팔각형 모양과 무관하게 박스 전체 둘레)가
+     가장자리로 갈수록 서서히 투명해지도록 두 방향 선형 그라디언트를 겹쳐 마스크한다. */
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  -webkit-mask-composite: source-in, source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  mask-composite: intersect;
   /* 맵 영역(#mapCanvas) 자체를 80% 크기로 축소하되, 중심은 그대로 유지 */
   transform: scale(0.8);
   transform-origin: 50% 50%;
@@ -332,7 +343,8 @@
 
 /* ── 하단 바 ──────────────────────────────────────────────────────────────── */
 .dmap-bottom {
-  border-top: 0;
+  /* .dmap-body 아래에 하단 바가 붕 떠 보이는 것을 막기 위한 구분선 */
+  border-top: 0.14cqh solid rgba(176, 130, 50, 0.4);
   background: transparent;
   display: flex;
   align-items: center;
