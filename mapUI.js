@@ -511,7 +511,7 @@ function buildOverlay() {
           </div>
         </div>
         <div class="map-legend dmap-legend" id="dMapLegend">
-          <div class="legend-title dmap-legend-title">✦ 길목 안내 ✦</div>
+          <div class="legend-title dmap-legend-title">✦ 길잡이 ✦</div>
           ${legendHtml}
         </div>
         <div class="dmap-tip-box" id="dMapTipBox"></div>
