@@ -337,27 +337,25 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .ui-bag-button::before{background-image:url("assets/ui_buttons/bag.png");}
 .ui-codex-button::before{background-image:url("assets/ui_buttons/codex.png");}
 .ui-settings-button::before{background-image:url("assets/ui_buttons/settings.png");}
+.ui-depth-button::before{background-image:url("assets/ui_buttons/depth.png");}
 .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
   clip:rect(0,0,0,0); white-space:nowrap; border:0;}
 
 /* ── 심도(끝없는 여정 디버프) 확인 버튼/드롭다운 ───────────────────────── */
 .ui-depth-button{position:relative;}
-.top-menu-button.ui-depth-button{
-  flex-direction:column; gap:.15cqh; font-family:var(--font-title);
-  background:rgba(255,255,255,.82); border:.18cqh solid var(--c-panel-line); border-radius:.9cqh;
-}
-.top-menu-button.ui-depth-button .depth-button-label{font-size:1.5cqh; font-weight:800; color:var(--c-ink); line-height:1;}
 .top-menu-button.ui-depth-button .depth-button-count{
-  position:absolute; top:-.4cqh; right:-.4cqh; min-width:1.7cqh; height:1.7cqh; padding:0 .3cqh;
-  border-radius:50%; background:#3b6ea5; color:#fff; font-size:1.1cqh; font-weight:800;
-  display:flex; align-items:center; justify-content:center; line-height:1;
+  position:absolute; top:-.7cqh; right:-.7cqh; min-width:2.6cqh; height:2.6cqh; padding:0 .4cqh;
+  border-radius:50%; background:#3b6ea5; color:#fff; font-size:1.6cqh; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1; z-index:1;
+  border:.15cqh solid #fff; box-shadow:0 .1cqh .3cqh rgba(0,0,0,.35);
 }
 .top-menu-button.ui-depth-button.depth-button-inactive .depth-button-count{background:#8a8a8a;}
 
 .dmap-action-btn.ui-depth-button .depth-button-count{
-  display:inline-flex; align-items:center; justify-content:center; min-width:1.6cqh; height:1.6cqh;
-  padding:0 .3cqh; margin-left:.3cqw; border-radius:50%; background:#8f2f2f; color:#fff;
-  font-size:1.1cqh; font-weight:800;
+  position:absolute; top:-.7cqh; right:-.7cqh; display:flex; align-items:center; justify-content:center;
+  min-width:2.4cqh; height:2.4cqh; padding:0 .4cqh; margin-left:0; border-radius:50%;
+  background:#8f2f2f; color:#fff; font-size:1.5cqh; font-weight:800; z-index:1;
+  border:.15cqh solid #fff; box-shadow:0 .1cqh .3cqh rgba(0,0,0,.35);
 }
 .dmap-action-btn.ui-depth-button.depth-button-inactive .depth-button-count{background:#8a8a8a;}
 

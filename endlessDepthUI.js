@@ -39,6 +39,10 @@ function formatDepthDesc(debuff){
 function isDepthUiHidden(){
   if(typeof S !== "undefined" && S && S.tutorialMode) return true;
   if(typeof window.isTutorialMapLegendMode === "function" && window.isTutorialMapLegendMode()) return true;
+  const journey = (typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.journey)
+    ? RUN_STATE.journey
+    : (typeof S !== "undefined" && S && S.journey ? S.journey : null);
+  if(journey && journey.mode !== "endless") return true;
   return false;
 }
 

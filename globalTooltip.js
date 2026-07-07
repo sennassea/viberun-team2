@@ -489,8 +489,11 @@
      월영당 주문 팩(덱) 구매 확인 팝업 – 덱 구성 미리보기
      - bmStoreUI.js가 만드는 .bm-purchase-confirm-panel이 생성될 때, 표시된 상품명이
        deck_pack 상품과 일치하면 팝업 맨 위에 "포함 주문/법구/약병" 목록을 주입한다.
-     - 각 항목은 data-tooltip-title/data-tooltip을 부여해 기존 전역 툴팁 로직을 그대로
-       재사용한다(새 hover 로직 불필요).
+     - 주문 카드 타일(.bm-deck-preview-card)은 data-tooltip을 쓰지 않는다 — 이름/설명에
+       .card-name-text/.card-desc-text 클래스를 부여해 tooltip.js의 카드 용어(키워드)
+       툴팁을 그대로 재사용한다(전투 손패·상점·도감 등과 동일한 툴팁 방식).
+     - 법구/약병 타일(.bm-deck-preview-item)은 카드가 아니므로 기존처럼
+       data-tooltip-title/data-tooltip으로 전역 툴팁 로직을 재사용한다.
      - CARD_DB/RELIC_MASTER_DB/POTION_DB는 읽기 전용으로만 참조하며 수정하지 않는다.
      - bmStoreUI.js는 구매 확인 팝업을 열 때마다 새 DOM을 만들므로, 패널 인스턴스마다
        1회만 검사/주입되도록 dataset 마커로 중복 실행(우리 자신의 삽입이 다시 관찰되는 것)을 막는다.
@@ -541,21 +544,22 @@
   /* 카드 프레임 PNG 위에 비용/이름/설명을 전부 겹쳐 그린다. 설명이 길어 원래 카드 비율
      그대로는 하단 설명 영역이 너무 좁아 잘렸으므로, 설명 영역 자체를 훨씬 크게 잡고(카드
      높이의 절반 가까이) 그 뒤에 반투명 크림색 판을 깔아 원화 위에서도 잘 읽히게 했다.
-     카드 자체도 2열로 키워 절대 크기를 키웠다. hover 시엔 동일한 이름/설명이 전역
-     툴팁으로도 한 번 더 뜬다 */
+     카드 자체도 2열로 키워 절대 크기를 키웠다. hover 시 뜨는 툴팁은 여기서 만들지 않는다
+     — 이름/설명 텍스트에 .card-name-text/.card-desc-text 클래스를 얹어 전투 손패 등
+     다른 화면과 동일하게 tooltip.js의 카드 용어(키워드) 툴팁을 그대로 재사용한다
+     (tooltip.js의 DECK_OR_REWARD_CARD_SELECTOR에 .bm-deck-preview-card 등록됨) */
   function buildDeckCardTile(card) {
     const visualHtml = card.art
       ? '<img class="bm-deck-preview-card-art" src="' + escapeHtml(card.art) + '" alt="" onerror="this.remove()">'
       : '<span class="bm-deck-preview-card-emoji">' + escapeHtml(card.emoji || "🃏") + "</span>";
-    const tooltipTitle = escapeHtml((card.name || "") + (card.emoji ? " " + card.emoji : ""));
     return (
-      '<div class="bm-deck-preview-card" data-tooltip-title="' + tooltipTitle + '" data-tooltip="' + escapeHtml(card.desc || "") + '">' +
+      '<div class="bm-deck-preview-card">' +
         '<div class="bm-deck-preview-card-visual">' +
           visualHtml +
           '<img class="bm-deck-preview-card-frame" src="' + escapeHtml(getDeckCardFramePath(card)) + '" alt="" onerror="this.style.display=&quot;none&quot;">' +
           '<div class="bm-deck-preview-card-cost">' + escapeHtml(card.cost != null ? card.cost : "") + "</div>" +
-          '<div class="bm-deck-preview-card-title">' + escapeHtml(card.name || "") + "</div>" +
-          '<div class="bm-deck-preview-card-desc">' + escapeHtml(card.desc || "") + "</div>" +
+          '<div class="bm-deck-preview-card-title card-name-text">' + escapeHtml(card.name || "") + "</div>" +
+          '<div class="bm-deck-preview-card-desc card-desc-text">' + escapeHtml(card.desc || "") + "</div>" +
         "</div>" +
       "</div>"
     );
