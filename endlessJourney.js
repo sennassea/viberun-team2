@@ -64,6 +64,9 @@ window.APPLY_START_ENDLESS_LEVEL_TO_NEW_RUN = function(requestedLevel){
   journey.endlessLevel = level;
   journey.totalDisplayFloorOffset = level * 16;
   journey.activeDebuffIds = [];
+  // 직접 시작한 끝없는 여정 N의 첫 보스 승리에서만 신령 승리 연출을 보여준다.
+  journey.firstVictoryPresentationEndlessLevel = level;
+  journey.firstVictoryPresentationShown = false;
 
   for(let debuffLevel = 1; debuffLevel <= level; debuffLevel++){
     const debuff = getEndlessJourneyDebuffByLevel(debuffLevel);

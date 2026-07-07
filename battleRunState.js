@@ -37,7 +37,11 @@ function createDefaultJourneyState(){
     activeDebuffIds: [],
     clearedBossPackageIds: [],
     bossHistory: [],
-    totalDisplayFloorOffset: 0
+    totalDisplayFloorOffset: 0,
+    // 끝없는 여정 N부터 직접 시작한 런에서 첫 보스 승리 시에만 신령 승리 연출을
+    // 보여주기 위한 플래그. 0이면 특별 처리 없음.
+    firstVictoryPresentationEndlessLevel: 0,
+    firstVictoryPresentationShown: false
   };
 }
 
@@ -55,7 +59,11 @@ function cloneJourneyState(journey){
     bossHistory: Array.isArray(source.bossHistory) ? source.bossHistory.slice() : [],
     totalDisplayFloorOffset: Number.isFinite(source.totalDisplayFloorOffset)
       ? source.totalDisplayFloorOffset
-      : defaults.totalDisplayFloorOffset
+      : defaults.totalDisplayFloorOffset,
+    firstVictoryPresentationEndlessLevel: Number.isFinite(source.firstVictoryPresentationEndlessLevel)
+      ? source.firstVictoryPresentationEndlessLevel
+      : defaults.firstVictoryPresentationEndlessLevel,
+    firstVictoryPresentationShown: !!source.firstVictoryPresentationShown
   };
 }
 
