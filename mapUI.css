@@ -137,10 +137,13 @@
   flex: 1;
   /* map_main_area_panel.png(857x568) : map_side_info_panel.png(234x568) 실측 비율.
      두 패널 다 .dmap-body와 같은 폭을 공유하므로, cqw(=#game 기준, 패널 폭과 무관)가 아니라
-     .dmap-body 자신의 폭(%)으로 잡아야 패널 크기가 바뀌어도 실제 에셋 칸과 어긋나지 않는다. */
-  --dmap-map-ratio: 78.5%;
-  --dmap-legend-ratio: 21.5%;
-  --dmap-divider-gap: 1.7%;
+     .dmap-body 자신의 폭(%)으로 잡아야 패널 크기가 바뀌어도 실제 에셋 칸과 어긋나지 않는다.
+     map-ratio + legend-ratio + divider-gap = 100%이 항상 성립하므로(즉 셋 중 둘을 동시에
+     늘리려면 나머지 하나를 그만큼 줄여야 함), 맵/범례를 동시에 아주 살짝씩 넓히기 위해
+     divider-gap을 최소한으로 줄여 여유를 만들었다. */
+  --dmap-map-ratio: 77.1%;
+  --dmap-legend-ratio: 22.5%;
+  --dmap-divider-gap: 0.4%;
   --dmap-legend-width: var(--dmap-legend-ratio);
   position: relative;
   display: block;
