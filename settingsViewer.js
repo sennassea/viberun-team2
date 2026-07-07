@@ -332,27 +332,7 @@
       if(!isSavedProgressForCurrentAccount(saved)) return;
       /* S는 배틀 시작 전까지 초기값이 없어(let S;) typeof S가 항상 "undefined"이므로,
          기존 typeof 가드로는 새로고침 직후 복원이 절대 실행되지 않았다. */
-      S = saved.state;
-      if(typeof ensureJourneyState === "function") ensureJourneyState(S);
-      if(typeof STARTER_DECK !== "undefined") STARTER_DECK = [...saved.starterDeck];
-      if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
-      if(window.MAP_STATE && saved.mapState){
-        window.MAP_STATE.currentStage = saved.mapState.currentStage || 0;
-        window.MAP_STATE.proceedMode = !!saved.mapState.proceedMode;
-      }
-      if(S) S.busy = false;
-      if(typeof updateHudFloor === "function") updateHudFloor();
-      if(typeof renderAll === "function") renderAll();
-      /* 보상 선택 화면이 열려 있던 상태로 저장되었다면, 새로 뽑지 않고
-         저장된 카드 3종(S.victoryCardRewardKeys)을 그대로 다시 표시한다. */
-      if(S && S.rewardOpen){
-        if(S.victoryCardRewardOpen && Array.isArray(S.victoryCardRewardKeys) && typeof renderRewardOverlay === "function"){
-          renderRewardOverlay(S.victoryCardRewardKeys);
-        } else if(typeof renderBattleVictoryOverlay === "function"){
-          renderBattleVictoryOverlay();
-        }
-        if(typeof updateEndBtn === "function") updateEndBtn();
-      }
+      if(typeof window.restoreSavedRunState === "function") window.restoreSavedRunState(saved);
     } catch(error) {
       localStorage.removeItem(SAVE_KEY);
     }
@@ -378,10 +358,26 @@
       ensureJourneyState(state);
     }
     const starterDeck = typeof STARTER_DECK === "undefined" ? [] : [...STARTER_DECK];
+    const journey = state.journey || null;
+    const displayAreaNumber = typeof getCurrentDisplayAreaNumber === "function"
+      ? getCurrentDisplayAreaNumber()
+      : null;
+    const displayAreaLabel = typeof formatCurrentDisplayArea === "function"
+      ? formatCurrentDisplayArea()
+      : ((document.querySelector("#hudFloor") || {}).textContent || "");
+    const actName = typeof getCurrentActName === "function"
+      ? getCurrentActName()
+      : ((journey && journey.actName) || "최초의 여정");
     const mapState = window.MAP_STATE ? {
       currentStage: window.MAP_STATE.currentStage || 0,
       proceedMode: !!window.MAP_STATE.proceedMode,
+      startMapMode: !!window.MAP_STATE.startMapMode,
       floorLabel: (document.querySelector("#hudFloor") || {}).textContent || "",
+      actName,
+      displayAreaNumber,
+      displayAreaLabel,
+      journeyMode: journey ? journey.mode : "first",
+      endlessLevel: journey ? journey.endlessLevel : 0,
     } : null;
     const account = window.VIBERUN_AUTH && typeof window.VIBERUN_AUTH.getAccountInfo === "function"
       ? window.VIBERUN_AUTH.getAccountInfo()

@@ -564,6 +564,67 @@ function syncRunStateFromCombat(){
   S.journey = cloneJourneyState(RUN_STATE.journey);
 }
 
+/* 이어하기 복원 공용 함수: settingsViewer.js(설정창 이어하기)와 startMenu.js
+   (시작화면 이어하기)가 각자 복원 로직을 중복 구현하던 것을 하나로 합친다.
+   새 게임이 아니므로 beginNewRun()은 절대 호출하지 않고, 저장된 덱/체력/
+   법구/약병/골드/journey(심도·보스기록)를 그대로 복원한다. */
+function restoreSavedRunState(saved){
+  if(!saved || !saved.state) return false;
+
+  S = saved.state;
+  if(typeof normalizeRunResources === "function") normalizeRunResources();
+  if(typeof ensureJourneyState === "function") ensureJourneyState(S);
+  if(typeof STARTER_DECK !== "undefined" && Array.isArray(saved.starterDeck)){
+    STARTER_DECK = [...saved.starterDeck];
+  }
+  if(typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
+  if(S) S.busy = false;
+
+  const mapState = saved.mapState;
+  const wantedStage = mapState && Number.isFinite(mapState.currentStage) ? mapState.currentStage : 0;
+  const wantedProceedMode = !!(mapState && mapState.proceedMode);
+  const wantedStartMapMode = !!(mapState && mapState.startMapMode);
+
+  if(window.MAP_STATE && mapState){
+    // ACT1 맵 데이터(MAP_FLOORS/MAP_PATHS/MAP_STAGES)를 재생성해 새로고침 이후에도
+    // 현재 런과 어긋난 맵을 참조하지 않도록 한다. 전투 패키지 기록은 보스 중복
+    // 방지/최근 패키지 회피 흐름이 깨지지 않도록 초기화하지 않는다(resetCombatHistory: false).
+    if(typeof window.ACT1_REGENERATE_MAP === "function"){
+      window.ACT1_REGENERATE_MAP({
+        resetCombatHistory: false,
+        currentStage: wantedStage,
+        proceedMode: wantedProceedMode,
+        startMapMode: wantedStartMapMode
+      });
+    } else {
+      if(typeof generateMap === "function") generateMap();
+      window.MAP_STATE.currentStage = wantedStage;
+      window.MAP_STATE.proceedMode = wantedProceedMode;
+      window.MAP_STATE.startMapMode = wantedStartMapMode;
+    }
+  }
+
+  if(typeof updateHudFloor === "function") updateHudFloor();
+  if(typeof renderAll === "function") renderAll();
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
+  if(typeof window.closeDepthDropdown === "function") window.closeDepthDropdown();
+  if(typeof closeRewardOverlay === "function") closeRewardOverlay();
+
+  // 보상 선택 화면이 열려 있던 상태로 저장되었다면, 새로 뽑지 않고
+  // 저장된 카드 3종(S.victoryCardRewardKeys)을 그대로 다시 표시한다.
+  if(S && S.rewardOpen){
+    if(S.victoryCardRewardOpen && Array.isArray(S.victoryCardRewardKeys) && typeof renderRewardOverlay === "function"){
+      renderRewardOverlay(S.victoryCardRewardKeys);
+    } else if(typeof renderBattleVictoryOverlay === "function"){
+      renderBattleVictoryOverlay();
+    }
+    if(typeof updateEndBtn === "function") updateEndBtn();
+  }
+
+  return true;
+}
+
 window.createDefaultJourneyState = createDefaultJourneyState;
 window.cloneJourneyState = cloneJourneyState;
+window.restoreSavedRunState = restoreSavedRunState;
 window.ensureJourneyState = ensureJourneyState;
