@@ -676,7 +676,11 @@ function applyEventCardRemove(effect){
   const count = Math.min(effect.count || 1, STARTER_DECK.length - 1);
   const removedKeys = [];
   for(let i = 0; i < count && STARTER_DECK.length > 1; i++){
-    const idx = Math.floor(Math.random() * STARTER_DECK.length);
+    const removableIdxs = STARTER_DECK
+      .map((_, idx) => idx)
+      .filter(idx => typeof isEndlessRestCardRemovable !== "function" || isEndlessRestCardRemovable(STARTER_DECK[idx]));
+    if(!removableIdxs.length) break;
+    const idx = removableIdxs[Math.floor(Math.random() * removableIdxs.length)];
     const key = STARTER_DECK[idx];
     STARTER_DECK.splice(idx, 1);
     const card = (typeof CARD_DB !== "undefined" && CARD_DB[key]) ? CARD_DB[key] : null;

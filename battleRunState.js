@@ -41,7 +41,11 @@ function createDefaultJourneyState(){
     // 끝없는 여정 N부터 직접 시작한 런에서 첫 보스 승리 시에만 신령 승리 연출을
     // 보여주기 위한 플래그. 0이면 특별 처리 없음.
     firstVictoryPresentationEndlessLevel: 0,
-    firstVictoryPresentationShown: false
+    firstVictoryPresentationShown: false,
+    // 심도 도달 시 1회만 적용되는 효과(정신력 압박/잠념 침투)의 중복 적용 방지 기록
+    appliedOneShotDepthEffectIds: [],
+    // 잠념 침투로 추가되어 제거할 수 없는 잠념 카드 누적 수
+    unremovableIntrusiveThoughtCount: 0
   };
 }
 
@@ -63,7 +67,13 @@ function cloneJourneyState(journey){
     firstVictoryPresentationEndlessLevel: Number.isFinite(source.firstVictoryPresentationEndlessLevel)
       ? source.firstVictoryPresentationEndlessLevel
       : defaults.firstVictoryPresentationEndlessLevel,
-    firstVictoryPresentationShown: !!source.firstVictoryPresentationShown
+    firstVictoryPresentationShown: !!source.firstVictoryPresentationShown,
+    appliedOneShotDepthEffectIds: Array.isArray(source.appliedOneShotDepthEffectIds)
+      ? source.appliedOneShotDepthEffectIds.slice()
+      : [],
+    unremovableIntrusiveThoughtCount: Number.isFinite(source.unremovableIntrusiveThoughtCount)
+      ? source.unremovableIntrusiveThoughtCount
+      : defaults.unremovableIntrusiveThoughtCount
   };
 }
 

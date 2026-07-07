@@ -29,6 +29,21 @@ function getCardRemoveCost(){
 }
 window.getCardRemoveCost = getCardRemoveCost;
 
+/* ── 끝없는 여정 잠념 침투(심도 13/20)로 추가된 카드는 일정 수량만큼 제거할 수 없다.
+   덱은 카드 키 배열이라 개별 인스턴스를 구분하지 못하므로, 덱에 남은
+   "잠념" 수가 저주로 보호된 수량을 초과할 때만 제거를 허용한다. ── */
+function isEndlessRestCardRemovable(key){
+  if(key !== "intrusive_thought") return true;
+  const protectedCount = typeof getEndlessUnremovableIntrusiveThoughtCount === "function"
+    ? getEndlessUnremovableIntrusiveThoughtCount()
+    : 0;
+  if(protectedCount <= 0) return true;
+  const deck = typeof STARTER_DECK !== "undefined" ? STARTER_DECK : [];
+  const currentCount = deck.filter(k => k === "intrusive_thought").length;
+  return currentCount > protectedCount;
+}
+window.isEndlessRestCardRemovable = isEndlessRestCardRemovable;
+
 let prayerOverlayEl   = null;
 let prayerSelected    = null;
 
@@ -210,8 +225,10 @@ function openRestCardRemove(){
     title: "제거할 카드 선택",
     confirmText: "제거 완료",
     helpText: "제거할 주문 1장을 선택하세요.",
+    disabledText: "끝없는 여정의 잠념은 제거할 수 없습니다.",
     costText: "제거 비용: " + cost + " 복채",
     costHtml: '제거 비용: <span class="inline-resource-icon inline-resource-icon-gold" aria-hidden="true"></span>' + cost + " 복채",
+    isSelectable: key => isEndlessRestCardRemovable(key),
     getConfirmDisabled: () => {
       const gold = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
       return gold < cost;
@@ -220,6 +237,10 @@ function openRestCardRemove(){
       const gold = (typeof S !== "undefined" && S && typeof S.gold === "number") ? S.gold : 0;
       if(gold < cost){
         if(typeof toast === "function") toast("복채가 부족합니다.");
+        return;
+      }
+      if(!isEndlessRestCardRemovable(key)){
+        if(typeof toast === "function") toast("끝없는 여정의 잠념은 제거할 수 없습니다.");
         return;
       }
       const idx = STARTER_DECK.indexOf(key);
