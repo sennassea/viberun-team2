@@ -1133,6 +1133,18 @@ function submitRunRankingIfAvailable(snapshot){
     });
 }
 
+function markEndlessProgressIfNeeded(){
+  const journey = getRrJourneyState();
+  if(!journey || journey.mode !== "endless") return;
+  const level = Number(journey.endlessLevel) || 0;
+  if(level <= 0) return;
+
+  const progress = window.VIBERUN_ENDLESS_PROGRESS;
+  if(progress && typeof progress.markCleared === "function"){
+    progress.markCleared(level);
+  }
+}
+
 function rrOpen(result, onContinue){
   if(result !== "win" && result !== "lose") return false;
 
@@ -1141,6 +1153,8 @@ function rrOpen(result, onContinue){
   submitRunRankingIfAvailable(snapshot);
 
   if(result === "win"){
+    markEndlessProgressIfNeeded();
+
     if(isRrEndlessMode()){
       // 끝없는 여정 보스 클리어: 신령 출현 승리 연출을 생략하고 바로 동자신 선택지로 이동한다.
       renderEndlessJourneyChoice(NPC_DONGJASEUNG, snapshot, onContinue);
