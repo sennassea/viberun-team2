@@ -259,6 +259,35 @@ function mapIconPath(type) {
   return DMAP_ICON[type] || DMAP_ICON.enemy;
 }
 
+/* 마커 이미지별 원본 가로세로 비율(크롭+리사이즈 후 실측값). 새 마커 이미지 추가 시 여기도 추가. */
+const MAP_MARKER_DIMENSIONS = {
+  "assets/map_icons/player_marker.png": { w: 193, h: 260 },
+  "assets/map_icons/player_marker_wolyeong_academy_transfer.png": { w: 198, h: 260 },
+  "assets/map_icons/player_marker_moonlight_vow_magic_maiden.png": { w: 202, h: 260 },
+  "assets/map_icons/player_marker_common_prayer_robe.png": { w: 222, h: 260 },
+};
+
+/* 장착 중인 BM 스킨에 맞춰 맵 플레이어 마커 이미지를 결정. 스킨이 없거나
+   매핑 실패 시 기본 마커(assets/map_icons/player_marker.png)로 대체. */
+function resolveMapMarkerImage() {
+  const storeData = window.VIBERUN_BM_STORE_DATA;
+  const fallback = (storeData && typeof storeData.getDefaultMapMarkerImage === "function")
+    ? storeData.getDefaultMapMarkerImage()
+    : "assets/map_icons/player_marker.png";
+
+  const menuProfileUI = window.VIBERUN_MENU_PROFILE_UI;
+  const equippedSkinId = (menuProfileUI && typeof menuProfileUI.getEquippedSkinId === "function")
+    ? menuProfileUI.getEquippedSkinId()
+    : null;
+
+  if (!equippedSkinId || !storeData || typeof storeData.getCharacterSkinBySkinId !== "function") {
+    return fallback;
+  }
+
+  const skin = storeData.getCharacterSkinBySkinId(equippedSkinId);
+  return (skin && skin.mapMarkerImage) || fallback;
+}
+
 function mapLegendIconHtml(item) {
   return '<img src="' + mapIconPath(item.type) + '" alt="' + item.label + '">';
 }
@@ -368,16 +397,18 @@ function renderCanvas(currentNodeId) {
     </g>`;
   }));
 
-  /* ── 플레이어 마커 (노드 아이콘 위에 서 있는 캐릭터) ── */
+  /* ── 플레이어 마커 (노드 아이콘 위에 서 있는 캐릭터, 장착 스킨에 따라 교체) ── */
   let svgPin = "";
   if (pos[currentNodeId]) {
     const { x, y } = pos[currentNodeId];
+    const markerImage = resolveMapMarkerImage();
+    const markerDims = MAP_MARKER_DIMENSIONS[markerImage] || MAP_MARKER_DIMENSIONS["assets/map_icons/player_marker.png"];
     const charH = 74;
-    const charW = charH * (193 / 260);
+    const charW = charH * (markerDims.w / markerDims.h);
     // 발이 노드 원 안쪽으로 더 깊이 겹치도록 해서 원을 밟고 선 느낌을 강조함
     const feetY = y - curNodeR + 20;
     svgPin = `<g transform="translate(${x | 0},${(feetY - charH) | 0}) scale(-1,1)">
-      <image href="assets/map_icons/player_marker.png"
+      <image href="${markerImage}"
         x="${-charW / 2 | 0}" y="0"
         width="${charW | 0}" height="${charH | 0}"
         class="mplayer-marker" preserveAspectRatio="xMidYMid meet"/>
