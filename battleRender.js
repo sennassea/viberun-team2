@@ -20,6 +20,7 @@ function renderHud(){
   renderBattleProgressHud();
   renderSideItemSlots();
   renderProfileStatuses();
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
 }
 
 function renderHudPortrait(){

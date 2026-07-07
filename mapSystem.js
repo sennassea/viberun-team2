@@ -207,6 +207,7 @@ function updateHudFloor(){
     : "1구역";
   const actEl = document.getElementById("hudAct");
   if(actEl && typeof getCurrentActName === "function") actEl.textContent = getCurrentActName();
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
 }
 
 function hasNextTier(){
@@ -287,6 +288,7 @@ function openMap(){
   if(fi >= 0) centerScrollOnFloor(fi);
   renderCanvas(getCurrentNodeId());
   ov.style.display = "grid";
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
   requestAnimationFrame(() => requestAnimationFrame(() => { ov.style.opacity = "1"; }));
   if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
     window.VIBERUN_SOUND.playBgm("bgmMap");
@@ -295,6 +297,7 @@ function openMap(){
 
 function closeMap(){
   if(typeof window.BAG_UI_CLOSE === "function") window.BAG_UI_CLOSE();
+  if(typeof window.closeDepthDropdown === "function") window.closeDepthDropdown();
   const ov = document.getElementById("mapOverlay"); if(!ov) return;
   const returnToStart = window.MAP_STATE && window.MAP_STATE.startMapMode && window.MAP_STATE.currentStage < 0;
   ov.style.opacity = "0";

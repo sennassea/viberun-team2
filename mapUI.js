@@ -415,6 +415,8 @@ function renderCanvas(currentNodeId) {
       startStage(+el.dataset.nextstage);
     });
   });
+
+  if (typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
 }
 
 /* ── 범례 데이터 ──────────────────────────────────────────────────────────── */
@@ -529,6 +531,7 @@ function buildOverlay() {
         <div class="dmap-action-bar">
           <button class="dmap-action-btn ui-asset-button ui-codex-button" id="dMapDeckBtn">📖 보유 주문</button>
           <button class="dmap-action-btn ui-asset-button ui-bag-button" id="dMapItemBtn">🎒 가방</button>
+          <button class="dmap-action-btn ui-depth-button" id="dMapDepthBtn">심도 <span class="depth-button-count" id="dMapDepthCount">0</span></button>
           <button class="dmap-action-btn ui-asset-button ui-settings-button" id="dMapSettingsBtn">⚙️ 설정</button>
         </div>
         <div class="map-footer dmap-footer" id="mapFooter"></div>
@@ -561,6 +564,12 @@ function buildOverlay() {
     const footer = document.getElementById("mapFooter");
     if (footer) footer.textContent = "가방 기능을 불러올 수 없습니다. bagUI.js 로드 상태를 확인하세요.";
   });
+
+  /* 심도 확인: 끝없는 여정 심도 드롭다운 토글 (endlessDepthUI.js) */
+  const depthBtn = div.querySelector("#dMapDepthBtn");
+  if(depthBtn && typeof window.bindDepthButton === "function"){
+    window.bindDepthButton(depthBtn);
+  }
 
   /* 설정: 기존 설정 버튼 트리거 */
   div.querySelector("#dMapSettingsBtn").addEventListener("click", () => {
@@ -642,6 +651,9 @@ function closeMapPopupViews(except) {
   }
   if (except !== "bag" && typeof window.BAG_UI_CLOSE === "function") {
     window.BAG_UI_CLOSE();
+  }
+  if (except !== "depth" && typeof window.closeDepthDropdown === "function") {
+    window.closeDepthDropdown();
   }
   if (except !== "settings" && typeof window.SETTINGS_VIEWER_CLOSE === "function") {
     window.SETTINGS_VIEWER_CLOSE();

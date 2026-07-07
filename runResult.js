@@ -605,7 +605,7 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
     if(!canEnterEndless){
       endlessDesc = "끝없는 여정 20까지 완료했습니다. 더 이상 진입할 수 없습니다.";
     } else if(nextDebuff){
-      endlessDesc = "추가 디버프: " + nextDebuff.name + "\n" + nextDebuff.desc;
+      endlessDesc = "추가 심도: 심도 " + nextDebuff.level + "\n" + nextDebuff.name + "\n" + nextDebuff.desc;
     } else {
       endlessDesc = (choices.infinite && choices.infinite.desc) || "다음 끝없는 여정으로 이어서 나아갑니다.";
     }

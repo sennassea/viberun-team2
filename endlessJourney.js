@@ -124,6 +124,7 @@ window.START_INFINITE_JOURNEY = function(){
   }
 
   if(typeof S !== "undefined" && S) S.journey = cloneJourneyState(journey);
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
 
   const startScreen = document.getElementById("startScreen");
   if(startScreen) startScreen.classList.add("hidden");
