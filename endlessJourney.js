@@ -55,10 +55,16 @@ window.START_INFINITE_JOURNEY = function(){
     return;
   }
 
-  if(typeof generateMap !== "function"){
-    console.warn("[EndlessJourney] generateMap을 찾을 수 없어 진입을 중단합니다.");
+  if(typeof window.ACT1_REGENERATE_MAP !== "function"){
+    console.warn("[EndlessJourney] ACT1_REGENERATE_MAP을 찾을 수 없어 진입을 중단합니다.");
     return;
   }
+
+  /* 실패 시 복구를 위해 진입 전 journey 상태를 보관해둔다. */
+  const prevJourneySnapshot = cloneJourneyState(journey);
+  const prevSJourneySnapshot = (typeof S !== "undefined" && S && S.journey)
+    ? cloneJourneyState(S.journey)
+    : null;
 
   const nextLevel = journey.endlessLevel + 1;
   const nextDebuff = getEndlessJourneyDebuffByLevel(nextLevel);
@@ -83,13 +89,19 @@ window.START_INFINITE_JOURNEY = function(){
     journey.clearedBossPackageIds.push(bossPackageId);
   }
 
-  if(typeof window.ACT1_RESET_COMBAT_HISTORY === "function") window.ACT1_RESET_COMBAT_HISTORY();
-  generateMap();
-
-  if(window.MAP_STATE){
-    window.MAP_STATE.currentStage = -1;
-    window.MAP_STATE.proceedMode = false;
-    window.MAP_STATE.startMapMode = false;
+  /* ACT1 맵 재생성 실패 시, 변경 전 journey 상태로 복구하고 진입을 중단한다.
+     (덱/체력/골드 등 다른 런 상태는 이 시점까지 건드리지 않았으므로 그대로 둔다.) */
+  const regenerated = window.ACT1_REGENERATE_MAP({
+    resetCombatHistory: true,
+    currentStage: -1,
+    proceedMode: false,
+    startMapMode: false
+  });
+  if(!regenerated){
+    RUN_STATE.journey = prevJourneySnapshot;
+    if(typeof S !== "undefined" && S) S.journey = prevSJourneySnapshot || cloneJourneyState(prevJourneySnapshot);
+    console.warn("[EndlessJourney] ACT1 맵 재생성에 실패하여 끝없는 여정 진입을 중단합니다.");
+    return;
   }
 
   const fallbackMaxHp = (typeof LIFE !== "undefined" && typeof PLAYER_DEF !== "undefined")
