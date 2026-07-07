@@ -79,17 +79,24 @@
   width: 4.8cqh;
   height: 4.8cqh;
   line-height: 4.8cqh;
-  font-size:5cqh;
+  font-size:4.2cqh;
   font-weight: 900;
-  color: #4a2b07;
   text-align: center;
-  text-shadow: 0 0.12cqh 0 rgba(255,255,255,.8), 0 0.25cqh 0.45cqh rgba(90,55,10,.24);
+  /* 진한 단색보다 금박 느낌이 나도록 그라디언트 텍스트 + 얇은 테두리로 처리해서
+     주변 금색 프레임 장식과 어울리게 하고, 크기도 살짝 줄여 튀지 않게 한다.
+     너무 밝으면 크림색 배경에 묻혀 보여서, 짙은 청동/금색 계열로 명도를 낮췄다. */
+  color: transparent;
+  background: linear-gradient(180deg, #f3c866 0%, #c9922e 38%, #8a5a12 72%, #5c3a08 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 0.045cqh rgba(35,18,2,0.6);
+  text-shadow: 0 0.08cqh 0 rgba(255,235,180,.3), 0 0.3cqh 0.5cqh rgba(40,22,2,.45);
 }
 .dmap-title-left {
-  left: 1.1cqh;
+  left: -0.2cqh;
 }
 .dmap-title-right {
-  right: 1.1cqh;
+  right: -0.2cqh;
 }
 
 .dmap-cur-badge {
