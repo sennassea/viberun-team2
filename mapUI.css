@@ -135,7 +135,13 @@
 /* ── 바디 ─────────────────────────────────────────────────────────────────── */
 .dmap-body {
   flex: 1;
-  --dmap-legend-width: clamp(118px, 15cqw, 150px);
+  /* map_main_area_panel.png(857x568) : map_side_info_panel.png(234x568) 실측 비율.
+     두 패널 다 .dmap-body와 같은 폭을 공유하므로, cqw(=#game 기준, 패널 폭과 무관)가 아니라
+     .dmap-body 자신의 폭(%)으로 잡아야 패널 크기가 바뀌어도 실제 에셋 칸과 어긋나지 않는다. */
+  --dmap-map-ratio: 78.5%;
+  --dmap-legend-ratio: 21.5%;
+  --dmap-divider-gap: 1.7%;
+  --dmap-legend-width: var(--dmap-legend-ratio);
   position: relative;
   display: block;
   min-height: 0;
@@ -147,7 +153,7 @@
   position: absolute;
   left: 0;
   top: 0;
-  right: var(--dmap-legend-width);
+  right: calc(var(--dmap-legend-width) + var(--dmap-divider-gap));
   bottom: 0;
   width: auto;
   min-width: 0;
@@ -208,8 +214,6 @@
   background: transparent;
   border-left: 0;
   contain: layout paint;
-  /* 중앙보다 아주 살짝 위로, 왼쪽으로 많이 이동했던 것을 아주아주 살짝만 오른쪽으로 */
-  transform: translate(-2.6cqw, -2.4cqh);
 }
 
 .dmap-legend-title {
@@ -292,12 +296,11 @@
      안이 아니라 .dmap-body 기준으로 배치해서 목록 위치와 무관하게, 범례 목록
      바로 아래 여백에 뜨도록 한다. */
   position: absolute;
-  right: 3cqw;
+  right: 0;
   bottom: 6cqh;
   width: var(--dmap-legend-width);
-  max-width: calc(100% - 2.8cqw);
   box-sizing: border-box;
-  padding-top: 0.6cqh;
+  padding: 0.6cqh 1.4cqw 0;
   display: none;
   overflow: hidden;
   pointer-events: none;
