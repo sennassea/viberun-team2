@@ -28,7 +28,8 @@ function createRunRewardId(){
 }
 
 function createDefaultJourneyState(){
-  // 끝없는 여정 1차 상태 모델: 이번 작업에서는 저장/복원용 데이터만 만들고 전투에는 적용하지 않는다.
+  // 끝없는 여정 진행 상태 모델: 현재 모드/레벨, 적용 중인 디버프, 중복 방지를 위한
+  // 클리어/처치 보스 기록까지 실제 진행에 사용되는 상태다.
   return {
     mode: "first",
     actName: "최초의 여정",

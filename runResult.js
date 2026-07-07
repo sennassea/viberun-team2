@@ -4,7 +4,9 @@
    기획서: 최종 승리 / 패배 UI 구현 기획서
 
    현재 구현 범위:
-   - 승리: ① 신령 출현 연출 → ② 동자신 대사 → ③ 여정 종료/끝없는 여정 선택
+   - 승리(최초의 여정): ① 신령 출현 연출 → ② 동자신 대사 → ③ 여정 종료/끝없는 여정 선택
+     → ④ 기존 전투 요약 화면
+   - 승리(끝없는 여정): ① 신령 출현 연출 생략 → ② 동자신 대사 → ③ 여정 종료/다음 끝없는 여정 선택
      → ④ 기존 전투 요약 화면
    - 패배: ① 동자신 패배 연출 → ② 기존 전투 요약 화면
    전투 상세 화면의 "메인 메뉴로 돌아가기"는 오버레이를 닫고
@@ -51,6 +53,42 @@ const RR_NODE_TYPE_INFO = {
   rest:  { emoji: "🛖", label: "휴식", iconImage: "assets/map_icons/rest.png" },
   unknown: { emoji: "❔", label: "알 수 없음", iconImage: "" }
 };
+
+/* ── 끝없는 여정 상태 판별 헬퍼 ────────────────────────────────────────────
+   RUN_STATE.journey를 우선 사용하고, 없으면 S.journey로 폴백한다. */
+function getRrJourneyState(){
+  if(typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.journey) return RUN_STATE.journey;
+  if(typeof S !== "undefined" && S && S.journey) return S.journey;
+  return null;
+}
+
+function isRrEndlessMode(){
+  const journey = getRrJourneyState();
+  return !!journey && journey.mode === "endless";
+}
+
+function getRrCurrentEndlessLevel(){
+  const journey = getRrJourneyState();
+  return (journey && Number.isFinite(journey.endlessLevel)) ? journey.endlessLevel : 0;
+}
+
+function getRrNextEndlessLevel(){
+  return getRrCurrentEndlessLevel() + 1;
+}
+
+function getRrNextEndlessDebuff(){
+  const nextLevel = getRrNextEndlessLevel();
+  if(typeof window.getEndlessJourneyDebuffByLevel === "function"){
+    return window.getEndlessJourneyDebuffByLevel(nextLevel);
+  }
+  const list = window.ENDLESS_JOURNEY_DEBUFFS;
+  if(!Array.isArray(list)) return null;
+  return list.find(d => d && d.level === nextLevel) || null;
+}
+
+function canRrEnterEndlessJourney(){
+  return getRrNextEndlessLevel() <= 20;
+}
 
 /* ── ACT1 점수 / 달빛조각 임시 계산 유틸 ──────────────────────────────────
    ACT1_점수_달빛조각_통합기획서_v4.0 기준. script.js를 아직 연결하지 않았으므로
@@ -554,6 +592,27 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   const renderChoices = () => {
     const choices = RR_ENDING.choices || {};
     const panelSlot = overlay.querySelector("#rrPanelSlot");
+
+    const canEnterEndless = canRrEnterEndlessJourney();
+    const nextLevel = getRrNextEndlessLevel();
+    const nextDebuff = getRrNextEndlessDebuff();
+
+    const endlessTitle = canEnterEndless
+      ? "끝없는 여정 " + nextLevel + " 진입"
+      : ((choices.infinite && choices.infinite.title) || "끝없는 여정 진입");
+
+    let endlessDesc;
+    if(!canEnterEndless){
+      endlessDesc = "끝없는 여정 20까지 완료했습니다. 더 이상 진입할 수 없습니다.";
+    } else if(nextDebuff){
+      endlessDesc = "추가 디버프: " + nextDebuff.name + "\n" + nextDebuff.desc;
+    } else {
+      endlessDesc = (choices.infinite && choices.infinite.desc) || "다음 끝없는 여정으로 이어서 나아갑니다.";
+    }
+
+    const endlessCardClass = "rr-choice-card " +
+      (canEnterEndless ? "rr-choice-card--active" : "rr-choice-card--disabled");
+
     panelSlot.innerHTML =
       '<div class="rr-choice-panel">' +
         '<div class="rr-choice-titlebar"><span>' + escapeRrHtml(npc.endlessTitle || "끝없는 여정") + '</span></div>' +
@@ -566,10 +625,10 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
             '<div class="rr-choice-card-title">' + escapeRrHtml(choices.exit && choices.exit.title || "여정 종료") + '</div>' +
             '<div class="rr-choice-card-desc">' + escapeRrHtml(choices.exit && choices.exit.desc || "이번 여정의 기록을 확인하고 돌아갑니다.") + '</div>' +
           '</div>' +
-          '<div class="rr-choice-card rr-choice-card--active" id="rrChoiceEndless">' +
+          '<div class="' + endlessCardClass + '" id="rrChoiceEndless"' + (canEnterEndless ? "" : ' aria-disabled="true"') + '>' +
             '<div class="rr-choice-card-icon">∞</div>' +
-            '<div class="rr-choice-card-title">' + escapeRrHtml(choices.infinite && choices.infinite.title || "끝없는 여정 진입") + '</div>' +
-            '<div class="rr-choice-card-desc">' + escapeRrHtml(choices.infinite && choices.infinite.desc || "끝없는 여정으로 이어서 나아갑니다.") + '</div>' +
+            '<div class="rr-choice-card-title">' + escapeRrHtml(endlessTitle) + '</div>' +
+            '<div class="rr-choice-card-desc">' + escapeRrHtml(endlessDesc).replace(/\n/g, "<br>") + '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -580,6 +639,10 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
     });
     panelSlot.querySelector("#rrChoiceEndless").addEventListener("click", (event) => {
       event.stopPropagation();
+      if(!canRrEnterEndlessJourney()){
+        if(typeof toast === "function") toast("더 이상 진입할 수 있는 끝없는 여정이 없습니다.");
+        return;
+      }
       startInfiniteJourney();
     });
   };
@@ -924,7 +987,9 @@ function buildRunResultSnapshot(result){
     : ((run && Array.isArray(run.deck)) ? run.deck : []);
 
   let highestFloor = 0;
-  if(typeof nodeFloorIdx === "function" && typeof getCurrentNodeId === "function"){
+  if(typeof getCurrentDisplayAreaNumber === "function"){
+    highestFloor = Math.max(0, getCurrentDisplayAreaNumber());
+  } else if(typeof nodeFloorIdx === "function" && typeof getCurrentNodeId === "function"){
     highestFloor = Math.max(0, nodeFloorIdx(getCurrentNodeId()));
   }
 
@@ -1076,6 +1141,11 @@ function rrOpen(result, onContinue){
   submitRunRankingIfAvailable(snapshot);
 
   if(result === "win"){
+    if(isRrEndlessMode()){
+      // 끝없는 여정 보스 클리어: 신령 출현 승리 연출을 생략하고 바로 동자신 선택지로 이동한다.
+      renderEndlessJourneyChoice(NPC_DONGJASEUNG, snapshot, onContinue);
+      return true;
+    }
     const spirit = getSavedEndingSpirit();
     if(!spirit) return false;
     renderBlessingSpiritAppearance(spirit, snapshot, onContinue);
