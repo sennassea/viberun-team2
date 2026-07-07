@@ -150,6 +150,38 @@
     };
   }
 
+  function rewardsContain(mail, type){
+    const rewards = Array.isArray(mail && mail.rewards) ? mail.rewards : [];
+    return rewards.some(reward => reward && reward.type === type);
+  }
+
+  function getFirstRewardId(mail, type){
+    const rewards = Array.isArray(mail && mail.rewards) ? mail.rewards : [];
+    const reward = rewards.find(item => item && item.type === type);
+    return reward && reward.id ? String(reward.id) : "";
+  }
+
+  function activateMonthlyPassIfNeeded(mail){
+    if(!rewardsContain(mail, "monthly_pass")){
+      return Promise.resolve(null);
+    }
+
+    const service = window.VIBERUN_BM_STORE_SERVICE;
+    if(!service || typeof service.activateMonthlyPass !== "function"){
+      return Promise.resolve(null);
+    }
+
+    return Promise.resolve(service.activateMonthlyPass(getFirstRewardId(mail, "monthly_pass"))).then(result => {
+      if(result && !result.ok){
+        console.warn("[Mailbox] Failed to activate monthly pass.", result);
+      }
+      return result || null;
+    }).catch(error => {
+      console.warn("[Mailbox] Failed to activate monthly pass.", error);
+      return { ok: false, error };
+    });
+  }
+
   function requireReady(){
     const client = getClient();
     const account = getAccount();
@@ -225,13 +257,14 @@
       const data = result && result.data ? result.data : {};
       const mail = normalizeMail(data.mail);
       const wallet = data.wallet ? syncWallet(data.wallet) : getCachedWallet();
-      return {
+      return activateMonthlyPassIfNeeded(mail).then(monthlyPassResult => ({
         ok: true,
         claimedMailId: mail.mailId || mailId,
         mail,
         rewards: mail.rewards,
-        wallet
-      };
+        wallet,
+        monthlyPass: monthlyPassResult && monthlyPassResult.monthlyPass ? monthlyPassResult.monthlyPass : null
+      }));
     }).catch(error => {
       console.warn("[Mailbox] Failed to claim mail.", error);
       return { ok: false, error, message: "Failed to claim mail." };

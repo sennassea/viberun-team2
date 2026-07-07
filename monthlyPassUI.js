@@ -261,6 +261,7 @@
 
   window.addEventListener("viberun:auth-changed", refresh);
   window.addEventListener("viberun:mailbox-changed", refresh);
+  window.addEventListener("viberun:monthly-pass-changed", refresh);
 
   if(document.readyState === "loading"){
     document.addEventListener("DOMContentLoaded", refresh);
