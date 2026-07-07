@@ -112,7 +112,12 @@
     if (options.restart !== false) audio.currentTime = 0;
     const promise = audio.play();
     if (promise && typeof promise.catch === "function") {
-      promise.catch(() => {
+      promise.catch(err => {
+        /* play()가 곧바로 이어진 pause()에 의해 중단된 경우(AbortError)는 다른 BGM으로
+           의도적으로 전환된 것이므로 재시도 대상이 아니다. 실제 자동재생 차단(NotAllowedError)
+           이고, 그 사이 다른 곡으로 바뀌지 않았을 때만 다음 제스처에 재시도한다. */
+        if (err && err.name === "AbortError") return;
+        if (currentBgm && currentBgm.key !== key) return;
         if (category.volumeKey === "music" || sound.loop || category.loop) {
           pendingBgmKey = key;
           ensureUnlockListener();

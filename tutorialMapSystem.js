@@ -45,6 +45,11 @@
     openMap();
     const overlay = document.getElementById("mapOverlay");
     if(overlay) overlay.classList.add("tutorial-map-mode");
+    /* openMap()이 기본 bgmMap을 트는데, 튜토리얼 진행 중에는 처음부터 끝까지(전투 제외)
+       튜토리얼 전용 BGM이 나와야 하므로 맵 BGM을 튜토리얼 BGM으로 바로 덮어쓴다. */
+    if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+      window.VIBERUN_SOUND.playBgm("bgmTutorial");
+    }
     startTutorialMapIntro();
   }
 
