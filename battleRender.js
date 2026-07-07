@@ -400,8 +400,7 @@ function renderEnergyOrbs(){
   wrap.innerHTML = "";
   for(let i=0; i<ENERGY_SLOT_COUNT; i++){
     const orb = document.createElement("span");
-    let state = "empty";
-    if(i < getMaxEnergy()) state = i < S.energy ? "active" : "used";
+    const state = i < S.energy ? "active" : "used";
     orb.className = "energy-slot "+state;
     wrap.appendChild(orb);
   }
