@@ -5,7 +5,10 @@
   const VOLUME_KEY = "viberunVolumeSettings";
   const DEFAULT_VOLUMES = CONFIG.defaults || { master: 80, music: 70, effect: 80 };
   const cache = new Map();
+  const lastPlayedAt = new Map();
   let currentBgm = null;
+  let pendingBgmKey = null;
+  let unlockBound = false;
 
   function clampVolume(value, fallback) {
     const n = Number(value);
@@ -96,13 +99,44 @@
     const audio = getAudio(key);
     if (!sound || !audio) return false;
     const category = getCategory(sound);
+    if (options.allowOverlap !== true) {
+      const now = (typeof performance !== "undefined" ? performance.now() : Date.now());
+      const minGap = category.minGapMs ?? 60;
+      const last = lastPlayedAt.get(key) || 0;
+      if (now - last < minGap) return false;
+      lastPlayedAt.set(key, now);
+    }
     const volumes = readVolumes();
     applyAudioVolume(key, audio, volumes);
     audio.loop = options.loop ?? sound.loop ?? category.loop ?? false;
     if (options.restart !== false) audio.currentTime = 0;
     const promise = audio.play();
-    if (promise && typeof promise.catch === "function") promise.catch(() => {});
+    if (promise && typeof promise.catch === "function") {
+      promise.catch(() => {
+        if (category.volumeKey === "music" || sound.loop || category.loop) {
+          pendingBgmKey = key;
+          ensureUnlockListener();
+        }
+      });
+    }
     return true;
+  }
+
+  function ensureUnlockListener() {
+    if (unlockBound) return;
+    unlockBound = true;
+    const retry = () => {
+      document.removeEventListener("pointerdown", retry, true);
+      document.removeEventListener("keydown", retry, true);
+      unlockBound = false;
+      if (pendingBgmKey) {
+        const key = pendingBgmKey;
+        pendingBgmKey = null;
+        playBgm(key, { restart: false });
+      }
+    };
+    document.addEventListener("pointerdown", retry, true);
+    document.addEventListener("keydown", retry, true);
   }
 
   function playBgm(key, options = {}) {
@@ -110,7 +144,7 @@
     const audio = getAudio(key);
     if (!audio) return false;
     currentBgm = { key, audio };
-    return play(key, { ...options, loop: options.loop ?? true, restart: options.restart ?? false });
+    return play(key, { ...options, loop: options.loop ?? true, restart: options.restart ?? false, allowOverlap: true });
   }
 
   function stop(key) {

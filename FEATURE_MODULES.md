@@ -30,7 +30,7 @@ This project still keeps several older systems in broad files. To reduce team co
 
 1. Add a key in `soundConfig.js`.
 2. Set `category` to one of `bgm`, `battle`, `card`, `ui`, `reward`, `shop`, `rest`, `event`, or `result`.
-3. Add `src` relative to `assets/sound/`.
+3. Add `src` relative to `assets/audio/` (the project's actual sound folder: `bgm/`, `sfx/`).
 4. Trigger it with `window.VIBERUN_SOUND.play("soundKey")` or add `data-sound-key="soundKey"` to a clickable element.
 5. Use `window.VIBERUN_SOUND.playBgm("bgmKey")` for looping music.
 

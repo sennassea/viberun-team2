@@ -278,6 +278,9 @@ function newGame(options={}){
   // 패키지 몬스터 전체 동시 배치 (기획서 §8-3)
   spawnPackageEnemies();
   applyBattleBackground();
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
+    window.VIBERUN_SOUND.playBgm(S.battleNodeType === "boss" ? "bgmBattleBoss" : "bgmBattleNormal");
+  }
 
   const initialDeck = zipShuffleCards([...STARTER_DECK], createCardInstancesForKeys(STARTER_DECK));
   S.draw = initialDeck.keys;

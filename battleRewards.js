@@ -37,12 +37,18 @@ function openCardReward(){
   S.busy = true; S.rewardOpen = true;
   renderRewardOverlay(getRandomRewardKeys(3));
   updateEndBtn();
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function"){
+    window.VIBERUN_SOUND.play("rewardOpen");
+  }
 }
 
 function openBattleVictoryReward(){
   S.busy = true; S.rewardOpen = true;
   renderBattleVictoryOverlay();
   updateEndBtn();
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function"){
+    window.VIBERUN_SOUND.play("battleVictory");
+  }
 }
 
 function proceedToMap(){
@@ -300,6 +306,7 @@ function chooseRewardCard(key){
   if(!S || !S.rewardOpen) return;
   const card = CARD_DB[key];
   if(!card) return;
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("rewardPick");
   addPermanentCard(key, { source:"battleReward" });
   if(S.victoryCardRewardOpen){
     toast(card.name+" 획득");

@@ -482,6 +482,7 @@ function drawCards(n, options={}){
       S.handInstances.push(drawnInstance || createCardInstance(drawn));
       if(Array.isArray(S.handLockTokens)) S.handLockTokens.push(createHandLockToken());
       if(Array.isArray(S.handCostOverrides)) S.handCostOverrides.push(null);
+      if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("cardDraw");
       applyRelicTrigger("onCardDrawnFromDrawPile", { cardUid:(drawnInstance && drawnInstance.uid) || null, cardKey:drawn, handIndex:S.hand.length - 1, source:options.source || "unknown" });
     }
   }
@@ -692,6 +693,12 @@ async function playCard(handIndex, targetEnemy){
 
   const heatBeforePlay = getBlessingCount("heat");
   S.energy -= cardCost;
+  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function"){
+    const cardSoundKey = card.type === "attack" ? "cardUseAttack"
+      : card.type === "defense" ? "cardUseDefense"
+      : "cardUseSkill";
+    window.VIBERUN_SOUND.play(cardSoundKey);
+  }
   if(card.type === "attack") applyPreAttackCardGimmicks(targetEnemy);
   const relicCardContext = { cardUid:cardInstance.uid, cardKey:key, card, handIndex, target:targetEnemy, bonusDamage:0 };
   S.spellTypesPlayedThisTurn = S.spellTypesPlayedThisTurn || {};
