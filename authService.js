@@ -270,7 +270,46 @@
 
     const result = writeSession(session);
     if(!result.ok) return result;
-    return { ok: true, account: buildAccountInfo(result.session), session: result.session };
+    return prepareServerUserData(result.session).then(dataResult => {
+      return {
+        ok: true,
+        account: buildAccountInfo(result.session),
+        session: result.session,
+        profile: dataResult && dataResult.profile ? dataResult.profile : null,
+        wallet: dataResult && dataResult.wallet ? dataResult.wallet : null,
+        userData: dataResult || null
+      };
+    });
+  }
+
+  function prepareServerUserData(session){
+    if(!session || !session.accountId) return Promise.resolve(null);
+    const userData = window.VIBERUN_USER_DATA;
+    if(!userData || typeof userData.prepareUserData !== "function") return Promise.resolve(null);
+
+    return Promise.resolve(userData.prepareUserData(buildAccountInfo(session))).then(result => {
+      if(result && !result.ok){
+        console.warn("[Auth] 서버 유저 데이터 준비가 완전히 끝나지 않았습니다.", result);
+      }
+      return result;
+    }).catch(error => {
+      console.warn("[Auth] 서버 유저 데이터 준비 중 오류가 발생했습니다.", error);
+      return { ok: false, error };
+    });
+  }
+
+  function buildSessionResult(session){
+    const account = buildAccountInfo(session);
+    return prepareServerUserData(session).then(dataResult => {
+      return {
+        ok: true,
+        account,
+        session,
+        profile: dataResult && dataResult.profile ? dataResult.profile : null,
+        wallet: dataResult && dataResult.wallet ? dataResult.wallet : null,
+        userData: dataResult || null
+      };
+    });
   }
 
   function isLoggedIn(){
@@ -301,7 +340,7 @@
 
   function checkSession(){
     const existing = readSession();
-    if(existing) return Promise.resolve({ ok: true, account: buildAccountInfo(existing) });
+    if(existing) return buildSessionResult(existing);
 
     const client = getSupabaseClient();
     if(!client || !client.auth || typeof client.auth.getSession !== "function"){
@@ -326,7 +365,7 @@
   /* 1차 실제 구현 대상입니다. 기존 Guest 세션이 있으면 새 UID를 만들지 않고 재사용합니다. */
   function signInGuest(){
     const existing = readSession();
-    if(existing) return Promise.resolve({ ok: true, account: buildAccountInfo(existing) });
+    if(existing) return buildSessionResult(existing);
 
     const client = getSupabaseClient();
     if(client && client.auth && typeof client.auth.signInAnonymously === "function"){
@@ -658,6 +697,9 @@
         client.auth.signOut().catch(error => {
           console.warn("[Auth] Supabase 로그아웃 요청에 실패했습니다.", error);
         });
+      }
+      if(window.VIBERUN_USER_DATA && typeof window.VIBERUN_USER_DATA.clearCache === "function"){
+        window.VIBERUN_USER_DATA.clearCache();
       }
       localStorage.removeItem(AUTH_KEY);
       emitAuthChanged({ isLoggedIn: false, previousUid: previousAccount && previousAccount.uid ? previousAccount.uid : null });
