@@ -10,15 +10,20 @@
   const AUTH_API_BASE = (window.VIBERUN_AUTH_API_BASE || "").replace(/\/$/, "");
   const MAILBOX_CONTEXT_VERSION = 1;
   const PROVIDER_CONFIG = {
+    google: {
+      accountType: "Google",
+      bridgeMethod: "signInGoogle",
+      message: "Google 로그인 설정을 확인해 주세요."
+    },
     googlePlay: {
-      accountType: "Google Play",
+      accountType: "Google",
       bridgeMethod: "signInGooglePlay",
-      message: "Google Play 로그인은 Android 모바일 빌드에서 사용할 수 있습니다."
+      message: "Google 로그인 설정을 확인해 주세요."
     },
     facebook: {
       accountType: "Facebook",
       bridgeMethod: "signInFacebook",
-      message: "Facebook Login SDK가 연결되지 않았습니다."
+      message: "Facebook 로그인 설정을 확인해 주세요."
     }
   };
   const pendingProviderRequests = {};
@@ -224,6 +229,50 @@
     };
   }
 
+  function getSupabaseClient(){
+    const supabaseBridge = window.VIBERUN_SUPABASE;
+    if(!supabaseBridge || typeof supabaseBridge.getClient !== "function") return null;
+    return supabaseBridge.getClient();
+  }
+
+  function buildSupabaseSession(authSession){
+    const sourceSession = authSession && typeof authSession === "object" ? authSession : {};
+    const user = sourceSession.user || {};
+    const appMetadata = user.app_metadata || {};
+    const userMetadata = user.user_metadata || {};
+    const userId = String(user.id || "").trim();
+    const rawProvider = String(appMetadata.provider || "").trim();
+    const provider = user.is_anonymous || rawProvider === "anonymous" ? "guest" : (rawProvider || "guest");
+    const now = Date.now();
+    return {
+      accountId: userId,
+      provider,
+      providerUserId: String(userMetadata.provider_id || userMetadata.sub || "").trim(),
+      displayName: String(userMetadata.full_name || userMetadata.name || userMetadata.email || "").trim(),
+      accessToken: String(sourceSession.access_token || "").trim(),
+      refreshToken: String(sourceSession.refresh_token || "").trim(),
+      isGuest: provider === "guest",
+      createdAt: user.created_at ? Date.parse(user.created_at) || now : now,
+      lastLoginAt: now,
+      linkedProvider: provider === "guest" ? "" : provider
+    };
+  }
+
+  function writeSupabaseSession(authSession){
+    const session = buildSupabaseSession(authSession);
+    if(!session.accountId || !session.accessToken || !session.refreshToken){
+      return {
+        ok: false,
+        code: "INVALID_SUPABASE_SESSION",
+        message: "Supabase 로그인 응답이 올바르지 않습니다."
+      };
+    }
+
+    const result = writeSession(session);
+    if(!result.ok) return result;
+    return { ok: true, account: buildAccountInfo(result.session), session: result.session };
+  }
+
   function isLoggedIn(){
     return !!readSession();
   }
@@ -250,10 +299,59 @@
     return false;
   }
 
+  function checkSession(){
+    const existing = readSession();
+    if(existing) return Promise.resolve({ ok: true, account: buildAccountInfo(existing) });
+
+    const client = getSupabaseClient();
+    if(!client || !client.auth || typeof client.auth.getSession !== "function"){
+      return Promise.resolve({ ok: false, code: "SUPABASE_UNAVAILABLE", message: "Supabase 연결을 사용할 수 없습니다." });
+    }
+
+    return client.auth.getSession().then(result => {
+      const authSession = result && result.data ? result.data.session : null;
+      if(!authSession) return { ok: false, code: "NO_SESSION", message: "저장된 로그인 세션이 없습니다." };
+      return writeSupabaseSession(authSession);
+    }).catch(error => {
+      console.warn("[Auth] Supabase 세션 확인 중 오류가 발생했습니다.", error);
+      return {
+        ok: false,
+        code: "SUPABASE_SESSION_ERROR",
+        error,
+        message: "로그인 세션을 확인하지 못했습니다."
+      };
+    });
+  }
+
   /* 1차 실제 구현 대상입니다. 기존 Guest 세션이 있으면 새 UID를 만들지 않고 재사용합니다. */
   function signInGuest(){
     const existing = readSession();
     if(existing) return Promise.resolve({ ok: true, account: buildAccountInfo(existing) });
+
+    const client = getSupabaseClient();
+    if(client && client.auth && typeof client.auth.signInAnonymously === "function"){
+      return client.auth.signInAnonymously().then(result => {
+        if(result && result.error){
+          return {
+            ok: false,
+            code: result.error.code || "SUPABASE_AUTH_ERROR",
+            error: result.error,
+            message: result.error.message || "Supabase 익명 로그인에 실패했습니다."
+          };
+        }
+
+        const authSession = result && result.data ? result.data.session : null;
+        return writeSupabaseSession(authSession);
+      }).catch(error => {
+        console.warn("[Auth] Supabase 익명 로그인 중 오류가 발생했습니다.", error);
+        return {
+          ok: false,
+          code: "SUPABASE_NETWORK_ERROR",
+          error,
+          message: "Supabase 익명 로그인 중 오류가 발생했습니다."
+        };
+      });
+    }
 
     return requestAuthJson("/auth/guest", { method: "POST" }).then(response => {
       if(!response.ok) return response;
@@ -491,11 +589,57 @@
   }
 
   function signInGooglePlay(){
-    return requestProviderLogin("googlePlay");
+    return signInWithSupabaseOAuth("google");
   }
 
   function signInFacebook(){
-    return requestProviderLogin("facebook");
+    return signInWithSupabaseOAuth("facebook");
+  }
+
+  function getOAuthRedirectTo(){
+    if(!window.location || !/^https?:$/.test(window.location.protocol)) return undefined;
+    return window.location.href.split("#")[0];
+  }
+
+  function signInWithSupabaseOAuth(provider){
+    const client = getSupabaseClient();
+    const config = PROVIDER_CONFIG[provider] || PROVIDER_CONFIG.googlePlay;
+    if(!client || !client.auth || typeof client.auth.signInWithOAuth !== "function"){
+      return requestProviderLogin(provider === "google" ? "googlePlay" : provider);
+    }
+
+    return client.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: getOAuthRedirectTo()
+      }
+    }).then(result => {
+      if(result && result.error){
+        return {
+          ok: false,
+          provider,
+          code: result.error.code || "SUPABASE_OAUTH_ERROR",
+          error: result.error,
+          message: result.error.message || (config.accountType + " 로그인에 실패했습니다.")
+        };
+      }
+
+      return {
+        ok: false,
+        provider,
+        code: "OAUTH_REDIRECT",
+        message: config.accountType + " 로그인 페이지로 이동합니다."
+      };
+    }).catch(error => {
+      console.warn("[Auth] " + config.accountType + " OAuth 로그인 중 오류가 발생했습니다.", error);
+      return {
+        ok: false,
+        provider,
+        code: "SUPABASE_OAUTH_ERROR",
+        error,
+        message: config.accountType + " 로그인 중 오류가 발생했습니다."
+      };
+    });
   }
 
   /* 로그아웃은 인증 세션을 제거하고, 첫 방문 메뉴 복귀에 필요한 이전 계정 정보를 반환합니다. */
@@ -509,6 +653,12 @@
 
     try {
       const previousAccount = getAccountInfo();
+      const client = getSupabaseClient();
+      if(client && client.auth && typeof client.auth.signOut === "function"){
+        client.auth.signOut().catch(error => {
+          console.warn("[Auth] Supabase 로그아웃 요청에 실패했습니다.", error);
+        });
+      }
       localStorage.removeItem(AUTH_KEY);
       emitAuthChanged({ isLoggedIn: false, previousUid: previousAccount && previousAccount.uid ? previousAccount.uid : null });
       return {
@@ -544,10 +694,30 @@
     getAccountInfo,
     getMailboxContext,
     requireLogin,
+    checkSession,
     signInGuest,
     signInGooglePlay,
     signInFacebook,
     completeProviderLogin,
     logout
   };
+
+  function restoreSupabaseSessionOnLoad(){
+    if(readSession()) return;
+    checkSession().then(result => {
+      if(result && result.ok){
+        emitAuthChanged({
+          isLoggedIn: true,
+          accountId: result.account && (result.account.accountId || result.account.uid),
+          provider: result.account && result.account.provider
+        });
+      }
+    });
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", restoreSupabaseSessionOnLoad);
+  } else {
+    restoreSupabaseSessionOnLoad();
+  }
 })();

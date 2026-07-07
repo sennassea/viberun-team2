@@ -50,7 +50,7 @@
         '</div>' +
         '<p class="auth-login-desc">플레이 데이터를 저장하고 보상을 받기 위해 계정을 선택해 주세요.</p>' +
         '<div class="auth-login-actions">' +
-          '<button type="button" class="auth-login-button auth-login-google">Google Play</button>' +
+          '<button type="button" class="auth-login-button auth-login-google">Google</button>' +
           '<button type="button" class="auth-login-button auth-login-facebook">Facebook</button>' +
           '<button type="button" class="auth-login-button auth-login-guest">Guest로 시작</button>' +
         '</div>' +
@@ -122,7 +122,7 @@
     }
   }
   function signInGooglePlay(){
-    signInProvider("signInGooglePlay", "Google Play");
+    signInProvider("signInGooglePlay", "Google");
   }
 
   function signInFacebook(){
@@ -161,6 +161,9 @@
     if(result && result.code === "ACCOUNT_ALREADY_LINKED"){
       return { text: "이미 다른 계정에 연결된 로그인입니다.", type: "error" };
     }
+    if(result && result.code === "OAUTH_REDIRECT"){
+      return { text: (result.message || "로그인 페이지로 이동합니다."), type: "info" };
+    }
     const rawMessage = result && result.message ? String(result.message) : "";
     if(rawMessage.includes("이미 다른 계정에 연결된 로그인")){
       return { text: "이미 다른 계정에 연결된 로그인입니다.", type: "error" };
@@ -180,8 +183,8 @@
     if(label === "Facebook"){
       return { text: "Facebook 로그인에 실패했습니다. 다시 시도해 주세요.", type: "error" };
     }
-    if(label === "Google Play"){
-      return { text: "Google Play 로그인에 실패했습니다. 다시 시도해 주세요.", type: "error" };
+    if(label === "Google" || label === "Google Play"){
+      return { text: "Google 로그인에 실패했습니다. 다시 시도해 주세요.", type: "error" };
     }
     return { text: rawMessage || "로그인에 실패했습니다. 다시 시도해 주세요.", type: "error" };
   }
