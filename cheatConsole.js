@@ -351,11 +351,33 @@
     });
   }
 
+  function requestWalletCheatSupabase(op, amount){
+    if(!requireLoggedInAccount()) return Promise.resolve(null);
+
+    const service = window.VIBERUN_CHEAT_WALLET;
+    if(!service || typeof service.updateMoon !== "function"){
+      cheatWarn("wallet cheat service is unavailable.");
+      return Promise.resolve(null);
+    }
+
+    return Promise.resolve(service.updateMoon(op, amount, "CHEAT.wallet.moon." + op)).then(result => {
+      if(!result || !result.ok){
+        cheatWarn("wallet cheat failed: " + ((result && result.message) || "unknown error"));
+        return null;
+      }
+
+      return result.wallet;
+    }).catch(error => {
+      cheatWarn("wallet cheat failed: " + error);
+      return null;
+    });
+  }
+
   function cheatWalletMoonAdd(amount){
     const v = requireFiniteAmount(amount);
     if(v === null || v <= 0){ cheatWarn("수량은 0보다 커야 합니다."); return; }
     const delta = Math.floor(v);
-    requestWalletCheat("add", delta).then(wallet => {
+    requestWalletCheatSupabase("add", delta).then(wallet => {
       if(wallet) cheatLog("계정 달빛조각 " + delta + " 증가 → 현재 " + wallet.moonShards);
     });
   }
@@ -364,7 +386,7 @@
     const v = requireFiniteAmount(amount);
     if(v === null || v <= 0){ cheatWarn("수량은 0보다 커야 합니다."); return; }
     const delta = Math.floor(v);
-    requestWalletCheat("take", delta).then(wallet => {
+    requestWalletCheatSupabase("take", delta).then(wallet => {
       if(wallet) cheatLog("계정 달빛조각 " + delta + " 감소 → 현재 " + wallet.moonShards);
     });
   }
@@ -373,7 +395,7 @@
     const v = requireFiniteAmount(amount);
     if(v === null){ return; }
     const target = Math.max(0, Math.floor(v));
-    requestWalletCheat("set", target).then(wallet => {
+    requestWalletCheatSupabase("set", target).then(wallet => {
       if(wallet) cheatLog("계정 달빛조각을 " + target + "로 설정 → 현재 " + wallet.moonShards);
     });
   }
