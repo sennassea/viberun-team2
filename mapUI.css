@@ -125,6 +125,9 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  /* .dmap-loc-badge가 배경 플레이트 중앙에 오도록 translateY(1.2cqh)만큼 내려가 있어서,
+     같은 헤더 줄에 있는 닫기 버튼도 같은 만큼 내려 두 요소의 세로선을 맞춘다. */
+  transform: translateY(1.2cqh);
   transition: transform 0.12s;
 }
 .map-close.dmap-close:hover {
