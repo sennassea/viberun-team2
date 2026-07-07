@@ -50,6 +50,11 @@
     return normalized;
   }
 
+  function firstRow(data){
+    if(Array.isArray(data)) return data[0] || null;
+    return data || null;
+  }
+
   function fetchWallet(){
     if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.fetchWallet === "function"){
       return Promise.resolve(window.VIBERUN_WALLET.fetchWallet()).then(result => {
@@ -69,17 +74,32 @@
   function updateWalletGem(client, account, nextGem){
     const userId = account && (account.accountId || account.uid);
     if(!userId) return Promise.resolve({ ok: false, code: "ACCOUNT_REQUIRED" });
+    const nextGemValue = Math.max(0, Math.floor(Number(nextGem) || 0));
 
     return client.from("wallets")
-      .update({ gem: Math.max(0, Math.floor(Number(nextGem) || 0)), updated_at: new Date().toISOString() })
+      .update({ gem: nextGemValue, updated_at: new Date().toISOString() })
       .eq("user_id", userId)
-      .select("*")
-      .single()
       .then(result => {
         if(result && result.error){
           return { ok: false, error: result.error, message: result.error.message || "Failed to update wallet." };
         }
-        return { ok: true, wallet: syncWallet(result.data) };
+
+        return client.from("wallets")
+          .select("*")
+          .eq("user_id", userId)
+          .limit(1)
+          .then(selectResult => {
+            if(selectResult && selectResult.error){
+              return { ok: false, error: selectResult.error, message: selectResult.error.message || "Failed to load wallet." };
+            }
+
+            const walletRow = firstRow(selectResult.data);
+            if(!walletRow || Math.max(0, Math.floor(Number(walletRow.gem) || 0)) !== nextGemValue){
+              return { ok: false, code: "WALLET_UPDATE_EMPTY", message: "Wallet was not updated." };
+            }
+
+            return { ok: true, wallet: syncWallet(walletRow) };
+          });
       });
   }
 

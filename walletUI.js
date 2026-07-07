@@ -82,7 +82,6 @@
       const cachedWallet = window.VIBERUN_USER_DATA.getCachedWallet();
       if(cachedWallet){
         render(cachedWallet);
-        return;
       }
     }
 
@@ -103,7 +102,8 @@
 
   window.addEventListener("viberun:wallet-changed", event => {
     const wallet = event && event.detail ? event.detail.wallet : null;
-    render(wallet || { moonShards: 0 });
+    if(wallet) render(wallet);
+    else if(!isLoggedIn()) render({ moonShards: 0 });
     setVisible(isLoggedIn());
   });
 
@@ -113,7 +113,9 @@
 
   window.addEventListener("viberun:user-data-changed", event => {
     const wallet = event && event.detail ? event.detail.wallet : null;
-    render(wallet || { gem: 0 });
+    if(wallet) render(wallet);
+    else if(isLoggedIn()) refresh();
+    else render({ gem: 0 });
     setVisible(isLoggedIn());
   });
 

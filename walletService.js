@@ -16,6 +16,19 @@
     return account && account.isLoggedIn ? account : null;
   }
 
+  function getSupabaseUserId(){
+    const bridge = window.VIBERUN_SUPABASE;
+    const client = bridge && typeof bridge.getClient === "function" ? bridge.getClient() : null;
+    if(!client || !client.auth || typeof client.auth.getUser !== "function"){
+      return Promise.resolve("");
+    }
+
+    return client.auth.getUser().then(result => {
+      const user = result && result.data ? result.data.user : null;
+      return user && user.id ? String(user.id) : "";
+    }).catch(() => "");
+  }
+
   function normalizeWallet(wallet){
     const source = wallet && typeof wallet === "object" ? wallet : {};
     const gemValue = typeof source.gem !== "undefined" ? source.gem : source.moonShards;
@@ -44,7 +57,7 @@
     }
 
     const userData = window.VIBERUN_USER_DATA;
-    if(!userData || typeof userData.getOrCreateWallet !== "function"){
+    if(!userData || typeof userData.fetchWallet !== "function"){
       return Promise.resolve({
         ok: false,
         code: "USER_DATA_UNAVAILABLE",
@@ -52,7 +65,10 @@
       });
     }
 
-    return Promise.resolve(userData.getOrCreateWallet(account.accountId || account.uid)).then(result => {
+    return getSupabaseUserId().then(supabaseUserId => {
+      const userId = supabaseUserId || account.accountId || account.uid;
+      return userData.fetchWallet(userId);
+    }).then(result => {
       if(!result || !result.ok) return result || { ok: false, message: "Failed to load wallet." };
 
       const wallet = normalizeWallet(result.wallet);

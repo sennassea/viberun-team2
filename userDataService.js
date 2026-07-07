@@ -128,6 +128,30 @@
     });
   }
 
+  function fetchWallet(userId){
+    const client = getClient();
+    const id = String(userId || "").trim();
+    if(!client || !id){
+      return Promise.resolve({ ok: false, code: "SUPABASE_UNAVAILABLE", message: "?ы솕 ?뺣낫瑜?遺덈윭?????놁뒿?덈떎." });
+    }
+
+    return client.from("wallets").select("*").eq("user_id", id).limit(1).then(result => {
+      if(result && result.error){
+        return { ok: false, error: result.error, message: result.error.message || "?ы솕 ?뺣낫瑜?遺덈윭?ㅼ? 紐삵뻽?듬땲??" };
+      }
+
+      const row = Array.isArray(result.data) ? result.data[0] : result.data;
+      if(!row){
+        return { ok: false, code: "WALLET_NOT_FOUND", message: "?ы솕 ?뺣낫媛 ?놁뒿?덈떎." };
+      }
+
+      return { ok: true, wallet: syncWalletCache(row), created: false };
+    }).catch(error => {
+      console.warn("[UserData] wallet 議고쉶 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.", error);
+      return { ok: false, error, message: "?ы솕 ?뺣낫瑜?遺덈윭?ㅼ? 紐삵뻽?듬땲??" };
+    });
+  }
+
   function prepareUserData(account){
     const source = account && typeof account === "object" ? account : {};
     const userId = String(source.accountId || source.uid || "").trim();
@@ -221,6 +245,7 @@
   window.VIBERUN_USER_DATA = {
     getOrCreateProfile,
     getOrCreateWallet,
+    fetchWallet,
     prepareUserData,
     grantTestGem,
     getCachedProfile,
