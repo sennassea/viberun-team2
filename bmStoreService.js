@@ -2,14 +2,13 @@
 
 /* =========================================================================
    BM Store Service
-   - 월영당 상품 목록 제공과 패키지 구매 처리를 담당합니다.
-   - 구매 즉시 dummyInventory/wallet.moonShards로 보상을 지급하지 않으며, 서버가 구매 상품을
-     선물함 구매 메일로 생성합니다. 실제 지급은 선물함에서 수령할 때만 이뤄집니다.
-   - wallet.moonShards는 walletService의 캐시/이벤트와 동기화해 메인/선물함/BM UI가
-     같은 수량을 표시하도록 유지합니다.
+   - Purchase results are delivered through Supabase mails.
+   - Account BM currency is wallets.gem, exposed to UI as moonShards.
    ========================================================================= */
 (function(){
-  const API_BASE = (window.VIBERUN_BM_STORE_API_BASE || window.VIBERUN_AUTH_API_BASE || "").replace(/\/$/, "");
+  const REFUND_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+  const EQUIPPED_SKIN_KEY = "viberunEquippedSkinId";
+  const pendingPurchases = new Set();
   let cachedDummyInventory = [];
   let cachedDeckPackUnlocks = { ownedDeckPackIds: [] };
 
@@ -17,21 +16,29 @@
     return window.VIBERUN_BM_STORE_DATA;
   }
 
+  function getClient(){
+    const bridge = window.VIBERUN_SUPABASE;
+    return bridge && typeof bridge.getClient === "function" ? bridge.getClient() : null;
+  }
+
   function getAuthAccount(){
     const auth = window.VIBERUN_AUTH;
     if(!auth || typeof auth.getAccountInfo !== "function") return null;
-
     const account = auth.getAccountInfo();
     return account && account.isLoggedIn ? account : null;
   }
 
-  function getAccessToken(){
+  function requireReady(){
+    const client = getClient();
     const account = getAuthAccount();
-    return account ? String(account.accessToken || "") : "";
+    if(!client) return { ok: false, code: "SUPABASE_UNAVAILABLE", message: "Supabase is unavailable." };
+    if(!account) return { ok: false, code: "NOT_LOGGED_IN", message: "Login is required." };
+    return { ok: true, client, account, userId: account.accountId || account.uid };
   }
 
   function normalizeWallet(wallet){
-    const gemValue = wallet && typeof wallet.gem !== "undefined" ? wallet.gem : (wallet && wallet.moonShards);
+    const source = wallet && typeof wallet === "object" ? wallet : {};
+    const gemValue = typeof source.gem !== "undefined" ? source.gem : source.moonShards;
     const moonShards = Math.max(0, Math.floor(Number(gemValue) || 0));
     return { gem: moonShards, moonShards };
   }
@@ -44,11 +51,26 @@
     return normalized;
   }
 
+  function fetchWalletIfNeeded(){
+    const walletService = window.VIBERUN_WALLET;
+    const cached = walletService && typeof walletService.getCachedWallet === "function"
+      ? walletService.getCachedWallet()
+      : null;
+    if(cached) return Promise.resolve(normalizeWallet(cached));
+
+    if(walletService && typeof walletService.fetchWallet === "function"){
+      return Promise.resolve(walletService.fetchWallet()).then(result => {
+        if(result && result.ok && result.wallet) return normalizeWallet(result.wallet);
+        return { gem: 0, moonShards: 0 };
+      });
+    }
+
+    return Promise.resolve({ gem: 0, moonShards: 0 });
+  }
+
   function normalizeDeckPackUnlocks(deckPackUnlocks){
     const ownedDeckPackIds = deckPackUnlocks && Array.isArray(deckPackUnlocks.ownedDeckPackIds)
-      ? deckPackUnlocks.ownedDeckPackIds
-          .map(id => String(id || "").trim())
-          .filter(Boolean)
+      ? deckPackUnlocks.ownedDeckPackIds.map(id => String(id || "").trim()).filter(Boolean)
       : [];
     return { ownedDeckPackIds: Array.from(new Set(ownedDeckPackIds)) };
   }
@@ -59,83 +81,6 @@
     return cachedDeckPackUnlocks;
   }
 
-  function getCachedWallet(){
-    if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.getCachedWallet === "function"){
-      return window.VIBERUN_WALLET.getCachedWallet();
-    }
-    return null;
-  }
-
-  function fetchWalletIfNeeded(){
-    const cached = getCachedWallet();
-    if(cached) return Promise.resolve(normalizeWallet(cached));
-
-    if(window.VIBERUN_WALLET && typeof window.VIBERUN_WALLET.fetchWallet === "function"){
-      return Promise.resolve(window.VIBERUN_WALLET.fetchWallet()).then(result => {
-        if(result && result.ok && result.wallet) return normalizeWallet(result.wallet);
-        return { moonShards: 0 };
-      });
-    }
-
-    return Promise.resolve({ moonShards: 0 });
-  }
-
-  function requestJson(path, options){
-    const token = getAccessToken();
-    if(!token){
-      return Promise.resolve({
-        ok: false,
-        code: "NOT_LOGGED_IN",
-        message: "로그인이 필요합니다."
-      });
-    }
-
-    if(typeof fetch !== "function"){
-      return Promise.resolve({
-        ok: false,
-        code: "FETCH_UNAVAILABLE",
-        message: "네트워크 요청을 사용할 수 없는 환경입니다."
-      });
-    }
-
-    const requestOptions = options || {};
-    const headers = Object.assign({
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
-    }, requestOptions.headers || {});
-
-    return fetch(API_BASE + path, Object.assign({}, requestOptions, { headers }))
-      .then(response => response.text().then(text => {
-        let body = {};
-        if(text){
-          try {
-            body = JSON.parse(text);
-          } catch(error) {
-            console.warn("[BMStore] 서버 응답 JSON 파싱에 실패했습니다.", error);
-            body = { message: text };
-          }
-        }
-
-        if(response.ok) return Object.assign({ ok: true }, body);
-        return {
-          ok: false,
-          status: response.status,
-          code: body.code || body.errorCode || "",
-          message: body.message || "월영당 요청에 실패했습니다.",
-          body
-        };
-      }))
-      .catch(error => {
-        console.warn("[BMStore] 서버 요청 중 네트워크 오류가 발생했습니다.", error);
-        return {
-          ok: false,
-          code: "NETWORK_ERROR",
-          error,
-          message: "서버와 연결할 수 없습니다. 네트워크 상태를 확인해 주세요."
-        };
-      });
-  }
-
   function getPackageProducts(){
     const data = getData();
     return data && typeof data.getPackageProducts === "function" ? data.getPackageProducts() : [];
@@ -144,8 +89,6 @@
   function getProductsByTab(tab){
     const data = getData();
     if(data && typeof data.getProductsByTab === "function") return data.getProductsByTab(tab);
-    if(tab === "package") return getPackageProducts();
-    if(tab === "order_pack") return getOrderPackProducts();
     return [];
   }
 
@@ -157,7 +100,7 @@
   function findProduct(productId){
     const data = getData();
     if(data && typeof data.findProduct === "function") return data.findProduct(productId);
-    return findPackageProduct(productId) || findOrderPackProduct(productId);
+    return findPackageProduct(productId) || findOrderPackProduct(productId) || findMoonChargeProduct(productId) || findMonthlyPassProduct(productId);
   }
 
   function getOrderPackProducts(){
@@ -175,13 +118,6 @@
     return data && typeof data.getMoonChargeProducts === "function" ? data.getMoonChargeProducts() : [];
   }
 
-  /* 추천탭 전용 조회 함수입니다. 패키지/주문 팩/충전 상품 중 recommended === true인
-     상품만 recommendOrder 오름차순으로 가져오며, 구매는 기존 purchaseProduct를 그대로 사용합니다. */
-  function getRecommendedProducts(){
-    const data = getData();
-    return data && typeof data.getRecommendedProducts === "function" ? data.getRecommendedProducts() : [];
-  }
-
   function findMoonChargeProduct(productId){
     const data = getData();
     return data && typeof data.findMoonChargeProduct === "function" ? data.findMoonChargeProduct(productId) : null;
@@ -197,337 +133,384 @@
     return data && typeof data.findMonthlyPassProduct === "function" ? data.findMonthlyPassProduct(productId) : null;
   }
 
-  /* 패키지/주문 팩 공통 구매 처리입니다.
-     wallet 확인 → 서버 요청 → wallet 동기화 흐름은 동일하게 재사용하며, 실제 보상은
-     서버가 생성한 선물함 구매 메일(result.mail)을 통해서만 지급됩니다. */
-  function purchaseFromCatalog(productId, product, endpointBase){
-    const account = getAuthAccount();
-    if(!account){
-      return Promise.resolve({
-        ok: false,
-        code: "NOT_LOGGED_IN",
-        message: "로그인이 필요합니다."
-      });
-    }
+  function getRecommendedProducts(){
+    const data = getData();
+    return data && typeof data.getRecommendedProducts === "function" ? data.getRecommendedProducts() : [];
+  }
 
-    if(!product){
-      return Promise.resolve({
-        ok: false,
-        code: "UNKNOWN_PRODUCT",
-        message: "존재하지 않는 상품입니다."
-      });
+  function toReward(product){
+    if(!product) return [];
+    if(product.rewardType === "moon_shard"){
+      return [{ type: "moon_shard", amount: Math.max(0, Math.floor(Number(product.rewardAmount) || 0)) }];
     }
-
-    if(product.priceType !== "moon_shard" || product.rewardType !== "dummy_item"){
-      return Promise.resolve({
-        ok: false,
-        code: "UNSUPPORTED_PRODUCT",
-        message: "현재 구매할 수 없는 상품입니다."
-      });
+    if(product.rewardType === "character_skin"){
+      return [{ type: "character_skin", id: product.skinId || product.id, name: product.name || "", amount: 1 }];
     }
+    if(product.rewardType === "deck_pack"){
+      return [{ type: "deck_pack", id: product.deckPackId || product.id, name: product.name || "", amount: 1 }];
+    }
+    if(product.rewardType === "monthly_pass"){
+      const rewards = [{ type: "monthly_pass", id: product.id, name: product.name || "", amount: 1 }];
+      if(product.immediateRewardType === "moon_shard" && Number(product.immediateRewardAmount) > 0){
+        rewards.push({ type: "moon_shard", amount: Math.floor(Number(product.immediateRewardAmount) || 0) });
+      }
+      return rewards;
+    }
+    return [{ type: product.rewardType || "item", id: product.rewardId || product.id, name: product.name || "", amount: 1 }];
+  }
 
-    return fetchWalletIfNeeded().then(wallet => {
-      if(wallet.moonShards < product.price){
+  function normalizeMail(row){
+    const source = row && typeof row === "object" ? row : {};
+    return {
+      mailId: String(source.id || "").trim(),
+      source: source.source || "bm_purchase",
+      status: source.status || "PURCHASED_UNCLAIMED",
+      productId: source.product_id || "",
+      productName: source.product_name || source.title || "",
+      productDescription: source.product_description || "",
+      rewards: Array.isArray(source.rewards) ? source.rewards : []
+    };
+  }
+
+  function productTypeFor(product){
+    return product && product.rewardType === "moon_shard" ? "currency" : "item";
+  }
+
+  function isRepeatableProduct(product){
+    return !!(product && product.rewardType === "moon_shard");
+  }
+
+  function createPurchaseMail(product, ready){
+    const rewards = toReward(product);
+    const now = Date.now();
+    const row = {
+      user_id: ready.userId,
+      source: "bm_purchase",
+      status: "PURCHASED_UNCLAIMED",
+      title: product.name || "",
+      message: "Purchased item has arrived.",
+      product_id: product.id,
+      product_name: product.name || "",
+      product_description: product.description || product.subtitle || "",
+      product_type: productTypeFor(product),
+      is_repeatable: isRepeatableProduct(product),
+      rewards,
+      purchased_at: new Date(now).toISOString(),
+      refund_until: new Date(now + REFUND_WINDOW_MS).toISOString()
+    };
+
+    return ready.client.from("mails").insert(row).select("*").single().then(result => {
+      if(result && result.error){
         return {
           ok: false,
-          code: "INSUFFICIENT_MOON_SHARDS",
-          message: "달빛조각이 부족합니다.",
-          wallet
+          error: result.error,
+          code: result.error.code === "23505" ? "ALREADY_PURCHASED" : result.error.code,
+          message: result.error.code === "23505" ? "This product has already been purchased." : (result.error.message || "Failed to create purchase mail.")
         };
       }
-
-      return requestJson(endpointBase + "/" + encodeURIComponent(product.id) + "/purchase", {
-        method: "POST"
-      }).then(result => {
-        if(!result || !result.ok){
-          if(result && result.wallet) syncWallet(result.wallet);
-          return result || { ok: false, message: "구매에 실패했습니다." };
-        }
-
-        if(result.wallet) result.wallet = syncWallet(result.wallet);
-        return result;
-      });
-    });
-  }
-
-  function purchasePackage(productId){
-    return purchaseFromCatalog(productId, findPackageProduct(productId), "/bm-store/package");
-  }
-
-  /* 캐릭터 스킨 구매입니다. 달빛조각 결제이며, 실제 보유 처리는 하지 않고 서버가
-     선물함 구매 메일을 생성합니다. 한정 스킨은 saleEndAt이 지나면 구매를 막습니다. */
-  function purchaseCharacterSkin(productId){
-    const product = findPackageProduct(productId);
-
-    if(!product || product.rewardType !== "character_skin"){
-      return Promise.resolve({
-        ok: false,
-        code: "INVALID_CHARACTER_SKIN_PRODUCT",
-        message: "캐릭터 스킨 상품이 아닙니다."
-      });
-    }
-
-    const account = getAuthAccount();
-    if(!account){
-      return Promise.resolve({
-        ok: false,
-        code: "NOT_LOGGED_IN",
-        message: "로그인이 필요합니다."
-      });
-    }
-
-    if(product.saleEndAt){
-      const now = Date.now();
-      const saleEndAt = Date.parse(product.saleEndAt);
-
-      if(Number.isFinite(saleEndAt) && now >= saleEndAt){
-        return Promise.resolve({
-          ok: false,
-          code: "CHARACTER_SKIN_SALE_ENDED",
-          message: "판매 기간이 종료된 스킨입니다."
-        });
-      }
-    }
-
-    return fetchWalletIfNeeded().then(wallet => {
-      if(wallet.moonShards < product.price){
-        return {
-          ok: false,
-          code: "INSUFFICIENT_MOON_SHARDS",
-          message: "달빛조각이 부족합니다.",
-          wallet
-        };
-      }
-
-      return requestJson("/bm-store/character-skin/" + encodeURIComponent(productId) + "/purchase", {
-        method: "POST"
-      }).then(result => {
-        if(!result || !result.ok){
-          if(result && result.wallet) syncWallet(result.wallet);
-          return result || { ok: false, message: "구매에 실패했습니다." };
-        }
-
-        if(result.wallet) result.wallet = syncWallet(result.wallet);
-        return result;
-      });
-    });
-  }
-
-  function purchaseOrderPack(productId){
-    return purchaseFromCatalog(productId, findOrderPackProduct(productId), "/bm-store/package");
-  }
-
-  /* 주문 덱 BM 임시 구현: 한풀이 덱 / 굿판 덱 확장덱 구매입니다. 달빛조각 결제이며,
-     실제 소유권 부여는 하지 않고 서버가 선물함 구매 메일을 생성합니다. */
-  function purchaseDeckPack(productId){
-    return requestJson("/bm-store/deck-pack/" + encodeURIComponent(productId) + "/purchase", {
-      method: "POST"
-    }).then(result => {
-      if(result && result.wallet){
-        result.wallet = syncWallet(result.wallet);
-      }
-      if(result && result.deckPackUnlocks){
-        result.deckPackUnlocks = syncDeckPackUnlocks(result.deckPackUnlocks);
-      }
-      return result;
-    });
-  }
-
-  /* 계정이 보유 중인 확장덱 ID 목록을 조회합니다. */
-  function fetchDeckPackUnlocks(){
-    return requestJson("/bm-store/deck-pack/unlocks", {
-      method: "GET"
-    }).then(result => {
-      if(result && result.ok && result.deckPackUnlocks){
-        result.deckPackUnlocks = syncDeckPackUnlocks(result.deckPackUnlocks);
-      }
-      return result;
-    });
-  }
-
-  /* 달빛조각 충전은 실제 결제가 아닌 테스트 구매입니다.
-     달빛조각 잔액 확인/차감 없이 rewardAmount만큼 wallet.moonShards만 증가시킵니다. */
-  function purchaseMoonCharge(productId){
-    const account = getAuthAccount();
-    if(!account){
-      return Promise.resolve({
-        ok: false,
-        code: "NOT_LOGGED_IN",
-        message: "로그인이 필요합니다."
-      });
-    }
-
-    const product = findMoonChargeProduct(productId);
-    if(!product){
-      return Promise.resolve({
-        ok: false,
-        code: "UNKNOWN_PRODUCT",
-        message: "존재하지 않는 상품입니다."
-      });
-    }
-
-    if(product.priceType !== "test_cash" || product.rewardType !== "moon_shard"){
-      return Promise.resolve({
-        ok: false,
-        code: "UNSUPPORTED_PRODUCT",
-        message: "현재 구매할 수 없는 상품입니다."
-      });
-    }
-
-    if(!API_BASE){
-      return purchaseMoonChargeForTest(product);
-    }
-
-    return requestJson("/bm-store/moon-charge/" + encodeURIComponent(product.id) + "/purchase", {
-      method: "POST"
-    }).then(result => {
-      if(!result || !result.ok){
-        if(result && result.wallet) syncWallet(result.wallet);
-        return result || { ok: false, message: "구매에 실패했습니다." };
-      }
-
-      if(result.wallet) result.wallet = syncWallet(result.wallet);
-      return result;
-    });
-  }
-
-  function purchaseMoonChargeForTest(product){
-    const userData = window.VIBERUN_USER_DATA;
-    if(!userData || typeof userData.grantTestGem !== "function"){
-      return Promise.resolve({
-        ok: false,
-        code: "TEST_PURCHASE_UNAVAILABLE",
-        message: "테스트 구매 기능을 사용할 수 없습니다."
-      });
-    }
-
-    const amount = Math.max(0, Math.floor(Number(product.rewardAmount) || 0));
-    if(!amount){
-      return Promise.resolve({
-        ok: false,
-        code: "INVALID_REWARD_AMOUNT",
-        message: "지급할 테스트 재화가 없습니다."
-      });
-    }
-
-    return Promise.resolve(userData.grantTestGem(amount)).then(result => {
-      if(!result || !result.ok) return result || { ok: false, message: "테스트 구매에 실패했습니다." };
 
       return {
         ok: true,
-        wallet: syncWallet(result.wallet),
-        testPurchase: true,
+        mail: normalizeMail(result.data),
         productId: product.id,
-        rewardAmount: amount
+        rewards
       };
     });
   }
 
-  /* 월영의 약속(30일 출석 상품) 구매입니다. 결제는 test_cash이며, 즉시/매일 지급 모두
-     선물함 구매 메일을 통해서만 이뤄집니다(수령 시 활성화 + 즉시 100 지급). */
-  function purchaseMonthlyPass(productId){
-    const product = findMonthlyPassProduct(productId);
-
-    if(!product || product.rewardType !== "monthly_pass"){
-      return Promise.resolve({
-        ok: false,
-        code: "INVALID_MONTHLY_PASS_PRODUCT",
-        message: "월영의 약속 상품이 아닙니다."
+  function updateWalletGem(client, userId, nextGem){
+    return client.from("wallets")
+      .update({ gem: Math.max(0, Math.floor(Number(nextGem) || 0)), updated_at: new Date().toISOString() })
+      .eq("user_id", userId)
+      .select("*")
+      .single()
+      .then(result => {
+        if(result && result.error){
+          return { ok: false, error: result.error, message: result.error.message || "Failed to update wallet." };
+        }
+        return { ok: true, wallet: syncWallet(result.data) };
       });
-    }
+  }
 
-    const account = getAuthAccount();
-    if(!account){
-      return Promise.resolve({
-        ok: false,
-        code: "NOT_LOGGED_IN",
-        message: "로그인이 필요합니다."
-      });
-    }
-
-    return requestJson("/bm-store/monthly-pass/" + encodeURIComponent(productId) + "/purchase", {
-      method: "POST"
+  function purchaseCashProduct(product){
+    const ready = requireReady();
+    if(!ready.ok) return Promise.resolve(ready);
+    return createPurchaseMail(product, ready).then(result => {
+      if(!result || !result.ok) return result;
+      return fetchWalletIfNeeded().then(wallet => Object.assign({}, result, { wallet }));
     });
   }
 
-  /* 활성 탭과 무관하게 UI가 상품 ID만으로 구매를 요청할 수 있도록 모든 카탈로그를 조회합니다.
-     딤드/준비 중 상품은 서버 요청 없이 COMING_SOON으로 막고, rewardType에 따라
-     월영의 약속/충전 테스트 구매/기존 패키지·주문 팩 구매로 분기합니다. */
-  function purchaseProduct(productId){
-    const product = findProduct(productId);
+  function purchaseGemProduct(product){
+    const ready = requireReady();
+    if(!ready.ok) return Promise.resolve(ready);
 
-    if(!product){
-      return Promise.resolve({
-        ok: false,
-        code: "UNKNOWN_PRODUCT",
-        message: "존재하지 않는 상품입니다."
+    return fetchWalletIfNeeded().then(wallet => {
+      const price = Math.max(0, Math.floor(Number(product.price) || 0));
+      if(wallet.moonShards < price){
+        return {
+          ok: false,
+          code: "INSUFFICIENT_MOON_SHARDS",
+          message: "Not enough moon shards.",
+          wallet
+        };
+      }
+
+      const nextGem = wallet.moonShards - price;
+      return updateWalletGem(ready.client, ready.userId, nextGem).then(walletResult => {
+        if(!walletResult || !walletResult.ok) return walletResult;
+
+        return createPurchaseMail(product, ready).then(mailResult => {
+          if(mailResult && mailResult.ok){
+            return Object.assign({}, mailResult, { wallet: walletResult.wallet });
+          }
+
+          return updateWalletGem(ready.client, ready.userId, wallet.moonShards).then(revertResult => {
+            if(revertResult && revertResult.wallet) mailResult.wallet = revertResult.wallet;
+            return mailResult;
+          });
+        });
       });
+    });
+  }
+
+  function purchaseProductInternal(product){
+    if(product.priceType === "moon_shard") return purchaseGemProduct(product);
+    return purchaseCashProduct(product);
+  }
+
+  function purchaseGuarded(product){
+    if(!product){
+      return Promise.resolve({ ok: false, code: "UNKNOWN_PRODUCT", message: "Unknown product." });
     }
 
     if(product.dimmed || product.comingSoon || product.purchasable === false){
       return Promise.resolve({
         ok: false,
         code: "COMING_SOON",
-        message: product.disabledReason || "준비 중입니다."
+        message: product.disabledReason || "Coming soon."
       });
     }
 
-    if(product.rewardType === "monthly_pass") return purchaseMonthlyPass(productId);
-    if(product.rewardType === "moon_shard") return purchaseMoonCharge(productId);
-    if(product.rewardType === "character_skin") return purchaseCharacterSkin(productId);
-    if(product.rewardType === "deck_pack") return purchaseDeckPack(productId);
-    return purchaseFromCatalog(productId, product, "/bm-store/package");
+    if(pendingPurchases.has(product.id)){
+      return Promise.resolve({ ok: false, code: "REQUEST_PENDING", message: "Request is already pending." });
+    }
+
+    pendingPurchases.add(product.id);
+    return purchaseProductInternal(product).finally(() => {
+      pendingPurchases.delete(product.id);
+    });
   }
 
-  /* 메인메뉴 좌하단 월영의 약속 일일 보상 UI가 사용하는 상태 조회/수령 함수입니다.
-     계정용 wallet.moonShards만 동기화하며, 전투용 S.moonShards와는 연결하지 않습니다. */
-  function fetchMonthlyPassStatus(){
-    return requestJson("/bm-store/monthly-pass/status", { method: "GET" }).then(result => {
-      if(result && result.wallet) syncWallet(result.wallet);
+  function purchasePackage(productId){
+    return purchaseGuarded(findPackageProduct(productId));
+  }
+
+  function purchaseCharacterSkin(productId){
+    const product = findPackageProduct(productId);
+    if(product && product.saleEndAt){
+      const saleEndAt = Date.parse(product.saleEndAt);
+      if(Number.isFinite(saleEndAt) && Date.now() >= saleEndAt){
+        return Promise.resolve({ ok: false, code: "CHARACTER_SKIN_SALE_ENDED", message: "Sale ended." });
+      }
+    }
+    return purchaseGuarded(product);
+  }
+
+  function purchaseOrderPack(productId){
+    return purchaseGuarded(findOrderPackProduct(productId));
+  }
+
+  function purchaseDeckPack(productId){
+    return purchaseGuarded(findOrderPackProduct(productId)).then(result => {
+      if(result && result.ok) return fetchDeckPackUnlocks().then(unlocks => Object.assign({}, result, { deckPackUnlocks: unlocks.deckPackUnlocks }));
       return result;
+    });
+  }
+
+  function purchaseMoonCharge(productId){
+    return purchaseGuarded(findMoonChargeProduct(productId));
+  }
+
+  function purchaseMonthlyPass(productId){
+    return purchaseGuarded(findMonthlyPassProduct(productId));
+  }
+
+  function purchaseProduct(productId){
+    return purchaseGuarded(findProduct(productId));
+  }
+
+  function rewardsContain(row, type){
+    const rewards = Array.isArray(row && row.rewards) ? row.rewards : [];
+    return rewards.some(reward => reward && reward.type === type);
+  }
+
+  function fetchClaimedPurchaseMails(){
+    const ready = requireReady();
+    if(!ready.ok) return Promise.resolve(Object.assign({}, ready, { mails: [] }));
+
+    return ready.client.from("mails")
+      .select("*")
+      .eq("user_id", ready.userId)
+      .eq("source", "bm_purchase")
+      .eq("status", "CLAIMED")
+      .then(result => {
+        if(result && result.error){
+          return { ok: false, error: result.error, message: result.error.message || "Failed to load claimed mails.", mails: [] };
+        }
+        return { ok: true, mails: Array.isArray(result.data) ? result.data : [] };
+      });
+  }
+
+  function fetchDeckPackUnlocks(){
+    return fetchClaimedPurchaseMails().then(result => {
+      if(!result || !result.ok) return result;
+      const ownedDeckPackIds = [];
+      result.mails.forEach(mail => {
+        (Array.isArray(mail.rewards) ? mail.rewards : []).forEach(reward => {
+          if(reward && reward.type === "deck_pack" && reward.id) ownedDeckPackIds.push(String(reward.id));
+        });
+      });
+      return {
+        ok: true,
+        deckPackUnlocks: syncDeckPackUnlocks({ ownedDeckPackIds })
+      };
+    });
+  }
+
+  function fetchCharacterSkinProfileState(){
+    return fetchClaimedPurchaseMails().then(result => {
+      const userData = window.VIBERUN_USER_DATA;
+      const profile = userData && typeof userData.getCachedProfile === "function" ? userData.getCachedProfile() : null;
+      if(!result || !result.ok){
+        return {
+          ok: false,
+          profile: profile || null,
+          characterSkins: { ownedSkinIds: [] }
+        };
+      }
+
+      const ownedSkinIds = [];
+      result.mails.forEach(mail => {
+        (Array.isArray(mail.rewards) ? mail.rewards : []).forEach(reward => {
+          if(reward && reward.type === "character_skin" && reward.id) ownedSkinIds.push(String(reward.id));
+        });
+      });
+
+      const equippedSkinId = getStoredEquippedSkinId(ownedSkinIds);
+      return {
+        ok: true,
+        profile: Object.assign({}, profile || {}, { equippedSkinId }),
+        characterSkins: { ownedSkinIds: Array.from(new Set(ownedSkinIds)) }
+      };
+    });
+  }
+
+  function getStoredEquippedSkinId(ownedSkinIds){
+    try {
+      const value = String(localStorage.getItem(EQUIPPED_SKIN_KEY) || "").trim();
+      return ownedSkinIds && ownedSkinIds.includes(value) ? value : null;
+    } catch(error) {
+      return null;
+    }
+  }
+
+  function equipCharacterSkinProfile(skinId){
+    return fetchCharacterSkinProfileState().then(result => {
+      if(!result || !result.ok) return result;
+      const ownedSkinIds = result.characterSkins && Array.isArray(result.characterSkins.ownedSkinIds)
+        ? result.characterSkins.ownedSkinIds
+        : [];
+      const nextSkinId = String(skinId || "").trim();
+      if(nextSkinId && !ownedSkinIds.includes(nextSkinId)){
+        return { ok: false, code: "SKIN_NOT_OWNED", message: "Skin is not owned." };
+      }
+      try {
+        if(nextSkinId) localStorage.setItem(EQUIPPED_SKIN_KEY, nextSkinId);
+        else localStorage.removeItem(EQUIPPED_SKIN_KEY);
+      } catch(error) {
+        return { ok: false, error, message: "Failed to save equipped skin." };
+      }
+      return fetchCharacterSkinProfileState();
+    });
+  }
+
+  function fetchProfileStatus(){
+    const profile = window.VIBERUN_USER_DATA && typeof window.VIBERUN_USER_DATA.getCachedProfile === "function"
+      ? window.VIBERUN_USER_DATA.getCachedProfile()
+      : null;
+    return Promise.resolve({ ok: true, profile });
+  }
+
+  function updateProfileNickname(nickname){
+    const ready = requireReady();
+    if(!ready.ok) return Promise.resolve(ready);
+    const nextNickname = String(nickname || "").trim();
+
+    return ready.client.from("profiles")
+      .update({ nickname: nextNickname })
+      .eq("id", ready.userId)
+      .select("*")
+      .single()
+      .then(result => {
+        if(result && result.error){
+          return { ok: false, error: result.error, message: result.error.message || "Failed to update nickname." };
+        }
+
+        if(window.VIBERUN_USER_DATA && typeof window.VIBERUN_USER_DATA.prepareUserData === "function"){
+          window.VIBERUN_USER_DATA.prepareUserData(ready.account);
+        }
+
+        return { ok: true, profile: result.data, message: "Nickname updated." };
+      });
+  }
+
+  function fetchMonthlyPassStatus(){
+    return fetchClaimedPurchaseMails().then(result => {
+      if(!result || !result.ok){
+        return { ok: false, monthlyPass: { active: false, daysRemaining: 30, dailyRewardAmount: 15, todayRewardAmount: 15, canClaimToday: false } };
+      }
+
+      const activeMail = result.mails.find(mail => rewardsContain(mail, "monthly_pass"));
+      if(!activeMail){
+        return { ok: true, monthlyPass: { active: false, daysRemaining: 30, dailyRewardAmount: 15, todayRewardAmount: 15, canClaimToday: false } };
+      }
+
+      const purchasedAt = Date.parse(activeMail.purchased_at || activeMail.created_at || "");
+      const expiresAt = Number.isFinite(purchasedAt) ? purchasedAt + 30 * 24 * 60 * 60 * 1000 : 0;
+      const daysRemaining = expiresAt ? Math.max(0, Math.ceil((expiresAt - Date.now()) / 86400000)) : 30;
+      return {
+        ok: true,
+        monthlyPass: {
+          active: true,
+          expiresAt,
+          daysRemaining,
+          dailyRewardAmount: 15,
+          todayRewardAmount: 15,
+          canClaimToday: false
+        }
+      };
     });
   }
 
   function claimMonthlyPassDailyReward(){
-    return requestJson("/bm-store/monthly-pass/claim-daily", { method: "POST" }).then(result => {
-      if(result && result.wallet) syncWallet(result.wallet);
-      return result;
-    });
-  }
-
-  /* 메인메뉴 좌상단 프로필 UI 전용 조회/적용 함수입니다.
-     구매/보유 로직에는 관여하지 않고 equippedSkinId 조회·저장만 담당합니다. */
-  function fetchCharacterSkinProfileState(){
-    return requestJson("/profile/character-skins", { method: "GET" });
-  }
-
-  function equipCharacterSkinProfile(skinId){
-    return requestJson("/profile/character-skins/equip", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ skinId: skinId ?? null })
-    });
-  }
-
-  /* 닉네임 변경 UI(nicknameUI.js) 전용 조회/변경 함수입니다. 스킨/장착 로직에는 관여하지 않습니다. */
-  function fetchProfileStatus(){
-    return requestJson("/profile/status", { method: "GET" });
-  }
-
-  function updateProfileNickname(nickname){
-    return requestJson("/profile/nickname", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nickname })
+    return Promise.resolve({
+      ok: false,
+      code: "DAILY_REWARD_UNAVAILABLE",
+      message: "Daily monthly pass reward is not connected yet."
     });
   }
 
   function fetchDummyInventory(){
-    return requestJson("/bm-store/dummy-inventory", { method: "GET" }).then(result => {
-      if(result && result.ok && Array.isArray(result.dummyInventory)){
-        cachedDummyInventory = result.dummyInventory.slice();
-      }
-      return result;
+    return fetchClaimedPurchaseMails().then(result => {
+      if(!result || !result.ok) return result;
+      cachedDummyInventory = [];
+      result.mails.forEach(mail => {
+        (Array.isArray(mail.rewards) ? mail.rewards : []).forEach(reward => {
+          if(reward && reward.type === "dummy_item") cachedDummyInventory.push(reward);
+        });
+      });
+      return { ok: true, dummyInventory: cachedDummyInventory.slice() };
     });
   }
 

@@ -484,7 +484,7 @@
       if(!result || !result.ok) return;
       const items = Array.isArray(result.items) ? result.items : [];
       syncCommonWallet(result.wallet);
-      const unclaimed = items.filter(item => item.status !== "CLAIMED").length;
+      const unclaimed = items.filter(item => item.status !== "CLAIMED" && item.status !== "REFUNDED").length;
       setBadgeCount(unclaimed);
     }).catch(() => {});
   }
