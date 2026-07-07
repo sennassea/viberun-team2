@@ -10,6 +10,17 @@
 (function(){
   const DEFAULT_SELECTED = ["barrier", "memory", "soul_mark"];
   const REQUIRED_SELECTION_COUNT = 3;
+  const SPIRIT_PATH_ASSETS = {
+    panelUnlocked: "assets/ui/spirit_path/deck_panel_unlocked.png",
+    panelLocked: "assets/ui/spirit_path/deck_panel_locked.png",
+    selectedRibbon: "assets/ui/spirit_path/selected_ribbon.png",
+    lockSeal: "assets/ui/spirit_path/lock_seal.png",
+    deck_emblem_barrier: "assets/ui/spirit_path/deck_emblem_barrier.png",
+    deck_emblem_memory: "assets/ui/spirit_path/deck_emblem_memory.png",
+    deck_emblem_soul_mark: "assets/ui/spirit_path/deck_emblem_soul_mark.png",
+    deck_emblem_hanpuri: "assets/ui/spirit_path/deck_emblem_hanpuri.png",
+    deck_emblem_gutpan: "assets/ui/spirit_path/deck_emblem_gutpan.png"
+  };
 
   /* deckId <-> cardData.js attr 표기 매핑입니다. 카드 썸네일 미리보기에만 사용합니다. */
   const DECKS = [
@@ -19,7 +30,9 @@
       subtitle: "막고, 모아서, 되돌린다",
       tags: ["방어", "반격"],
       cardAttr: "결계 덱",
-      deckPackId: null
+      itemDeck: "결계",
+      deckPackId: null,
+      emblemKey: "deck_emblem_barrier"
     },
     {
       id: "memory",
@@ -27,7 +40,9 @@
       subtitle: "쌓고, 오래 괴롭힌다",
       tags: ["지속 정화", "장기전"],
       cardAttr: "회상 덱",
-      deckPackId: null
+      itemDeck: "회상",
+      deckPackId: null,
+      emblemKey: "deck_emblem_memory"
     },
     {
       id: "soul_mark",
@@ -35,7 +50,9 @@
       subtitle: "모았다가 한 번에 터뜨린다",
       tags: ["축적", "폭발"],
       cardAttr: "성불 표식 덱",
-      deckPackId: null
+      itemDeck: "성불 표식",
+      deckPackId: null,
+      emblemKey: "deck_emblem_soul_mark"
     },
     {
       id: "hanpuri",
@@ -43,7 +60,9 @@
       subtitle: "참았다가 더 크게 푼다",
       tags: ["성장", "회수"],
       cardAttr: "한풀이 덱",
-      deckPackId: "hanpuri"
+      itemDeck: "한풀이",
+      deckPackId: "hanpuri",
+      emblemKey: "deck_emblem_hanpuri"
     },
     {
       id: "gutpan",
@@ -51,7 +70,9 @@
       subtitle: "만들고, 연속으로 몰아친다",
       tags: ["생성", "연속 사용"],
       cardAttr: "굿판 덱",
-      deckPackId: "gutpan"
+      itemDeck: "굿판",
+      deckPackId: "gutpan",
+      emblemKey: "deck_emblem_gutpan"
     }
   ];
 
@@ -85,9 +106,21 @@
   function getCardPreviewList(deck){
     if(typeof CARD_DB !== "object" || !CARD_DB) return [];
     return Object.keys(CARD_DB)
-      .map(key => CARD_DB[key])
-      .filter(card => card && card.attr === deck.cardAttr)
-      .slice(0, 4);
+      .map(key => ({ key, card: CARD_DB[key] }))
+      .filter(entry => entry.card && entry.card.attr === deck.cardAttr);
+  }
+
+  function getRelicPreviewList(deck){
+    if(typeof RELIC_MASTER_DB === "undefined" || !Array.isArray(RELIC_MASTER_DB)) return [];
+    return RELIC_MASTER_DB.filter(relic => {
+      if(!relic || relic.category === "blessingRelic" || relic.source === "startBlessing") return false;
+      return relic.deck === deck.itemDeck;
+    });
+  }
+
+  function getPotionPreviewList(deck){
+    if(typeof POTION_DB === "undefined" || !Array.isArray(POTION_DB)) return [];
+    return POTION_DB.filter(potion => potion && potion.deckId === deck.id);
   }
 
   function getUnlockedStartLevels(){
@@ -159,45 +192,152 @@
     return Math.max(0, Math.floor(Number(amount) || 0)).toLocaleString("ko-KR");
   }
 
+  function escapeHtml(value){
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function escapeAttr(value){
+    return escapeHtml(value);
+  }
+
+  function cardArtHtml(card){
+    if(card && card.art){
+      return '<img src="' + escapeAttr(card.art) + '" alt="' + escapeAttr(card.name || "") + '">';
+    }
+    return escapeHtml(card && card.emoji ? card.emoji : "?");
+  }
+
+  function cardFramePath(card){
+    if(card && card.type === "status") return "assets/card_frames/card-frame-status.png";
+    const type = card && ["attack", "defense", "skill"].includes(card.type) ? card.type : "skill";
+    const rarity = card && card.rarity ? card.rarity : "common";
+    return "assets/card_frames/card-frame-" + type + "-" + rarity + ".png";
+  }
+
+  function cardFaceHtml(card){
+    const safeCard = card || {};
+    const desc = typeof colorizeRarityLabels === "function"
+      ? colorizeRarityLabels(escapeHtml(safeCard.desc || ""))
+      : escapeHtml(safeCard.desc || "");
+    return '<div class="card-art-layer">' + cardArtHtml(safeCard) + '</div>' +
+      '<img class="card-frame-layer" src="' + escapeAttr(cardFramePath(safeCard)) + '" alt="" aria-hidden="true" draggable="false">' +
+      '<div class="card-text-layer">' +
+        '<div class="card-cost-text">' + escapeHtml(safeCard.cost ?? "") + '</div>' +
+        '<div class="card-name-text">' + escapeHtml(safeCard.name || "") + '</div>' +
+        '<div class="card-desc-text">' + desc + '</div>' +
+      '</div>' +
+      '<div class="card-hit-layer" aria-hidden="true"></div>';
+  }
+
+  function getItemIconSrc(item, iconMapName){
+    const iconMap = window[iconMapName];
+    if(item && item.iconImage) return item.iconImage;
+    if(iconMap && item && item.id && iconMap[item.id]) return iconMap[item.id];
+    return "";
+  }
+
+  function renderMiniCard(entry, locked){
+    const card = entry && entry.card;
+    if(!card) return "";
+    return '<div class="spirit-path-mini-card card-frame-card cost-' + escapeAttr(card.type || "skill") +
+      (locked ? ' is-preview-disabled" data-tooltip-disabled="true"' : '"') +
+      ' data-card-key="' + escapeAttr(entry.key) + '">' +
+      cardFaceHtml(card) +
+    '</div>';
+  }
+
+  function renderMiniItem(item, kind, locked){
+    if(!item) return "";
+    const iconSrc = kind === "relic"
+      ? getItemIconSrc(item, "RELIC_ICON_PATHS")
+      : getItemIconSrc(item, "POTION_ICON_PATHS");
+    const imgHtml = iconSrc
+      ? '<img class="spirit-path-mini-item-icon" src="' + escapeAttr(iconSrc) + '" alt="" onerror="this.remove()">'
+      : "";
+    return (
+      '<div class="spirit-path-mini-item spirit-path-mini-item--' + kind + '" data-tooltip-title="' +
+        escapeAttr((item.name || "") + (item.emoji ? " " + item.emoji : "")) + '" data-tooltip="' + escapeAttr(item.desc || item.effectText || "") + '"' +
+        (locked ? ' data-tooltip-disabled="true"' : '') + '>' +
+        '<span class="spirit-path-mini-item-fallback">' + escapeHtml(item.emoji || (kind === "relic" ? "🏺" : "🧪")) + '</span>' +
+        imgHtml +
+      '</div>'
+    );
+  }
+
+  function renderPreviewSection(title, className, itemsHtml, emptyText){
+    return '<div class="spirit-path-preview-section spirit-path-preview-section--' + className + '">' +
+      '<div class="spirit-path-preview-title">' + title + '</div>' +
+      '<div class="spirit-path-preview-grid spirit-path-preview-grid--' + className + '">' +
+        (itemsHtml || '<span class="spirit-path-preview-empty">' + emptyText + '</span>') +
+      '</div>' +
+    '</div>';
+  }
+
+  function assetStyleVar(name, value){
+    return value ? '--' + name + ':url(&quot;' + escapeAttr(value) + '&quot;);' : "";
+  }
+
+  function renderDeckEmblem(deck){
+    const emblemPath = SPIRIT_PATH_ASSETS[deck.emblemKey];
+    if(emblemPath){
+      return '<img class="spirit-path-card-emblem" src="' + escapeAttr(emblemPath) + '" alt="" aria-hidden="true">';
+    }
+    return '<span class="spirit-path-card-emblem spirit-path-card-emblem--fallback" aria-hidden="true">' + escapeHtml(deck.name.charAt(0) || "") + '</span>';
+  }
+
   function renderDeckCard(deck){
     const locked = isDeckLocked(deck);
     const selected = selectedDeckIds.indexOf(deck.id) !== -1;
     const product = deck.deckPackId ? getDeckPackProduct(deck.deckPackId) : null;
     const previewCards = getCardPreviewList(deck);
-
-    const badgeText = locked ? "미구매" : (selected ? "선택됨" : "선택");
-
-    const previewHtml = previewCards.length
-      ? '<span class="spirit-path-card-preview">' +
-          previewCards.map(card =>
-            '<span class="spirit-path-preview-item" title="' + card.name + '">' +
-              '<span class="spirit-path-preview-emoji">' + (card.emoji || "🌸") + '</span>' +
-            '</span>'
-          ).join("") +
-        '</span>'
-      : "";
+    const previewRelics = getRelicPreviewList(deck);
+    const previewPotions = getPotionPreviewList(deck);
 
     const tagsHtml = '<span class="spirit-path-card-tags">' +
-      deck.tags.map(tag => '<em>' + tag + '</em>').join("") +
+      deck.tags.map(tag => '<em>' + escapeHtml(tag) + '</em>').join("") +
       '</span>';
 
     const purchaseHtml = locked
-      ? '<button type="button" class="spirit-path-purchase-btn" data-deck-pack-id="' + deck.deckPackId + '">' +
-          '🌙 ' + formatMoonShards(product ? product.price : 0) + ' 달빛 조각 구매' +
-        '</button>'
+      ? '<div class="spirit-path-purchase-panel">' +
+          '<button type="button" class="spirit-path-purchase-btn" data-deck-pack-id="' + deck.deckPackId + '">' +
+            '<span>🌙 ' + formatMoonShards(product ? product.price : 0) + '</span><strong>구매</strong>' +
+          '</button>' +
+        '</div>'
       : "";
+    const statusHtml = selected
+      ? '<span class="spirit-path-selected-ribbon"><span>선택됨</span></span>'
+      : (locked ? '<span class="spirit-path-lock-seal">' +
+          (SPIRIT_PATH_ASSETS.lockSeal
+            ? '<img src="' + escapeAttr(SPIRIT_PATH_ASSETS.lockSeal) + '" alt="" aria-hidden="true">'
+            : '<span class="spirit-path-lock-seal-fallback" aria-hidden="true">잠금</span>') +
+        '</span>' : "");
+    const cardStyle = assetStyleVar("spirit-path-panel-bg", locked ? SPIRIT_PATH_ASSETS.panelLocked : SPIRIT_PATH_ASSETS.panelUnlocked) +
+      assetStyleVar("spirit-path-ribbon-bg", SPIRIT_PATH_ASSETS.selectedRibbon);
 
     return (
       '<div role="button" tabindex="0" class="spirit-path-card' +
+        (locked ? '' : ' is-unlocked') +
         (selected ? ' is-selected' : '') +
         (locked ? ' is-locked' : '') +
-      '" data-deck-id="' + deck.id + '"' + (locked ? ' data-locked="true"' : '') + '>' +
-        '<span class="spirit-path-card-badge">' + badgeText + '</span>' +
-        (locked ? '<span class="spirit-path-lock" aria-hidden="true">🔒</span>' : '') +
-        '<strong class="spirit-path-card-title">' + deck.name + '</strong>' +
-        '<span class="spirit-path-card-subtitle">' + deck.subtitle + '</span>' +
-        previewHtml +
-        (locked ? tagsHtml + purchaseHtml : tagsHtml) +
+      '" data-deck-id="' + deck.id + '"' + (locked ? ' data-locked="true"' : '') + (cardStyle ? ' style="' + cardStyle + '"' : '') + '>' +
+        statusHtml +
+        '<div class="spirit-path-card-head">' +
+          renderDeckEmblem(deck) +
+          '<strong class="spirit-path-card-title">' + escapeHtml(deck.name) + '</strong>' +
+          '<span class="spirit-path-card-subtitle">' + escapeHtml(deck.subtitle) + '</span>' +
+          tagsHtml +
+        '</div>' +
+        '<div class="spirit-path-card-content">' +
+          renderPreviewSection("주문", "cards", previewCards.map(entry => renderMiniCard(entry, locked)).join(""), "주문 없음") +
+          renderPreviewSection("법구", "items", previewRelics.map(relic => renderMiniItem(relic, "relic", locked)).join(""), "법구 없음") +
+          renderPreviewSection("약병", "items", previewPotions.map(potion => renderMiniItem(potion, "potion", locked)).join(""), "약병 없음") +
+        '</div>' +
+        purchaseHtml +
       '</div>'
     );
   }
