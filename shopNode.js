@@ -713,8 +713,8 @@ function ensureShopStyles() {
     ".shop-player-card{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;gap:1.15cqw;width:24cqw;min-width:30cqh;" +
       "background:transparent url(\"assets/ui/player_info_panel_wide.png\") center/100% 100% no-repeat;border:0;border-radius:0;" +
       "padding:.8cqh 1cqw;box-shadow:none;backdrop-filter:none;color:var(--c-ink);font-size:2.2cqh;}" +
-    ".shop-portrait{flex:none;width:8.4cqh;height:8.4cqh;border-radius:50%;display:grid;place-items:center;" +
-      "font-size:4.2cqh;background:transparent;border:0;box-shadow:none;overflow:hidden;transform:translateX(.3cqw);}" +
+    ".shop-portrait{flex:none;width:8.7cqh;height:8.7cqh;border-radius:50%;display:grid;place-items:center;" +
+      "font-size:4.2cqh;background:transparent;border:0;box-shadow:none;overflow:hidden;transform:translate(.3cqw,.15cqh);}" +
     ".shop-portrait img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}" +
     ".shop-player-body{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4cqh;color:var(--c-ink);}" +
     ".shop-player-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--c-ink);}" +
