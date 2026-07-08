@@ -89,7 +89,7 @@
     }
 
     if(rewardMoonShards <= 0){
-      return buildError("NO_REWARD", "수령할 달빛조각 보상이 없습니다.");
+      return buildError("NO_REWARD", "수령할 달빛 조각 보상이 없습니다.");
     }
 
     if(pendingClaimKeys.has(claimKey)){
@@ -127,7 +127,7 @@
         .single();
 
       if(updateResult && updateResult.error){
-        return buildError("WALLET_UPDATE_FAILED", updateResult.error.message || "달빛조각 수령에 실패했습니다.", updateResult.error);
+        return buildError("WALLET_UPDATE_FAILED", updateResult.error.message || "달빛 조각 수령에 실패했습니다.", updateResult.error);
       }
 
       claimedClaimKeys.add(claimKey);
@@ -140,7 +140,7 @@
       };
     } catch(error) {
       console.warn("[RunReward] claim failed:", error);
-      return buildError("CLAIM_ERROR", "달빛조각 수령 중 오류가 발생했습니다.", error);
+      return buildError("CLAIM_ERROR", "달빛 조각 수령 중 오류가 발생했습니다.", error);
     } finally {
       pendingClaimKeys.delete(claimKey);
     }

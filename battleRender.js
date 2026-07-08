@@ -24,24 +24,7 @@ function renderHud(){
 }
 
 function renderHudPortrait(){
-  const portraitEl = $("#hudPortrait");
-  if(!portraitEl) return;
-
-  const equippedSkinId = S.playerAppearance ? S.playerAppearance.equippedSkinId : null;
-  const iconSrc = resolveBattleProfileIcon(equippedSkinId);
-
-  let imgEl = portraitEl.querySelector("img");
-  if(!imgEl){
-    portraitEl.textContent = "";
-    imgEl = document.createElement("img");
-    imgEl.alt = "";
-    imgEl.addEventListener("error", () => {
-      const fallback = resolveBattleProfileIcon(null);
-      if(imgEl.getAttribute("src") !== fallback) imgEl.src = fallback;
-    });
-    portraitEl.appendChild(imgEl);
-  }
-  if(imgEl.getAttribute("src") !== iconSrc) imgEl.src = iconSrc;
+  renderPlayerPortraitIcon($("#hudPortrait"));
 }
 
 /* 전투화면 좌상단 닉네임(#hudName) 표시 전용입니다. 닉네임 변경은 표시 텍스트만 바꾸며,

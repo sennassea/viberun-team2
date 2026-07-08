@@ -28,7 +28,7 @@
     },
     {
       id: "moon_charge",
-      label: "달빛조각 충전",
+      label: "달빛 조각 충전",
       enabled: true,
       readyMessage: ""
     }
@@ -107,7 +107,7 @@
       rewardType: "character_skin",
       skinId: "moonlight_vow_magic_maiden",
 
-      description: "달빛 아래 맺은 서약을 품은 한정 마법무녀 의상입니다. 판매 기간: 2026.07.06 ~ 2026.08.19 23:59",
+      description: "달빛 아래 맺은 서약을 품은 한정 마법무녀 의상입니다.",
       saleStartAt: "2026-07-06T00:00:00+09:00",
       saleEndAt: "2026-08-20T00:00:00+09:00",
       salePeriodText: "판매 기간: 2026.07.06 ~ 2026.08.19 23:59",
@@ -275,7 +275,7 @@
       durationDays: 30,
       totalRewardAmount: 550,
 
-      description: "30일 동안 매일 달빛조각을 받을 수 있습니다.",
+      description: "30일 동안 매일 달빛 조각을 받을 수 있습니다.",
       limitText: "즉시 100개 + 매일 15개 × 30일",
       detailLines: [
         "즉시 100 달빛 조각",
@@ -349,14 +349,14 @@
     }
   ];
 
-  /* 달빛조각 충전 탭 상품 4종입니다. 실제 결제는 하지 않는 테스트 구매이며,
-     달빛조각 차감 없이 rewardAmount만큼 wallet.moonShards를 증가시킵니다.
+  /* 달빛 조각 충전 탭 상품 4종입니다. 실제 결제는 하지 않는 테스트 구매이며,
+     달빛 조각 차감 없이 rewardAmount만큼 wallet.moonShards를 증가시킵니다.
      BM 기획서의 "달빛 조각 직접 판매안" 기준(개당 단가/용도)을 따릅니다. */
   const MOON_CHARGE_PRODUCTS = [
     {
       id: "moon_charge_100",
       tab: "moon_charge",
-      name: "달빛조각 100개",
+      name: "달빛 조각 100개",
       subtitle: "소액 부족분 보충",
       priceType: "test_cash",
       price: 1200,
@@ -372,7 +372,7 @@
     {
       id: "moon_charge_500",
       tab: "moon_charge",
-      name: "달빛조각 500개",
+      name: "달빛 조각 500개",
       subtitle: "혼합 구매용",
       priceType: "test_cash",
       price: 5500,
@@ -388,7 +388,7 @@
     {
       id: "moon_charge_1200",
       tab: "moon_charge",
-      name: "달빛조각 1,200개",
+      name: "달빛 조각 1,200개",
       subtitle: "확장덱 즉시 해금",
       priceType: "test_cash",
       price: 12000,
@@ -404,7 +404,7 @@
     {
       id: "moon_charge_3000",
       tab: "moon_charge",
-      name: "달빛조각 3,000개",
+      name: "달빛 조각 3,000개",
       subtitle: "복합 구매용",
       priceType: "test_cash",
       price: 27000,

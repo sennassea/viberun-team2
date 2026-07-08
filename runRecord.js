@@ -198,7 +198,7 @@ function injectRecordPageStyles(){
 
 /* ── 기록 상세 오버레이 (여정 요약/상세, 읽기 전용) ─────────────────────────
    runResult.js의 rr-overlay/rr-summary-panel/rr-detail-panel 스타일과 헬퍼
-   함수(rrRouteNodeHtml 등)를 그대로 재사용하되, 달빛조각 수령 버튼이나
+   함수(rrRouteNodeHtml 등)를 그대로 재사용하되, 달빛 조각 수령 버튼이나
    "메인 메뉴로 돌아가기"(세이브 삭제) 같은 실행 중 전용 동작은 넣지 않는다.
    과거 기록을 다시 볼 때 보상을 재수령하거나 현재 진행 중인 세이브가
    지워지면 안 되기 때문이다. */

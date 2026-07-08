@@ -346,17 +346,17 @@ function prayerOverlayHtml(){
     '</div>' +
     '<div class="prayer-body">' +
       '<div class="prayer-tip prayer-tip-left">' +
-        '<span class="prayer-tip-ghost">👻</span>' +
+        '<span class="prayer-tip-ghost" style="background-image:url(\'assets/prayer_icons/ghost_left.png\')"></span>' +
         '<span class="prayer-tip-text"><b>TIP</b> 기도는 언제나 당신을 지켜줄 힘이 되어줄 거예요.</span>' +
       '</div>' +
       '<div class="prayer-cards">' +
-        prayerCardHtml("rest",    "🍵", "휴식하기",   "정신력 회복", "따뜻한 향과 차 한 잔으로 지친 몸을 쉬게 합니다.") +
-        prayerCardHtml("accept",  "🌸", "받아들이기", "주문 추가",   "기도의 가호로 새로운 인연을 덱에 맞이합니다.") +
-        prayerCardHtml("cleanse", "📜", "정리하기",   "주문 제거",   "마음을 정화하며 불필요한 인연을 정리합니다.") +
+        prayerCardHtml("rest",    "assets/prayer_icons/rest.png",    "휴식하기",   "정신력 회복", "따뜻한 향과 차 한 잔으로 지친 몸을 쉬게 합니다.") +
+        prayerCardHtml("accept",  "assets/prayer_icons/accept.png",  "받아들이기", "주문 추가",   "기도의 가호로 새로운 인연을 덱에 맞이합니다.") +
+        prayerCardHtml("cleanse", "assets/prayer_icons/cleanse.png", "정리하기",   "주문 제거",   "마음을 정화하며 불필요한 인연을 정리합니다.") +
       '</div>' +
       '<div class="prayer-tip prayer-tip-right">' +
         '<span class="prayer-tip-text">기도가 전해지길 바라는 마음이 가장 중요해요~</span>' +
-        '<span class="prayer-tip-ghost">👻</span>' +
+        '<span class="prayer-tip-ghost" style="background-image:url(\'assets/prayer_icons/ghost_right.png\')"></span>' +
       '</div>' +
     '</div>' +
     '<div class="prayer-actions">' +
@@ -365,10 +365,10 @@ function prayerOverlayHtml(){
   );
 }
 
-function prayerCardHtml(choice, icon, title, sub, desc){
+function prayerCardHtml(choice, iconSrc, title, sub, desc){
   return (
     '<button type="button" class="prayer-card" data-choice="' + choice + '">' +
-      '<div class="prayer-card-icon">' + icon + '</div>' +
+      '<div class="prayer-card-icon" style="background-image:url(\'' + iconSrc + '\')"></div>' +
       '<div class="prayer-card-title">' + title + '</div>' +
       '<div class="prayer-card-sub">' + sub + '</div>' +
       '<div class="prayer-card-desc">' + desc + '</div>' +
@@ -388,7 +388,7 @@ function renderPrayerHeader(){
   if(typeof S === "undefined" || !S || !S.player) return;
   const p = S.player;
 
-  prayerOverlayEl.querySelector("#prayerPortrait").textContent = p.emoji || "👼";
+  renderPlayerPortraitIcon(prayerOverlayEl.querySelector("#prayerPortrait"));
   prayerOverlayEl.querySelector("#prayerName").textContent     = p.name  || "";
   prayerOverlayEl.querySelector("#prayerTitle").textContent    = p.title || "";
   prayerOverlayEl.querySelector("#prayerHpText").textContent   = p.hp + "/" + p.maxHp;
@@ -454,7 +454,8 @@ function ensurePrayerStyles(){
       "background:transparent url(\"assets/ui/player_info_panel_wide.png\") center/100% 100% no-repeat;border:0;border-radius:0;" +
       "padding:.8cqh 1cqw;box-shadow:none;backdrop-filter:none;}" +
     ".prayer-portrait{flex:none;width:8.4cqh;height:8.4cqh;border-radius:50%;display:grid;place-items:center;" +
-      "font-size:4.2cqh;background:transparent;border:0;box-shadow:none;overflow:hidden;}" +
+      "font-size:4.2cqh;background:transparent;border:0;box-shadow:none;overflow:hidden;transform:translateX(.3cqw);}" +
+    ".prayer-portrait img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}" +
     ".prayer-player-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4cqh;}" +
     ".prayer-player-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}" +
     ".prayer-player-name b{font-size:2.3cqh;}" +
@@ -495,8 +496,7 @@ function ensurePrayerStyles(){
     ".prayer-card.selected{filter:brightness(1.04) drop-shadow(0 0 .75cqh rgba(201,74,61,.38));box-shadow:0 1.1cqh 2cqh rgba(90,65,25,.26);}" +
     ".prayer-card.disabled{opacity:.55;cursor:not-allowed;}" +
     ".prayer-card.disabled:hover{transform:none;box-shadow:0 .8cqh 1.6cqh rgba(90,65,25,.18);}" +
-    ".prayer-card-icon{flex:none;width:9cqh;height:9cqh;border-radius:1.2cqh;display:grid;place-items:center;" +
-      "font-size:5cqh;background:linear-gradient(160deg,#fff8e6,#f0dcb0);border:.16cqh solid #d9bd85;}" +
+    ".prayer-card-icon{flex:none;width:9cqh;height:9cqh;background-position:center;background-size:contain;background-repeat:no-repeat;}" +
     ".prayer-card-title{font-size:2.15cqh;font-weight:900;}" +
     ".prayer-card-sub{font-size:1.3cqh;font-weight:800;color:#8a6b3d;}" +
     ".prayer-card-desc{flex:1;font-size:1.32cqh;color:#6b4a20;text-align:center;line-height:1.4;font-weight:700;}" +
@@ -510,7 +510,7 @@ function ensurePrayerStyles(){
     ".prayer-tip{position:absolute;bottom:0;display:flex;align-items:center;gap:.6cqw;max-width:15cqw;}" +
     ".prayer-tip-left{left:0;}" +
     ".prayer-tip-right{right:0;flex-direction:row-reverse;text-align:right;}" +
-    ".prayer-tip-ghost{font-size:4cqh;flex:none;}" +
+    ".prayer-tip-ghost{flex:none;width:6cqh;height:6cqh;background-position:center;background-size:contain;background-repeat:no-repeat;}" +
     ".prayer-tip-text{font-size:1.15cqh;font-weight:800;color:#6b4a20;background:rgba(255,251,240,.88);" +
       "border-radius:1cqh;padding:.6cqh .8cqw;border:.15cqh solid rgba(178,140,80,.4);}" +
     ".prayer-tip-text b{color:#c94a3d;margin-right:.3cqw;}" +

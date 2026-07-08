@@ -3,7 +3,7 @@
 /* =========================================================================
    Monthly Pass Claim UI
    - 메인메뉴 좌하단 월영의 약속 일일 보상 수령 UI
-   - 계정용 달빛조각 wallet만 갱신한다.
+   - 계정용 달빛 조각 wallet만 갱신한다.
    - 전투/런 진행 데이터는 절대 수정하지 않는다.
    ========================================================================= */
 (function(){
@@ -246,7 +246,7 @@
         ? result.reward.amount
         : 15;
 
-      showToastMessage("달빛조각 " + amount + "개를 받았습니다.", "success");
+      showToastMessage("달빛 조각 " + amount + "개를 받았습니다.", "success");
     }).catch(error => {
       isClaiming = false;
       console.warn("[MonthlyPassUI] 월영의 약속 보상 수령 실패", error);

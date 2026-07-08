@@ -111,19 +111,16 @@
 
   /* 월영당 스킨 프리뷰 툴팁 데이터. 스킨 탭 카드/추천 탭의 마법무녀 스킨(한정)/월영학당
      전학생(프리미엄) 카드가 모두 대상이며, 상품 데이터를 그대로 써서 항상 스킨 탭과
-     동일한 전신 프리뷰 이미지를 보여준다. 설명에 판매 기간 문구가 있으면 별도 줄로 내린다 */
+     동일한 전신 프리뷰 이미지를 보여준다. 판매 기간(salePeriodText)이 있으면 별도 줄로 붙인다 */
   function getBmSkinCardData(anchor) {
     const product = findBmStoreProductById(getBmCardProductId(anchor));
     if (!product || product.rewardType !== "character_skin") return null;
-
-    let desc = product.description || "";
-    desc = desc.replace(/\s*(판매\s*기간\s*:)/, "\n$1");
 
     return {
       isBmPreview: true,
       title: product.name || "",
       grade: product.gradeLabel || product.badge || "",
-      body: [product.skinTypeName || "", desc].filter(Boolean).join("\n"),
+      body: [product.skinTypeName || "", product.description || "", product.salePeriodText || ""].filter(Boolean).join("\n"),
       imageSrc: product.previewImage || ""
     };
   }
@@ -132,7 +129,7 @@
   const RUN_SUMMARY_TOOLTIPS = [
     { match: "최종 여정 점수", title: "최종 여정 점수",
       body: "구역 진행, ACT1 완주, 몬스터 처치, 전투 수행, 보스 종료 상태, 여정 행동 점수를 모두 합산한 이번 여정의 최종 점수입니다." },
-    { match: "달빛조각", title: "달빛조각",
+    { match: "달빛 조각", title: "달빛 조각",
       body: "최종 여정 점수 구간에 따라 지급되는 달빛 조각 개수입니다. 평균적인 완주 기준 약 55개이며, 점수가 높을수록 더 많은 조각을 받습니다." },
     { match: "진행한 구역 수", title: "진행한 구역 수",
       body: "이번 여정에서 밟은 구역(노드) 수입니다. 일반 전투·엘리트·이벤트·상점·휴식/신당·보물 등을 모두 포함합니다." },

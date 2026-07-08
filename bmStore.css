@@ -568,6 +568,10 @@
   margin:.25cqh 0;
   word-break:keep-all;
 }
+.bm-store-skin-description .bm-store-sale-period{
+  color:#8a6a48;
+  font-size:1.3cqh;
+}
 .bm-store-skin-buy-btn{
   position:absolute;
   left:1.4cqh;
@@ -870,6 +874,11 @@
   line-height:1.28;
   font-weight:800;
   word-break:keep-all;
+}
+.bm-recommended-wide-copy .bm-store-sale-period{
+  color:#8a6a48;
+  font-weight:700;
+  font-size:1.2cqh;
 }
 .bm-recommended-wide-card .bm-recommended-buy-btn{
   justify-self:start;
