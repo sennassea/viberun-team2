@@ -260,19 +260,21 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
   border:0.25cqh solid var(--c-gold); box-shadow:0 0 1cqh rgba(231,181,74,.6);}
 .player-info-card .portrait{
   /* 렌더링된 카드 스크린샷을 픽셀 단위로 실측한 금테 원형 프레임 위치입니다
-     (카드 전체 대비 좌측 약 5.3%, 상단 약 17.1%, 가로 약 19.5%, 세로 약 59.7%).
-     기존에는 "중심 16.2%"라는 주석을 잘못 읽어 padding-left(=좌측 시작점)에 그대로
-     적용하는 바람에 사진이 실제 프레임보다 오른쪽으로 밀려 보였습니다. flex 흐름에
-     맡기지 않고 이 컨테이너(.player-info-card, position:absolute) 기준으로 직접
-     좌표를 지정해 이름/HP/재화 영역과 완전히 독립적으로 위치를 맞춥니다. */
+     (카드 전체 대비 좌측 약 5.3%, 상단 약 17.1%, 가로 약 19.5%, 세로 약 59.7%를
+     .player-info-card 크기(24cqw x 12cqh)에 곱해 #game 기준 cqw/cqh 절대값으로
+     환산했습니다). 기존에는 .player-info-card 자신의 렌더링 폭 기준 %를 썼는데,
+     %는 .player-info-card가 실제로 페인트되는 크기 기준으로, 이름/HP바 등 나머지
+     요소는 #game 기준 cqw/cqh로 각각 별도로 반올림되다 보니 화면이 축소(브라우저/
+     OS 배율 변경)될 때 서브픽셀 오차로 초상화와 이름/HP바가 서로 다른 방향으로
+     어긋나 보였습니다. 좌표 기준을 cqw/cqh 하나로 통일해 반올림 오차를 없앱니다. */
   position:absolute;
-  left:5.3%;
-  top:17.1%;
+  left:1.27cqw;
+  top:2.05cqh;
   background:transparent;
   border:0;
   box-shadow:none;
-  width:19.5%;
-  height:59.7%;
+  width:4.68cqw;
+  height:7.16cqh;
   border-radius:50%;
   overflow:hidden;
 }

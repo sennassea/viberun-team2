@@ -366,8 +366,8 @@ function ensureTreasureStyles(){
     ".treasure-hint{position:absolute;top:84cqh;left:50%;transform:translateX(-50%);z-index:2;" +
       "font-size:1.9cqh;font-weight:900;color:#fdf6e3;text-shadow:0 .2cqh .4cqh rgba(0,0,0,.6);" +
       "background:rgba(30,20,10,.4);padding:.7cqh 1.6cqw;border-radius:1cqh;border:.14cqh solid rgba(200,170,110,.4);white-space:nowrap;}" +
-    /* 상자 맨 아래가 화면 세로길이의 70% 지점(위에서부터)에 오도록 배치 */
-    ".treasure-chest-btn{position:absolute;left:50%;top:70cqh;transform:translate(-50%,-100%);" +
+    /* 상자 맨 아래가 화면 세로길이의 80% 지점(위에서부터)에 오도록 배치 */
+    ".treasure-chest-btn{position:absolute;left:50%;top:80cqh;transform:translate(-50%,-100%);" +
       "border:0;background:transparent;padding:0;cursor:pointer;width:min(90cqw,45cqh);}" +
     ".treasure-chest-btn:disabled{cursor:default;}" +
     ".treasure-chest-img{width:100%;height:auto;display:block;filter:drop-shadow(0 1cqh 2.2cqh rgba(0,0,0,.5));transition:transform .15s ease;}" +
