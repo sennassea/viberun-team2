@@ -260,6 +260,23 @@ function renderIntents(){
   }).join("");
   $("#intentList").innerHTML = html || '<div class="eff-empty">성불 완료</div>';
 }
+/* 플레이어 공격/피격 모션: idle → attack/damage 스탠딩 이미지로 잠깐 전환하고
+   .motion-attack/.motion-damage 클래스로 살짝 확대+이동하는 CSS 애니메이션을 재생한 뒤
+   지정 시간이 지나면 자동으로 idle 상태로 되돌린다(life-ui.css의 keyframes 참고). */
+const PLAYER_BATTLE_MOTION_DURATION = { attack:750, damage:650 };
+let playerBattleMotionTimer = null;
+function triggerPlayerBattleMotion(type){
+  if(!S || !S.player || !PLAYER_BATTLE_MOTION_DURATION[type]) return;
+  S.playerBattleMotion = type;
+  if(playerBattleMotionTimer) clearTimeout(playerBattleMotionTimer);
+  playerBattleMotionTimer = setTimeout(() => {
+    playerBattleMotionTimer = null;
+    if(S) S.playerBattleMotion = null;
+    renderField();
+  }, PLAYER_BATTLE_MOTION_DURATION[type]);
+  renderField();
+}
+
 function renderField(){
   const f = $("#field");
   f.innerHTML = "";
@@ -272,10 +289,17 @@ function renderField(){
 
   // 플레이어 (좌측 고정)
   const equippedSkinId = S.playerAppearance ? S.playerAppearance.equippedSkinId : null;
+  const playerMotion = S.playerBattleMotion || null;
+  const playerSprite = playerMotion === "attack" ? resolveBattleStandingImageAttack(equippedSkinId)
+    : playerMotion === "damage" ? resolveBattleStandingImageDamage(equippedSkinId)
+    : resolveBattleStandingImage(equippedSkinId);
+  const playerSpriteFallback = playerMotion === "attack" ? resolveBattleStandingImageAttack(null)
+    : playerMotion === "damage" ? resolveBattleStandingImageDamage(null)
+    : resolveBattleStandingImage(null);
   playerLayer.appendChild(combatantEl({
-    cls:"player", emoji:S.player.emoji||"👼",
-    sprite:resolveBattleStandingImage(equippedSkinId),
-    spriteFallback:resolveBattleStandingImage(null),
+    cls:"player"+(playerMotion ? " motion-"+playerMotion : ""), emoji:S.player.emoji||"👼",
+    sprite:playerSprite,
+    spriteFallback:playerSpriteFallback,
     name:S.player.name, hp:S.player.hp, maxHp:S.player.maxHp,
     block:S.player.block, weak:S.player.weak,
     anxiety:S.player.anxiety, lethargy:S.player.lethargy,

@@ -211,6 +211,34 @@ function resolveBattleStandingImage(equippedSkinId){
   return (skin && skin.battleStandingImage) || fallback;
 }
 
+function resolveBattleStandingImageAttack(equippedSkinId){
+  const storeData = window.VIBERUN_BM_STORE_DATA;
+  const fallback = (storeData && typeof storeData.getDefaultBattleStandingImageAttack === "function")
+    ? storeData.getDefaultBattleStandingImageAttack()
+    : "assets/characters/player-temp-cutout-attack.png";
+
+  if(!equippedSkinId || !storeData || typeof storeData.getCharacterSkinBySkinId !== "function"){
+    return fallback;
+  }
+
+  const skin = storeData.getCharacterSkinBySkinId(equippedSkinId);
+  return (skin && skin.battleStandingImageAttack) || fallback;
+}
+
+function resolveBattleStandingImageDamage(equippedSkinId){
+  const storeData = window.VIBERUN_BM_STORE_DATA;
+  const fallback = (storeData && typeof storeData.getDefaultBattleStandingImageDamage === "function")
+    ? storeData.getDefaultBattleStandingImageDamage()
+    : "assets/characters/player-temp-cutout-damage.png";
+
+  if(!equippedSkinId || !storeData || typeof storeData.getCharacterSkinBySkinId !== "function"){
+    return fallback;
+  }
+
+  const skin = storeData.getCharacterSkinBySkinId(equippedSkinId);
+  return (skin && skin.battleStandingImageDamage) || fallback;
+}
+
 /* =========================================================================
    전투 초기화
    ========================================================================= */
