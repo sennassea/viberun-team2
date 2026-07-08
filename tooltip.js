@@ -328,7 +328,7 @@
       test: function (d) { return /동요/.test(d); },
       icon: "🌀",
       name: "동요",
-      desc: "정화 피해를 25% 감소시키는 상태이상입니다. 매 턴 1씩 감소합니다."
+      desc: "피해를 25% 감소시키는 상태이상입니다. 매 턴 1씩 감소합니다."
     },
     {
       test: function (d) { return /뽑기/.test(d); },
@@ -759,7 +759,7 @@
     var cb = field.querySelector(sel);
     if (!cb || cb.classList.contains("dead")) { hideCombatantTooltip(); return; }
     showCombatantFor(cb);
-  }).observe(field, { childList: true });
+  }).observe(field, { childList: true, subtree: true });
 
   /* ══════════════════════════════════════════════════════════════════════
      V. 주문 용어 툴팁
