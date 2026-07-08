@@ -978,7 +978,6 @@ function confirmEventCard(){
         }
       }
     }
-    if(typeof toast === "function") toast(card.name + " 주문을 덱에 추가했습니다.");
   }
   finishEventNode();
 }
