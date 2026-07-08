@@ -405,9 +405,10 @@
       ".codex-section-tab.active{filter:brightness(1.05) drop-shadow(0 .35cqh .55cqh rgba(90,65,20,.25));}" +
       ".codex-section-tab-image{width:100%;height:100%;object-fit:fill;display:block;user-select:none;-webkit-user-drag:none;}" +
       ".codex-home-grid{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:1cqw;min-height:28cqh;align-items:center;margin:auto 0;}" +
-      ".codex-home-card{height:23.5cqh;border:0;background:transparent;box-shadow:none;display:block;padding:0;color:var(--c-ink);font:inherit;cursor:pointer;}" +
+      ".codex-home-card{position:relative;height:23.5cqh;border:0;background:transparent;box-shadow:none;display:block;padding:0;color:var(--c-ink);font:inherit;cursor:pointer;}" +
       ".codex-home-card:hover,.codex-home-card:focus-visible{transform:translateY(-.5cqh);filter:brightness(1.04) drop-shadow(0 1cqh 1.4cqh rgba(80,55,15,.22));outline:none;}" +
       ".codex-home-image{width:100%;height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none;}" +
+      ".codex-home-label{position:absolute;left:0;right:0;bottom:4%;text-align:center;font-family:var(--font-title);font-size:2.1cqh;font-weight:800;color:#4a2f0a;text-shadow:0 .08cqh 0 rgba(255,255,255,.65);pointer-events:none;}" +
       ".codex-home-card[data-codex-section='cards'] .codex-home-image{transform:scale(1.13);}" +
       ".codex-home-card[data-codex-section='relics'] .codex-home-image{transform:scale(1.11);}" +
       ".codex-home-card[data-codex-section='potions'] .codex-home-image{transform:scale(1.12);}" +
@@ -867,6 +868,7 @@
   function codexHomeButtonHtml(section){
     return '<button type="button" class="codex-home-card" data-codex-section="' + escapeAttr(section.id) + '" aria-label="' + escapeAttr(section.title) + '">' +
       '<img class="codex-home-image" src="' + escapeAttr(section.image) + '" alt="" aria-hidden="true">' +
+      '<span class="codex-home-label">' + escapeHtml(section.label) + '</span>' +
     '</button>';
   }
 
