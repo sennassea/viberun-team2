@@ -42,14 +42,33 @@
     { id: "status", label: "상태이상" },
   ];
 
+  const DECK_FILTERS = [
+    { id: "all", label: "모든 덱" },
+    { id: "barrier", label: "결계 덱" },
+    { id: "memory", label: "회상 덱" },
+    { id: "soul_mark", label: "성불 표식 덱" },
+    { id: "hanpuri", label: "한풀이 덱" },
+    { id: "gutpan", label: "굿판 덱" },
+    { id: "general", label: "범용" },
+  ];
+
+  const DECK_ID_MAP = {
+    "결계": "barrier", "결계 덱": "barrier", "barrier": "barrier",
+    "회상": "memory", "회상 덱": "memory", "memory": "memory",
+    "성불 표식": "soul_mark", "성불 표식 덱": "soul_mark", "soul_mark": "soul_mark",
+    "한풀이": "hanpuri", "한풀이 덱": "hanpuri", "hanpuri": "hanpuri",
+    "굿판": "gutpan", "굿판 덱": "gutpan", "gutpan": "gutpan",
+    "범용": "general", "범용 보조 덱": "general", "general": "general",
+  };
+
   const filterState = {
-    all: { type: "all" },
-    hand: { type: "all" },
-    discard: { type: "all" },
-    exhaust: { type: "all" },
-    codexCards: { type: "all" },
-    codexRelics: { type: "all" },
-    codexPotions: { type: "all" },
+    all: { type: "all", deck: "all" },
+    hand: { type: "all", deck: "all" },
+    discard: { type: "all", deck: "all" },
+    exhaust: { type: "all", deck: "all" },
+    codexCards: { type: "all", deck: "all" },
+    codexRelics: { type: "all", deck: "all" },
+    codexPotions: { type: "all", deck: "all" },
   };
 
   const searchState = {
@@ -199,7 +218,8 @@
           '<label>방향 <select class="deck-viewer-sort-direction">' + SORT_DIRECTIONS.map(optionHtml).join("") + '</select></label>' +
         '</div>' +
         '<div class="deck-viewer-filter" aria-label="주문 필터">' +
-          '<label>타입 <select class="deck-viewer-filter-type">' + TYPE_FILTERS.map(optionHtml).join("") + '</select></label>' +
+          '<label class="deck-viewer-filter-type-label">타입 <select class="deck-viewer-filter-type">' + TYPE_FILTERS.map(optionHtml).join("") + '</select></label>' +
+          '<label>덱 <select class="deck-viewer-filter-deck">' + DECK_FILTERS.map(optionHtml).join("") + '</select></label>' +
         '</div>' +
         '</div>' +
         '<div class="deck-viewer-grid"></div>' +
@@ -243,6 +263,10 @@
     });
     overlay.querySelector(".deck-viewer-filter-type").addEventListener("change", event => {
       filterState[activeTab].type = event.target.value;
+      renderDeckViewer();
+    });
+    overlay.querySelector(".deck-viewer-filter-deck").addEventListener("change", event => {
+      filterState[activeTab].deck = event.target.value;
       renderDeckViewer();
     });
     overlay.querySelector(".deck-viewer-search-input").addEventListener("input", event => {
@@ -311,9 +335,11 @@
       summary: overlay.querySelector(".deck-viewer-summary"),
       controls: overlay.querySelector(".deck-viewer-controls"),
       filterWrap: overlay.querySelector(".deck-viewer-filter"),
+      filterTypeWrap: overlay.querySelector(".deck-viewer-filter-type-label"),
       sortType: overlay.querySelector(".deck-viewer-sort-type"),
       sortDirection: overlay.querySelector(".deck-viewer-sort-direction"),
       filterType: overlay.querySelector(".deck-viewer-filter-type"),
+      filterDeck: overlay.querySelector(".deck-viewer-filter-deck"),
       search: overlay.querySelector(".deck-viewer-search-input"),
       grid: overlay.querySelector(".deck-viewer-grid"),
       pickFooter: overlay.querySelector(".deck-viewer-pick-footer"),
@@ -345,7 +371,12 @@
       ".deck-viewer-sort label,.deck-viewer-filter label,.deck-viewer-search{display:flex;align-items:center;gap:.4cqw;color:var(--c-ink-soft);font-size:1.55cqh;font-weight:800;}" +
       ".deck-viewer-sort select,.deck-viewer-filter select,.deck-viewer-search input{height:3.6cqh;border:0.2cqh solid var(--c-panel-line);border-radius:.8cqh;background:rgba(255,255,255,.86);color:var(--c-ink);font-size:1.55cqh;font-weight:800;padding:0 .7cqw;}" +
       ".deck-viewer-search input{width:15cqw;}" +
-      ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}" +
+      ".deck-viewer-grid{min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:thin;scrollbar-color:rgba(180,140,70,.65) rgba(70,45,20,.12);}" +
+      ".deck-viewer-grid::-webkit-scrollbar{width:.9cqh;}" +
+      ".deck-viewer-grid::-webkit-scrollbar-track{background:rgba(70,45,20,.12);border-radius:1cqh;}" +
+      ".deck-viewer-grid::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#d9b467,#a9772f);border-radius:1cqh;border:.15cqh solid rgba(70,45,20,.18);}" +
+      ".deck-viewer-grid::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#e6c583,#bd8638);}" +
+      ".deck-viewer-grid .card-hit-layer,.deck-viewer-grid .item-hit-layer{touch-action:pan-y;}" +
       ".deck-viewer.detail-open .deck-viewer-grid{visibility:hidden;}" +
       ".deck-viewer-card{font:inherit;color:var(--c-ink);cursor:pointer;text-align:inherit;transition:transform .14s ease,box-shadow .14s ease;}" +
       ".deck-viewer-card:hover,.deck-viewer-card:focus-visible{transform:translateY(-.6cqh);box-shadow:0 .9cqh 1.8cqh rgba(40,70,120,.28);outline:none;}" +
@@ -476,7 +507,9 @@
     if(els.controls) els.controls.style.display = "";
     if(els.grid) els.grid.style.display = "";
     els.filterType.disabled = false;
+    els.filterDeck.disabled = false;
     if(els.filterWrap) els.filterWrap.classList.remove("disabled");
+    if(els.filterTypeWrap) els.filterTypeWrap.classList.remove("disabled");
     renderDeckViewer();
     els.overlay.classList.add("show");
     els.overlay.setAttribute("aria-hidden", "false");
@@ -537,6 +570,7 @@
         }
       }
       els.filterType.disabled = usingCandidates;
+      els.filterDeck.disabled = usingCandidates;
       if(els.filterWrap) els.filterWrap.classList.toggle("disabled", usingCandidates);
       closeCardDetail();
       renderDeckViewer();
@@ -756,6 +790,7 @@
     els.sortType.value = sortState[tab.id].type;
     els.sortDirection.value = sortState[tab.id].direction;
     els.filterType.value = filterState[tab.id].type;
+    els.filterDeck.value = filterState[tab.id].deck;
     els.search.value = searchState[tab.id];
     els.summary.textContent = tab.label + " " + visibleCount + "장 / " + speciesCount + "종류";
     els.grid.innerHTML = entries.length
@@ -802,10 +837,11 @@
     els.sortDirection.value = sortState[tabId].direction;
     els.filterType.value = "all";
     els.filterType.disabled = filterDisabled;
-    if(els.filterWrap) els.filterWrap.classList.toggle("disabled", filterDisabled);
+    if(els.filterTypeWrap) els.filterTypeWrap.classList.toggle("disabled", filterDisabled);
     if(!filterDisabled){
       els.filterType.value = filterState[tabId].type;
     }
+    els.filterDeck.value = filterState[tabId].deck;
     els.search.value = searchState[tabId];
     els.summary.textContent = getCodexSummaryText(codexSection, entries, sourceItems.length);
     els.grid.innerHTML = entries.length
@@ -903,16 +939,17 @@
     const state = filterState[tabId] || filterState.all;
     const query = searchState[tabId].trim().toLowerCase();
     return entries.filter(entry => {
+      const deckMatches = state.deck === "all" || getCardFilterDeck(entry) === state.deck;
       if(entry.kind && entry.kind !== "card"){
         const itemText = (String(entry.item.name || "") + " " + String(entry.item.desc || "")).toLowerCase();
-        return !query || itemText.includes(query);
+        return deckMatches && (!query || itemText.includes(query));
       }
       if(entry.locked){
-        return !query && state.type === "all";
+        return !query && state.type === "all" && state.deck === "all";
       }
       const typeMatches = state.type === "all" || getCardFilterType(entry.card) === state.type;
       const nameMatches = !query || String(entry.card.name).toLowerCase().includes(query);
-      return typeMatches && nameMatches;
+      return deckMatches && typeMatches && nameMatches;
     });
   }
 
@@ -923,6 +960,12 @@
     if(type === "skill" || type === "boost" || type === "스킬" || type === "강화") return "skill";
     if(type === "status" || type === "상태이상") return "status";
     return "";
+  }
+
+  function getCardFilterDeck(entry){
+    const data = entry.card || entry.item || {};
+    const raw = data.attr || data.deck || data.deckId;
+    return DECK_ID_MAP[raw] || "general";
   }
 
   function getCardFilterAttribute(card){
