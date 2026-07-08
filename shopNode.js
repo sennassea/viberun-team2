@@ -414,14 +414,6 @@ function ensureShopOverlay() {
   overlay.querySelector("#shopRefreshBtn").addEventListener("click", refreshShopStock);
   overlay.querySelector("#shopExitBtn").addEventListener("click", exitShopNode);
 
-  const shopMainEl = overlay.querySelector(".shop-main");
-  const shopMerchantBubbleEl = overlay.querySelector("#shopMerchantBubble");
-  if (shopMainEl && shopMerchantBubbleEl && typeof ResizeObserver !== "undefined") {
-    new ResizeObserver(() => {
-      shopMerchantBubbleEl.style.height = shopMainEl.offsetHeight + "px";
-    }).observe(shopMainEl);
-  }
-
   overlay.querySelector("#shopMapBtn").addEventListener("click", () => {
     if (typeof openMap === "function") openMap();
     else if (typeof toast === "function") toast("여정을 열 수 없습니다.");
@@ -766,7 +758,7 @@ function ensureShopStyles() {
     ".shop-body{flex:1;min-height:0;display:flex;justify-content:center;gap:1.4cqw;}" +
 
     ".shop-merchant{flex:none;width:21cqw;min-width:25cqh;position:relative;min-height:0;}" +
-    ".shop-merchant-bubble{position:absolute;left:0;right:.8cqw;top:0;z-index:2;display:flex;align-items:center;justify-content:center;box-sizing:border-box;overflow:auto;" +
+    ".shop-merchant-bubble{position:absolute;left:0;right:.8cqw;top:0;z-index:2;" +
       "background:linear-gradient(155deg,rgba(255,250,235,.95) 0%,rgba(240,221,181,.9) 100%);border:.14cqh solid rgba(178,140,80,.5);border-radius:1.3cqh;" +
       "padding:1.9cqh 1.8cqw;font-size:1.55cqh;font-weight:800;color:#5b3710;text-align:center;text-shadow:0 .1cqh 0 rgba(255,255,255,.65);box-shadow:0 .35cqh .7cqh rgba(80,55,24,.15);}" +
     ".shop-merchant-npc{position:absolute;left:-8cqw;top:18cqh;z-index:1;width:48cqw;height:116cqh;display:flex;align-items:flex-start;justify-content:flex-start;" +
@@ -784,8 +776,8 @@ function ensureShopStyles() {
       "background:linear-gradient(165deg,rgba(255,250,235,.92) 0%,rgba(240,221,181,.88) 100%);border:.18cqh solid rgba(178,140,80,.55);border-radius:1.5cqh;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(90,65,25,.22),inset 0 0 0 .08cqh rgba(255,255,255,.4);}" +
     ".shop-tabs{flex:1;min-height:3.6cqh;display:flex;align-items:center;gap:.5cqw;padding:0 .2cqw;}" +
-    ".shop-tab{flex:1;align-self:center;height:3.2cqh;border-radius:.9cqh;border:.13cqh solid rgba(178,140,80,.45);" +
-      "background:linear-gradient(180deg,rgba(255,250,235,.85),rgba(235,215,175,.75));color:#7a5521;text-shadow:0 .1cqh 0 rgba(255,255,255,.5);font-size:1.05cqh;font-weight:900;cursor:pointer;font:inherit;transition:background .12s ease,color .12s ease,box-shadow .12s ease;}" +
+    ".shop-tab{flex:1;align-self:center;height:6cqh;display:flex;align-items:center;justify-content:center;border-radius:.9cqh;border:.13cqh solid rgba(178,140,80,.45);" +
+      "background:linear-gradient(180deg,rgba(255,250,235,.85),rgba(235,215,175,.75));color:#7a5521;text-shadow:0 .1cqh 0 rgba(255,255,255,.5);font-size:1.3cqh;font-weight:900;cursor:pointer;font:inherit;transition:background .12s ease,color .12s ease,box-shadow .12s ease;}" +
     ".shop-tab:hover{background:linear-gradient(180deg,rgba(255,250,235,.95),rgba(240,222,182,.85));}" +
     ".shop-tab.active{background:linear-gradient(180deg,#fffaf0,#f0dcb0);color:#2f4f36;border-color:rgba(47,79,54,.35);box-shadow:inset 0 0 0 .1cqh rgba(47,79,54,.18);}" +
     ".shop-products{flex:none;display:grid;align-content:start;gap:.9cqw;padding:.9cqh .1cqw .1cqh;max-height:60cqh;overflow:auto;}" +
@@ -809,7 +801,7 @@ function ensureShopStyles() {
     ".shop-price-icon{width:2.3cqh;height:2.3cqh;flex:none;display:inline-block;font-size:0;line-height:1;background-position:center;background-size:contain;background-repeat:no-repeat;}" +
     ".shop-product.shop-product-card-frame,.shop-product.shop-product-item-frame{position:relative;display:flex;flex-direction:column;align-items:center;" +
       "justify-self:center;width:min(13.5cqw,22cqh);height:auto;min-height:0;padding:0;gap:1cqh;border:0;border-radius:0;background:transparent;}" +
-    ".shop-card-visual{position:relative;width:100%;flex:none;box-shadow:0 .35cqh .7cqh rgba(90,65,25,.22);transition:box-shadow .12s ease,filter .12s ease;}" +
+    ".shop-card-visual{position:relative;width:100%;flex:none;transition:box-shadow .12s ease,filter .12s ease;}" +
     ".shop-product.shop-product-card-frame.selected .shop-card-visual,.shop-product.shop-product-item-frame.selected .shop-card-visual{" +
       "box-shadow:0 0 0 .28cqh rgba(63,143,224,.55),0 .5cqh 1cqh rgba(90,65,25,.14);}" +
     ".shop-card-price-badge{position:static;flex:none;padding:.4cqh 1cqw;border-radius:.8cqh;" +
@@ -827,13 +819,13 @@ function ensureShopStyles() {
     ".shop-detail-price{font-size:2.1cqh;font-weight:900;color:#a97a1f;}" +
     ".shop-detail-card-preview{position:relative;width:min(14cqw,25cqh);height:auto;aspect-ratio:2/3;flex:none;}" +
     ".shop-detail-item-preview{position:relative;width:min(14cqw,25cqh);height:auto;aspect-ratio:2/3;flex:none;}" +
-    ".shop-buy-btn{width:100%;height:5cqh;border-radius:1.1cqh;font-size:1.5cqh;font-weight:900;cursor:pointer;" +
+    ".shop-buy-btn{width:100%;height:5cqh;border-radius:1.1cqh;font-size:1.2cqh;font-weight:900;cursor:pointer;" +
       "font:inherit;border:.2cqh solid #3f7c4e;background:linear-gradient(180deg,#7fbf8a,#4f9c62);color:#fff;margin-top:auto;}" +
     ".shop-buy-btn:disabled{filter:grayscale(.5) brightness(.92);cursor:default;opacity:.7;}" +
 
     ".shop-footer{flex:none;display:flex;justify-content:flex-end;gap:1cqw;}" +
-    ".shop-footer-btn{min-width:14cqw;height:5.4cqh;border-radius:1.2cqh;font-size:1.3cqh;font-weight:900;cursor:pointer;" +
-      "font:inherit;border:.2cqh solid rgba(178,140,80,.5);background:rgba(255,251,240,.9);color:#6b4a20;}" +
+    ".shop-footer-btn{min-width:14cqw;height:5.4cqh;border-radius:1.2cqh;font-size:1.05cqh;font-weight:900;cursor:pointer;" +
+      "font:inherit;border:.2cqh solid rgba(178,140,80,.5);background:rgba(255,251,240,.9);color:#6b4a20;-webkit-text-stroke:.02em currentColor;}" +
     ".shop-footer-btn:disabled{opacity:.5;cursor:default;}" +
     ".shop-cost{margin-left:.4cqw;font-size:1.9cqh;}" +
     ".shop-cost .shop-price-icon{width:2.6cqh;height:2.6cqh;}" +

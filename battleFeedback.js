@@ -51,7 +51,7 @@ function injectRewardStyles(){
     .reward-meta{font-size:1.25cqh;font-weight:800;color:var(--c-ink-soft);margin-bottom:.4cqh;}
     .reward-card .desc{font-size:1.45cqh;line-height:1.35;white-space:pre-line;}
     .reward-skip{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#fff;cursor:pointer;color:var(--c-ink-soft);}
-    .reward-card.card-frame-card{aspect-ratio:2/3;min-height:0;height:32cqh;padding:0;border:0;overflow:hidden;background:#f5efe4;}
+    .reward-card.card-frame-card{aspect-ratio:2/3;min-height:0;padding:0;border:0;overflow:hidden;background:#f5efe4;}
     .reward-card.card-frame-card .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);pointer-events:none;}
     .reward-card.card-frame-card .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none;}
     .reward-card.card-frame-card .card-frame-layer{position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:fill;pointer-events:none;}

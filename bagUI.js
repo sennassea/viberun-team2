@@ -99,7 +99,7 @@
       ".bag-relic-card{box-sizing:border-box;width:100%;aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;padding:.5cqh;" +
         "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
       ".bag-relic-card.item-frame-card{width:100%;}" +
-      ".bag-relic-card .item-text-layer,.bag-potion-card .item-text-layer{display:none;}" +
+      ".bag-relic-card .item-desc-text,.bag-potion-card .item-desc-text{display:none;}" +
       ".bag-relic-card:hover{border-color:var(--bg-gold);}" +
       ".bag-relic-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
       ".bag-relic-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
@@ -113,11 +113,11 @@
       ".bag-page-nav{flex:none;display:flex;align-items:center;justify-content:center;gap:.8cqw;font-size:1.3cqh;font-weight:800;}" +
       ".bag-page-nav button{width:3.4cqh;height:3.4cqh;border:0;border-radius:0;background:transparent url(\"assets/ui/event_choice_panel.png\") center/100% 100% no-repeat;cursor:pointer;font-weight:900;color:#6b4a20;filter:drop-shadow(0 .18cqh .28cqh rgba(90,65,25,.16));}" +
       ".bag-page-nav button:disabled{opacity:.4;cursor:default;filter:grayscale(.4);}" +
-      ".bag-detail{flex:none;min-height:6.4cqh;background:rgba(255,255,255,.48);border:0.14cqh solid rgba(178,140,80,.36);" +
+      ".bag-detail{flex:none;min-height:7.6cqh;background:rgba(255,255,255,.48);border:0.14cqh solid rgba(178,140,80,.36);" +
         "border-radius:1cqh;padding:.8cqh 1cqw;display:flex;flex-direction:column;gap:.3cqh;}" +
       ".bag-detail-name{font-size:1.5cqh;font-weight:900;}" +
-      ".bag-detail-desc{font-size:1.25cqh;color:var(--bg-ink-soft);font-weight:700;white-space:pre-line;line-height:1.4;}" +
-      ".bag-detail-placeholder{font-size:1.25cqh;color:var(--bg-ink-soft);font-weight:700;margin:auto;}" +
+      ".bag-detail-desc{font-size:1.65cqh;color:var(--bg-ink-soft);font-weight:700;white-space:pre-line;line-height:1.4;}" +
+      ".bag-detail-placeholder{font-size:1.65cqh;color:var(--bg-ink-soft);font-weight:700;margin:auto;}" +
       ".bag-potion-slots{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;}" +
       ".bag-potion-card{box-sizing:border-box;position:relative;width:100%;aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
         "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
