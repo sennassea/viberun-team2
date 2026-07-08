@@ -90,7 +90,7 @@ function canRrEnterEndlessJourney(){
   return getRrNextEndlessLevel() <= 20;
 }
 
-/* ── ACT1 점수 / 달빛조각 임시 계산 유틸 ──────────────────────────────────
+/* ── ACT1 점수 / 달빛 조각 임시 계산 유틸 ──────────────────────────────────
    ACT1_점수_달빛조각_통합기획서_v4.0 기준. script.js를 아직 연결하지 않았으므로
    route 방문 기록 기반의 임시 추정치만 계산한다. snapshot.scoreBreakdown이
    실제로 들어오면(추후 script.js 연결) 그 값을 우선 사용한다.
@@ -262,7 +262,7 @@ function getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward){
   if(scoreBreakdown && scoreBreakdown.isTemporary) return "실제 점수 연결 필요";
   if(!moonReward || rrToSafeNumber(moonReward.moonShards, 0) <= 0) return "수령 보상 없음";
   if(snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimed) return "수령 완료";
-  return "달빛조각 수령";
+  return "달빛 조각 수령";
 }
 
 function markAct1MoonRewardClaimed(snapshot, amount, score){
@@ -304,7 +304,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     return Promise.resolve({
       ok: false,
       code: "NOT_CLAIMABLE",
-      message: "현재 상태에서는 달빛조각을 수령할 수 없습니다."
+      message: "현재 상태에서는 달빛 조각을 수령할 수 없습니다."
     });
   }
 
@@ -313,7 +313,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     return Promise.resolve({
       ok: false,
       code: "SERVICE_MISSING",
-      message: "달빛조각 수령 서비스가 연결되지 않았습니다."
+      message: "달빛 조각 수령 서비스가 연결되지 않았습니다."
     });
   }
 
@@ -340,7 +340,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
       markAct1MoonRewardClaimed(snapshot, paidAmount, scoreBreakdown.total);
 
       if(typeof toast === "function"){
-        toast("달빛조각 " + paidAmount + "개를 수령했습니다.");
+        toast("달빛 조각 " + paidAmount + "개를 수령했습니다.");
       }
 
       return result;
@@ -351,7 +351,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
       markAct1MoonRewardClaimed(snapshot, paidAmount, scoreBreakdown.total);
 
       if(typeof toast === "function"){
-        toast("이미 수령한 달빛조각 보상입니다.");
+        toast("이미 수령한 달빛 조각 보상입니다.");
       }
 
       return result;
@@ -363,16 +363,16 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     }
 
     if(typeof toast === "function"){
-      toast((result && result.message) || "달빛조각 수령에 실패했습니다.");
+      toast((result && result.message) || "달빛 조각 수령에 실패했습니다.");
     }
 
     return result || {
       ok: false,
       code: "UNKNOWN_ERROR",
-      message: "달빛조각 수령에 실패했습니다."
+      message: "달빛 조각 수령에 실패했습니다."
     };
   }).catch(error => {
-    console.warn("[runResult] 달빛조각 수령 중 오류", error);
+    console.warn("[runResult] 달빛 조각 수령 중 오류", error);
 
     if(ui.button){
       ui.button.disabled = false;
@@ -380,14 +380,14 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     }
 
     if(typeof toast === "function"){
-      toast("달빛조각 수령 중 오류가 발생했습니다.");
+      toast("달빛 조각 수령 중 오류가 발생했습니다.");
     }
 
     return {
       ok: false,
       code: "CLAIM_ERROR",
       error,
-      message: "달빛조각 수령 중 오류가 발생했습니다."
+      message: "달빛 조각 수령 중 오류가 발생했습니다."
     };
   });
 }
@@ -677,7 +677,7 @@ function renderRunSummary(snapshot, onFinish){
 
   const rows = [
     { icon:"🏆", label:"최종 여정 점수",      value:scoreBreakdown.total,   unit:"점" },
-    { icon:"🌙", label:isClaimed ? "달빛조각 수령 완료" : "달빛조각 수령 가능",  value:moonReward.moonShards,  unit:"개" },
+    { icon:"🌙", label:isClaimed ? "달빛 조각 수령 완료" : "달빛 조각 수령 가능",  value:moonReward.moonShards,  unit:"개" },
     { icon:"🗼", label:"진행한 구역 수", value:snapshot.highestFloor, unit:"층" },
     { icon:"💀", label:"클리어 보스 수",     value:snapshot.cleared.boss,  unit:"개" },
     { icon:"👺", label:"클리어 노멀 수",      value:snapshot.cleared.enemy, unit:"개" },

@@ -5,7 +5,8 @@
    - 계정 기반 선물함 1차 기능의 팝업 UI입니다.
    - 로그인 여부는 VIBERUN_AUTH.requireLogin으로 확인하고, 목록/수령/청약철회는
      mailboxService.js(window.VIBERUN_MAILBOX)를 통해 서버와 통신합니다.
-   - 월영당 구매 상품(source === "bm_purchase")은 수령 전 청약철회가 가능하며,
+   - 월영당 구매 상품(source === "bm_purchase") 중 현금 결제 상품만 수령 전 청약철회가
+     가능하며, 달빛 조각(moon_shard)으로 구매한 상품은 청약철회 버튼을 노출하지 않습니다.
      실제 보상 지급은 이 팝업에서 수령하기를 눌렀을 때만 이뤄집니다.
    - RUN_STATE/S.moonShards는 건드리지 않으며, 계정 wallet.moonShards는
      이 팝업 안에서만 표시합니다.
@@ -24,6 +25,10 @@
     return String(str == null ? "" : str).replace(/[&<>"']/g, c => (
       { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
     ));
+  }
+
+  function formatNumber(value){
+    return (Number(value) || 0).toLocaleString("ko-KR");
   }
 
   function ensureUI(){
@@ -258,12 +263,12 @@
   function rewardLabel(reward){
     if(!reward) return "";
     const amount = Number(reward.amount) || 0;
-    if(reward.type === "moon_shard") return "🌙 " + amount;
+    if(reward.type === "moon_shard") return "🌙 " + formatNumber(amount);
     if(reward.type === "dummy_item") return "테스트용 더미 아이템";
     if(reward.type === "monthly_pass") return "월영의 약속 활성화";
     if(reward.type === "character_skin") return (reward.name || "캐릭터 스킨") + " 획득";
     if(reward.type === "deck_pack") return (reward.name || "주문 덱") + " 해금";
-    return String(reward.type || "") + " " + amount;
+    return String(reward.type || "") + " " + formatNumber(amount);
   }
 
   function rewardToastMessage(rewards){
@@ -273,11 +278,11 @@
   }
 
   /* 구매 상품 메일 전용 수령 완료 토스트 문구입니다. 예: "초심자 스타터 팩을 수령했습니다.",
-     "달빛조각 300개를 수령했습니다." */
+     "달빛 조각 300개를 수령했습니다." */
   function purchaseClaimToastMessage(item){
     const rewards = Array.isArray(item.rewards) ? item.rewards : [];
     const moonShardReward = rewards.find(reward => reward.type === "moon_shard");
-    if(moonShardReward) return "달빛조각 " + (Number(moonShardReward.amount) || 0) + "개를 수령했습니다.";
+    if(moonShardReward) return "달빛 조각 " + formatNumber(moonShardReward.amount) + "개를 수령했습니다.";
     return (item.productName || "상품") + "을 수령했습니다.";
   }
 
@@ -301,17 +306,26 @@
     return date.getFullYear() + "." + pad(date.getMonth() + 1) + "." + pad(date.getDate());
   }
 
-  /* 청약철회 가능 조건: 구매 메일 + 수령 전(PURCHASED_UNCLAIMED) + 7일 이내 + 미환불. */
+  function isCashPurchase(item){
+    const store = window.VIBERUN_BM_STORE_DATA;
+    if(!store || typeof store.findProduct !== "function") return true;
+    const product = store.findProduct(item.productId);
+    return !product || product.priceType !== "moon_shard";
+  }
+
+  /* 청약철회 가능 조건: 구매 메일 + 현금 구매(달빛 조각 구매 제외) + 수령 전(PURCHASED_UNCLAIMED) + 7일 이내 + 미환불. */
   function isRefundEligible(item){
     return item.source === "bm_purchase" &&
       item.status === "PURCHASED_UNCLAIMED" &&
-      Number(item.refundUntil) > Date.now();
+      Number(item.refundUntil) > Date.now() &&
+      isCashPurchase(item);
   }
 
   function formatRefundWindow(item){
     if(item.status === "CLAIMED") return "수령 완료 (청약철회 불가)";
     if(item.status === "REFUNDED") return "청약철회 완료";
     if(item.status === "EXPIRED_REFUND") return "청약철회 기간 만료";
+    if(!isCashPurchase(item)) return "";
 
     const diff = Number(item.refundUntil) - Date.now();
     if(!Number.isFinite(diff) || diff <= 0) return "청약철회 기간 만료";
@@ -394,7 +408,7 @@
 
   function render(){
     if(!els) return;
-    els.walletValue.textContent = String((state.wallet && state.wallet.moonShards) || 0);
+    els.walletValue.textContent = formatNumber((state.wallet && state.wallet.moonShards) || 0);
     updateActiveTab();
 
     if(state.loading){

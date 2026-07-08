@@ -147,8 +147,8 @@
 
 .dmap-close {
   position: absolute;
-  right: 4.5cqw;
-  top: calc(50% + 0.6cqh);
+  right: 4cqw;
+  top: calc(50% + 0.2cqh);
   justify-self: auto;
   width: 4.6cqh;
   height: 4.6cqh;

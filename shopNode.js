@@ -513,7 +513,7 @@ function renderShopHeader() {
   if (typeof S === "undefined" || !S || !S.player) return;
   const p = S.player;
 
-  shopOverlayEl.querySelector("#shopPortrait").textContent = p.emoji || "👼";
+  renderPlayerPortraitIcon(shopOverlayEl.querySelector("#shopPortrait"));
   shopOverlayEl.querySelector("#shopName").textContent     = p.name  || "";
   shopOverlayEl.querySelector("#shopTitle").textContent    = p.title || "";
   shopOverlayEl.querySelector("#shopHpText").textContent   = p.hp + "/" + p.maxHp;
@@ -583,24 +583,25 @@ function shopItemFaceHtml(item) {
 function shopProductCardHtml(item) {
   const selected = item.id === SHOP_STATE.selectedId;
   const typeCls  = item.category === "card" ? item.cardType : "";
+  const priceHtml = '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>';
   if (item.category === "card" && typeof cardFaceHtml === "function") {
     const card = CARD_DB[item.sourceKey];
     if (card) {
       return (
-        '<button type="button" class="shop-product shop-product-card-frame card-frame-card cost-' + escapeShopHtml(card.type) +
+        '<button type="button" class="shop-product shop-product-card-frame' +
           (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + escapeShopHtml(item.id) + '">' +
-          cardFaceHtml(card) +
-          '<div class="shop-card-price-badge">' + (item.soldOut ? "품절" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>' +
+          '<div class="shop-card-visual card-frame-card cost-' + escapeShopHtml(card.type) + '">' + cardFaceHtml(card) + '</div>' +
+          priceHtml +
         '</button>'
       );
     }
   }
   if (item.category === "potion" || item.category === "relic") {
     return (
-      '<button type="button" class="shop-product shop-product-item-frame item-frame-card' +
+      '<button type="button" class="shop-product shop-product-item-frame' +
         (selected ? " selected" : "") + (item.soldOut ? " sold-out" : "") + '" data-id="' + escapeShopHtml(item.id) + '">' +
-        shopItemFaceHtml(item) +
-        '<div class="shop-card-price-badge">' + (item.soldOut ? "?덉젅" : shopGoldCostHtml(getEffectiveShopPrice(item))) + '</div>' +
+        '<div class="shop-card-visual item-frame-card">' + shopItemFaceHtml(item) + '</div>' +
+        priceHtml +
       '</button>'
     );
   }
@@ -713,7 +714,8 @@ function ensureShopStyles() {
       "background:transparent url(\"assets/ui/player_info_panel_wide.png\") center/100% 100% no-repeat;border:0;border-radius:0;" +
       "padding:.8cqh 1cqw;box-shadow:none;backdrop-filter:none;color:var(--c-ink);font-size:2.2cqh;}" +
     ".shop-portrait{flex:none;width:8.4cqh;height:8.4cqh;border-radius:50%;display:grid;place-items:center;" +
-      "font-size:4.2cqh;background:transparent;border:0;box-shadow:none;overflow:hidden;}" +
+      "font-size:4.2cqh;background:transparent;border:0;box-shadow:none;overflow:hidden;transform:translateX(.3cqw);}" +
+    ".shop-portrait img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}" +
     ".shop-player-body{position:relative;z-index:1;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:.4cqh;color:var(--c-ink);}" +
     ".shop-player-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--c-ink);}" +
     ".shop-player-name b{display:inline;font-size:2.3cqh;color:var(--c-ink);}" +
@@ -764,7 +766,7 @@ function ensureShopStyles() {
     ".shop-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:.7cqh;padding:2.2cqh 1.5cqw 1.8cqh;" +
       "background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;}" +
     ".shop-tabs{flex:none;display:flex;gap:.6cqw;padding:0 .6cqw;}" +
-    ".shop-tab{flex:1;height:4.7cqh;border-radius:0;border:0;" +
+    ".shop-tab{flex:1;height:auto;aspect-ratio:1094/310;border-radius:0;border:0;" +
       "background:transparent url(\"assets/ui/settings/settings_panel.png\") center/100% 100% no-repeat;color:#7a5521;text-shadow:0 .1cqh 0 rgba(255,255,255,.65);font-size:1.7cqh;font-weight:900;cursor:pointer;font:inherit;}" +
     ".shop-tab.active{color:#2f4f36;filter:saturate(1.08) brightness(1.03);}" +
     ".shop-products{flex:1;min-height:0;display:grid;align-content:start;gap:.9cqw;padding:.9cqh .8cqw 1cqh;" +
@@ -786,15 +788,14 @@ function ensureShopStyles() {
     ".shop-product-desc{font-size:1.05cqh;font-weight:700;color:#6b4a20;text-align:center;line-height:1.3;min-height:3.2cqh;}" +
     ".shop-product-price{font-size:1.3cqh;font-weight:900;color:#a97a1f;}" +
     ".shop-product-price,.shop-detail-price,.shop-card-price-badge,.shop-cost{display:inline-flex;align-items:center;justify-content:center;gap:.25cqw;}" +
-    ".shop-price-icon{width:1.8cqh;height:1.8cqh;flex:none;display:inline-block;font-size:0;line-height:1;background-position:center;background-size:contain;background-repeat:no-repeat;}" +
-    ".shop-product.shop-product-card-frame{position:relative;display:block;justify-self:center;width:min(13.5cqw,22cqh);height:auto;aspect-ratio:2/3;" +
-      "min-height:0;padding:0;gap:0;border:0;border-radius:0;overflow:hidden;background:#f5efe4;}" +
-    ".shop-product.shop-product-item-frame{position:relative;display:block;justify-self:center;width:min(13.5cqw,22cqh);height:auto;aspect-ratio:2/3;" +
-      "min-height:0;padding:0;gap:0;border:0;border-radius:0;overflow:hidden;background:transparent;}" +
-    ".shop-product.shop-product-card-frame.selected{box-shadow:0 0 0 .28cqh rgba(63,143,224,.55),0 .5cqh 1cqh rgba(90,65,25,.14);}" +
-    ".shop-product.shop-product-item-frame.selected{box-shadow:0 0 0 .28cqh rgba(63,143,224,.55),0 .5cqh 1cqh rgba(90,65,25,.14);}" +
-    ".shop-card-price-badge{position:absolute;right:.55cqw;bottom:.55cqh;z-index:5;padding:.28cqh .55cqw;border-radius:.75cqh;" +
-      "background:rgba(255,251,240,.94);border:.14cqh solid rgba(178,140,80,.58);color:#a97a1f;font-size:1.15cqh;font-weight:900;box-shadow:0 .25cqh .6cqh rgba(90,65,25,.18);}" +
+    ".shop-price-icon{width:2.3cqh;height:2.3cqh;flex:none;display:inline-block;font-size:0;line-height:1;background-position:center;background-size:contain;background-repeat:no-repeat;}" +
+    ".shop-product.shop-product-card-frame,.shop-product.shop-product-item-frame{position:relative;display:flex;flex-direction:column;align-items:center;" +
+      "justify-self:center;width:min(13.5cqw,22cqh);height:auto;min-height:0;padding:0;gap:1cqh;border:0;border-radius:0;background:transparent;}" +
+    ".shop-card-visual{position:relative;width:100%;flex:none;transition:box-shadow .12s ease,filter .12s ease;}" +
+    ".shop-product.shop-product-card-frame.selected .shop-card-visual,.shop-product.shop-product-item-frame.selected .shop-card-visual{" +
+      "box-shadow:0 0 0 .28cqh rgba(63,143,224,.55),0 .5cqh 1cqh rgba(90,65,25,.14);}" +
+    ".shop-card-price-badge{position:static;flex:none;padding:.4cqh 1cqw;border-radius:.8cqh;" +
+      "background:rgba(255,251,240,.95);border:.16cqh solid rgba(178,140,80,.6);color:#a97a1f;font-size:2cqh;font-weight:900;box-shadow:0 .25cqh .6cqh rgba(90,65,25,.18);}" +
 
     ".shop-detail{flex:none;width:17cqw;min-width:22cqh;display:flex;flex-direction:column;align-items:center;gap:.8cqh;" +
       "padding:2.5cqh 1.35cqw 2.1cqh;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;}" +
@@ -804,7 +805,7 @@ function ensureShopStyles() {
       "background:linear-gradient(160deg,#fff8e6,#f0dcb0);border-radius:1.2cqh;border:.18cqh solid #d9bd85;}" +
     ".shop-detail-type{font-size:1.15cqh;font-weight:800;color:#fff;padding:.2cqh 1cqw;border-radius:.8cqh;background:#8a6b3d;}" +
     ".shop-detail-desc{font-size:1.2cqh;font-weight:700;color:#6b4a20;text-align:center;line-height:1.4;}" +
-    ".shop-detail-price{font-size:1.6cqh;font-weight:900;color:#a97a1f;}" +
+    ".shop-detail-price{font-size:2.1cqh;font-weight:900;color:#a97a1f;}" +
     ".shop-detail-card-preview{position:relative;width:min(14cqw,25cqh);height:auto;aspect-ratio:2/3;flex:none;}" +
     ".shop-detail-item-preview{position:relative;width:min(14cqw,25cqh);height:auto;aspect-ratio:2/3;flex:none;}" +
     ".shop-buy-btn{width:100%;height:5cqh;border-radius:1.1cqh;font-size:1.9cqh;font-weight:900;cursor:pointer;" +

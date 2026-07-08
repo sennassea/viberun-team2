@@ -3,14 +3,14 @@
 /* =========================================================================
    BM Store UI
    - 월영당 팝업 생성/열기/닫기, 패키지 탭 렌더링, 구매 버튼 처리를 담당합니다.
-   - 추천/주문 팩/달빛조각 충전 탭은 화면에만 표시하고 클릭 시 준비 중 토스트를 띄웁니다.
+   - 추천/주문 팩/달빛 조각 충전 탭은 화면에만 표시하고 클릭 시 준비 중 토스트를 띄웁니다.
    - 전투 화면 진입 버튼은 만들지 않으며, 메인/선물함의 wallet UI가 이 open()만 호출합니다.
    ========================================================================= */
 (function(){
   const READY_MESSAGE = "해당 탭은 준비 중입니다.";
   const PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 수령할 수 있습니다.";
   const SKIN_PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 스킨을 수령할 수 있습니다.";
-  const MOON_CHARGE_SUCCESS_MESSAGE = "테스트 구매가 완료되었습니다. 선물함에서 달빛조각을 수령할 수 있습니다.";
+  const MOON_CHARGE_SUCCESS_MESSAGE = "테스트 구매가 완료되었습니다. 선물함에서 달빛 조각을 수령할 수 있습니다.";
   const DECK_PACK_PURCHASE_SUCCESS_MESSAGE = "구매가 완료되었습니다. 선물함에서 주문 덱을 수령할 수 있습니다.";
   const MOON_CHARGE_NOTICE = "테스트 구매입니다. 실제 결제가 발생하지 않습니다.";
   const RECOMMENDED_NOTICE = "운영자가 추천하는 특별 상품입니다.";
@@ -87,7 +87,7 @@
             '<p>달빛 조각을 바쳐 특별한 인연과 물품을 얻습니다.</p>' +
           '</div>' +
           '<div class="bm-store-head-actions">' +
-            '<div class="bm-store-wallet" aria-label="현재 달빛조각 보유량">' +
+            '<div class="bm-store-wallet" aria-label="현재 달빛 조각 보유량">' +
               '<span class="bm-store-wallet-icon" aria-hidden="true"></span>' +
               '<span id="bmStoreWalletValue">0</span>' +
             '</div>' +
@@ -263,7 +263,7 @@
       purchasingProductId = "";
       if(!result || !result.ok){
         const message = result && result.code === "INSUFFICIENT_MOON_SHARDS"
-          ? "달빛조각이 부족합니다."
+          ? "달빛 조각이 부족합니다."
           : ((result && result.message) || "구매에 실패했습니다.");
         if(result && result.wallet) state.wallet = result.wallet;
         render();
@@ -311,7 +311,7 @@
     if(!product) return "";
     if(product.priceLabel) return product.priceLabel;
     if(product.priceType === "test_cash") return formatKRW(product.price);
-    return "달빛조각 " + formatCount(product.price) + "개";
+    return "달빛 조각 " + formatCount(product.price) + "개";
   }
 
   /* 구매 버튼 클릭 시 바로 구매하지 않고 구매 확인 팝업을 먼저 띄웁니다.
@@ -506,7 +506,8 @@
 
         '<div class="bm-store-skin-description">' +
           '<p>' + escapeHtml(product.skinTypeName || "") + '</p>' +
-          '<p>' + escapeHtml(product.description || "") + '</p>' +
+          (product.description ? '<p>' + escapeHtml(product.description) + '</p>' : '') +
+          (product.salePeriodText ? '<p class="bm-store-sale-period">' + escapeHtml(product.salePeriodText) + '</p>' : '') +
         '</div>' +
 
         '<button type="button" class="bm-store-buy-btn bm-store-skin-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
@@ -519,7 +520,7 @@
   }
 
   /* 추천 탭 전용 레이아웃입니다. 좌측에 월영의 약속 대형 카드, 우측 상단에 한정 스킨 실구매 카드,
-     우측 하단에 프리미엄 스킨/한풀이 덱/달빛조각 3,000개 실구매 카드를 배치합니다.
+     우측 하단에 프리미엄 스킨/한풀이 덱/달빛 조각 3,000개 실구매 카드를 배치합니다.
      패키지/주문 팩/충전 탭의 기존 그리드 렌더링에는 영향을 주지 않습니다. */
   function renderRecommendedLayout(){
     const products = state.products || [];
@@ -621,6 +622,7 @@
           '<h3>' + escapeHtml(product.name) + '</h3>' +
           (product.skinTypeName ? '<p>' + escapeHtml(product.skinTypeName) + '</p>' : '') +
           (product.description ? '<p>' + escapeHtml(product.description) + '</p>' : '') +
+          (product.salePeriodText ? '<p class="bm-store-sale-period">' + escapeHtml(product.salePeriodText) + '</p>' : '') +
         '</div>' +
         '<button type="button" class="bm-store-buy-btn bm-recommended-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
           (disabled ? ' disabled' : '') + '>' +
@@ -632,7 +634,7 @@
     );
   }
 
-  /* 추천 탭 우측 하단 소형 실구매 카드입니다(프리미엄 스킨/한풀이 덱/달빛조각 3,000개).
+  /* 추천 탭 우측 하단 소형 실구매 카드입니다(프리미엄 스킨/한풀이 덱/달빛 조각 3,000개).
      rewardType별로 보유 상태와 가격 표시를 분기하며, 딤드는 사용하지 않습니다. */
   function renderRecommendedSmallProductCard(product){
     const isBusy = purchasingProductId === product.id;
@@ -660,7 +662,9 @@
             ? '<img src="' + escapeHtml(product.profileIcon) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
             : product.previewImage
               ? '<img src="' + escapeHtml(product.previewImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
-              : '<span class="bm-store-art-icon">' + escapeHtml(product.icon || "✦") + '</span>') +
+              : product.rewardType === "moon_shard"
+                ? '<span class="bm-store-art-moon"></span>'
+                : '<span class="bm-store-art-icon">' + escapeHtml(product.icon || "✦") + '</span>') +
         '</div>' +
         '<h3>' + escapeHtml(product.name) + '</h3>' +
         (product.subtitle || product.skinTypeName
@@ -673,7 +677,7 @@
     );
   }
 
-  /* 달빛조각 충전 탭 전용 레이아웃입니다. 4개 상품을 가로 4카드로 배치하며,
+  /* 달빛 조각 충전 탭 전용 레이아웃입니다. 4개 상품을 가로 4카드로 배치하며,
      구매 버튼은 기존 .bm-store-buy-btn 클래스/data-product-id를 그대로 사용해
      공통 구매 확인 팝업 → purchaseProduct 흐름을 그대로 탑니다. */
   function renderMoonChargeLayout(){
