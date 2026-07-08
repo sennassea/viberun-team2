@@ -129,25 +129,27 @@
 .settings-account-status{
   display:grid;
   gap:.8cqh;
-  color:var(--c-ink-soft);
-  font-size:1.84cqh;
+  color:#6f4210;
+  font-size:2.2cqh;
   font-weight:800;
 }
 .settings-account-row{
   display:grid;
-  grid-template-columns:8cqw minmax(0,1fr);
+  grid-template-columns:11cqw minmax(0,1fr);
   gap:1cqw;
   align-items:start;
 }
 .settings-account-label{
-  color:var(--c-ink);
+  color:#6f4210;
   font-weight:900;
+  white-space:nowrap;
 }
 .settings-account-value{
   min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
+  color:#3a2408;
 }
 .settings-account-actions{
   display:flex;
@@ -157,11 +159,11 @@
 }
 .settings-account-actions button{
   height:3.9cqh;
-  border:.18cqh solid var(--c-panel-line);
+  border:.18cqh solid rgba(184,137,36,.32);
   border-radius:.9cqh;
   padding:0 1.2cqw;
   background:#fff;
-  color:var(--c-ink);
+  color:#3a2408;
   font:inherit;
   font-size:1.78cqh;
   font-weight:900;

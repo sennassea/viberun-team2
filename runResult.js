@@ -28,9 +28,10 @@ const NPC_DONGJASEUNG = {
   id: "npc_dongjaseung",
   name: (RR_ENDING.dongja && RR_ENDING.dongja.name) || RR_DEFEAT.speaker || "동자신",
   emoji: (RR_ENDING.dongja && RR_ENDING.dongja.emoji) || RR_DEFEAT.emoji || "🧒",
+  image: (RR_ENDING.dongja && RR_ENDING.dongja.image) || "assets/characters/dongjasin/dgs_greeting_wave.png",
   endlessTitle: (RR_ENDING.labels && RR_ENDING.labels.dongja) || "끝없는 여정",
   endlessLines: (RR_ENDING.dongja && RR_ENDING.dongja.lines) || [
-    "드디어 여정이 끝났네.",
+    { text: "드디어 여정이 끝났네.", portrait: "assets/characters/dongjasin/dgs_serious_gentle.png" },
     "아가, 이번 여정은 끝났지만 아직도 수많은 미련이 남았구나.",
     "아가, 이 끝없는 여정을 시작할래?"
   ],
@@ -90,7 +91,7 @@ function canRrEnterEndlessJourney(){
   return getRrNextEndlessLevel() <= 20;
 }
 
-/* ── ACT1 점수 / 달빛조각 임시 계산 유틸 ──────────────────────────────────
+/* ── ACT1 점수 / 달빛 조각 임시 계산 유틸 ──────────────────────────────────
    ACT1_점수_달빛조각_통합기획서_v4.0 기준. script.js를 아직 연결하지 않았으므로
    route 방문 기록 기반의 임시 추정치만 계산한다. snapshot.scoreBreakdown이
    실제로 들어오면(추후 script.js 연결) 그 값을 우선 사용한다.
@@ -262,7 +263,7 @@ function getAct1MoonClaimButtonLabel(snapshot, scoreBreakdown, moonReward){
   if(scoreBreakdown && scoreBreakdown.isTemporary) return "실제 점수 연결 필요";
   if(!moonReward || rrToSafeNumber(moonReward.moonShards, 0) <= 0) return "수령 보상 없음";
   if(snapshot.moonRewardClaim && snapshot.moonRewardClaim.claimed) return "수령 완료";
-  return "달빛조각 수령";
+  return "달빛 조각 수령";
 }
 
 function markAct1MoonRewardClaimed(snapshot, amount, score){
@@ -304,7 +305,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     return Promise.resolve({
       ok: false,
       code: "NOT_CLAIMABLE",
-      message: "현재 상태에서는 달빛조각을 수령할 수 없습니다."
+      message: "현재 상태에서는 달빛 조각을 수령할 수 없습니다."
     });
   }
 
@@ -313,7 +314,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     return Promise.resolve({
       ok: false,
       code: "SERVICE_MISSING",
-      message: "달빛조각 수령 서비스가 연결되지 않았습니다."
+      message: "달빛 조각 수령 서비스가 연결되지 않았습니다."
     });
   }
 
@@ -340,7 +341,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
       markAct1MoonRewardClaimed(snapshot, paidAmount, scoreBreakdown.total);
 
       if(typeof toast === "function"){
-        toast("달빛조각 " + paidAmount + "개를 수령했습니다.");
+        toast("달빛 조각 " + paidAmount + "개를 수령했습니다.");
       }
 
       return result;
@@ -351,7 +352,7 @@ function claimAct1MoonRewardFromResult(snapshot, options){
       markAct1MoonRewardClaimed(snapshot, paidAmount, scoreBreakdown.total);
 
       if(typeof toast === "function"){
-        toast("이미 수령한 달빛조각 보상입니다.");
+        toast("이미 수령한 달빛 조각 보상입니다.");
       }
 
       return result;
@@ -363,16 +364,16 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     }
 
     if(typeof toast === "function"){
-      toast((result && result.message) || "달빛조각 수령에 실패했습니다.");
+      toast((result && result.message) || "달빛 조각 수령에 실패했습니다.");
     }
 
     return result || {
       ok: false,
       code: "UNKNOWN_ERROR",
-      message: "달빛조각 수령에 실패했습니다."
+      message: "달빛 조각 수령에 실패했습니다."
     };
   }).catch(error => {
-    console.warn("[runResult] 달빛조각 수령 중 오류", error);
+    console.warn("[runResult] 달빛 조각 수령 중 오류", error);
 
     if(ui.button){
       ui.button.disabled = false;
@@ -380,14 +381,14 @@ function claimAct1MoonRewardFromResult(snapshot, options){
     }
 
     if(typeof toast === "function"){
-      toast("달빛조각 수령 중 오류가 발생했습니다.");
+      toast("달빛 조각 수령 중 오류가 발생했습니다.");
     }
 
     return {
       ok: false,
       code: "CLAIM_ERROR",
       error,
-      message: "달빛조각 수령 중 오류가 발생했습니다."
+      message: "달빛 조각 수령 중 오류가 발생했습니다."
     };
   });
 }
@@ -481,6 +482,7 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
+  characterWrap.className = "rr-character-wrap rr-character-wrap--victory";
   characterWrap.innerHTML = spirit.image
     ? '<img src="' + spirit.image + '" alt="' + (spirit.name || "") + '">'
     : '<div class="rr-character-emoji">' + (spirit.emoji || "") + '</div>';
@@ -489,7 +491,7 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
   panelSlot.innerHTML =
     '<div class="rr-dialog-panel">' +
       '<div class="rr-badge"><span id="rrBadgeText">승리</span></div>' +
-      '<div class="rr-lines" id="rrLines"></div>' +
+      '<div class="rr-lines rr-lines--victory" id="rrLines"></div>' +
       '<div class="rr-divider"></div>' +
       '<div class="rr-continue">✦ 터치하여 계속 ✦</div>' +
     '</div>';
@@ -500,7 +502,7 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
   const dialogLines = getEndingSpiritLines(spirit);
   let lineIndex = 0;
   const renderLine = () => {
-    overlay.querySelector("#rrLines").innerHTML = '<p>' + escapeRrHtml(dialogLines[lineIndex] || "") + '</p>';
+    overlay.querySelector("#rrLines").innerHTML = '<p>' + escapeRrHtml(dialogLines[lineIndex] || "").replace(/\n/g, "<br>") + '</p>';
   };
   renderLine();
 
@@ -529,6 +531,7 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
+  characterWrap.className = "rr-character-wrap";
   const defeatImage = npc.defeatImage || RR_DEFEAT.image || RR_TUTORIAL_SKIP_DONGJASIN_IMAGE;
   characterWrap.innerHTML = defeatImage
     ? '<img class="rr-defeat-dongjasin" src="' + defeatImage + '" alt="' + (npc.name || "") + '">'
@@ -536,7 +539,7 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
-    '<div class="rr-dialog-panel">' +
+    '<div class="rr-dialog-panel rr-dialog-panel--defeat">' +
       '<div class="rr-badge"><span id="rrBadgeText">패배</span></div>' +
       '<div class="rr-lines" id="rrLines"></div>' +
       '<div class="rr-divider"></div>' +
@@ -547,7 +550,7 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
 
   const dialogLines = [npc.defeatLine1, npc.defeatLine2].filter(Boolean);
   overlay.querySelector("#rrLines").innerHTML =
-    dialogLines.map(line => '<p>' + escapeRrHtml(line) + '</p>').join("");
+    dialogLines.map(line => '<p>' + escapeRrHtml(line).replace(/\n/g, "<br>") + '</p>').join("");
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
@@ -568,9 +571,14 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
-  characterWrap.innerHTML = npc.image
-    ? '<img src="' + npc.image + '" alt="' + (npc.name || "") + '">'
-    : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
+  characterWrap.className = "rr-character-wrap";
+  const renderCharacterForLine = (line) => {
+    const portrait = (line && typeof line === "object" && line.portrait) || npc.image;
+    characterWrap.innerHTML = portrait
+      ? '<img class="rr-defeat-dongjasin" src="' + portrait + '" alt="' + (npc.name || "") + '">'
+      : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
+  };
+  const getLineText = (line) => typeof line === "string" ? line : ((line && line.text) || "");
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
@@ -579,12 +587,14 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   const lines = Array.isArray(npc.endlessLines) ? npc.endlessLines : [];
   let lineIndex = 0;
   const renderDialogue = () => {
+    const currentLine = lines[lineIndex];
+    renderCharacterForLine(currentLine);
     const panelSlot = overlay.querySelector("#rrPanelSlot");
     panelSlot.innerHTML =
       '<div class="rr-choice-panel">' +
         '<div class="rr-choice-titlebar"><span>' + escapeRrHtml(npc.endlessTitle || "끝없는 여정") + '</span></div>' +
         '<div class="rr-choice-lines">' +
-          '<p class="rr-choice-line-main">' + escapeRrHtml(lines[lineIndex] || "") + '</p>' +
+          '<p class="rr-choice-line-main">' + escapeRrHtml(getLineText(currentLine)).replace(/\n/g, "<br>") + '</p>' +
         '</div>' +
         '<div class="rr-divider"></div>' +
         '<div class="rr-continue">✦ ' + escapeRrHtml((RR_ENDING.labels && RR_ENDING.labels.continue) || "터치하여 계속") + ' ✦</div>' +
@@ -677,7 +687,7 @@ function renderRunSummary(snapshot, onFinish){
 
   const rows = [
     { icon:"🏆", label:"최종 여정 점수",      value:scoreBreakdown.total,   unit:"점" },
-    { icon:"🌙", label:isClaimed ? "달빛조각 수령 완료" : "달빛조각 수령 가능",  value:moonReward.moonShards,  unit:"개" },
+    { icon:"🌙", label:isClaimed ? "달빛 조각 수령 완료" : "달빛 조각 수령 가능",  value:moonReward.moonShards,  unit:"개" },
     { icon:"🗼", label:"진행한 구역 수", value:snapshot.highestFloor, unit:"층" },
     { icon:"💀", label:"클리어 보스 수",     value:snapshot.cleared.boss,  unit:"개" },
     { icon:"👺", label:"클리어 노멀 수",      value:snapshot.cleared.enemy, unit:"개" },
@@ -881,9 +891,10 @@ function rrRouteIconHtml(info){
 
 function rrRouteNodeHtml(node){
   const info = rrGetRouteNodeInfo(node);
-  const score = Number.isFinite(Number(node && node.score))
+  // 노드를 밟기만 하고 아직 클리어(completed)하지 않았다면 점수는 0으로 표시한다.
+  const score = (node && node.completed && Number.isFinite(Number(node.score)))
     ? Number(node.score)
-    : getAct1NodeScore(node);
+    : 0;
 
   return '<div class="rr-route-node">' +
     '<div class="rr-route-node-icon">' + rrRouteIconHtml(info) + '</div>' +
@@ -901,10 +912,10 @@ function rrItemIconHtml(icon){
 
 function rrItemCardHtml(icon, name, count){
   const badge = count > 1 ? '<div class="rr-item-card-count">x' + count + '</div>' : '';
-  return '<div class="rr-item-card">' +
+  return '<div class="rr-item-card" title="' + escapeRrHtml(name || "") + '">' +
     badge +
     '<div class="rr-item-card-icon">' + rrItemIconHtml(icon) + '</div>' +
-    '<div class="rr-item-card-name">' + escapeRrHtml(name || "") + '</div>' +
+    '<span class="sr-only rr-item-card-name">' + escapeRrHtml(name || "") + '</span>' +
   '</div>';
 }
 
@@ -1223,25 +1234,28 @@ function ensureRrStyles(){
     ".rr-overlay.show{display:flex;}" +
     /* 결과 연출은 전투 화면 위에 얹고, 뒤 전투 화면은 살짝 어둡게 눌러준다. */
     "body.result-ui-open .top-hud{z-index:30;}" +
-    ".rr-backdrop{position:absolute;inset:0;background:rgba(8,10,16,.38);pointer-events:none;}" +
+    ".rr-backdrop{position:absolute;inset:0;background:rgba(8,10,16,.6);backdrop-filter:blur(4px);pointer-events:none;}" +
     ".rr-frame{position:relative;width:88%;height:76%;}" +
-    ".rr-character-wrap{position:absolute;left:3%;bottom:-5%;width:50%;height:118%;z-index:2;" +
+    ".rr-character-wrap{position:absolute;left:0%;bottom:-5%;width:50%;height:118%;z-index:2;" +
       "display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}" +
     ".rr-character-wrap img{width:100%;height:100%;object-fit:contain;object-position:bottom;" +
-      "filter:drop-shadow(0 1.4cqh 2cqh rgba(0,0,0,.55));}" +
+      "filter:drop-shadow(0 1.4cqh 2cqh rgba(0,0,0,.55)) drop-shadow(0 0 1.6cqh rgba(120,170,255,.4));}" +
     ".rr-character-wrap img.rr-defeat-dongjasin{width:88%;height:88%;}" +
-    ".rr-character-emoji{font-size:17cqh;line-height:1;}" +
-    ".rr-dialog-panel{position:absolute;left:40%;right:7%;top:24%;bottom:12%;z-index:1;" +
+    ".rr-character-wrap--victory{bottom:-11%;}" +
+    ".rr-character-emoji{font-size:17cqh;line-height:1;filter:drop-shadow(0 0 1.6cqh rgba(120,170,255,.4));}" +
+    ".rr-dialog-panel{position:absolute;left:37%;right:10%;top:24%;bottom:12%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
       "padding:3cqh 3cqw;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.2cqh rgba(0,0,0,.4);}" +
+    ".rr-dialog-panel--defeat{left:30%;right:17%;}" +
     ".rr-badge{position:absolute;top:-3.8cqh;width:9cqh;height:9cqh;transform:rotate(45deg);" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.24cqh solid #e8c874;border-radius:.4cqh;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;}" +
     ".rr-badge span{transform:rotate(-45deg);color:#fbe9c8;font-weight:900;font-size:2.2cqh;letter-spacing:.15cqh;white-space:nowrap;}" +
     ".rr-lines{text-align:center;color:#4a3524;}" +
-    ".rr-lines p{margin:0;font-weight:800;}" +
+    ".rr-lines--victory{width:55%;}" +
+    ".rr-lines p{margin:0;font-weight:800;white-space:nowrap;word-break:keep-all;}" +
     ".rr-lines p:first-child{font-size:3.6cqh;margin-bottom:1.2cqh;color:#3a2814;}" +
     ".rr-lines p:not(:first-child){font-size:1.8cqh;color:#6b5236;line-height:1.5;}" +
     ".rr-divider{position:relative;width:60%;height:.16cqh;background:linear-gradient(90deg,transparent,rgba(180,140,80,.6),transparent);}" +
@@ -1251,8 +1265,8 @@ function ensureRrStyles(){
     "@keyframes rrPulse{0%,100%{opacity:.5;}50%{opacity:1;}}" +
 
     /* 끝없는 여정 선택 패널 (기획서 §3-1) — 승리 연출과 동일한 rr-frame 크기를 공유한다 */
-    ".rr-choice-panel{position:absolute;left:40%;right:7%;top:18%;bottom:12%;z-index:1;" +
-      "display:flex;flex-direction:column;align-items:center;gap:1.6cqh;" +
+    ".rr-choice-panel{position:absolute;left:37%;right:10%;top:18%;bottom:12%;z-index:1;" +
+      "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
       "padding:4.2cqh 3cqw 2.6cqh;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.2cqh rgba(0,0,0,.4);}" +
@@ -1262,9 +1276,9 @@ function ensureRrStyles(){
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
     ".rr-choice-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.2cqh;letter-spacing:.1cqh;}" +
     ".rr-choice-lines{text-align:center;color:#4a3524;flex:0 0 auto;}" +
-    ".rr-choice-lines p{margin:0;font-weight:700;}" +
-    ".rr-choice-lines p.rr-choice-line-main{font-size:2.1cqh;font-weight:900;color:#3a2814;margin-bottom:.6cqh;}" +
-    ".rr-choice-lines p:not(.rr-choice-line-main){font-size:1.4cqh;color:#6b5236;line-height:1.5;}" +
+    ".rr-choice-lines p{margin:0;font-weight:800;}" +
+    ".rr-choice-lines p.rr-choice-line-main{font-size:3.6cqh;font-weight:800;color:#3a2814;margin-bottom:1.2cqh;}" +
+    ".rr-choice-lines p:not(.rr-choice-line-main){font-size:1.8cqh;color:#6b5236;line-height:1.5;}" +
     ".rr-choice-cards{display:flex;gap:2cqw;width:100%;flex:1;min-height:0;}" +
     ".rr-choice-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7cqh;" +
       "padding:1.6cqh 1cqw;border-radius:1.2cqh;border:.16cqh solid rgba(150,110,60,.5);" +
@@ -1281,16 +1295,17 @@ function ensureRrStyles(){
     "@keyframes rrShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-.6cqw);}75%{transform:translateX(.6cqw);}}" +
 
     /* 전투 요약 화면 (기획서 §4-1, §10-1) — 캐릭터 없이 중앙 패널로 표시한다 */
-    ".rr-summary-panel{position:absolute;left:50%;top:16%;bottom:1.5%;transform:translateX(-50%);" +
+    ".rr-summary-panel{position:absolute;left:50%;top:4%;bottom:1.5%;transform:translateX(-50%);" +
       "width:56%;min-width:44cqh;z-index:1;display:flex;flex-direction:column;align-items:center;" +
       "padding:4.4cqh 3.4cqw 2.4cqh;border-radius:1.8cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
     ".rr-summary-titlebar{position:absolute;top:-3.6cqh;left:50%;transform:translateX(-50%);" +
       "padding:1.1cqh 3.6cqw;border-radius:1cqh;white-space:nowrap;" +
+      "display:flex;align-items:center;justify-content:center;" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.22cqh solid #e8c874;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
-    ".rr-summary-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
+    ".rr-summary-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;line-height:1;}" +
     ".rr-summary-rows{flex:1;width:100%;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:.8cqh;}" +
     ".rr-summary-row{display:flex;align-items:center;gap:1.2cqw;padding:.65cqh 0;" +
       "border-bottom:.14cqh dashed rgba(160,120,70,.4);}" +
@@ -1313,12 +1328,14 @@ function ensureRrStyles(){
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
     ".rr-detail-titlebar{position:absolute;top:-2.4cqh;left:50%;transform:translateX(-50%);" +
+      "display:flex;align-items:center;justify-content:center;" +
       "padding:1.1cqh 3.6cqw;border-radius:1cqh;white-space:nowrap;" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.22cqh solid #e8c874;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
     ".rr-detail-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
     ".rr-detail-section{display:flex;flex-direction:column;gap:.7cqh;min-height:0;}" +
-    ".rr-detail-section-title{text-align:center;font-size:1.5cqh;font-weight:800;color:#8a6a3c;letter-spacing:.05cqh;}" +
+    ".rr-detail-section-title{text-align:center;font-size:1.5cqh;font-weight:800;color:#8a6a3c;letter-spacing:.05cqh;margin-top:.9cqh;}" +
+    ".rr-detail-section--tight .rr-detail-section-title{margin-top:0;}" +
     ".rr-detail-grid{flex:1;min-height:0;display:grid;grid-template-columns:30% 1fr;gap:1cqh 1.2cqw;}" +
     ".rr-detail-stack{display:flex;flex-direction:column;gap:1cqh;min-height:0;}" +
     ".rr-detail-stack .rr-detail-tile,.rr-detail-stack .rr-detail-section--tight{flex:1;min-height:0;}" +
@@ -1367,7 +1384,6 @@ function ensureRrStyles(){
     ".rr-item-card-icon{width:5cqh;height:5cqh;border-radius:50%;display:grid;place-items:center;font-size:2.4cqh;" +
       "background:linear-gradient(160deg,#fff7d7,#f6e6bf);border:.16cqh solid rgba(150,110,60,.45);" +
       "box-shadow:0 .4cqh .9cqh rgba(0,0,0,.18);}" +
-    ".rr-item-card-name{font-size:1.1cqh;font-weight:800;color:#5a4326;text-align:center;line-height:1.2;}" +
     ".rr-item-card-count{position:absolute;top:-.4cqh;right:.4cqh;min-width:2.2cqh;height:2.2cqh;padding:0 .3cqh;" +
       "border-radius:1.1cqh;background:#a5322a;color:#fbe9c8;font-size:1.1cqh;font-weight:900;" +
       "display:grid;place-items:center;box-shadow:0 .2cqh .5cqh rgba(0,0,0,.3);}" +
@@ -1422,18 +1438,6 @@ function ensureRrStyles(){
 
     ".rr-moon-claim-btn:hover:not(:disabled){filter:brightness(1.05);}" +
 
-    ".rr-moon-claim-btn:disabled{cursor:not-allowed;opacity:.55;filter:grayscale(.25);}" +
-
-    "@media (max-width:900px){" +
-      ".rr-frame{width:94%;height:84%;}" +
-      ".rr-character-wrap{width:52%;height:52%;left:50%;transform:translateX(-50%);bottom:auto;top:4%;}" +
-      ".rr-dialog-panel{right:7%;left:7%;width:auto;top:auto;bottom:5%;height:36%;}" +
-      ".rr-badge{top:-3.4cqh;}" +
-      ".rr-choice-panel{right:7%;left:7%;width:auto;top:auto;bottom:5%;height:48%;padding-top:3.2cqh;}" +
-      ".rr-choice-cards{flex-direction:column;gap:1cqh;}" +
-      ".rr-summary-panel{left:5%;right:5%;width:auto;transform:none;top:6%;bottom:1.5%;min-width:0;}" +
-      ".rr-detail-panel{left:4%;right:4%;width:auto;transform:none;top:5%;bottom:0.6%;min-width:0;padding:4cqh 2.4cqw 1.6cqh;}" +
-      ".rr-detail-grid{grid-template-columns:1fr;}" +
-    "}";
+    ".rr-moon-claim-btn:disabled{cursor:not-allowed;opacity:.55;filter:grayscale(.25);}";
   document.head.appendChild(style);
 }

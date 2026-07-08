@@ -23,7 +23,7 @@ window.BOHYUN_RUN_RESULT_DATA = {
         lines: [
           "끝까지 물러서지 않았구나.",
           "원혼을 성불시킨 것, 네가 쌓아 온 주문의 결과다.",
-          "앞으로의 위령에서도, 네 각오를 지켜보겠다."
+          "앞으로의 위령에서도,\n네 각오를 지켜보겠다."
         ]
       },
       {
@@ -34,8 +34,8 @@ window.BOHYUN_RUN_RESULT_DATA = {
         blessingDialogue: "별빛은 어둔 길에서도 네 걸음을 잊지 않는다.",
         lines: [
           "별의 흐름이 이 여정의 끝을 비추는구나.",
-          "네가 지나온 길은 끝내 원혼을 성불로 이끌었다.",
-          "남은 밤길에서도, 나는 너의 별을 지켜보겠다."
+          "네가 지나온 길은\n끝내 원혼을 성불로 이끌었다.",
+          "남은 밤길에서도,\n나는 너의 별을 지켜보겠다."
         ]
       },
       {
@@ -46,8 +46,8 @@ window.BOHYUN_RUN_RESULT_DATA = {
         blessingDialogue: "떠도는 한을 건너게 할 마음을 잃지 말거라.",
         lines: [
           "그래, 끝내 그 한을 풀어냈구나.",
-          "네가 쌓아 온 주문이 원혼의 길을 열어 주었다.",
-          "앞으로의 위령에서도, 네 마음이 흐트러지지 않는지 지켜보마."
+          "네가 쌓아 온 주문이\n원혼의 길을 열어 주었다.",
+          "앞으로의 위령에서도,\n네 마음이 흐트러지지 않는지\n지켜보마."
         ]
       }
     ],
@@ -55,8 +55,8 @@ window.BOHYUN_RUN_RESULT_DATA = {
       name: "동자신",
       emoji: "🧒",
       lines: [
-        "드디어 여정이 끝났네.",
-        "아가, 이번 여정은 끝났지만 아직도 수많은 미련이 남았구나.",
+        { text: "드디어 여정이 끝났네.", portrait: "assets/characters/dongjasin/dgs_serious_gentle.png" },
+        "아가, 이번 여정은 끝났지만\n아직도 수많은 미련이 남았구나.",
         "아가, 이 끝없는 여정을 시작할래?"
       ]
     },
@@ -95,7 +95,7 @@ window.BOHYUN_RUN_RESULT_DATA = Object.assign({}, window.BOHYUN_RUN_RESULT_DATA,
 
     labels: {
       totalScore: "최종 여정 점수",
-      moonReward: "달빛조각 수령 가능",
+      moonReward: "달빛 조각 수령 가능",
       nodeScore: "구역 점수",
       temporaryNotice: "현재 점수는 script.js 미연결 상태의 임시 점수입니다."
     },

@@ -24,24 +24,7 @@ function renderHud(){
 }
 
 function renderHudPortrait(){
-  const portraitEl = $("#hudPortrait");
-  if(!portraitEl) return;
-
-  const equippedSkinId = S.playerAppearance ? S.playerAppearance.equippedSkinId : null;
-  const iconSrc = resolveBattleProfileIcon(equippedSkinId);
-
-  let imgEl = portraitEl.querySelector("img");
-  if(!imgEl){
-    portraitEl.textContent = "";
-    imgEl = document.createElement("img");
-    imgEl.alt = "";
-    imgEl.addEventListener("error", () => {
-      const fallback = resolveBattleProfileIcon(null);
-      if(imgEl.getAttribute("src") !== fallback) imgEl.src = fallback;
-    });
-    portraitEl.appendChild(imgEl);
-  }
-  if(imgEl.getAttribute("src") !== iconSrc) imgEl.src = iconSrc;
+  renderPlayerPortraitIcon($("#hudPortrait"));
 }
 
 /* 전투화면 좌상단 닉네임(#hudName) 표시 전용입니다. 닉네임 변경은 표시 텍스트만 바꾸며,
@@ -307,7 +290,7 @@ function renderField(){
   S.enemies.forEach((e, i) => {
     const positionIndex = e.hp > 0 ? liveIndex++ : i;
     const el = combatantEl({
-      cls:"enemy ghost"+(e.id===S.selectedId ? " selected" : ""),
+      cls:"enemy ghost"+(e.grade==="elite" ? " elite" : e.grade==="boss" ? " boss" : "")+(e.id===S.selectedId ? " selected" : ""),
       sprite:e.image, name:e.name,
       hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, mark:e.mark, status:e.status,
       anxiety:e.anxiety, lethargy:e.lethargy,

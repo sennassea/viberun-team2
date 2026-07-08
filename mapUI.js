@@ -307,6 +307,31 @@ function getTutorialMapCurrentLabel(currentNodeId) {
   return "튜토리얼";
 }
 
+/* ── 플레이 타임 (현재 런 시작 이후 경과 시간, 닫기 버튼 옆에 표기) ── */
+function formatMapPlayTime(ms) {
+  const totalSeconds = Math.max(0, Math.floor((ms || 0) / 1000));
+  const hh = Math.floor(totalSeconds / 3600);
+  const mm = Math.floor((totalSeconds % 3600) / 60);
+  const ss = totalSeconds % 60;
+  const pad = n => String(n).padStart(2, "0");
+  return pad(hh) + ":" + pad(mm) + ":" + pad(ss);
+}
+
+function updateMapPlayTime() {
+  const el = document.getElementById("mapPlayTime");
+  if (!el) return;
+  const startedAt = typeof RUN_STATE !== "undefined" && RUN_STATE && RUN_STATE.runStats
+    ? RUN_STATE.runStats.startedAt
+    : null;
+  el.textContent = startedAt ? formatMapPlayTime(Date.now() - startedAt) : "00:00:00";
+}
+
+/* 맵이 열려 있는 동안 1초마다 갱신 (열기/닫기 로직에 손대지 않고 가시 상태만 확인) */
+setInterval(() => {
+  const ov = document.getElementById("mapOverlay");
+  if (ov && ov.style.display !== "none") updateMapPlayTime();
+}, 1000);
+
 /* ── renderCanvas 오버라이드 ────────────────────────────────────────────── */
 function renderCanvas(currentNodeId) {
   const svg = document.getElementById("mapCanvas");
@@ -421,13 +446,20 @@ function renderCanvas(currentNodeId) {
 
   /* ── 닫기 버튼: 다음 노드를 반드시 선택해야 하는 상태에서는 숨김 ── */
   const closeBtn = document.getElementById("mapClose");
-  if (closeBtn) closeBtn.style.display = window.MAP_STATE.proceedMode ? "none" : "";
+  if (closeBtn) {
+    closeBtn.style.display = "";
+    closeBtn.style.visibility = window.MAP_STATE.proceedMode ? "hidden" : "";
+    closeBtn.style.pointerEvents = window.MAP_STATE.proceedMode ? "none" : "";
+  }
 
   /* ── ACT 배지 (좌상단) ── */
   const actBadge = document.getElementById("mapCurrentAct");
   if (actBadge) {
     actBadge.textContent = typeof getCurrentActName === "function" ? getCurrentActName() : "최초의 여정";
   }
+
+  /* ── 플레이 타임 (닫기 버튼 옆) ── */
+  updateMapPlayTime();
 
   /* ── 푸터 텍스트 ── */
   const footer = document.getElementById("mapFooter");
@@ -538,6 +570,10 @@ function buildOverlay() {
           <span class="dmap-title-emoji" aria-hidden="true">🗺️</span>
           <span class="dmap-title-char dmap-title-left" aria-hidden="true">여</span>
           <span class="dmap-title-char dmap-title-right" aria-hidden="true">정</span>
+        </span>
+        <span class="dmap-playtime">
+          <span class="dmap-playtime-icon" aria-hidden="true">⏳</span>
+          <span id="mapPlayTime">00:00:00</span>
         </span>
         <button class="map-close dmap-close" id="mapClose" aria-label="닫기">✕</button>
       </div>

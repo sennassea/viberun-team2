@@ -290,9 +290,6 @@ function openMap(){
   ov.style.display = "grid";
   if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
   requestAnimationFrame(() => requestAnimationFrame(() => { ov.style.opacity = "1"; }));
-  if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.playBgm === "function"){
-    window.VIBERUN_SOUND.playBgm("bgmMap");
-  }
 }
 
 function closeMap(){

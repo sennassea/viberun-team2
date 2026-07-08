@@ -31,10 +31,18 @@
     "viberunCardCodex",
     "viberunRunRecords"
   ];
-  const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80 };
+  const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80, muted: { master: false, music: false, effect: false } };
+  function normalizeMuted(muted){
+    const source = muted && typeof muted === "object" ? muted : {};
+    return {
+      master: source.master === true,
+      music: source.music === true,
+      effect: source.effect === true,
+    };
+  }
   const volumeSettingsApi = window.VIBERUN_VOLUME_SETTINGS || (window.VIBERUN_VOLUME_SETTINGS = {
     key: VOLUME_KEY,
-    defaults: { ...DEFAULT_VOLUMES },
+    defaults: { ...DEFAULT_VOLUMES, muted: normalizeMuted(DEFAULT_VOLUMES.muted) },
     read(){
       if(typeof localStorage === "undefined") return { ...this.defaults };
       try {
@@ -43,6 +51,7 @@
           master: Number.isFinite(saved.master) ? saved.master : this.defaults.master,
           music: Number.isFinite(saved.music) ? saved.music : this.defaults.music,
           effect: Number.isFinite(saved.effect) ? saved.effect : this.defaults.effect,
+          muted: normalizeMuted(saved.muted),
         };
       } catch(error) {
         localStorage.removeItem(this.key);
@@ -55,6 +64,7 @@
         master: Number(volumes.master),
         music: Number(volumes.music),
         effect: Number(volumes.effect),
+        muted: normalizeMuted(volumes.muted),
       }));
     }
   });
@@ -198,10 +208,16 @@
     });
     overlay.addEventListener("input", event => {
       if(!event.target.matches(".settings-viewer-volume input")) return;
+      event.target.style.setProperty("--val", event.target.value + "%");
       const output = event.target.closest(".settings-viewer-volume").querySelector("output");
       if(output) output.textContent = event.target.value;
       saveVolumeSettings();
       applyVolumeSettings();
+    });
+    overlay.addEventListener("click", event => {
+      const muteButton = event.target.closest(".settings-viewer-volume-mute");
+      if(!muteButton) return;
+      toggleVolumeMute(muteButton.dataset.volumeKey);
     });
     overlay.querySelector(".settings-viewer-close").addEventListener("click", closeSettingsViewer);
     overlay.querySelector(".settings-viewer-help").addEventListener("click", openHelp);
@@ -277,6 +293,7 @@
       accountLogout: overlay.querySelector(".settings-account-logout"),
       accountMessage: overlay.querySelector(".settings-account-message"),
       volumeInputs: Array.from(overlay.querySelectorAll(".settings-viewer-volume input")),
+      volumeMuteButtons: Array.from(overlay.querySelectorAll(".settings-viewer-volume-mute")),
     };
   }
 
@@ -290,9 +307,26 @@
   function volumeControlHtml(id, label, value){
     return '<label class="settings-viewer-volume" for="settingsVolume' + id + '">' +
       '<span>' + label + '</span>' +
-      '<input id="settingsVolume' + id + '" type="range" min="0" max="100" value="' + value + '">' +
+      '<input id="settingsVolume' + id + '" type="range" min="0" max="100" value="' + value + '" style="--val:' + value + '%">' +
       '<output>' + value + '</output>' +
+      volumeMuteButtonHtml(id, label) +
     '</label>';
+  }
+
+  function volumeMuteButtonHtml(id, label){
+    return '<button type="button" class="settings-viewer-volume-mute" data-volume-key="' + id + '" data-muted="false" aria-pressed="false" aria-label="' + label + ' 음소거">' +
+      '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"></path>' +
+        '<g class="settings-viewer-volume-mute-on">' +
+          '<path d="M16.3 8.5a5 5 0 0 1 0 7"></path>' +
+          '<path d="M18.8 6a9 9 0 0 1 0 12"></path>' +
+        '</g>' +
+        '<g class="settings-viewer-volume-mute-off">' +
+          '<line x1="15.5" y1="9" x2="21.5" y2="15"></line>' +
+          '<line x1="21.5" y1="9" x2="15.5" y2="15"></line>' +
+        '</g>' +
+      '</svg>' +
+    '</button>';
   }
 
   function getVolumeSettings(){
@@ -301,12 +335,20 @@
 
   function saveVolumeSettings(){
     if(typeof localStorage === "undefined" || !els) return;
-    const volumes = {};
+    const volumes = { muted: getVolumeSettings().muted };
     els.volumeInputs.forEach(input => {
       const key = input.id.replace("settingsVolume", "");
       volumes[key] = Number(input.value);
     });
     volumeSettingsApi.write(volumes);
+  }
+
+  function toggleVolumeMute(key){
+    if(!els || !key) return;
+    const volumes = getVolumeSettings();
+    const muted = { ...volumes.muted, [key]: !volumes.muted[key] };
+    volumeSettingsApi.write({ ...volumes, muted });
+    applyVolumeSettings();
   }
 
   function applyVolumeSettings(){
@@ -316,8 +358,15 @@
       const key = input.id.replace("settingsVolume", "");
       const value = volumes[key] ?? DEFAULT_VOLUMES[key] ?? 80;
       input.value = value;
+      input.style.setProperty("--val", value + "%");
       const output = input.closest(".settings-viewer-volume").querySelector("output");
       if(output) output.textContent = value;
+    });
+    els.volumeMuteButtons.forEach(button => {
+      const key = button.dataset.volumeKey;
+      const isMuted = !!(volumes.muted && volumes.muted[key]);
+      button.dataset.muted = isMuted ? "true" : "false";
+      button.setAttribute("aria-pressed", isMuted ? "true" : "false");
     });
   }
 
@@ -347,11 +396,45 @@
     return !!(account && account.isLoggedIn && currentAccountId === savedAccountId);
   }
 
-  function saveProgressAndExit(){
-    if(typeof localStorage === "undefined" || typeof S === "undefined" || !S || S.over) return;
+  function buildLobbySaveState(runState){
+    const journey = typeof ensureJourneyState === "function"
+      ? cloneJourneyState(ensureJourneyState(runState))
+      : (runState.journey || null);
+    return {
+      player: { ...runState.player },
+      enemies: [], selectedId: null,
+      hand: [], draw: [], discard: [], exhaust: [],
+      energy: 0,
+      busy: false, over: null, rewardOpen: false,
+      relics: Array.isArray(runState.relics) ? runState.relics.map(relic => ({ ...relic })) : [],
+      potions: Array.isArray(runState.potions) ? runState.potions.map(potion => ({ ...potion })) : [],
+      gold: runState.gold, moonShards: runState.moonShards,
+      relicRuntime: runState.relicRuntime || {},
+      selectedSpiritPathDeckIds: Array.isArray(runState.selectedSpiritPathDeckIds)
+        ? runState.selectedSpiritPathDeckIds.slice()
+        : [],
+      alwaysIncludeGenericItems: true,
+      journey,
+      cleanseCount: typeof runState.cleanseCount === "number" ? runState.cleanseCount : 0,
+      nextBattleStartBlock: runState.nextBattleStartBlock || 0,
+      turn: 1
+    };
+  }
 
-    const state = JSON.parse(JSON.stringify(S));
-    state.busy = pauseState ? pauseState.busy : !!S.busy;
+  function saveProgressAndExit(){
+    if(typeof localStorage === "undefined") return;
+    /* 신령의 은혜 화면처럼 아직 전투가 시작되지 않은 상태에서는 배틀 상태(S)가
+       let S;로 선언만 되어 있어 typeof S가 항상 "undefined"다. 예전에는 이 가드
+       때문에 저장하기를 눌러도 조용히 아무 일도 일어나지 않았다(복원 로직인
+       restoreSavedProgress는 이미 이 문제를 인지해 대응했지만 저장 로직은
+       빠져 있었다). RUN_STATE만 있어도 저장이 되도록 배틀 미시작 상태를 만든다. */
+    const battleActive = typeof S !== "undefined" && !!S;
+    if(battleActive && S.over) return;
+    const runState = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
+    if(!battleActive && !runState) return;
+
+    const state = battleActive ? JSON.parse(JSON.stringify(S)) : buildLobbySaveState(runState);
+    state.busy = battleActive ? (pauseState ? pauseState.busy : !!S.busy) : false;
     if(typeof RUN_STATE !== "undefined" && RUN_STATE && typeof ensureJourneyState === "function"){
       state.journey = cloneJourneyState(ensureJourneyState(RUN_STATE));
     } else if(typeof ensureJourneyState === "function") {
@@ -413,18 +496,32 @@
       ".settings-viewer.show{display:grid;}" +
       ".settings-viewer.start-mode{z-index:300!important;}" +
       ".settings-viewer-panel{position:relative;width:min(86cqw,124cqh);max-height:86cqh;display:flex;flex-direction:column;background:transparent url('assets/ui/settings/outer_panel.png') center/100% 100% no-repeat;border:0;border-radius:1.6cqh;box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:3.2cqh 3cqw 2.8cqh;}" +
-      ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding-bottom:1.2cqh;border-bottom:0.15cqh solid var(--c-panel-line);}" +
-      ".settings-viewer-head h2{font-size:3cqh;line-height:1;flex:1;}" +
+      ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding-top:1.6cqh;padding-bottom:1.2cqh;}" +
+      ".settings-viewer-head h2{font-size:3.8cqh;line-height:1;flex:1;color:#4a2b07;}" +
       ".settings-viewer-help{width:4.4cqh;height:4.4cqh;border:0;background:transparent url('assets/ui/settings/help.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
       ".settings-viewer-close{width:4.8cqh;height:4.8cqh;border:0;background:transparent url('assets/ui/settings/close.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
       ".settings-viewer-body{padding:2cqh 0 0;min-height:18cqh;display:flex;flex-direction:column;gap:2cqh;}" +
       ".settings-viewer-section{border:0.18cqh solid var(--c-panel-line);border-radius:1.2cqh;background:rgba(255,255,255,.58);padding:1.6cqh 1.4cqw;}" +
       ".settings-viewer-section:not(.settings-account-section){background:transparent url('assets/ui/settings/settings_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
       ".settings-account-section{position:relative;background:transparent url('assets/ui/settings/account_info_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
-      ".settings-viewer-section h3{font-size:2.1cqh;margin-bottom:1.4cqh;color:var(--c-ink);}" +
-      ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 4cqw;align-items:center;gap:1cqw;margin-top:1cqh;color:var(--c-ink-soft);font-size:1.7cqh;font-weight:800;}" +
-      ".settings-viewer-volume input{width:100%;accent-color:var(--c-blue);}" +
-      ".settings-viewer-volume output{text-align:right;color:var(--c-ink);font-weight:900;}" +
+      ".settings-viewer-section h3{font-size:2.6cqh;margin-bottom:1.4cqh;color:#4a2b07;}" +
+      ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 3.4cqw 4.2cqh;align-items:center;gap:1cqw;margin-top:1.4cqh;color:#6f4210;font-size:2.1cqh;font-weight:800;}" +
+      ".settings-viewer-volume output{text-align:right;color:#3a2408;font-weight:900;}" +
+      ".settings-viewer-volume input[type=\"range\"]{-webkit-appearance:none;appearance:none;width:100%;height:3.2cqh;background:transparent;margin:0;padding:0;cursor:pointer;}" +
+      ".settings-viewer-volume input[type=\"range\"]::-webkit-slider-runnable-track{height:.9cqh;border-radius:1cqh;background:linear-gradient(90deg,var(--c-gold-deep) 0%,var(--c-gold) var(--val,50%),rgba(255,255,255,.6) var(--val,50%),rgba(255,255,255,.6) 100%);border:.12cqh solid var(--c-gold-deep);box-shadow:inset 0 .12cqh .22cqh rgba(90,60,10,.28);}" +
+      ".settings-viewer-volume input[type=\"range\"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:3cqh;height:3cqh;margin-top:-1.05cqh;border-radius:50%;background:#fdf1da url('assets/ui/settings/volume_icon.png') center/68% no-repeat;border:.16cqh solid var(--c-gold-deep);box-shadow:0 .2cqh .4cqh rgba(90,60,10,.35);}" +
+      ".settings-viewer-volume input[type=\"range\"]::-moz-range-track{height:.9cqh;border-radius:1cqh;background:rgba(255,255,255,.6);border:.12cqh solid var(--c-gold-deep);box-shadow:inset 0 .12cqh .22cqh rgba(90,60,10,.28);}" +
+      ".settings-viewer-volume input[type=\"range\"]::-moz-range-progress{height:.9cqh;border-radius:1cqh 0 0 1cqh;background:linear-gradient(90deg,var(--c-gold-deep),var(--c-gold));}" +
+      ".settings-viewer-volume input[type=\"range\"]::-moz-range-thumb{width:3cqh;height:3cqh;border-radius:50%;background:#fdf1da url('assets/ui/settings/volume_icon.png') center/68% no-repeat;border:.16cqh solid var(--c-gold-deep);box-shadow:0 .2cqh .4cqh rgba(90,60,10,.35);}" +
+      ".settings-viewer-volume input[type=\"range\"]:focus-visible::-webkit-slider-thumb{outline:.2cqh solid var(--c-blue);outline-offset:.15cqh;}" +
+      ".settings-viewer-volume input[type=\"range\"]:focus-visible::-moz-range-thumb{outline:.2cqh solid var(--c-blue);outline-offset:.15cqh;}" +
+      ".settings-viewer-volume-mute{width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;padding:.8cqh;cursor:pointer;justify-self:center;background:linear-gradient(180deg,#fff6df,#f0c15a);border:.16cqh solid var(--c-gold-deep);color:#5b3a12;box-shadow:0 .2cqh .4cqh rgba(176,125,29,.32);transition:background .15s ease,border-color .15s ease,color .15s ease;}" +
+      ".settings-viewer-volume-mute svg{width:100%;height:100%;}" +
+      ".settings-viewer-volume-mute[data-muted=\"true\"]{background:linear-gradient(180deg,#ffe0d3,#f6b9a0);border-color:#c96a3e;color:#7a2b12;box-shadow:0 .2cqh .4cqh rgba(180,60,40,.28);}" +
+      ".settings-viewer-volume-mute .settings-viewer-volume-mute-off{display:none;}" +
+      ".settings-viewer-volume-mute[data-muted=\"true\"] .settings-viewer-volume-mute-on{display:none;}" +
+      ".settings-viewer-volume-mute[data-muted=\"true\"] .settings-viewer-volume-mute-off{display:inline;}" +
+      ".settings-viewer-volume-mute:focus-visible{outline:0.2cqh solid var(--c-blue);outline-offset:.2cqh;}" +
       ".settings-viewer-actions{display:flex;justify-content:center;align-items:center;gap:1.2cqw;margin-top:-1cqh;}" +
       ".settings-viewer-actions button{height:5.58cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-danger{order:2;height:5.58cqh;border-radius:2.5cqh;padding:0 2.2cqw;background:linear-gradient(180deg,#ffe0d3,#f6b9a0);border:0.22cqh solid #c96a3e;color:#7a2b12;box-shadow:0 .3cqh .6cqh rgba(180,60,40,.22),inset 0 0 0 .12cqh #ffe9d8;position:relative;top:-0.5cqh;}" +
@@ -442,21 +539,21 @@
       ".settings-account-message--error{border-color:rgba(211,88,88,.58);background:rgba(255,241,238,.96);color:#7d1f19;}" +
       ".settings-account-message--info{border-color:rgba(102,148,205,.58);background:rgba(240,247,255,.96);color:#1f4a7d;}" +
       ".settings-account-message--success{border-color:rgba(83,152,92,.58);background:rgba(240,252,242,.96);color:#245d2b;}" +
-      ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm,.settings-viewer-logout-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
+      ".settings-viewer-confirm,.settings-viewer-save-confirm,.settings-viewer-reset-confirm,.settings-viewer-logout-confirm{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.45);backdrop-filter:blur(3px);}" +
       ".settings-viewer-confirm.show,.settings-viewer-save-confirm.show,.settings-viewer-reset-confirm.show,.settings-viewer-logout-confirm.show{display:grid;}" +
-      ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:2.2cqh 2cqw;text-align:center;}" +
-      ".settings-viewer-confirm-panel h3{font-size:2.4cqh;color:var(--c-ink);margin-bottom:1cqh;}" +
-      ".settings-viewer-confirm-panel p{font-size:1.7cqh;line-height:1.45;color:var(--c-ink-soft);font-weight:800;margin-bottom:1.8cqh;}" +
+      ".settings-viewer-confirm-panel{width:min(38cqw,54cqh);max-width:92vw;box-sizing:border-box;background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:0.22cqh solid rgba(190,150,80,.65);border-radius:1.4cqh;box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.4);padding:2.2cqh 2cqw;text-align:center;}" +
+      ".settings-viewer-confirm-panel h3{font-size:2.4cqh;color:#3a2814;font-weight:900;margin-bottom:1cqh;}" +
+      ".settings-viewer-confirm-panel p{font-size:1.7cqh;line-height:1.45;color:#6b5236;font-weight:800;margin-bottom:1.8cqh;}" +
       ".settings-viewer-confirm-actions{display:flex;justify-content:center;gap:1cqw;}" +
-      ".settings-viewer-confirm-actions button{height:4.2cqh;min-width:8cqw;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
-      ".settings-viewer-confirm-no{background:#fff;color:var(--c-ink-soft);}" +
-      ".settings-viewer-confirm-yes{background:#fff1ef;color:var(--c-red-deep);}" +
-      ".settings-viewer-reset-no{background:#fff;color:var(--c-ink-soft);}" +
-      ".settings-viewer-reset-yes{background:#fff1ef;color:var(--c-red-deep);}" +
-      ".settings-viewer-logout-no{background:#fff;color:var(--c-ink-soft);}" +
-      ".settings-viewer-logout-yes{background:#fff1ef;color:var(--c-red-deep);}" +
-      ".settings-viewer-save-no{background:#fff;color:var(--c-ink-soft);}" +
-      ".settings-viewer-save-yes{background:var(--c-blue);color:#fff;}" +
+      ".settings-viewer-confirm-actions button{height:4.2cqh;min-width:8cqw;border-radius:2.2cqh;border:0.2cqh solid rgba(190,150,80,.5);font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
+      ".settings-viewer-confirm-no{background:#fffaf0;color:#6b5236;}" +
+      ".settings-viewer-confirm-yes{background:linear-gradient(160deg,#cf5b52,#8f2f2f);border-color:#e8c874;color:#fbe9c8;box-shadow:0 .4cqh .9cqh rgba(0,0,0,.3);}" +
+      ".settings-viewer-reset-no{background:#fffaf0;color:#6b5236;}" +
+      ".settings-viewer-reset-yes{background:linear-gradient(160deg,#cf5b52,#8f2f2f);border-color:#e8c874;color:#fbe9c8;box-shadow:0 .4cqh .9cqh rgba(0,0,0,.3);}" +
+      ".settings-viewer-logout-no{background:#fffaf0;color:#6b5236;}" +
+      ".settings-viewer-logout-yes{background:linear-gradient(160deg,#cf5b52,#8f2f2f);border-color:#e8c874;color:#fbe9c8;box-shadow:0 .4cqh .9cqh rgba(0,0,0,.3);}" +
+      ".settings-viewer-save-no{background:#fffaf0;color:#6b5236;}" +
+      ".settings-viewer-save-yes{background:linear-gradient(180deg,#fff6df,#f0c15a);border-color:var(--c-gold-deep);color:#5b3a12;box-shadow:0 .3cqh .7cqh rgba(176,125,29,.38);}" +
       ".settings-viewer-help-layer{position:absolute;inset:0;display:none;place-items:center;border-radius:var(--r);background:rgba(20,35,60,.38);}" +
       ".settings-viewer-help-layer.show{display:grid;}" +
       ".settings-viewer-help-panel{width:min(46cqw,68cqh);max-height:58cqh;display:flex;flex-direction:column;background:#fff;border:0.24cqh solid var(--c-panel-line);border-radius:1.2cqh;box-shadow:0 1.4cqh 3cqh rgba(20,35,60,.26);padding:1.8cqh 1.6cqw;}" +
@@ -488,7 +585,7 @@
     els.overlay.classList.remove("start-mode");
     if(els.actions) els.actions.style.display = "";
     if(els.reset) els.reset.style.display = "none";
-    if(els.tutorial) els.tutorial.style.display = "";
+    if(els.tutorial) els.tutorial.style.display = "none";
     if(els.primary) els.primary.style.display = "";
     const danger = els.overlay.querySelector(".settings-viewer-danger");
     if(danger) danger.style.display = "";
@@ -837,6 +934,7 @@
   }
 
   function replayTutorial(){
+    if(settingsMode === "combat") return;
     if(typeof markHasPlayedBefore === "function") markHasPlayedBefore();
     closeSettingsViewer();
     if(window.TUTORIAL_SYSTEM && typeof window.TUTORIAL_SYSTEM.showGuide === "function"){

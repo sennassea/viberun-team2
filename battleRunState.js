@@ -42,9 +42,9 @@ function createDefaultJourneyState(){
     // 보여주기 위한 플래그. 0이면 특별 처리 없음.
     firstVictoryPresentationEndlessLevel: 0,
     firstVictoryPresentationShown: false,
-    // 심도 도달 시 1회만 적용되는 효과(정신력 압박/잠념 침투)의 중복 적용 방지 기록
+    // 심도 도달 시 1회만 적용되는 효과(정신력 압박/잡념 침투)의 중복 적용 방지 기록
     appliedOneShotDepthEffectIds: [],
-    // 잠념 침투로 추가되어 제거할 수 없는 잠념 카드 누적 수
+    // 잡념 침투로 추가되어 제거할 수 없는 잡념 카드 누적 수
     unremovableIntrusiveThoughtCount: 0
   };
 }
@@ -623,6 +623,16 @@ function restoreSavedRunState(saved){
   }
 
   if(typeof updateHudFloor === "function") updateHudFloor();
+
+  // 신령의 은혜 화면(로비, currentStage<0)에서 저장된 경우 아직 전투가 시작되지
+  // 않은 상태이므로, 전투 화면(renderAll)을 그리는 대신 신령의 은혜 화면을 그대로
+  // 복원한다(startBlessing.js). proceedMode는 은혜를 이미 골랐는지 여부를 뜻한다.
+  if(wantedStage < 0 && typeof window.RESUME_START_BLESSING === "function"){
+    if(typeof closeRewardOverlay === "function") closeRewardOverlay();
+    window.RESUME_START_BLESSING(wantedProceedMode);
+    return true;
+  }
+
   if(typeof renderAll === "function") renderAll();
   if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
   if(typeof window.closeDepthDropdown === "function") window.closeDepthDropdown();

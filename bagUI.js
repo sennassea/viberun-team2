@@ -19,6 +19,7 @@
   let relicPage        = 0;
   let selectedRelicIdx = null;
   let selectedPotionIdx = null;
+  let potionDiscardConfirmOpen = false;
 
   function getRelics() {
     if (typeof S !== "undefined" && S && Array.isArray(S.relics)) return S.relics;
@@ -84,21 +85,27 @@
         "background:rgba(30,20,10,.45);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s ease;}" +
       ".bag-ui-overlay.show{display:grid;opacity:1;}" +
       ".bag-ui-overlay.map-mode{top:0;z-index:300!important;}" +
-      ".bag-ui-panel{position:relative;width:min(84cqw,106cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;display:flex;flex-direction:column;gap:1.3cqh;padding:2.5cqh 2.4cqw 2.8cqh;" +
+      ".bag-ui-panel{position:relative;width:min(84cqw,106cqh);max-height:92cqh;box-sizing:border-box;display:flex;flex-direction:column;gap:1.3cqh;padding:2.5cqh 2.4cqw 2.8cqh;" +
         "background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;" +
         "border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.22);color:var(--bg-ink);}" +
       ".bag-ui-head{flex:none;display:flex;align-items:center;justify-content:center;position:relative;}" +
       ".bag-ui-title{font-size:2.6cqh;font-weight:900;}" +
       ".bag-ui-close{position:absolute;right:.3cqw;top:50%;transform:translateY(-50%);width:4cqh;height:4cqh;" +
         "border:0;border-radius:0;background:transparent url(\"assets/ui_buttons/close.png\") center/100% 100% no-repeat;color:transparent;font-size:0;font-weight:900;cursor:pointer;line-height:1;}" +
-      ".bag-ui-body{flex:1;min-height:0;display:grid;grid-template-columns:1.6fr 1fr;gap:1.4cqw;}" +
+      ".bag-ui-body{flex:1;min-height:0;display:grid;grid-template-columns:1.6fr 1fr;gap:1.4cqw;align-items:start;overflow-y:auto;}" +
       ".bag-ui-col{min-height:0;display:flex;flex-direction:column;gap:.8cqh;background:rgba(255,255,255,.36);" +
         "border:0.14cqh solid rgba(178,140,80,.36);border-radius:1cqh;padding:1.2cqh 1cqw;}" +
       ".bag-ui-col-title{font-size:1.7cqh;font-weight:900;}" +
-      ".bag-relic-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:.8cqh;min-height:0;}" +
-      ".bag-relic-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;padding:.5cqh;" +
+      ".bag-relic-grid{display:grid;grid-template-columns:repeat(4,1fr);align-content:start;gap:.8cqh;min-height:0;}" +
+      ".bag-relic-card{box-sizing:border-box;width:100%;aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;padding:.5cqh;" +
         "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
-      ".bag-relic-card.item-frame-card{width:100%;height:100%;min-height:0;}" +
+      ".bag-relic-card.item-frame-card{width:100%;}" +
+      ".bag-relic-card .item-desc-text,.bag-potion-card .item-desc-text{display:none;}" +
+      /* 가방 카드는 도감/손패보다 훨씬 작게 표시되므로, 이름 글자 크기도
+         카드 자기 자신의 너비(container query inline-size)를 기준으로 다시
+         계산해 카드가 작아진 비율만큼 함께 작아지도록 한다. */
+      ".bag-relic-card.item-frame-card,.bag-potion-card.item-frame-card{container-type:inline-size;}" +
+      ".bag-relic-card .item-name-text,.bag-potion-card .item-name-text{font-size:8.6cqi;line-height:1.1;}" +
       ".bag-relic-card:hover{border-color:var(--bg-gold);}" +
       ".bag-relic-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
       ".bag-relic-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
@@ -112,15 +119,28 @@
       ".bag-page-nav{flex:none;display:flex;align-items:center;justify-content:center;gap:.8cqw;font-size:1.3cqh;font-weight:800;}" +
       ".bag-page-nav button{width:3.4cqh;height:3.4cqh;border:0;border-radius:0;background:transparent url(\"assets/ui/event_choice_panel.png\") center/100% 100% no-repeat;cursor:pointer;font-weight:900;color:#6b4a20;filter:drop-shadow(0 .18cqh .28cqh rgba(90,65,25,.16));}" +
       ".bag-page-nav button:disabled{opacity:.4;cursor:default;filter:grayscale(.4);}" +
-      ".bag-detail{flex:none;min-height:6.4cqh;background:rgba(255,255,255,.48);border:0.14cqh solid rgba(178,140,80,.36);" +
+      ".bag-detail{flex:none;min-height:7.6cqh;background:rgba(255,255,255,.48);border:0.14cqh solid rgba(178,140,80,.36);" +
         "border-radius:1cqh;padding:.8cqh 1cqw;display:flex;flex-direction:column;gap:.3cqh;}" +
       ".bag-detail-name{font-size:1.5cqh;font-weight:900;}" +
-      ".bag-detail-desc{font-size:1.25cqh;color:var(--bg-ink-soft);font-weight:700;white-space:pre-line;line-height:1.4;}" +
-      ".bag-detail-placeholder{font-size:1.25cqh;color:var(--bg-ink-soft);font-weight:700;margin:auto;}" +
+      ".bag-detail-desc{font-size:1.65cqh;color:var(--bg-ink-soft);font-weight:700;white-space:pre-line;line-height:1.4;}" +
+      ".bag-detail-placeholder{font-size:1.65cqh;color:var(--bg-ink-soft);font-weight:700;margin:auto;}" +
+      ".bag-detail-actions{flex:none;display:flex;gap:.6cqw;margin-top:.4cqh;}" +
+      ".bag-action-btn{flex:1;font:inherit;font-size:1.35cqh;font-weight:900;padding:.6cqh .4cqw;" +
+        "border-radius:.8cqh;cursor:pointer;color:var(--bg-ink);}" +
+      ".bag-action-use{border:0.16cqh solid #c99a3f;background:linear-gradient(180deg,#fff3d6,#f0cf8a);}" +
+      ".bag-action-use:hover{filter:brightness(1.05);}" +
+      ".bag-action-discard{border:0.16cqh solid #c98d8d;background:linear-gradient(180deg,#fff0f0,#f4c9c9);}" +
+      ".bag-action-discard:hover{filter:brightness(1.05);}" +
+      ".bag-detail-confirm{flex:none;display:flex;flex-direction:column;gap:.4cqh;margin-top:.2cqh;}" +
+      ".bag-detail-confirm-text{font-size:1.35cqh;font-weight:800;color:var(--bg-ink);}" +
+      ".bag-detail-confirm-actions{display:flex;gap:.6cqw;}" +
+      ".bag-detail-confirm-actions button{flex:1;font:inherit;font-size:1.3cqh;font-weight:900;padding:.55cqh .4cqw;border-radius:.8cqh;cursor:pointer;color:var(--bg-ink);}" +
+      ".bag-detail-confirm-cancel{border:0.16cqh solid rgba(150,150,150,.6);background:#f0f0f0;}" +
+      ".bag-detail-confirm-ok{border:0.16cqh solid #c98d8d;background:linear-gradient(180deg,#fff0f0,#f4c9c9);}" +
       ".bag-potion-slots{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;}" +
-      ".bag-potion-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
-        "min-height:9cqh;background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
-      ".bag-potion-card.item-frame-card{width:100%;min-height:15cqh;}" +
+      ".bag-potion-card{box-sizing:border-box;position:relative;width:100%;aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
+        "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
+      ".bag-potion-card.item-frame-card{width:100%;}" +
       ".bag-potion-card:hover{border-color:var(--bg-gold);}" +
       ".bag-potion-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
       ".bag-potion-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
@@ -265,19 +285,93 @@
     els.potionSlots.innerHTML = html;
     els.potionSlots.querySelectorAll(".bag-potion-card[data-potion-idx]").forEach((card) => {
       card.addEventListener("click", () => {
-        selectedPotionIdx = Number(card.dataset.potionIdx);
+        const idx = Number(card.dataset.potionIdx);
+        if (idx !== selectedPotionIdx) potionDiscardConfirmOpen = false;
+        selectedPotionIdx = idx;
         render();
       });
     });
 
     if (selectedPotionIdx !== null && potions[selectedPotionIdx]) {
       const potion = potions[selectedPotionIdx];
-      els.potionDetail.innerHTML =
+      let detailHtml =
         '<div class="bag-detail-name">' + bagItemIconHtml(getBagPotionIcon(potion)) + ' ' + escapeHtml(potion.name || "") + '</div>' +
         '<div class="bag-detail-desc">' + colorizeRarityLabels(escapeHtml(potion.desc || potion.effectText || potion.valueText || "")) + '</div>';
+
+      if (potionDiscardConfirmOpen) {
+        detailHtml +=
+          '<div class="bag-detail-confirm">' +
+            '<div class="bag-detail-confirm-text">이 약병을 버릴까요?</div>' +
+            '<div class="bag-detail-confirm-actions">' +
+              '<button type="button" id="bagPotionDiscardCancel" class="bag-detail-confirm-cancel">취소</button>' +
+              '<button type="button" id="bagPotionDiscardOk" class="bag-detail-confirm-ok">버리기</button>' +
+            '</div>' +
+          '</div>';
+      } else {
+        detailHtml +=
+          '<div class="bag-detail-actions">' +
+            '<button type="button" id="bagPotionUseBtn" class="bag-action-btn bag-action-use">사용하기</button>' +
+            '<button type="button" id="bagPotionDiscardBtn" class="bag-action-btn bag-action-discard">버리기</button>' +
+          '</div>';
+      }
+      els.potionDetail.innerHTML = detailHtml;
+
+      const useBtn = els.potionDetail.querySelector("#bagPotionUseBtn");
+      if (useBtn) useBtn.addEventListener("click", () => handleBagPotionUse(selectedPotionIdx));
+      const discardBtn = els.potionDetail.querySelector("#bagPotionDiscardBtn");
+      if (discardBtn) discardBtn.addEventListener("click", () => { potionDiscardConfirmOpen = true; render(); });
+      const cancelBtn = els.potionDetail.querySelector("#bagPotionDiscardCancel");
+      if (cancelBtn) cancelBtn.addEventListener("click", () => { potionDiscardConfirmOpen = false; render(); });
+      const okBtn = els.potionDetail.querySelector("#bagPotionDiscardOk");
+      if (okBtn) okBtn.addEventListener("click", () => handleBagPotionDiscard(selectedPotionIdx));
     } else {
       els.potionDetail.innerHTML = '<div class="bag-detail-placeholder">약병을 선택하면 효과를 확인할 수 있어요.</div>';
     }
+  }
+
+  /* ── 약병 사용 / 버리기 ────────────────────────────────────────────── */
+  function handleBagPotionUse(index) {
+    const potions = getPotions();
+    const potion = potions[index];
+    if (!potion) return;
+
+    // 몬스터를 대상으로 하는 약병은 가방 팝업 안에서 대상(몬스터)을 고를 방법이
+    // 없으므로, 전투 화면 옆의 실제 약병 칸에서 사용하도록 안내만 하고 끝낸다.
+    if (typeof isAttackPotion === "function" && isAttackPotion(potion)) {
+      if (typeof toast === "function") {
+        toast("이 약병은 몬스터에게 사용하는 약병이에요. 가방을 닫고 화면 옆 약병 칸에서 사용해 주세요.");
+      }
+      return;
+    }
+
+    if (typeof canUsePotionNow === "function" && !canUsePotionNow()) {
+      if (typeof toast === "function") toast("전투 중 내 차례일 때만 약병을 사용할 수 있어요.");
+      return;
+    }
+
+    if (typeof useSelfPotion !== "function") return;
+    Promise.resolve(useSelfPotion(index)).then((used) => {
+      if (!used) return;
+      selectedPotionIdx = null;
+      potionDiscardConfirmOpen = false;
+      render();
+    });
+  }
+
+  function handleBagPotionDiscard(index) {
+    const potions = getPotions();
+    const potion = potions[index];
+    if (potion) {
+      if (typeof confirmDiscardPotion === "function") {
+        confirmDiscardPotion(index, potion);
+      } else {
+        potions.splice(index, 1);
+        if (typeof syncRunStateFromCombat === "function") syncRunStateFromCombat();
+      }
+    }
+    selectedPotionIdx = null;
+    potionDiscardConfirmOpen = false;
+    render();
   }
 
   /* ── 열기/닫기 ─────────────────────────────────────────────────────── */
@@ -289,6 +383,7 @@
     relicPage = 0;
     selectedRelicIdx = null;
     selectedPotionIdx = null;
+    potionDiscardConfirmOpen = false;
     // 맵에서 열릴 때는 맵 오버레이보다 위에 표시
     els.overlay.classList.toggle("map-mode", isMapMode);
     render();

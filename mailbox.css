@@ -21,7 +21,6 @@
 
 .mailbox-ui-head{
   flex:none; display:flex; align-items:center; gap:1cqw;
-  padding-bottom:1.2cqh; border-bottom:0.15cqh solid var(--c-panel-line);
 }
 .mailbox-ui-title{ flex:1; font-size:2.99cqh; font-weight:900; color:#4a2b07; text-shadow:0 .08cqh 0 rgba(255,255,255,.78); }
 .mailbox-ui-wallet{
@@ -32,14 +31,15 @@
 }
 .mailbox-wallet-icon{ font-size:2.3cqh; }
 .mailbox-ui-close{
-  width:4.2cqh; height:4.2cqh; border-radius:50%; border:0.2cqh solid var(--c-panel-line);
-  background:#fff; color:var(--c-ink); font-size:2.53cqh; font-weight:900; line-height:1; cursor:pointer;
+  flex:none; width:4.4cqh; height:4.4cqh; border:0; border-radius:0; box-shadow:none;
+  background:transparent url("assets/ui_buttons/close.png") center/100% 100% no-repeat;
+  color:transparent; font-size:0; line-height:1; cursor:pointer;
 }
 
 .mailbox-ui-tabs{ flex:none; display:flex; gap:.8cqw; }
 .mailbox-tab{
-  flex:1; height:4.2cqh; border-radius:1cqh; border:0.18cqh solid var(--c-panel-line);
-  background:rgba(255,255,255,.96); color:#3a2408; font:inherit; font-size:1.95cqh; font-weight:900; cursor:pointer;
+  flex:1; height:4.2cqh; border-radius:1cqh; border:0.18cqh solid rgba(184,137,36,.32);
+  background:rgba(255,255,255,.92); color:#5a3b12; font:inherit; font-size:1.95cqh; font-weight:900; cursor:pointer;
   text-shadow:0 .06cqh 0 rgba(255,255,255,.86);
 }
 .mailbox-tab.active{
@@ -54,13 +54,13 @@
 .mailbox-status-msg{ margin:auto; text-align:center; color:#4f3410; font-size:2.07cqh; font-weight:900; text-shadow:0 .06cqh 0 rgba(255,255,255,.7); }
 .mailbox-status-error{ color:var(--c-red-deep); }
 .mailbox-retry-btn{
-  margin:0 auto; height:4cqh; padding:0 1.4cqw; border-radius:1cqh; border:0.18cqh solid var(--c-panel-line);
-  background:#fff; color:var(--c-ink); font:inherit; font-size:1.84cqh; font-weight:900; cursor:pointer;
+  margin:0 auto; height:4cqh; padding:0 1.4cqw; border-radius:1cqh; border:0.18cqh solid rgba(184,137,36,.32);
+  background:#fff; color:#3a2408; font:inherit; font-size:1.84cqh; font-weight:900; cursor:pointer;
 }
 
 .mailbox-item{
-  display:flex; align-items:center; gap:1cqw; background:rgba(255,255,255,.6);
-  border:0.16cqh solid var(--c-panel-line); border-radius:1.2cqh; padding:1.2cqh 1.2cqw;
+  display:flex; align-items:center; gap:1cqw; background:rgba(255,253,242,.66);
+  border:0.16cqh solid rgba(184,137,36,.28); border-radius:1.2cqh; padding:1.2cqh 1.2cqw;
 }
 .mailbox-item.claimed{ opacity:.55; }
 .mailbox-item-icon{ flex:none; font-size:3.68cqh; line-height:1; }
@@ -71,9 +71,9 @@
 .mailbox-item-reward{ color:#8a5a0a; }
 .mailbox-item-expiry{ color:var(--c-red-deep); }
 .mailbox-claim-btn{
-  flex:none; height:4.4cqh; min-width:8cqw; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
-  background:linear-gradient(180deg,#4f95dd,#2869b4); color:#fff; font:inherit; font-size:1.84cqh; font-weight:900; cursor:pointer;
-  text-shadow:0 .12cqh .18cqh rgba(15,35,70,.45);
+  flex:none; height:4.4cqh; min-width:8cqw; border-radius:1cqh; border:0.2cqh solid #a97a1f;
+  background:linear-gradient(180deg,#ffe9a8,#d9a53c); color:#4a2b07; font:inherit; font-size:1.84cqh; font-weight:900; cursor:pointer;
+  text-shadow:0 .08cqh 0 rgba(255,255,255,.55);
 }
 .mailbox-claim-btn:disabled{
   background:rgba(238,232,216,.92); color:#5f5140; cursor:default; border-color:rgba(160,130,70,.26);
@@ -99,16 +99,16 @@
 
 .mailbox-ui-actions{ flex:none; display:flex; gap:1cqw; }
 .mailbox-claim-all-btn{
-  flex:1; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
+  flex:1; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid #b98924;
   background:linear-gradient(180deg,#fff5d2,#e2bd58); color:#3a2408; font:inherit; font-size:2.07cqh; font-weight:900; cursor:pointer;
-  border-color:#b98924; text-shadow:0 .08cqh 0 rgba(255,255,255,.72);
+  text-shadow:0 .08cqh 0 rgba(255,255,255,.72);
 }
 .mailbox-claim-all-btn:disabled{
   background:rgba(238,232,216,.92); color:#5f5140; cursor:default;
   text-shadow:0 .06cqh 0 rgba(255,255,255,.74);
 }
 .mailbox-close-btn{
-  flex:none; min-width:10cqw; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid var(--c-panel-line);
+  flex:none; min-width:10cqw; height:4.6cqh; border-radius:1cqh; border:0.2cqh solid rgba(184,137,36,.32);
   background:rgba(255,255,255,.96); color:#3a2408; font:inherit; font-size:2.07cqh; font-weight:900; cursor:pointer;
   text-shadow:0 .06cqh 0 rgba(255,255,255,.86);
 }

@@ -1,0 +1,32 @@
+/* 전투 필드 (중앙 진행도 HUD, 좌측 효과/우측 의도 패널, 필드 레이어) — style.css에서 분리 */
+
+.progress-center-hud{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:clamp(28cqw, 32cqw, calc(100% - 56cqw)); height:100%;
+  display:flex; align-items:center; justify-content:center; gap:.8cqw;
+  padding:.8cqh 4.2cqw; background:transparent url("assets/ui/stage_info_panel.png") center/100% 100% no-repeat; border:0;
+  border-radius:0; backdrop-filter:none; box-shadow:none;
+  font-size:2.9cqh; font-weight:900; color:#4a2f12; text-shadow:0 .07cqh 0 rgba(255,255,255,.55);}
+.progress-center-hud,.top-right-menu,.player-info-card{z-index:1;}
+.progress-region,.progress-floor,.progress-turn,.progress-act{display:inline-flex; align-items:center; white-space:nowrap; font-family:var(--font-title);}
+.progress-icon{font-size:3.05cqh; line-height:1; margin-right:.25cqw;}
+.progress-separator{width:.18cqh; height:2.6cqh; border-radius:.2cqh; background:#b98f42; opacity:.55;}
+#hudTurn{position:relative; left:auto; top:auto; transform:none;}
+
+/* =================== 醫뚯륫: ?꾩옱 ?④낵 / ?곗륫: ???섎룄 =================== */
+.left-side-hud{position:absolute; left:1.4cqh; top:14cqh; bottom:37cqh; width:14cqw; z-index:22;
+  display:flex; flex-direction:column; align-items:flex-start; gap:1.4cqh;}
+.left-side-main{display:flex; align-items:flex-start; gap:.8cqh;}
+.battle-field{position:absolute; left:0; right:0; top:13.5cqh; bottom:0; z-index:10; pointer-events:none;}
+.side{position:absolute; top:12cqh; width:21cqw; z-index:20;
+  background:var(--c-panel); border:0.2cqh solid var(--c-panel-line);
+  border-radius:var(--r); padding:1.2cqh 1cqw; backdrop-filter:blur(4px);
+  box-shadow:0 .5cqh 1.4cqh rgba(60,90,140,.15);}
+#effects{position:relative; top:auto; left:auto; width:100%;}
+#intents{top:1cqh; right:0; width:21cqw;}
+.side h3{font-family:var(--font-title); font-size:2.18cqh; text-align:center; color:var(--c-ink-soft);
+  padding-bottom:.7cqh; margin-bottom:.7cqh; border-bottom:0.15cqh solid var(--c-panel-line);}
+
+/* =========================== ?꾪닾 ?ㅽ뀒?댁? =========================== */
+#field{position:absolute; inset:0; z-index:10; pointer-events:none;}
+.player-layer{position:absolute; inset:0; z-index:2; pointer-events:none; overflow:visible;}
+.monster-field{position:absolute; left:calc(50% - 10.5cqw); right:1.4cqh; top:0; bottom:29cqh; z-index:1; pointer-events:none; overflow:hidden;}

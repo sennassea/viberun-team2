@@ -1,0 +1,116 @@
+/* 상단 HUD (플레이어 정보 카드, 체력/자원, 우측 메뉴 버튼) — style.css에서 분리 */
+
+/* =========================== ?곷떒 HUD =========================== */
+.top-hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:12cqh; z-index:30;}
+#hud{position:relative; width:100%; height:100%;}
+.hud-card{display:flex; align-items:center; gap:.7cqw; background:var(--c-panel);
+  border:0.2cqh solid var(--c-panel-line); border-radius:var(--r);
+  padding:.8cqh 1.1cqw; backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);}
+.player-info-card{position:absolute; left:0; top:0; width:24cqw; min-width:30cqh; max-width:calc(50% - 11cqw);
+  height:100%; align-items:center; gap:1.15cqw;
+  /* 사진(.portrait)은 이제 이 컨테이너 기준으로 position:absolute 배치되어 아래 padding-left와
+     무관하게 독립적으로 위치가 정해진다. 이 padding-left는 이름/HP/재화 묶음(.player-info-body)의
+     시작 위치만 결정하며, 실측한 원형 프레임 우측 끝(카드 폭의 약 24.8%)보다 살짝만 오른쪽에 오도록
+     사진 프레임 쪽으로 더 붙인다 */
+  padding:.8cqh 1cqw .8cqh 7.7cqw;}
+.player-info-card{
+  background:transparent url("assets/ui/player_info_panel_wide.png") center/100% 100% no-repeat;
+  border:0;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+.player-info-body{min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:.42cqh;}
+.player-info-card .player-info-body{
+  /* 초상화(.portrait)가 카드 세로 중앙에 오도록 배치되어 있으므로, 이름/HP/재화 묶음도
+     부모(.player-info-card)의 align-items:center를 그대로 따라 세로 중앙에 맞춘다 */
+  align-self:center;
+}
+.portrait{width:11cqh; height:7cqh; border-radius:1.5cqh; display:grid; place-items:center;
+  font-size:4.83cqh; background:linear-gradient(160deg,#fff,#dcecff);
+  border:0.25cqh solid var(--c-gold); box-shadow:0 0 1cqh rgba(231,181,74,.6);}
+.player-info-card .portrait{
+  /* 가로/세로를 모두 cqh 한 단위로만 지정해야 원이 찌그러지지 않는다. #game은
+     16:9로 고정되어 cqw:cqh 비율 자체는 항상 일정하지만, 폭은 cqw로 높이는 cqh로
+     따로 재서 섞어 쓰면(예: 4.85cqw x 7.42cqh) 두 값의 실제 비율이 원하는 1:1과
+     달라져 타원으로 보인다. 카드(24cqw x 12cqh) 안에서 세로 중앙(top = (12-D)/2)에
+     오도록 배치한다. */
+  position:absolute;
+  left:1.05cqw;
+  top:1.4cqh;
+  background:linear-gradient(160deg,#fff,#dcecff);
+  border:.3cqh solid var(--c-gold);
+  box-shadow:0 0 1cqh rgba(231,181,74,.6), 0 .4cqh 1.2cqh rgba(60,90,140,.2);
+  width:9.2cqh;
+  height:9.2cqh;
+  border-radius:50%;
+  overflow:hidden;
+}
+.player-info-card .portrait img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+}
+.who{min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1;}
+.who b{font-size:2.28cqh;} .who span{display:none;}
+.hud-hp-row{display:flex; align-items:center; gap:.8cqw;
+  font-size:1.78cqh; font-weight:800; color:var(--c-ink); line-height:1;}
+.hud-hp-label{color:var(--c-red-deep);}
+.hud-hpbar{position:relative; width:100%; height:1.45cqh; border-radius:.8cqh; overflow:hidden;
+  background:rgba(122,42,42,.62); border:.12cqh solid rgba(0,0,0,.14);}
+.player-info-card .hud-hpbar{
+  width:min(13.6cqw, 25cqh);
+  height:1.65cqh;
+  background:rgba(80,38,38,.42);
+  border:0;
+  box-shadow:inset 0 0 0 .12cqh rgba(75,40,28,.35);
+}
+#hudHpFill{position:absolute; left:0; top:0; bottom:0; width:100%;
+  background:linear-gradient(180deg,#ff8079,var(--c-hp)); transition:width .35s ease;}
+.player-info-card #hudHpFill{
+  border-radius:.8cqh;
+  background:linear-gradient(180deg,#ff6f67 0%,#e33434 58%,#a6171f 100%);
+}
+#hudHp{position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:1.32cqh; font-weight:900; line-height:1; text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}
+.hud-resource-row{display:flex; align-items:center; gap:.65cqw; min-width:0; padding-top:.1cqh; line-height:1;}
+.player-info-card .hud-resource-row{
+  transform:translateX(2cqw);
+  width:calc(100% - 2cqw);
+}
+.hud-resource{display:inline-flex; align-items:center; gap:.22cqw; min-width:0;
+  font-size:1.67cqh; font-weight:900; color:var(--c-ink);}
+.hud-resource-icon{width:2.15cqh; height:2.15cqh; flex:none; display:inline-block; font-size:0; line-height:1;
+  background:center/contain no-repeat;}
+.hud-resource-icon-relic{background-image:url("assets/ui/resource_icons/relic.png");}
+.hud-resource-icon-potion{background-image:url("assets/ui/resource_icons/potion.png");}
+.hud-resource-icon-gold{background-image:url("assets/ui/resource_icons/gold.png");}
+.hud-resource-icon-moon{background-image:url("assets/ui/resource_icons/moon_shard.png");}
+.profile-status-effects{position:absolute; left:0; top:calc(100% + .55cqh); width:24cqw; min-width:30cqh;
+  max-width:calc(50% - 11cqw); min-height:4.2cqh; display:flex; justify-content:flex-end; pointer-events:none; z-index:2;}
+.profile-status-effects .badges{width:100%; min-height:0; display:flex; flex-direction:row-reverse;
+  justify-content:flex-start; align-items:center; gap:.45cqh;}
+.profile-status-effects .status-icon{width:3.35cqh; height:3.35cqh; border-radius:.75cqh; pointer-events:auto;}
+.profile-status-effects .status-symbol{font-size:2.13cqh;}
+.profile-status-effects .status-symbol img{width:100%; height:100%; object-fit:contain; display:block;}
+.profile-status-effects .status-count{right:-.35cqh; bottom:-.45cqh; min-width:1.65cqh; height:1.65cqh; font-size:1.21cqh;}
+.stat{font-size:2.53cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw; line-height:1;}
+.spacer{display:none;}
+.hud-btn{cursor:pointer; transition:transform .12s;} .hud-btn:active{transform:scale(.94);}
+.top-right-menu{position:absolute; top:0; right:0; height:100%; display:flex; align-items:center; gap:.8cqw;}
+.top-menu-button{width:8.2cqh; height:100%; justify-content:center; padding:0; font-size:3.57cqh;}
+.top-menu-button.stat{gap:.25cqw; font-size:2.99cqh;}
+.top-menu-button #hudDeck{display:none;}
+.ui-asset-button{position:relative;background-color:transparent;background-position:center;background-repeat:no-repeat;background-size:contain;border:0;box-shadow:none;font-size:0;color:transparent;}
+.ui-asset-button::before{content:"";position:absolute;inset:0;background-position:center;background-repeat:no-repeat;background-size:contain;pointer-events:none;}
+.ui-map-button::before{background-image:url("assets/ui_buttons/map.png");}
+.ui-bag-button::before{background-image:url("assets/ui_buttons/bag.png");}
+.ui-codex-button::before{background-image:url("assets/ui_buttons/codex.png");}
+.ui-settings-button::before{background-image:url("assets/ui_buttons/settings.png");}
+.ui-depth-button::before{background-image:url("assets/ui_buttons/depth.png");}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+  clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+

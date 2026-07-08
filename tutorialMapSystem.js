@@ -122,22 +122,26 @@
         bottom:2.4cqh;
         --tutorial-dongjasin-avatar-width:36cqh;
         --tutorial-dongjasin-avatar-height:64cqh;
-        --tutorial-dongjasin-avatar-left:-35cqh;
+        --tutorial-dongjasin-avatar-left:-23cqh;
         --tutorial-dongjasin-avatar-top:-41.8cqh;
         --tutorial-dongjasin-avatar-transform:none;
         transform:translateX(-50%);
         z-index:12;
         pointer-events:none;
         width:min(54cqw, 72cqh);
-        padding:3cqh 3.2cqw;
+        aspect-ratio:2533/621;
+        display:flex;
+        padding:1.6cqh 3.2cqw;
         border:0;
         border-radius:0;
-        background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
+        background:transparent url("assets/ui/dialog_panel_battle_intro.png") center/100% 100% no-repeat;
         color:#243247;
         box-shadow:none;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-content{
-        display:block;
+        display:flex;
+        flex-direction:column;
+        width:100%;
       }
       #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar{
         position:absolute;
@@ -164,13 +168,18 @@
         box-shadow:0 .45cqh 1cqh rgba(20,35,60,.16);
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-body{
+        display:flex;
+        flex-direction:column;
+        width:100%;
+        flex:1 1 auto;
         min-width:0;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-speaker{
-        margin-bottom:.7cqh;
-        font-size:1.7cqh;
-        font-weight:900;
-        color:#2f66a8;
+        margin-top:1cqh;
+        margin-bottom:.6cqh;
+        font-size:2.3cqh;
+        color:#a8641f;
+        text-shadow:0 0.06cqh 0 rgba(255,255,255,.5);
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-text{
         font-size:1.9cqh;
@@ -180,19 +189,22 @@
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-actions{
         display:flex;
         justify-content:flex-end;
-        margin-top:1.2cqh;
+        margin-top:auto;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-next{
         pointer-events:auto;
-        min-width:7.5cqw;
-        min-height:4.2cqh;
-        border:0.16cqh solid #2f66a8;
-        border-radius:.8cqh;
-        background:#4b8bd8;
-        color:#fff;
+        min-width:0;
+        height:4.4cqh;
+        aspect-ratio:918/232;
+        border:0;
+        border-radius:0;
+        background:transparent url("assets/ui_buttons/tutorial_proceed_v2.png") center/100% 100% no-repeat;
+        color:#2a1a08;
         font-size:1.7cqh;
         font-weight:900;
         cursor:pointer;
+        display:grid;
+        place-items:center;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-click-blocker{
         position:absolute;

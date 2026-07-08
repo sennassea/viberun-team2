@@ -286,7 +286,7 @@ function renderEventHeader(){
     overlay.querySelector("#eventHpText").textContent = "";
     return;
   }
-  overlay.querySelector("#eventPortrait").textContent = player.emoji || "👼";
+  renderPlayerPortraitIcon(overlay.querySelector("#eventPortrait"));
   overlay.querySelector("#eventName").textContent = player.name || "";
   overlay.querySelector("#eventHpText").textContent = player.hp + "/" + player.maxHp;
   const pct = player.maxHp ? Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100)) : 0;
@@ -978,7 +978,6 @@ function confirmEventCard(){
         }
       }
     }
-    if(typeof toast === "function") toast(card.name + " 주문을 덱에 추가했습니다.");
   }
   finishEventNode();
 }

@@ -101,6 +101,35 @@ window.OPEN_START_BLESSING = function(){
   }
 };
 
+/* ── 이어하기 복원 전용: 신령의 은혜 화면(로비)에서 저장된 진행 상황을 복원할 때
+   호출된다(battleRunState.js의 restoreSavedRunState). resolved는 저장 당시
+   은혜를 이미 골랐는지(MAP_STATE.proceedMode) 여부다. 이미 골랐다면 새로 선택
+   화면을 보여주지 않고 completeSbBlessing()과 동일하게 바로 맵을 연다. */
+window.RESUME_START_BLESSING = function(resolved){
+  sbResolved = !!resolved;
+  if(!sbSpirit){
+    const run = getSbRunState();
+    const savedSpirit = run && run.blessingSpirit;
+    sbSpirit = savedSpirit
+      ? {
+          id: savedSpirit.id,
+          name: savedSpirit.name,
+          image: savedSpirit.image,
+          emoji: savedSpirit.emoji,
+          dialogue: (savedSpirit.appearanceLines && savedSpirit.appearanceLines[0]) || ""
+        }
+      : START_BLESSING_SPIRITS[Math.floor(Math.random() * START_BLESSING_SPIRITS.length)];
+  }
+
+  ensureSbOverlay();
+  hideSbChrome();
+  renderSbOverlay();
+  sbOverlayEl.classList.add("show");
+  sbOverlayEl.setAttribute("aria-hidden", "false");
+
+  if(sbResolved) completeSbBlessing();
+};
+
 function closeSbOverlay(){
   if(!sbOverlayEl) return;
   sbOverlayEl.classList.remove("show");
@@ -162,19 +191,16 @@ function openSbMapPreview(){
 function openSbDeck(){
   const deckBtn = document.getElementById("deckViewerButton");
   if(deckBtn) deckBtn.click();
-  else if(typeof toast === "function") toast("보유 주문 확인 기능을 불러올 수 없습니다.");
 }
 
 function openSbBag(){
   if(typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
-  else if(typeof toast === "function") toast("가방을 불러올 수 없습니다.");
 }
 
 function openSbSettings(){
   const settingsBtn = Array.from(document.querySelectorAll(".hud-btn"))
     .find(b => b.textContent.includes("⚙️") || b.textContent.includes("⚙"));
   if(settingsBtn) settingsBtn.click();
-  else if(typeof toast === "function") toast("설정을 불러올 수 없습니다.");
 }
 
 /* ── 은혜 선택 → 보상 적용 → 기존 노드 선택 화면 재사용 ─────────────────── */
@@ -199,8 +225,6 @@ function completeSbBlessing(blessing){
   /* 신령의 은혜 화면은 여기서 닫지 않는다. 여정(맵) 오버레이가 그 위에
      반투명하게 떠야 하므로(플레이어가 맵만 닫고 은혜 화면으로 돌아올 수도
      있음), 실제 전투 진입 시점(startStage 후킹)에서만 배경을 정리한다. */
-  if(typeof toast === "function") toast(blessing.name + "의 은혜를 받았습니다.");
-
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = -1;   // 현재 위치: 로비(신령의 은혜)
     window.MAP_STATE.proceedMode  = true; // 다음 노드(1층) 선택 가능
@@ -359,12 +383,10 @@ function removeSbRandomCards(count){
 function chooseSbStarterCardToRemove(){
   const targets = getSbStarterTargets();
   if(targets.length === 0){
-    if(typeof toast === "function") toast("제거할 기본 카드가 없습니다.");
     return null;
   }
   if(typeof window.OPEN_DECK_VIEWER_CARD_PICK !== "function"){
     console.error("[StartBlessing] 카드 선택 제거 UI를 찾을 수 없습니다.");
-    if(typeof toast === "function") toast("카드 선택 제거 UI를 불러올 수 없습니다.");
     return Promise.resolve(null);
   }
   return window.OPEN_DECK_VIEWER_CARD_PICK({
@@ -375,8 +397,7 @@ function chooseSbStarterCardToRemove(){
     onConfirm: key => {
       const run = getSbRunState();
       const index = run ? run.deck.findIndex(deckKey => deckKey === key && CARD_DB[deckKey] && (CARD_DB[deckKey].rarity === "starter" || CARD_DB[deckKey].rarity === "basic") && isSbDeckCardRemovable(deckKey)) : -1;
-      const removed = removeSbDeckCardAt(index);
-      if(removed && typeof toast === "function") toast("카드 제거: " + (CARD_DB[removed]?.name || removed));
+      removeSbDeckCardAt(index);
     }
   });
 }
@@ -406,7 +427,6 @@ function chooseSbCardRewardByRarity(rarity, options = {}){
   }
   if(typeof window.OPEN_CARD_REWARD_PICK !== "function"){
     console.error("[StartBlessing] 카드 선택 보상 UI를 찾을 수 없습니다.", rarity);
-    if(typeof toast === "function") toast("카드 선택 보상 UI를 불러올 수 없습니다.");
     return Promise.resolve(null);
   }
   return window.OPEN_CARD_REWARD_PICK({
@@ -709,7 +729,9 @@ function renderSbOverlay(){
   if(!sbOverlayEl) return;
 
   sbOverlayEl.querySelector("#sbSpiritEmoji").innerHTML = sbSpiritVisualHtml(sbSpirit);
-  sbOverlayEl.querySelector("#sbDialogue").textContent    = '"' + sbSpirit.dialogue + '"';
+  const sbDialogueEl = sbOverlayEl.querySelector("#sbDialogue");
+  sbDialogueEl.textContent = '"' + sbSpirit.dialogue + '"';
+  sbDialogueEl.style.color = getSbSpiritColor(sbSpirit);
 
   const choices = sbOverlayEl.querySelector("#sbChoices");
   const visibleBlessings = getSbVisibleBlessings();
@@ -738,6 +760,17 @@ function getSbSpiritGroup(spirit){
   return name;
 }
 
+/* ── 신령별 대표 색상 (대사 색상에 반영) ───────────────────────────────── */
+const SB_SPIRIT_COLORS = {
+  "수호 신령": "#e0574a",
+  "인연 신령": "#5b8fd9",
+  "길잡이 신령": "#e0a23c"
+};
+
+function getSbSpiritColor(spirit){
+  return SB_SPIRIT_COLORS[getSbSpiritGroup(spirit)] || "#9fd8c9";
+}
+
 function shuffleSbList(list){
   const result = [...list];
   for(let i = result.length - 1; i > 0; i--){
@@ -759,37 +792,57 @@ function ensureSbStyles(){
       "background-image:radial-gradient(120% 70% at 50% 0%,rgba(30,55,65,.38) 0%,rgba(14,28,38,.62) 45%,rgba(6,12,20,.76) 100%),url('assets/background/shrine_01_main.jpg');" +
       "background-size:cover;background-position:center;background-repeat:no-repeat;}" +
     ".sb-overlay.show{display:flex;}" +
-    ".sb-menu{position:absolute;top:1.4cqh;right:1.4cqh;height:12cqh;display:flex;align-items:center;gap:.8cqw;z-index:2;}" +
+    ".sb-menu{position:absolute;top:1.4cqh;right:1.4cqh;height:12cqh;display:flex;align-items:center;gap:.8cqw;z-index:5;}" +
     ".sb-menu-btn{position:relative;width:8.2cqh;height:100%;display:flex;align-items:center;justify-content:center;" +
       "background-color:transparent;background-position:center;background-repeat:no-repeat;background-size:contain;border:0;border-radius:0;" +
       "color:transparent;cursor:pointer;font:inherit;font-size:0;padding:0;box-shadow:none;backdrop-filter:none;}" +
     ".sb-menu-btn .sb-menu-ico{font-size:3.1cqh;line-height:1;}" +
     ".sb-menu-btn span:last-child{display:none;}" +
     ".sb-menu-btn:active{transform:scale(.94);}" +
-    ".sb-title-row{flex:none;text-align:center;padding-top:1.4cqh;}" +
-    ".sb-title{font-size:4.4cqh;font-weight:900;letter-spacing:.3cqh;color:#f1d98c;text-shadow:0 0 1.2cqh rgba(230,190,110,.55);}" +
-    ".sb-header{flex:none;text-align:center;padding-top:1cqh;display:flex;flex-direction:column;align-items:center;gap:.7cqh;}" +
+    ".sb-title-row{flex:none;position:relative;z-index:4;text-align:center;padding-top:1.4cqh;}" +
+    ".sb-title{font-size:4.4cqh;font-weight:900;letter-spacing:.3cqh;color:#f1d98c;" +
+      "text-shadow:0 0 1.2cqh rgba(230,190,110,.55),-.16cqh -.16cqh 0 rgba(20,14,4,.9),.16cqh -.16cqh 0 rgba(20,14,4,.9)," +
+      "-.16cqh .16cqh 0 rgba(20,14,4,.9),.16cqh .16cqh 0 rgba(20,14,4,.9),0 .2cqh .5cqh rgba(0,0,0,.85);}" +
+    ".sb-header{flex:none;position:relative;z-index:4;text-align:center;padding-top:1cqh;display:flex;flex-direction:column;align-items:center;gap:.7cqh;}" +
     ".sb-subtitle,.sb-dialogue{display:inline-block;}" +
-    ".sb-subtitle{font-size:2cqh;color:#cfe3df;font-weight:700;}" +
-    ".sb-dialogue{font-size:2.15cqh;color:#9fd8c9;font-weight:800;}" +
-    ".sb-scene{flex:1;min-height:0;display:flex;align-items:flex-end;justify-content:center;}" +
-    ".sb-spirit{width:51cqh;height:82cqh;font-size:14cqh;display:grid;place-items:center;" +
-      "transform:translateY(7cqh);border:none;background:transparent;box-shadow:none;overflow:visible;}" +
+    ".sb-subtitle{font-size:2cqh;color:#cfe3df;font-weight:700;" +
+      "text-shadow:-.13cqh -.13cqh 0 rgba(10,10,10,.92),.13cqh -.13cqh 0 rgba(10,10,10,.92)," +
+      "-.13cqh .13cqh 0 rgba(10,10,10,.92),.13cqh .13cqh 0 rgba(10,10,10,.92),0 .16cqh .4cqh rgba(0,0,0,.85);}" +
+    ".sb-dialogue{font-size:2.7cqh;color:#9fd8c9;font-weight:800;margin-top:1.4cqh;" +
+      "text-shadow:-.13cqh -.13cqh 0 rgba(6,16,14,.92),.13cqh -.13cqh 0 rgba(6,16,14,.92)," +
+      "-.13cqh .13cqh 0 rgba(6,16,14,.92),.13cqh .13cqh 0 rgba(6,16,14,.92),0 .16cqh .4cqh rgba(0,0,0,.85);}" +
+    ".sb-scene{flex:1;min-height:0;position:relative;z-index:1;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;}" +
+    ".sb-spirit{width:51cqh;height:82cqh;font-size:14cqh;display:grid;place-items:center;position:relative;z-index:1;pointer-events:none;" +
+      "transform:translateY(14cqh);border:none;background:transparent;box-shadow:none;overflow:visible;}" +
     ".sb-spirit img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 1.2cqh 1.6cqh rgba(0,0,0,.45)) drop-shadow(0 0 1.8cqh rgba(180,220,255,.2));}" +
-    ".sb-choices{flex:none;position:relative;z-index:2;display:flex;justify-content:center;gap:10cqw;padding:0 2cqw;margin-top:-20cqh;}" +
+    ".sb-choices{flex:none;position:relative;z-index:3;display:flex;justify-content:center;gap:10cqw;padding:0 2cqw;margin-top:-20cqh;}" +
     ".sb-card{position:relative;flex:1;max-width:17cqw;min-height:39cqh;display:flex;flex-direction:column;align-items:center;" +
       "box-sizing:border-box;gap:.55cqh;padding:3.1cqh 2.15cqw 3cqh;background:transparent url(\"assets/ui_panels/start_blessing_choice_panel.png\") center/100% 100% no-repeat;" +
       "border:0;border-radius:0;cursor:pointer;font:inherit;color:#4a2b07;" +
       "box-shadow:none;overflow:hidden;transition:transform .14s ease,filter .14s ease;}" +
     ".sb-card.item-frame-card{display:block;min-height:39cqh;background:transparent;}" +
     ".sb-card.item-frame-card .item-art-layer{font-size:9cqh;}" +
-    ".sb-card.item-frame-card .item-name-text{font-size:1.55cqh;}" +
-    ".sb-card.item-frame-card .item-desc-text{font-size:1.12cqh;}" +
+    ".sb-card.item-frame-card .item-name-text{font-size:2.05cqh;}" +
+    ".sb-card.item-frame-card .item-desc-text{font-size:1.5cqh;line-height:1.28;}" +
     ".sb-card:hover{transform:translateY(-.6cqh);filter:brightness(1.05) drop-shadow(0 .9cqh 1.2cqh rgba(90,65,25,.24));}" +
     ".sb-card-icon{height:12cqh;font-size:12cqh;display:flex;align-items:flex-start;justify-content:center;}" +
     ".sb-card-icon img{width:12cqh;height:12cqh;object-fit:contain;display:block;}" +
     ".sb-card-name{max-width:100%;margin-top:.35cqh;padding:0 .25cqw;font-size:1.75cqh;font-weight:900;text-align:center;line-height:1.14;word-break:keep-all;overflow-wrap:anywhere;text-shadow:0 .08cqh 0 rgba(255,255,255,.8);}" +
     ".sb-card-desc{flex:1;width:100%;box-sizing:border-box;margin-top:.25cqh;padding:0 .35cqw;font-size:1.08cqh;color:#5c3c10;text-align:center;line-height:1.44;font-weight:800;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-wrap:pretty;text-shadow:0 .06cqh 0 rgba(255,255,255,.65);}" +
-    "@media (max-width:900px){.sb-choices{flex-direction:column;align-items:center;}.sb-card{max-width:none;min-height:auto;padding:2.4cqh 2.8cqw;}.sb-card.item-frame-card{width:min(44cqw,21cqh);min-height:0;padding:0;}.sb-card-icon{height:8cqh;font-size:8cqh;}.sb-card-icon img{width:8cqh;height:8cqh;}.sb-card-desc{font-size:1.2cqh;}}";
+    "@media (max-width:900px){" +
+      ".sb-menu{top:1.2cqh;right:1.2cqh;height:10cqh;gap:.6cqw;}" +
+      ".sb-menu-btn{width:7.2cqh;}" +
+      ".sb-title-row{padding-top:1.2cqh;}" +
+      ".sb-title{font-size:3.8cqh;}" +
+      ".sb-subtitle{font-size:1.75cqh;}" +
+      ".sb-dialogue{font-size:2.35cqh;}" +
+      ".sb-spirit{width:48cqh;height:76cqh;transform:translateY(12.5cqh);}" +
+      ".sb-choices{flex-direction:row;align-items:stretch;justify-content:center;gap:8cqw;padding:0 2cqw;margin-top:-19cqh;}" +
+      ".sb-card{flex:1;max-width:17cqw;min-height:37cqh;padding:3cqh 2cqw 2.8cqh;}" +
+      ".sb-card-icon{height:11cqh;font-size:11cqh;}" +
+      ".sb-card-icon img{width:11cqh;height:11cqh;}" +
+      ".sb-card-name{font-size:1.6cqh;}" +
+      ".sb-card-desc{font-size:1.02cqh;line-height:1.4;}" +
+    "}";
   document.head.appendChild(style);
 }

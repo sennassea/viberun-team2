@@ -6,8 +6,6 @@ function nodeClear(){
   if(S.encounterCleared) return;
   S.encounterCleared = true;
 
-  S.enemies.forEach(e => toast(e.name+" 성불 완료"));
-
   const nodeType = S.battleNodeType || "enemy";
   recordBattleClear(nodeType);
 
@@ -16,10 +14,8 @@ function nodeClear(){
   }
 
   applyRelicTrigger("battleEnd");
-  if(nodeType==="boss"){
-    grantBattleGoldReward();
-    return endGame("win");
-  }
+  // ACT 확장 이후 보스도 다른 스테이지와 동일하게 승리 보상을 먼저 받는다(기획서 §10).
+  // 골드는 보상 UI의 "복채" 슬롯이 지급하므로 여기서 별도로 지급하지 않는다.
   openBattleVictoryReward();
 }
 
@@ -181,12 +177,12 @@ function randomItemResultFaceHtml(item){
   const source = randomItemResultSourceItem(item);
   const icon = (item && item.icon) || (source && (source.iconImage || source.icon || source.emoji)) || (item && item.type === "relic" ? "🏺" : item && item.type === "potion" ? "🧪" : "?");
   const name = (item && item.name) || (source && source.name) || "";
-  const desc = (item && item.desc) || (source && (source.desc || source.effectText || source.valueText)) || "";
+  // 법구/약병 획득 제거 결과 팝업은 아이콘+이름만 보여주고 설명 텍스트는 표시하지 않는다.
+  // 상세 설명은 globalTooltip.js가 이름으로 RELIC_DB/POTION_DB를 조회해 툴팁으로 보여준다.
   return '<div class="item-art-layer">' + randomItemResultIconHtml(icon, name) + '</div>' +
     '<img class="item-frame-layer" src="' + escapeHtml(randomItemResultFramePath(item)) + '" alt="" aria-hidden="true" draggable="false">' +
     '<div class="item-text-layer">' +
       '<div class="item-name-text">' + escapeHtml(name) + '</div>' +
-      '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(desc).replace(/\n/g, "<br>")) + '</div>' +
     '</div>' +
     '<div class="item-hit-layer" aria-hidden="true"></div>';
 }
@@ -238,7 +234,7 @@ function ensureRandomItemResultPopupStyle(){
     '}' +
     '#randomItemResultPopup.show{display:flex;}' +
     '#randomItemResultPopup .random-item-result-box{' +
-      'width:min(64cqw,760px);max-height:82cqh;padding:2.6cqh 2.6cqw;' +
+      'width:max-content;max-width:min(92cqw,100cqh);max-height:82cqh;padding:2.6cqh 2.6cqw;' +
       'border-radius:2cqh;border:.22cqh solid rgba(183,146,82,.72);' +
       'background:linear-gradient(180deg,rgba(255,250,235,.98),rgba(239,224,193,.98));' +
       'box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.38);' +
@@ -251,11 +247,14 @@ function ensureRandomItemResultPopupStyle(){
     '#randomItemResultPopup .random-item-result-message{' +
       'font-size:1.55cqh;font-weight:800;color:#6a4a2d;text-align:center;' +
     '}' +
+    /* 아이템이 몇 개든 한 줄(가로)로만 늘어서야 하므로 줄바꿈을 금지하고,
+       박스의 최대 너비를 넘어서는 경우에만 가로 스크롤로 대응한다. */
     '#randomItemResultPopup .random-item-result-list{' +
-      'display:flex;flex-wrap:wrap;justify-content:center;gap:1.4cqh;max-width:100%;' +
+      'display:flex;flex-wrap:nowrap;justify-content:center;gap:1.4cqh;' +
+      'width:max-content;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:.2cqh;' +
     '}' +
     '#randomItemResultPopup .random-item-result-card{' +
-      'width:13cqh;min-height:15cqh;padding:1.1cqh;border-radius:1.4cqh;' +
+      'flex-shrink:0;width:13cqh;min-height:15cqh;padding:1.1cqh;border-radius:1.4cqh;' +
       'border:.18cqh solid rgba(174,137,80,.55);background:rgba(255,253,244,.86);' +
       'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8cqh;' +
       'box-shadow:0 .45cqh 1.2cqh rgba(65,45,25,.16);' +
@@ -271,7 +270,7 @@ function ensureRandomItemResultPopupStyle(){
       'font-size:1.35cqh;font-weight:900;color:#332115;text-align:center;line-height:1.25;' +
     '}' +
     '#randomItemResultPopup .random-item-result-tag{' +
-      'font-size:1.1cqh;font-weight:900;color:#8a5c2b;text-align:center;' +
+      'font-size:1.9cqh;font-weight:900;color:#8a5c2b;text-align:center;' +
     '}' +
     '#randomItemResultPopup .random-item-result-card.remove .random-item-result-tag{color:#a3402f;}' +
     /* 주문(카드) 결과: 실제 카드 프레임 이미지 표시용
@@ -363,13 +362,11 @@ function chooseRewardCard(key){
   if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("rewardPick");
   addPermanentCard(key, { source:"battleReward" });
   if(S.victoryCardRewardOpen){
-    toast(card.name+" 획득");
     finishBattleVictoryCardReward();
     return;
   }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
-  toast(card.name+" 획득");
   proceedToMap();
 }
 
@@ -398,7 +395,7 @@ function ensureBattleVictoryOverlay(){
   ov.innerHTML =
     '<div class="victory-reward-panel">' +
       '<div class="victory-title-area">' +
-        '<h2>여정 승리</h2>' +
+        '<h2>위령 성공</h2>' +
         '<p>한풀이가 조금 더 깊어졌습니다.</p>' +
       '</div>' +
       '<div class="victory-section victory-reward-section">' +
@@ -785,6 +782,7 @@ function onBattleVictoryNextClick(){
   }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
+  if(S.battleNodeType === "boss"){ endGame("win"); return; }
   proceedToMap();
 }
 
@@ -808,6 +806,7 @@ function onBattleVictoryLeaveConfirmed(){
   closeBattleVictoryLeaveConfirm();
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
+  if(S.battleNodeType === "boss"){ endGame("win"); return; }
   proceedToMap();
 }
 
@@ -883,7 +882,6 @@ function resolveCardRewardPick(key){
   if(desc) desc.textContent = "새로운 주문 1장을 선택해 덱에 추가하세요.";
   if(skip) skip.style.display = "";
   closeRewardOverlay();
-  if(typeof toast === "function") toast(card.name + " 획득");
   mode.resolve(key);
 }
 

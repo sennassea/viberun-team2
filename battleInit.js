@@ -176,6 +176,27 @@ function resolveBattleProfileIcon(equippedSkinId){
   return (skin && skin.battleProfileIcon) || fallback;
 }
 
+/* 전투/상점/기도터/이벤트 좌상단 카드의 프로필 아이콘을 동일한 방식(장착 스킨 이미지)으로
+   렌더링합니다. 노드별로 이모지("👼")를 대신 표시하던 것을 이 함수로 통일합니다. */
+function renderPlayerPortraitIcon(portraitEl){
+  if(!portraitEl) return;
+  const equippedSkinId = (typeof S !== "undefined" && S && S.playerAppearance) ? S.playerAppearance.equippedSkinId : null;
+  const iconSrc = resolveBattleProfileIcon(equippedSkinId);
+
+  let imgEl = portraitEl.querySelector("img");
+  if(!imgEl){
+    portraitEl.textContent = "";
+    imgEl = document.createElement("img");
+    imgEl.alt = "";
+    imgEl.addEventListener("error", () => {
+      const fallback = resolveBattleProfileIcon(null);
+      if(imgEl.getAttribute("src") !== fallback) imgEl.src = fallback;
+    });
+    portraitEl.appendChild(imgEl);
+  }
+  if(imgEl.getAttribute("src") !== iconSrc) imgEl.src = iconSrc;
+}
+
 function resolveBattleStandingImage(equippedSkinId){
   const storeData = window.VIBERUN_BM_STORE_DATA;
   const fallback = (storeData && typeof storeData.getDefaultBattleStandingImage === "function")

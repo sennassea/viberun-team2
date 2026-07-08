@@ -26,6 +26,13 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-6SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-display: swap;
+}
+
 :root {
   --font-title: 'Paperozi', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
   --font-body: 'Paperozi', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', system-ui, sans-serif;
@@ -158,6 +165,7 @@ textarea,
    17. 기도터 노드 행동 카드 제목 ('받아들이기'/'정리하기'/'휴식하기')
    18. 각 노드(전투/상점/이벤트/기도터) 프로필 닉네임
    19. 이벤트 UI 제목 (예: 열면 안되는 병실 서랍)
+   20. 튜토리얼 대사창 화자명 ('동자신')
    ========================================================================= */
 .start-logo-main,
 .monthly-pass-claim-title,
@@ -166,10 +174,12 @@ textarea,
 .settings-viewer-head h2,
 .spirit-path-title,
 .sb-title,
+.sb-dialogue,
 .map-title,
 .dmap-title-char,
 .legend-title,
 .dmap-legend-title,
+.ranking-page-head h2,
 #hudName,
 .progress-region,
 .progress-floor,
@@ -187,7 +197,25 @@ textarea,
 #prayerName,
 .event-title,
 .rr-summary-titlebar span,
-.rr-detail-titlebar span {
+.rr-detail-titlebar span,
+.tutorial-battle-intro-speaker,
+.tutorial-map-dialogue-speaker {
   font-family: var(--font-special-title) !important;
   font-weight: 700;
+}
+
+/* =========================================================================
+   카드/아이템 에셋에 직접 인쇄되는 주문 설명 텍스트
+   - 그림 배경 위에 얹히는 텍스트라 본문 Regular(400)로는 잘 보이지 않아
+     SemiBold(600)로 굵기만 올려 가독성을 확보한다(레이아웃/크기는 유지).
+   - 각 화면(손패/보상/덱뷰어/신령의 길 등)마다 .card-desc-text에 서로 다른
+     line-height를 지정해두어, 클래스 자체를 대상으로 살짝 좁혀 통일한다.
+   - top을 살짝 올려(77.8% → 76.5%) 설명 영역 높이를 늘려서 잘림을 방지한다.
+   ========================================================================= */
+.card-desc-text,
+.item-desc-text {
+  font-weight: 600 !important;
+  line-height: 1.18 !important;
+  top: 76.5% !important;
+  text-shadow: 0 .08cqh 0 rgba(255,255,255,.6);
 }

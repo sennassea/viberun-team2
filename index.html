@@ -9,10 +9,24 @@
 <meta name="theme-color" content="#0c1422">
 <link rel="manifest" href="manifest.json">
 <title>신입 액소시스트 - 전투 프로토타입</title>
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="start-screen.css">
+<link rel="stylesheet" href="hud-top.css">
+<link rel="stylesheet" href="depth-dropdown.css">
+<link rel="stylesheet" href="battle-field.css">
+<link rel="stylesheet" href="dock-energy.css">
+<link rel="stylesheet" href="side-items.css">
+<link rel="stylesheet" href="hand-cards.css">
+<link rel="stylesheet" href="dock-actions.css">
+<link rel="stylesheet" href="aim-fx.css">
+<link rel="stylesheet" href="toast.css">
+<link rel="stylesheet" href="deck-viewer.css">
+<link rel="stylesheet" href="battle-choice.css">
+<link rel="stylesheet" href="game-over.css">
+<link rel="stylesheet" href="rotate.css">
 <link rel="stylesheet" href="life-ui.css">
 <link rel="stylesheet" href="map.css">
-<link rel="stylesheet" href="mapUI.css">
+<link rel="stylesheet" href="mapUI.css?v=8">
 <link rel="stylesheet" href="hand-layout.css">
 <link rel="stylesheet" href="eventNode.css">
 <link rel="stylesheet" href="auth.css?v=3">
@@ -70,6 +84,7 @@
         <button type="button" class="start-menu-button start-continue-game">
           <img class="start-menu-button-icon" src="assets/ui/start_menu/new_continue.png" alt="">
           <span class="start-menu-button-label">이어하기</span>
+          <span class="continue-status" hidden></span>
         </button>
         <button type="button" class="start-menu-button start-ranking-button">
           <img class="start-menu-button-icon" src="assets/ui/start_menu/new_ranking.png" alt="">
@@ -92,13 +107,13 @@
         <span class="start-mailbox-label">선물함</span>
         <span class="mailbox-badge" hidden>0</span>
       </button>
-      <button type="button" class="start-moon-wallet" hidden aria-label="달빛조각 보유량">
+      <button type="button" class="start-moon-wallet" hidden aria-label="달빛 조각 보유량">
         <span class="start-moon-icon" aria-hidden="true">🌙</span>
         <span class="start-moon-count">0</span>
         <span class="start-moon-plus" aria-hidden="true">＋</span>
       </button>
       <div class="monthly-pass-claim-card" hidden>
-        <div class="monthly-pass-claim-emblem">☾</div>
+        <div class="monthly-pass-claim-emblem"><img src="assets/status_icons/월영의 선물.png" alt=""></div>
 
         <div class="monthly-pass-claim-dday">D-0</div>
 
@@ -109,8 +124,8 @@
         <div class="monthly-pass-claim-subtitle">오늘의 보상</div>
 
         <div class="monthly-pass-claim-reward">
-          <span class="monthly-pass-claim-icon">🌙</span>
-          <span class="monthly-pass-claim-text">달빛조각 x15</span>
+          <span class="monthly-pass-claim-icon"><img src="assets/ui/resource_icons/moon_shard.png" alt=""></span>
+          <span class="monthly-pass-claim-text">달빛 조각 x15</span>
         </div>
 
         <button type="button" class="monthly-pass-claim-button">

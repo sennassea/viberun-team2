@@ -1,0 +1,44 @@
+/* 손패 카드 (기본 카드 + 카드/아이템 프레임 레이아웃) — style.css에서 분리 */
+
+/* ?먰뙣 */
+#hand{position:absolute; left:50%; bottom:.6cqh; transform:translateX(-50%);
+  display:flex; align-items:flex-end; justify-content:center; gap:0; height:32.2cqh;}
+.card{position:relative; width:11.5cqw; margin:0 -.6cqw; border-radius:1.4cqh; flex:none;
+  background:linear-gradient(180deg,#fbfcff,#eef4fb);
+  border:0.35cqh solid #cdddf0; box-shadow:0 .6cqh 1.4cqh rgba(40,70,120,.25);
+  display:flex; flex-direction:column; align-items:center; padding:.6cqh .5cqw; cursor:grab;
+  transition:transform .14s ease, box-shadow .14s ease; touch-action:none;}
+.card:hover{transform:translateY(-3cqh) scale(1.04); z-index:5; box-shadow:0 1.2cqh 2cqh rgba(40,70,120,.35);}
+.card.dragging{opacity:.25;}
+.card.cost-attack{border-color:#f0b9b0;} .card.cost-defense{border-color:#a9cdf0;} .card.cost-skill{border-color:#a9e0c2;}
+.card .cost{position:absolute; top:-1cqh; left:-1cqw; width:4.6cqh; height:4.6cqh; border-radius:50%;
+  display:grid; place-items:center; font-size:2.76cqh; font-weight:800; color:#fff;
+  background:radial-gradient(circle at 35% 30%,#bfe6ff,#3f8fe0 70%); border:0.25cqh solid #eaf6ff;
+  box-shadow:0 0 .8cqh rgba(80,170,255,.7);}
+.card .cname{font-family:var(--font-title); font-size:2.18cqh; font-weight:800; margin-top:.2cqh;}
+.card .art{width:100%; height:9cqh; margin:.5cqh 0; border-radius:1cqh; display:grid; place-items:center;
+  font-size:6.9cqh; background:linear-gradient(160deg,#eef6ff,#dcebfb); border:0.15cqh solid #d6e6f5; overflow:hidden;}
+.card .art img{width:100%; height:100%; object-fit:cover; display:block;}
+.card .type{font-size:1.61cqh; font-weight:700; color:#fff; padding:.1cqh .8cqw; border-radius:.7cqh; margin-bottom:.4cqh;}
+.type.attack{background:var(--c-red);} .type.defense{background:var(--c-blue);} .type.skill{background:var(--c-green);}
+.card .desc{font-family:var(--font-body); font-size:1.67cqh; text-align:center; color:var(--c-ink); line-height:1.3; white-space:pre-line;}
+
+.card-frame-card{aspect-ratio:2/3; padding:0 !important; border:0 !important; border-radius:1cqh; overflow:hidden; background:#f5efe4; color:#10243f;}
+.card-frame-card .card-art-layer{position:absolute; inset:0; z-index:0; display:grid; place-items:center; overflow:hidden; background:linear-gradient(160deg,#eef6ff,#dcebfb); pointer-events:none;}
+.card-frame-card .card-art-layer img{width:100%; height:100%; object-fit:cover; display:block; user-select:none; -webkit-user-drag:none;}
+.card-frame-card .card-frame-layer{position:absolute; inset:0; z-index:2; width:100%; height:100%; object-fit:fill; pointer-events:none;}
+.card-frame-card .card-text-layer{position:absolute; inset:0; z-index:3; pointer-events:none; font-family:inherit; font-weight:900; color:#10243f;}
+.card-frame-card .card-cost-text{position:absolute; left:6.2%; top:2.4%; width:18.8%; height:13.9%; display:grid; place-items:center; color:#2b3848; font-size:2.82cqh; line-height:1; text-shadow:0 .08cqh 0 rgba(255,255,255,.95);}
+.card-frame-card .card-name-text{position:absolute; left:12%; right:8%; top:5.9%; height:10%; display:grid; place-items:center; text-align:center; font-family:var(--font-title); font-size:1.67cqh; line-height:1.05; white-space:normal; overflow:hidden; text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}
+.card-frame-card .card-desc-text{position:absolute; left:8%; right:8%; top:77.8%; bottom:7.4%; display:block; text-align:center; font-family:var(--font-body); font-size:1.17cqh; line-height:1.34; white-space:pre-line; overflow:hidden; color:#10243f;}
+.card-frame-card .card-hit-layer{position:absolute; inset:0; z-index:4; background:transparent; touch-action:none; cursor:inherit;}
+
+.item-frame-card{position:relative; aspect-ratio:2/3; padding:0 !important; border:0 !important; border-radius:1cqh; overflow:hidden; background:transparent; color:#10243f;}
+.item-frame-card .item-art-layer{position:absolute; inset:0; z-index:1; display:grid; place-items:center; overflow:hidden; pointer-events:none; font-size:8cqh;}
+.item-frame-card .item-art-layer img{width:62%; height:48%; object-fit:contain; display:block; filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.22)); user-select:none; -webkit-user-drag:none;}
+.item-frame-card .item-frame-layer{position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:fill; pointer-events:none;}
+.item-frame-card .item-text-layer{position:absolute; inset:0; z-index:2; pointer-events:none; font-family:inherit; font-weight:900; color:#10243f;}
+.item-frame-card .item-name-text{position:absolute; left:12%; right:12%; top:9%; height:10%; display:grid; place-items:center; text-align:center; font-family:var(--font-title); font-size:1.67cqh; line-height:1.05; white-space:normal; overflow:hidden; text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}
+.item-frame-card .item-desc-text{position:absolute; left:9%; right:9%; top:77.8%; bottom:7.4%; display:block; text-align:center; font-family:var(--font-body); font-size:1.17cqh; line-height:1.34; white-space:pre-line; overflow:hidden; color:#10243f;}
+.item-frame-card .item-hit-layer{position:absolute; inset:0; z-index:4; background:transparent; touch-action:none; cursor:inherit;}
+
