@@ -672,6 +672,12 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   overlay.addEventListener("click", handleContinue);
 }
 
+/* "점수 보상" 박스(버튼 제외 영역) 터치 시 뜨는 툴팁. 심도_디버프_점수_로직_요약_v1.0 기준 */
+const RR_MOON_CLAIM_TOOLTIP = {
+  title: "점수 보상 기준",
+  body: "최종 여정 점수 구간에 따라 달빛 조각이 지급됩니다.\n\n끝없는 여정에서는 심도가 오를수록 몬스터가 강해지는 대신, 그 심도에서 새로 얻은 점수에만 최대 ×1.66까지 추가 배율이 붙어 더 큰 보상을 받을 수 있습니다. 이미 얻은 ACT1 점수나 이전 심도 점수는 나중에 심도가 올라가도 다시 계산되지 않습니다.\n\n최초의 여정부터 플레이 시 최초의 여정을 클리어하지 않으면 보상을 받을 수 없습니다."
+};
+
 /* ── 전투 요약 화면 (기존 구현 재사용) ─────────────────────────────────────
    승리: 끝없는 여정 선택에서 "여정 종료" 클릭 시 진입.
    패배: 동자신 패배 연출 터치 후 바로 진입한다. */
@@ -702,9 +708,11 @@ function renderRunSummary(snapshot, onFinish){
   const moonClaimBoxHtml =
     '<div class="rr-moon-claim-wrap">' +
       '<div class="rr-moon-claim-box' + (isClaimed ? " is-claimed" : "") + '">' +
-        '<div class="rr-moon-claim-icon">🌙</div>' +
-        '<div class="rr-moon-claim-label">' + (isClaimed ? "수령 완료" : "점수 보상") + '</div>' +
-        '<div class="rr-moon-claim-count">' + rrToSafeNumber(moonReward.moonShards, 0) + '개</div>' +
+        '<div class="rr-moon-claim-info" data-tooltip-title="' + escapeRrHtml(RR_MOON_CLAIM_TOOLTIP.title) + '" data-tooltip="' + escapeRrHtml(RR_MOON_CLAIM_TOOLTIP.body) + '" data-tooltip-wide="true">' +
+          '<div class="rr-moon-claim-icon">🌙</div>' +
+          '<div class="rr-moon-claim-label">' + (isClaimed ? "수령 완료" : "점수 보상") + '</div>' +
+          '<div class="rr-moon-claim-count">' + rrToSafeNumber(moonReward.moonShards, 0) + '개</div>' +
+        '</div>' +
         '<button type="button" class="rr-moon-claim-btn" id="rrMoonClaimBtn" ' +
           (canClaimMoon ? "" : "disabled") +
         '>' + escapeRrHtml(claimButtonLabel) + '</button>' +
@@ -799,7 +807,7 @@ function renderRunDetail(snapshot, onFinish){
         '<div><span>보스 종료 상태</span><strong>' + scoreBreakdown.bossEndHp + '점</strong></div>' +
         '<div><span>여정 행동</span><strong>' + scoreBreakdown.journeyAction + '점</strong></div>' +
       '</div>' +
-      '<div class="rr-score-reward-line">' +
+      '<div class="rr-score-reward-line" data-tooltip-title="' + escapeRrHtml(RR_MOON_CLAIM_TOOLTIP.title) + '" data-tooltip="' + escapeRrHtml(RR_MOON_CLAIM_TOOLTIP.body) + '" data-tooltip-wide="true">' +
         '<span>최종 ' + scoreBreakdown.total + '점</span>' +
         '<strong>' + escapeRrHtml(moonClaimText) + '</strong>' +
       '</div>' +
@@ -1413,7 +1421,7 @@ function ensureRrStyles(){
     ".rr-score-breakdown-grid strong{font-size:1.2cqh;font-weight:900;color:#a5322a;}" +
 
     ".rr-score-reward-line{display:flex;align-items:center;justify-content:center;gap:1.2cqw;" +
-      "font-size:1.45cqh;font-weight:900;color:#4a3524;}" +
+      "font-size:1.45cqh;font-weight:900;color:#4a3524;cursor:pointer;}" +
 
     ".rr-score-reward-line strong{color:#a5322a;}" +
 
@@ -1424,6 +1432,8 @@ function ensureRrStyles(){
       "background:rgba(255,248,230,.82);border:.16cqh solid rgba(203,154,76,.58);}" +
 
     ".rr-moon-claim-box.is-claimed{opacity:.82;}" +
+
+    ".rr-moon-claim-info{flex:1;min-width:0;display:flex;align-items:center;gap:.9cqw;cursor:pointer;}" +
 
     ".rr-moon-claim-icon{flex:0 0 auto;font-size:2.1cqh;line-height:1;}" +
 

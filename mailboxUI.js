@@ -70,6 +70,8 @@
         render();
       });
     });
+    setupMailboxBodyDragScroll(overlay.querySelector("#mailboxUIBody"));
+
     overlay.querySelector("#mailboxUIBody").addEventListener("click", event => {
       const claimBtn = event.target.closest(".mailbox-claim-btn");
       if(claimBtn && !claimBtn.disabled){
@@ -91,6 +93,48 @@
       tabs: Array.from(overlay.querySelectorAll(".mailbox-tab"))
     };
     return els;
+  }
+
+  /* 마우스 드래그로 선물함 목록을 스크롤할 수 있게 합니다. (rankingUI.js의 동일 패턴 참고)
+     드래그로 판단된 클릭은 claim/refund 버튼 핸들러(뒤에 등록됨)로 전달되지 않도록
+     stopImmediatePropagation으로 차단합니다. */
+  function setupMailboxBodyDragScroll(body){
+    if(!body || body.dataset.dragScrollBound) return;
+    body.dataset.dragScrollBound = "1";
+
+    let dragging = false;
+    let startY = 0;
+    let startScrollTop = 0;
+    let moved = false;
+
+    const onMove = event => {
+      if(!dragging) return;
+      const deltaY = event.clientY - startY;
+      if(Math.abs(deltaY) > 3) moved = true;
+      body.scrollTop = startScrollTop - deltaY;
+    };
+
+    const onUp = () => {
+      if(!dragging) return;
+      dragging = false;
+      body.classList.remove("dragging");
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+
+    body.addEventListener("mousedown", event => {
+      dragging = true;
+      moved = false;
+      startY = event.clientY;
+      startScrollTop = body.scrollTop;
+      body.classList.add("dragging");
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    });
+
+    body.addEventListener("click", event => {
+      if(moved) event.stopImmediatePropagation();
+    });
   }
 
   /* 메인 메뉴/HUD/맵/상점/이벤트의 선물함 버튼이 공통으로 호출하는 진입점입니다. */

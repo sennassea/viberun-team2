@@ -42,7 +42,7 @@
     { id: "all", label: "모든 타입" },
     { id: "attack", label: "정화(공격)" },
     { id: "defense", label: "결계(방어)" },
-    { id: "skill", label: "스킬(강화)" },
+    { id: "skill", label: "의식(강화)" },
     { id: "status", label: "상태이상" },
   ];
 
@@ -226,7 +226,11 @@
           '<label>덱 <select class="deck-viewer-filter-deck">' + DECK_FILTERS.map(optionHtml).join("") + '</select></label>' +
         '</div>' +
         '</div>' +
-        '<div class="deck-viewer-grid"></div>' +
+        '<div class="deck-viewer-grid-wrap">' +
+          '<div class="deck-viewer-grid"></div>' +
+          '<div class="deck-viewer-grid-fade deck-viewer-grid-fade-top" aria-hidden="true"></div>' +
+          '<div class="deck-viewer-grid-fade deck-viewer-grid-fade-bottom" aria-hidden="true"></div>' +
+        '</div>' +
         '<div class="deck-viewer-pick-footer" hidden>' +
           '<div class="deck-viewer-pick-help">기본 카드 1장을 선택하세요.</div>' +
           '<button type="button" class="deck-viewer-pick-cancel" hidden>취소</button>' +
@@ -346,6 +350,7 @@
       filterDeck: overlay.querySelector(".deck-viewer-filter-deck"),
       search: overlay.querySelector(".deck-viewer-search-input"),
       grid: overlay.querySelector(".deck-viewer-grid"),
+      gridWrap: overlay.querySelector(".deck-viewer-grid-wrap"),
       pickFooter: overlay.querySelector(".deck-viewer-pick-footer"),
       pickHelp: overlay.querySelector(".deck-viewer-pick-help"),
       pickCancel: overlay.querySelector(".deck-viewer-pick-cancel"),
@@ -381,7 +386,7 @@
       ".deck-viewer-grid::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#d9b467,#a9772f);border-radius:1cqh;border:.15cqh solid rgba(70,45,20,.18);}" +
       ".deck-viewer-grid::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#e6c583,#bd8638);}" +
       ".deck-viewer-grid .card-hit-layer,.deck-viewer-grid .item-hit-layer{touch-action:pan-y;}" +
-      ".deck-viewer.detail-open .deck-viewer-grid{visibility:hidden;}" +
+      ".deck-viewer.detail-open .deck-viewer-grid-wrap{visibility:hidden;}" +
       ".deck-viewer-card{font:inherit;color:var(--c-ink);cursor:pointer;text-align:inherit;transition:transform .14s ease,box-shadow .14s ease;}" +
       ".deck-viewer-card:hover,.deck-viewer-card:focus-visible{transform:translateY(-.6cqh);box-shadow:0 .9cqh 1.8cqh rgba(40,70,120,.28);outline:none;}" +
       ".deck-viewer.pick-mode .deck-viewer-card.pick-disabled{filter:grayscale(.8) opacity(.45);cursor:not-allowed;}" +
@@ -509,6 +514,7 @@
     if(els.codexHome) els.codexHome.style.display = "none";
     if(els.controls) els.controls.style.display = "";
     if(els.grid) els.grid.style.display = "";
+    if(els.gridWrap) els.gridWrap.style.display = "";
     els.filterType.disabled = false;
     els.filterDeck.disabled = false;
     if(els.filterWrap) els.filterWrap.classList.remove("disabled");
@@ -555,6 +561,7 @@
       if(els.codexHome) els.codexHome.style.display = "none";
       if(els.controls) els.controls.style.display = usingCandidates ? "none" : "";
       if(els.grid) els.grid.style.display = "";
+      if(els.gridWrap) els.gridWrap.style.display = "";
       if(els.pickFooter) els.pickFooter.hidden = false;
       if(els.pickHelp) els.pickHelp.textContent = pickMode.helpText;
       if(els.pickConfirm){
@@ -598,6 +605,7 @@
     if(els.codexHome) els.codexHome.style.display = "grid";
     if(els.controls) els.controls.style.display = "none";
     if(els.grid) els.grid.style.display = "none";
+    if(els.gridWrap) els.gridWrap.style.display = "none";
     if(els.pickFooter) els.pickFooter.hidden = true;
     if(els.pickConfirm) els.pickConfirm.disabled = true;
     detailEntries = [];
@@ -621,6 +629,7 @@
     if(els.codexHome) els.codexHome.style.display = "none";
     if(els.controls) els.controls.style.display = "";
     if(els.grid) els.grid.style.display = "";
+    if(els.gridWrap) els.gridWrap.style.display = "";
     if(els.pickFooter) els.pickFooter.hidden = true;
     if(els.pickConfirm) els.pickConfirm.disabled = true;
     renderDeckViewer();
@@ -1248,7 +1257,7 @@
     const type = getCardFilterType(card);
     if(type === "attack") return "정화";
     if(type === "defense") return "결계";
-    if(type === "skill") return "스킬";
+    if(type === "skill") return "의식";
     return getTypeLabel(card.type);
   }
 

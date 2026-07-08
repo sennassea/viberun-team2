@@ -18,11 +18,11 @@
 }
 .auth-login-modal.is-required .auth-login-close{display:none;}
 .auth-login-panel{
-  width:min(48cqw,68cqh);
-  aspect-ratio:1100/760;
+  width:min(58cqw,68cqh);
+  aspect-ratio:1100/709;
   display:flex;
   flex-direction:column;
-  padding:7.4cqh 4cqw 4cqh;
+  padding:6.4cqh 5.4cqh 4.4cqh;
   border:0;
   background:transparent url("assets/ui/settings/outer_panel.png") center/100% 100% no-repeat;
   box-shadow:0 1.6cqh 3.8cqh rgba(8,35,68,.28);
@@ -50,7 +50,7 @@
 }
 .auth-login-desc{
   margin:1.3cqh 0 1.8cqh;
-  color:var(--c-ink-soft);
+  color:#6f4210;
   font-size:1.9cqh;
   font-weight:800;
   line-height:1.45;
@@ -61,7 +61,7 @@
 }
 .auth-login-button{
   width:46%;
-  aspect-ratio:1086/362;
+  aspect-ratio:356/80;
   margin:0 auto;
   display:flex;
   align-items:center;
@@ -83,17 +83,19 @@
 .auth-login-google,
 .auth-login-facebook{
   background:transparent url("assets/ui_buttons/settings_google_v2.png") center/100% 100% no-repeat;
+  aspect-ratio:356/80;
   padding-left:3.4cqw;
   color:#5b3a12;
 }
 .auth-login-facebook{
   background-image:url("assets/ui_buttons/settings_facebook_v2.png");
+  aspect-ratio:356/80;
 }
 .auth-login-guest{
-  background:linear-gradient(180deg,#4f9be8,#2f6fc4);
-  color:#fff;
-  border:.18cqh solid var(--c-gold);
-  box-shadow:0 .45cqh 1.1cqh rgba(31,95,165,.32);
+  background:linear-gradient(180deg,#ffe9a8,#d9a53c);
+  color:#4a2b07;
+  border:0;
+  box-shadow:0 .45cqh 1.1cqh rgba(176,125,29,.35);
 }
 .auth-login-message{
   display:none;
