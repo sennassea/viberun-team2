@@ -34,23 +34,28 @@ function injectRewardStyles(){
   style.textContent = `
     #cardRewardOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.58);backdrop-filter:blur(.5cqh);}
     #cardRewardOverlay.show{display:grid;}
-    .reward-panel{width:min(70cqw,90cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.94);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;}
+    .reward-panel{width:min(70cqw,90cqh);padding:3cqh 3cqw;border-radius:2cqh;background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.4);text-align:center;}
     #cardRewardOverlay.blessing-card-reward .reward-panel{width:min(74cqw,98cqh);box-sizing:border-box;padding:3.2cqh 5.2cqw 5cqh;border:0;border-radius:0;background:transparent url("assets/ui_panels/codex_popup_frame.png") center/100% 100% no-repeat;box-shadow:none;}
     #cardRewardOverlay.blessing-card-reward .reward-panel h2{color:#3e2912;text-shadow:0 .08cqh 0 rgba(255,255,255,.85);}
     #cardRewardOverlay.blessing-card-reward .reward-panel p{color:#5c3c10;font-weight:800;text-shadow:0 .06cqh 0 rgba(255,255,255,.75);}
     #cardRewardOverlay.blessing-card-reward .reward-cards{margin-bottom:0;}
-    .reward-panel h2{font-size:3.2cqh;margin-bottom:.8cqh;color:var(--c-ink);}
-    .reward-panel p{font-size:1.7cqh;color:var(--c-ink-soft);margin-bottom:2cqh;}
+    .reward-panel h2{font-size:3.2cqh;margin-bottom:.8cqh;color:#3a2814;font-weight:900;}
+    .reward-panel p{font-size:1.7cqh;color:#6b5236;margin-bottom:2cqh;}
     .reward-cards{display:flex;justify-content:center;align-items:stretch;gap:1.4cqw;margin-bottom:1.6cqh;}
     .reward-card{position:relative;width:15cqw;min-height:28cqh;border-radius:1.4cqh;background:linear-gradient(180deg,#fbfcff,#eef4fb);border:.35cqh solid #cdddf0;box-shadow:0 .8cqh 1.6cqh rgba(40,70,120,.22);display:flex;flex-direction:column;align-items:center;padding:.8cqh .7cqw;cursor:pointer;font:inherit;color:var(--c-ink);transition:transform .14s, box-shadow .14s;}
     .reward-card:hover{transform:translateY(-1.4cqh) scale(1.03);box-shadow:0 1.2cqh 2.2cqh rgba(40,70,120,.34);}
+    .reward-card.selected{border-color:#e8c874;box-shadow:0 0 0 .3cqh #e8c874,0 1.2cqh 2.2cqh rgba(40,70,120,.34);}
+    .reward-card.selected::after{content:"✓";position:absolute;top:.5cqh;right:.5cqw;width:2.6cqh;height:2.6cqh;border-radius:50%;display:grid;place-items:center;background:#5d9f78;color:#fff;font-size:1.6cqh;font-weight:900;z-index:5;}
     .reward-card .cost{position:absolute;top:-1cqh;left:-1cqw;width:4.6cqh;height:4.6cqh;border-radius:50%;display:grid;place-items:center;font-size:2.4cqh;font-weight:800;color:#fff;background:radial-gradient(circle at 35% 30%,#bfe6ff,#3f8fe0 70%);border:.25cqh solid #eaf6ff;}
     .reward-card .cname{font-size:2cqh;font-weight:900;margin-top:.4cqh;}
     .reward-card .art{width:100%;height:9cqh;margin:.6cqh 0;border-radius:1cqh;display:grid;place-items:center;font-size:6cqh;background:linear-gradient(160deg,#eef6ff,#dcebfb);border:.15cqh solid #d6e6f5;}
     .reward-card .type{font-size:1.4cqh;font-weight:800;color:#fff;padding:.15cqh .8cqw;border-radius:.7cqh;margin-bottom:.4cqh;}
     .reward-meta{font-size:1.25cqh;font-weight:800;color:var(--c-ink-soft);margin-bottom:.4cqh;}
     .reward-card .desc{font-size:1.45cqh;line-height:1.35;white-space:pre-line;}
-    .reward-skip{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#fff;cursor:pointer;color:var(--c-ink-soft);}
+    .reward-actions{display:flex;justify-content:center;align-items:center;gap:1cqw;}
+    .reward-skip{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid rgba(190,150,80,.5);background:#fffaf0;cursor:pointer;color:#6b5236;}
+    .reward-confirm{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:2.6cqh;border:.2cqh solid rgba(190,150,80,.5);background:#eee6d6;color:#a99a80;cursor:not-allowed;opacity:.72;}
+    .reward-confirm.active{background:linear-gradient(160deg,#cf5b52,#8f2f2f);border-color:#e8c874;color:#fbe9c8;cursor:pointer;opacity:1;box-shadow:0 .5cqh 1.2cqh rgba(0,0,0,.35);}
     .reward-card.card-frame-card{aspect-ratio:2/3;min-height:0;padding:0;border:0;overflow:hidden;background:#f5efe4;}
     .reward-card.card-frame-card .card-art-layer{position:absolute;inset:0;z-index:0;display:grid;place-items:center;overflow:hidden;background:linear-gradient(160deg,#eef6ff,#dcebfb);pointer-events:none;}
     .reward-card.card-frame-card .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none;}
