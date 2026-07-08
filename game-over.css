@@ -1,0 +1,13 @@
+/* 종료(승리/패배) 오버레이 — style.css에서 분리 */
+
+/* 醫낅즺(???? ?ㅻ쾭?덉씠 */
+#over{position:absolute; inset:0; z-index:100; display:none; place-items:center;
+  background:rgba(20,35,60,.55); backdrop-filter:blur(3px);}
+#over.show{display:grid;}
+.over-box{background:var(--c-panel); border:0.3cqh solid var(--c-gold); border-radius:2cqh;
+  padding:4cqh 5cqw; text-align:center; box-shadow:0 2cqh 4cqh rgba(0,0,0,.3);}
+.over-box h2{font-family:var(--font-title); font-size:5.75cqh; margin-bottom:1cqh;}
+.over-box p{font-family:var(--font-body); font-size:2.53cqh; color:var(--c-ink-soft); margin-bottom:2.4cqh;}
+.over-box button{font-family:var(--font-title); font-size:2.76cqh; font-weight:800; color:#fff; padding:1.4cqh 3cqw; cursor:pointer;
+  border:none; border-radius:1.2cqh; background:linear-gradient(180deg,#5fa0e8,#2f6fc0);}
+#returnStart{display:block; margin:1.2cqh auto 0; background:linear-gradient(180deg,#8aa3bd,#5d748d);}

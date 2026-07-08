@@ -1,0 +1,63 @@
+/* 기본 변수 / 리셋 / 게임 무대(#game, #stageWrap) — style.css에서 분리 */
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Paperozi';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+}
+
+/* =========================================================================
+   ?붿옄???좏겙 / ?꾩뿭
+   - ?붾㈃鍮?16:9 怨좎젙, 而⑦뀒?대꼫 荑쇰━ ?⑥쐞(cqh/cqw)濡?紐⑤뱺 ?붿냼瑜?鍮꾩쑉 ?ㅼ???   - 紐⑤컮??媛濡쒖뿉?쒕룄 ?숈씪 ?덉씠?꾩썐??洹몃?濡?異뺤냼/?뺣???   ========================================================================= */
+:root{
+  --c-sky-1:#bfe3ff; --c-sky-2:#e8f5ff; --c-floor:#dfeaf5;
+  --c-panel:rgba(255,255,255,.82); --c-panel-line:rgba(120,160,210,.45);
+  --c-ink:#2b3b54; --c-ink-soft:#5b7090;
+  --c-gold:#e7b54a; --c-gold-deep:#b07d1d;
+  --c-blue:#3f8fe0; --c-blue-deep:#1f5fa5;
+  --c-red:#e3574e; --c-red-deep:#a82e2e;
+  --c-green:#4bb07a; --c-hp:#e24b4a; --c-hp-bg:#7a2a2a;
+  --r:1.4cqh;
+  --font-title:'Paperozi',"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  --font-body:'Paperozi',"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+}
+*{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+html,body{height:100%; background:#0c1422; overflow:hidden;
+  font-family: var(--font-body);
+  user-select:none; -webkit-user-select:none;}
+
+/* 16:9 臾대?: 酉고룷?몄뿉 苑?留욎텛??鍮꾩쑉 ?좎?(?덊꽣諛뺤뒪) */
+#stageWrap{position:fixed; inset:0; display:flex; align-items:center; justify-content:center;}
+#game{
+  position:relative;
+  width:min(100vw, calc(100vh * 16 / 9));
+  height:min(100vh, calc(100vw * 9 / 16));
+  container-type:size;                 /* cqh/cqw 湲곗? 而⑦뀒?대꼫 */
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--c-sky-2) 0%, var(--c-sky-1) 55%, #a7d3f5 100%);
+  overflow:hidden; color:var(--c-ink);
+  font-size:2.53cqh; line-height:1.25;
+}
+.battle-bg{
+  position:absolute; inset:0; z-index:0; opacity:0;
+  background-image:var(--battle-bg-image);
+  background-size:cover; background-position:center; background-repeat:no-repeat;
+  transition:opacity .25s ease;
+  pointer-events:none;
+}
+#game.battle-bg-active .battle-bg{opacity:1;}
+#game.battle-bg-active::before{opacity:.34;}
+/* 蹂묒썝 諛붾떏/李쎈Ц 遺꾩쐞湲??꾪듃 ?泥? */
+#game::before{content:""; position:absolute; left:0; right:0; bottom:0; height:42%;
+  background:linear-gradient(180deg, rgba(223,234,245,0) 0%, var(--c-floor) 40%, #cdddee 100%);
+  pointer-events:none; z-index:1;}
+.bokeh{position:absolute; border-radius:50%; background:rgba(255,255,255,.35);
+  filter:blur(2cqh); pointer-events:none;}

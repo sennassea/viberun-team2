@@ -1,0 +1,119 @@
+/* 상단 HUD (플레이어 정보 카드, 체력/자원, 우측 메뉴 버튼) — style.css에서 분리 */
+
+/* =========================== ?곷떒 HUD =========================== */
+.top-hud{position:absolute; top:1.4cqh; left:1.4cqh; right:1.4cqh; height:12cqh; z-index:30;}
+#hud{position:relative; width:100%; height:100%;}
+.hud-card{display:flex; align-items:center; gap:.7cqw; background:var(--c-panel);
+  border:0.2cqh solid var(--c-panel-line); border-radius:var(--r);
+  padding:.8cqh 1.1cqw; backdrop-filter:blur(4px); box-shadow:0 .4cqh 1.2cqh rgba(60,90,140,.15);}
+.player-info-card{position:absolute; left:0; top:0; width:24cqw; min-width:30cqh; max-width:calc(50% - 11cqw);
+  height:100%; align-items:center; gap:1.15cqw;
+  /* 사진(.portrait)은 이제 이 컨테이너 기준으로 position:absolute 배치되어 아래 padding-left와
+     무관하게 독립적으로 위치가 정해진다. 이 padding-left는 이름/HP/재화 묶음(.player-info-body)의
+     시작 위치만 결정하며, 실측한 원형 프레임 우측 끝(카드 폭의 약 24.8%)보다 살짝만 오른쪽에 오도록
+     사진 프레임 쪽으로 더 붙인다 */
+  padding:.8cqh 1cqw .8cqh 7.7cqw;}
+.player-info-card{
+  background:transparent url("assets/ui/player_info_panel_wide.png") center/100% 100% no-repeat;
+  border:0;
+  box-shadow:none;
+  backdrop-filter:none;
+}
+.player-info-body{min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:.42cqh;}
+.player-info-card .player-info-body{
+  /* 부모(.player-info-card)의 align-items:center는 사진 프레임을 세로 중앙에 맞추기 위한 것이라
+     유지하고, 이름/HP/재화 묶음만 카드 상단에 안정적으로 붙도록 별도로 정렬한다 */
+  align-self:flex-start;
+  margin-top:.6cqh;
+}
+.portrait{width:11cqh; height:7cqh; border-radius:1.5cqh; display:grid; place-items:center;
+  font-size:4.83cqh; background:linear-gradient(160deg,#fff,#dcecff);
+  border:0.25cqh solid var(--c-gold); box-shadow:0 0 1cqh rgba(231,181,74,.6);}
+.player-info-card .portrait{
+  /* 렌더링된 카드 스크린샷을 픽셀 단위로 실측한 금테 원형 프레임 위치입니다
+     (카드 전체 대비 좌측 약 5.3%, 상단 약 17.1%, 가로 약 19.5%, 세로 약 59.7%를
+     .player-info-card 크기(24cqw x 12cqh)에 곱해 #game 기준 cqw/cqh 절대값으로
+     환산했습니다). 기존에는 .player-info-card 자신의 렌더링 폭 기준 %를 썼는데,
+     %는 .player-info-card가 실제로 페인트되는 크기 기준으로, 이름/HP바 등 나머지
+     요소는 #game 기준 cqw/cqh로 각각 별도로 반올림되다 보니 화면이 축소(브라우저/
+     OS 배율 변경)될 때 서브픽셀 오차로 초상화와 이름/HP바가 서로 다른 방향으로
+     어긋나 보였습니다. 좌표 기준을 cqw/cqh 하나로 통일해 반올림 오차를 없앱니다. */
+  position:absolute;
+  left:1.27cqw;
+  top:2.05cqh;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  width:4.68cqw;
+  height:7.16cqh;
+  border-radius:50%;
+  overflow:hidden;
+}
+.player-info-card .portrait img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+}
+.who b{font-size:2.28cqh;} .who span{display:none;}
+.hud-hp-row{display:flex; align-items:center; gap:.8cqw;
+  font-size:1.78cqh; font-weight:800; color:var(--c-ink);}
+.hud-hp-label{color:var(--c-red-deep);}
+.hud-hpbar{position:relative; width:100%; height:1.45cqh; border-radius:.8cqh; overflow:hidden;
+  background:rgba(122,42,42,.62); border:.12cqh solid rgba(0,0,0,.14);}
+.player-info-card .hud-hpbar{
+  width:min(13.6cqw, 25cqh);
+  height:1.65cqh;
+  background:rgba(80,38,38,.42);
+  border:0;
+  box-shadow:inset 0 0 0 .12cqh rgba(75,40,28,.35);
+}
+#hudHpFill{position:absolute; left:0; top:0; bottom:0; width:100%;
+  background:linear-gradient(180deg,#ff8079,var(--c-hp)); transition:width .35s ease;}
+.player-info-card #hudHpFill{
+  border-radius:.8cqh;
+  background:linear-gradient(180deg,#ff6f67 0%,#e33434 58%,#a6171f 100%);
+}
+#hudHp{position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:1.32cqh; font-weight:900; line-height:1; text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}
+.hud-resource-row{display:flex; align-items:center; gap:.65cqw; min-width:0; padding-top:.1cqh;}
+.player-info-card .hud-resource-row{
+  transform:translateX(2cqw);
+  width:calc(100% - 2cqw);
+}
+.hud-resource{display:inline-flex; align-items:center; gap:.22cqw; min-width:0;
+  font-size:1.67cqh; font-weight:900; color:var(--c-ink);}
+.hud-resource-icon{width:2.15cqh; height:2.15cqh; flex:none; display:inline-block; font-size:0; line-height:1;
+  background:center/contain no-repeat;}
+.hud-resource-icon-relic{background-image:url("assets/ui/resource_icons/relic.png");}
+.hud-resource-icon-potion{background-image:url("assets/ui/resource_icons/potion.png");}
+.hud-resource-icon-gold{background-image:url("assets/ui/resource_icons/gold.png");}
+.hud-resource-icon-moon{background-image:url("assets/ui/resource_icons/moon_shard.png");}
+.profile-status-effects{position:absolute; left:0; top:calc(100% + .55cqh); width:24cqw; min-width:30cqh;
+  max-width:calc(50% - 11cqw); min-height:4.2cqh; display:flex; justify-content:flex-end; pointer-events:none; z-index:2;}
+.profile-status-effects .badges{width:100%; min-height:0; display:flex; flex-direction:row-reverse;
+  justify-content:flex-start; align-items:center; gap:.45cqh;}
+.profile-status-effects .status-icon{width:3.35cqh; height:3.35cqh; border-radius:.75cqh; pointer-events:auto;}
+.profile-status-effects .status-symbol{font-size:2.13cqh;}
+.profile-status-effects .status-symbol img{width:100%; height:100%; object-fit:contain; display:block;}
+.profile-status-effects .status-count{right:-.35cqh; bottom:-.45cqh; min-width:1.65cqh; height:1.65cqh; font-size:1.21cqh;}
+.stat{font-size:2.53cqh; font-weight:700; display:flex; align-items:center; gap:.4cqw;}
+.spacer{display:none;}
+.hud-btn{cursor:pointer; transition:transform .12s;} .hud-btn:active{transform:scale(.94);}
+.top-right-menu{position:absolute; top:0; right:0; height:100%; display:flex; align-items:center; gap:.8cqw;}
+.top-menu-button{width:8.2cqh; height:100%; justify-content:center; padding:0; font-size:3.57cqh;}
+.top-menu-button.stat{gap:.25cqw; font-size:2.99cqh;}
+.top-menu-button #hudDeck{display:none;}
+.ui-asset-button{position:relative;background-color:transparent;background-position:center;background-repeat:no-repeat;background-size:contain;border:0;box-shadow:none;font-size:0;color:transparent;}
+.ui-asset-button::before{content:"";position:absolute;inset:0;background-position:center;background-repeat:no-repeat;background-size:contain;pointer-events:none;}
+.ui-map-button::before{background-image:url("assets/ui_buttons/map.png");}
+.ui-bag-button::before{background-image:url("assets/ui_buttons/bag.png");}
+.ui-codex-button::before{background-image:url("assets/ui_buttons/codex.png");}
+.ui-settings-button::before{background-image:url("assets/ui_buttons/settings.png");}
+.ui-depth-button::before{background-image:url("assets/ui_buttons/depth.png");}
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+  clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+

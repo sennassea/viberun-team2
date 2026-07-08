@@ -1,0 +1,27 @@
+/* 전투 중 카드 선택 팝업 (약병 등) — style.css에서 분리 */
+
+/* ===================== 전투 중 카드 선택 팝업 (약병 등) ===================== */
+#battleCardChoiceOverlay,
+#battleCardMultiChoiceOverlay{position:absolute; inset:0; z-index:96; display:none; place-items:center;
+  background:rgba(20,35,60,.45); backdrop-filter:blur(3px);}
+#battleCardChoiceOverlay.show,
+#battleCardMultiChoiceOverlay.show{display:grid;}
+.battle-card-choice-panel{width:min(78cqw, 104cqh); max-height:78cqh; display:flex; flex-direction:column;
+  min-height:0; background:var(--c-panel); border:0.3cqh solid var(--c-gold); border-radius:var(--r);
+  box-shadow:0 2cqh 4cqh rgba(0,0,0,.28); padding:2cqh 2cqw;}
+.battle-card-choice-panel h2{flex:none; font-family:var(--font-title); font-size:2.8cqh; line-height:1;
+  text-align:center; padding-bottom:.8cqh;}
+.battle-card-choice-panel p{flex:none; font-size:1.7cqh; color:var(--c-ink-soft); text-align:center; padding-bottom:1.2cqh;}
+.battle-card-choice-cards{flex:1 1 auto; min-height:0; overflow-y:auto; display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(11.5cqw, 1fr)); gap:1.2cqh; padding:.5cqh .4cqw 1cqh; justify-items:center;}
+.battle-card-choice-card{position:relative; width:11.5cqw; padding:0; border:0; background:none; cursor:pointer;}
+.battle-card-choice-card.selected{outline:.32cqh solid var(--c-gold); outline-offset:.2cqh; border-radius:1.2cqh;}
+.battle-card-choice-cancel{flex:none; align-self:center; min-width:8cqw; height:4.6cqh; margin-top:1cqh;
+  border-radius:1cqh; border:.18cqh solid rgba(90,80,60,.4); background:rgba(255,255,255,.65);
+  color:var(--c-ink); font:inherit; font-size:1.7cqh; font-weight:800; cursor:pointer;}
+.battle-card-multi-choice-actions{flex:none; display:flex; align-items:center; justify-content:flex-end;
+  gap:1cqw; padding-top:1cqh;}
+.battle-card-multi-choice-actions .battle-card-choice-cancel{margin-top:0; align-self:auto;}
+.battle-card-multi-choice-confirm{flex:none; min-width:8cqw; height:4.6cqh; border-radius:1cqh;
+  border:.22cqh solid var(--c-gold); background:linear-gradient(180deg,#fff8d9,#ffe59a); color:#7a5510;
+  font:inherit; font-size:1.7cqh; font-weight:900; cursor:pointer;}
