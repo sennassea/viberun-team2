@@ -89,8 +89,10 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .start-menu-row{display:grid; gap:1.2cqw;}
 .start-menu-row.split{grid-template-columns:1fr 1fr;}
 .start-menu-button{
-  width:100%; height:7.8cqh; border:0; border-radius:1.2cqh;
-  background:transparent center/100% 100% no-repeat;
+  width:100%; border:0; border-radius:1.2cqh;
+  /* 버튼 배경 이미지는 원본 비율(아래 aspect-ratio)대로만 표시하고, 늘리거나 잘라 맞추지 않는다.
+     버튼 박스 자체가 이미지 비율과 동일하므로 contain이어도 여백 없이 꽉 차고, 클릭 영역도 이미지 전체와 일치한다. */
+  background:transparent center/contain no-repeat;
   display:flex; align-items:center; justify-content:center; gap:1.4cqw; padding:0 2.6cqh;
   color:var(--c-ink); cursor:pointer;
   font:inherit; font-family:var(--font-title); font-size:2.4cqh; font-weight:900; letter-spacing:0;
@@ -112,10 +114,12 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 .start-new-game,
 .start-continue-game,
 .start-ranking-button{
+  aspect-ratio:832.2/96.08; /* 긴 버튼 원본 비율 (약 8.66:1) */
   background-image:url("assets/ui/start_menu/new_button_long.png");
 }
 .start-codex-button,
 .start-record-button{
+  aspect-ratio:402.97/96.08; /* 짧은 버튼 원본 비율 (약 4.19:1) */
   background-image:url("assets/ui/start_menu/new_button_short.png");
 }
 .start-settings-button{
