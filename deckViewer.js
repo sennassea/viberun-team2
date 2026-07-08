@@ -215,7 +215,7 @@
         '</div>' +
         '<div class="deck-viewer-controls">' +
         '<div class="deck-viewer-summary"></div>' +
-        '<label class="deck-viewer-search">검색 <input class="deck-viewer-search-input" type="search" placeholder="주문 이름"></label>' +
+        '<label class="deck-viewer-search">검색 <input class="deck-viewer-search-input" type="search" placeholder="이름"></label>' +
         '<div class="deck-viewer-sort" aria-label="주문 정렬">' +
           '<label>정렬 <select class="deck-viewer-sort-type">' + SORT_OPTIONS.map(optionHtml).join("") + '</select></label>' +
           '<label>방향 <select class="deck-viewer-sort-direction">' + SORT_DIRECTIONS.map(optionHtml).join("") + '</select></label>' +
@@ -397,19 +397,19 @@
       ".deck-viewer:not(.codex-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
       ".deck-viewer.codex-mode{z-index:240;}" +
       ".deck-viewer.codex-mode:not(.codex-home-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
-      ".deck-viewer.codex-home-mode .deck-viewer-panel{width:min(64cqw,92cqh);aspect-ratio:2.12;max-height:49cqh;background:transparent url(\"assets/ui_panels/codex_popup_frame.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.4cqh 2.8cqh rgba(0,0,0,.22);padding:3.6cqh 3.6cqw 2cqh;}" +
+      ".deck-viewer.codex-home-mode .deck-viewer-panel{width:min(57cqw,82cqh);aspect-ratio:2.12;max-height:44cqh;background:transparent url(\"assets/ui_panels/codex_popup_frame.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.4cqh 2.8cqh rgba(0,0,0,.22);padding:3.6cqh 3.6cqw 2cqh;}" +
       ".deck-viewer.codex-home-mode .deck-viewer-head{border-bottom:0;padding-bottom:.2cqh;transform:translateY(-1.1cqh);}" +
       ".deck-viewer.codex-mode .deck-viewer-head h2{color:#4a2f0a;font-weight:900;letter-spacing:.05cqh;text-shadow:0 .12cqh 0 rgba(255,255,255,.65),0 .05cqh .3cqh rgba(74,47,10,.35);}" +
       ".codex-section-tabs{display:none;gap:0;margin:0 0 1.1cqh;}" +
       ".codex-section-tab{width:12.2cqw;height:4.6cqh;border:0;background:transparent;padding:0;color:transparent;font-size:0;cursor:pointer;}" +
       ".codex-section-tab.active{filter:brightness(1.05) drop-shadow(0 .35cqh .55cqh rgba(90,65,20,.25));}" +
       ".codex-section-tab-image{width:100%;height:100%;object-fit:fill;display:block;user-select:none;-webkit-user-drag:none;}" +
-      ".codex-home-grid{display:none;grid-template-columns:repeat(3,minmax(0,1fr));gap:1cqw;min-height:28cqh;align-items:center;margin:auto 0;}" +
-      ".codex-home-card{height:23.5cqh;border:0;background:transparent;box-shadow:none;display:block;padding:0;color:var(--c-ink);font:inherit;cursor:pointer;}" +
+      ".codex-home-grid{display:none;grid-template-columns:repeat(3,auto);justify-content:center;column-gap:2.2cqw;row-gap:0;min-height:28cqh;align-items:center;margin:auto 0;}" +
+      ".codex-home-card{height:23.5cqh;aspect-ratio:733/1536;justify-self:center;border:0;background:transparent;box-shadow:none;display:block;padding:0;color:var(--c-ink);font:inherit;cursor:pointer;}" +
       ".codex-home-card:hover,.codex-home-card:focus-visible{transform:translateY(-.5cqh);filter:brightness(1.04) drop-shadow(0 1cqh 1.4cqh rgba(80,55,15,.22));outline:none;}" +
       ".codex-home-card-frame{position:relative;display:block;width:100%;height:100%;}" +
       ".codex-home-image{width:100%;height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none;}" +
-      ".codex-home-label{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);text-align:center;font-family:var(--font-title);font-size:2.1cqh;font-weight:800;color:#4a2f0a;text-shadow:0 .08cqh 0 rgba(255,255,255,.65);pointer-events:none;white-space:nowrap;}" +
+      ".codex-home-label{position:absolute;left:10%;right:10%;top:75.5%;height:8.5%;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--font-title);font-size:1.7cqh;line-height:1;font-weight:800;color:#4a2f0a;text-shadow:0 .05cqh .12cqh rgba(120,80,20,.35);pointer-events:none;white-space:nowrap;overflow:hidden;}" +
       ".deck-viewer.codex-mode .deck-viewer-grid{gap:2.8cqh 1.8cqw;}" +
       ".deck-viewer-filter.disabled{opacity:.45;pointer-events:none;}" +
       ".codex-item-card .cost,.codex-item-card .type{display:none;}" +

@@ -87,7 +87,7 @@
     if(isExpiredMonthlyPass(cachedStatus)){
       ddayEl.hidden = false;
       ddayEl.textContent = "D-0";
-      rewardTextEl.textContent = "달빛 조각 15";
+      rewardTextEl.textContent = "달빛 조각 x15";
 
       claimButtonEl.disabled = false;
       claimButtonEl.textContent = "다시 구매";
@@ -98,9 +98,8 @@
     }
 
     if(!cachedStatus || !cachedStatus.active){
-      ddayEl.hidden = false;
-      ddayEl.textContent = "D-30";
-      rewardTextEl.textContent = "달빛 조각 15";
+      ddayEl.hidden = true;
+      rewardTextEl.textContent = "달빛 조각 x15";
 
       claimButtonEl.disabled = false;
       claimButtonEl.textContent = "구매하기";
@@ -111,9 +110,11 @@
     }
 
     const rewardAmount = Math.max(0, Number(cachedStatus.todayRewardAmount || cachedStatus.dailyRewardAmount) || 15);
+    const daysRemaining = Math.max(0, Number(cachedStatus.daysRemaining) || 0);
 
-    ddayEl.hidden = true;
-    rewardTextEl.textContent = "달빛 조각 " + rewardAmount;
+    ddayEl.hidden = false;
+    ddayEl.textContent = "D-" + daysRemaining;
+    rewardTextEl.textContent = "달빛 조각 x" + rewardAmount;
 
     claimButtonEl.disabled = false;
     claimButtonEl.classList.remove("is-claimed", "is-disabled");
