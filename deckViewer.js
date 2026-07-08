@@ -364,9 +364,8 @@
       ".deck-viewer.codex-mode{z-index:240;}" +
       ".deck-viewer.codex-mode:not(.codex-home-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
       ".deck-viewer.codex-home-mode .deck-viewer-panel{width:min(64cqw,92cqh);aspect-ratio:2.12;max-height:49cqh;background:transparent url(\"assets/ui_panels/codex_popup_frame.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.4cqh 2.8cqh rgba(0,0,0,.22);padding:3.6cqh 3.6cqw 2cqh;}" +
-      ".deck-viewer.codex-home-mode .deck-viewer-head{border-bottom:0;padding-bottom:.2cqh;}" +
-      ".deck-viewer.codex-mode .deck-viewer-head h2{position:relative;font-weight:900;letter-spacing:.05cqh;background:linear-gradient(90deg,#7a5510 0%,#c99a3f 22%,#fff6d8 50%,#c99a3f 78%,#7a5510 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-shadow:0 .05cqh .3cqh rgba(122,85,16,.35);filter:drop-shadow(0 .1cqh 0 rgba(255,255,255,.35));animation:codexTitleShine 3.4s ease-in-out infinite;}" +
-      "@keyframes codexTitleShine{0%{background-position:220% 0;}60%,100%{background-position:-40% 0;}}" +
+      ".deck-viewer.codex-home-mode .deck-viewer-head{border-bottom:0;padding-bottom:.2cqh;transform:translateY(-1.1cqh);}" +
+      ".deck-viewer.codex-mode .deck-viewer-head h2{color:#4a2f0a;font-weight:900;letter-spacing:.05cqh;text-shadow:0 .12cqh 0 rgba(255,255,255,.65),0 .05cqh .3cqh rgba(74,47,10,.35);}" +
       ".codex-section-tabs{display:none;gap:0;margin:0 0 1.1cqh;}" +
       ".codex-section-tab{width:12.2cqw;height:4.6cqh;border:0;background:transparent;padding:0;color:transparent;font-size:0;cursor:pointer;}" +
       ".codex-section-tab.active{filter:brightness(1.05) drop-shadow(0 .35cqh .55cqh rgba(90,65,20,.25));}" +

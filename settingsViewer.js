@@ -551,7 +551,7 @@
     els.overlay.classList.remove("start-mode");
     if(els.actions) els.actions.style.display = "";
     if(els.reset) els.reset.style.display = "none";
-    if(els.tutorial) els.tutorial.style.display = "";
+    if(els.tutorial) els.tutorial.style.display = "none";
     if(els.primary) els.primary.style.display = "";
     const danger = els.overlay.querySelector(".settings-viewer-danger");
     if(danger) danger.style.display = "";
@@ -900,6 +900,7 @@
   }
 
   function replayTutorial(){
+    if(settingsMode === "combat") return;
     if(typeof markHasPlayedBefore === "function") markHasPlayedBefore();
     closeSettingsViewer();
     if(window.TUTORIAL_SYSTEM && typeof window.TUTORIAL_SYSTEM.showGuide === "function"){

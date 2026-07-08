@@ -158,6 +158,7 @@ textarea,
    17. 기도터 노드 행동 카드 제목 ('받아들이기'/'정리하기'/'휴식하기')
    18. 각 노드(전투/상점/이벤트/기도터) 프로필 닉네임
    19. 이벤트 UI 제목 (예: 열면 안되는 병실 서랍)
+   20. 튜토리얼 대사창 화자명 ('동자신')
    ========================================================================= */
 .start-logo-main,
 .monthly-pass-claim-title,
@@ -189,7 +190,9 @@ textarea,
 #prayerName,
 .event-title,
 .rr-summary-titlebar span,
-.rr-detail-titlebar span {
+.rr-detail-titlebar span,
+.tutorial-battle-intro-speaker,
+.tutorial-map-dialogue-speaker {
   font-family: var(--font-special-title) !important;
   font-weight: 700;
 }

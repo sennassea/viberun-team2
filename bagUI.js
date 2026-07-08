@@ -99,6 +99,7 @@
       ".bag-relic-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;padding:.5cqh;" +
         "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
       ".bag-relic-card.item-frame-card{width:100%;height:100%;min-height:0;}" +
+      ".bag-relic-card .item-text-layer,.bag-potion-card .item-text-layer{display:none;}" +
       ".bag-relic-card:hover{border-color:var(--bg-gold);}" +
       ".bag-relic-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
       ".bag-relic-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +

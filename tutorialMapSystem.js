@@ -175,9 +175,9 @@
         min-width:0;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-speaker{
+        margin-top:1cqh;
         margin-bottom:.6cqh;
         font-size:2.3cqh;
-        font-weight:900;
         color:#a8641f;
         text-shadow:0 0.06cqh 0 rgba(255,255,255,.5);
       }

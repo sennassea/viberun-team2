@@ -1387,7 +1387,7 @@
       ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar{position:absolute;left:var(--tutorial-dongjasin-avatar-left);top:var(--tutorial-dongjasin-avatar-top);transform:var(--tutorial-dongjasin-avatar-transform);width:var(--tutorial-dongjasin-avatar-width);height:var(--tutorial-dongjasin-avatar-height);pointer-events:none;}" +
       ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar img{width:100%;height:100%;object-fit:contain;object-position:bottom center;display:block;}" +
       ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar-placeholder{width:100%;height:100%;border:.22cqh solid rgba(47,102,168,.45);border-radius:46% 46% 42% 42% / 38% 38% 52% 52%;background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(220,234,250,.96));box-shadow:0 .45cqh 1cqh rgba(20,35,60,.16);}" +
-      ".tutorial-battle-intro-speaker{margin-bottom:.6cqh;font-size:2.3cqh;font-weight:900;color:#a8641f;text-shadow:0 0.06cqh 0 rgba(255,255,255,.5);}" +
+      ".tutorial-battle-intro-speaker{margin-top:1cqh;margin-bottom:.6cqh;font-size:2.3cqh;color:#a8641f;text-shadow:0 0.06cqh 0 rgba(255,255,255,.5);}" +
       ".tutorial-battle-intro-text{font-size:1.9cqh;line-height:1.45;font-weight:800;}" +
       ".tutorial-battle-intro-actions{display:flex;justify-content:flex-end;margin-top:auto;}" +
       ".tutorial-battle-intro-next{min-width:0;height:4.4cqh;aspect-ratio:918/232;border:0;border-radius:0;background:transparent url(\"assets/ui_buttons/tutorial_proceed_v2.png\") center/100% 100% no-repeat;color:#2a1a08;font-size:1.7cqh;font-weight:900;cursor:pointer;display:grid;place-items:center;}";

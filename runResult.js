@@ -1317,9 +1317,9 @@ function ensureRrStyles(){
       "padding:1.1cqh 3.6cqw;border-radius:1cqh;white-space:nowrap;" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.22cqh solid #e8c874;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
-    ".rr-detail-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;line-height:1;}" +
+    ".rr-detail-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
     ".rr-detail-section{display:flex;flex-direction:column;gap:.7cqh;min-height:0;}" +
-    ".rr-detail-section-title{text-align:center;font-size:1.5cqh;font-weight:800;color:#8a6a3c;letter-spacing:.05cqh;margin-top:1.6cqh;}" +
+    ".rr-detail-section-title{text-align:center;font-size:1.5cqh;font-weight:800;color:#8a6a3c;letter-spacing:.05cqh;margin-top:.9cqh;}" +
     ".rr-detail-grid{flex:1;min-height:0;display:grid;grid-template-columns:30% 1fr;gap:1cqh 1.2cqw;}" +
     ".rr-detail-stack{display:flex;flex-direction:column;gap:1cqh;min-height:0;}" +
     ".rr-detail-stack .rr-detail-tile,.rr-detail-stack .rr-detail-section--tight{flex:1;min-height:0;}" +
