@@ -13,7 +13,7 @@
 #hudTurn{position:relative; left:auto; top:auto; transform:none;}
 
 /* =================== 醫뚯륫: ?꾩옱 ?④낵 / ?곗륫: ???섎룄 =================== */
-.left-side-hud{position:absolute; left:1.4cqh; top:14cqh; bottom:31cqh; width:14cqw; z-index:22;
+.left-side-hud{position:absolute; left:1.4cqh; top:14cqh; bottom:37cqh; width:14cqw; z-index:22;
   display:flex; flex-direction:column; align-items:flex-start; gap:1.4cqh;}
 .left-side-main{display:flex; align-items:flex-start; gap:.8cqh;}
 .battle-field{position:absolute; left:0; right:0; top:13.5cqh; bottom:0; z-index:10; pointer-events:none;}
@@ -29,4 +29,4 @@
 /* =========================== ?꾪닾 ?ㅽ뀒?댁? =========================== */
 #field{position:absolute; inset:0; z-index:10; pointer-events:none;}
 .player-layer{position:absolute; inset:0; z-index:2; pointer-events:none; overflow:visible;}
-.monster-field{position:absolute; left:calc(50% - 10.5cqw); right:1.4cqh; top:0; bottom:29cqh; z-index:1; pointer-events:none; overflow:hidden;}
+.monster-field{position:absolute; left:calc(50% - 10.5cqw); right:1.4cqh; top:0; bottom:35cqh; z-index:1; pointer-events:none; overflow:hidden;}

@@ -7,6 +7,6 @@
 .aim-head-img{position:absolute; left:0; top:0; height:6.9cqh; width:auto; max-width:none;
   transform:translate(-50%,0%); pointer-events:none;
   filter:drop-shadow(0 .3cqh .5cqh rgba(60,35,10,.4));}
-#dragClone{position:fixed; width:11.5cqw; height:25cqh; pointer-events:none; transform:translate(-50%,-50%) scale(1.05);
+#dragClone{position:fixed; width:11.5cqw; aspect-ratio:2/3; pointer-events:none; transform:translate(-50%,-50%) scale(1.05);
   filter:drop-shadow(0 1.6cqh 2cqh rgba(231,181,74,.6));}
 #dragClone .card{box-shadow:0 0 2cqh rgba(231,181,74,.9); border-color:var(--c-gold);}

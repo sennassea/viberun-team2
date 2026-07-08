@@ -39,13 +39,13 @@
      OS 배율 변경)될 때 서브픽셀 오차로 초상화와 이름/HP바가 서로 다른 방향으로
      어긋나 보였습니다. 좌표 기준을 cqw/cqh 하나로 통일해 반올림 오차를 없앱니다. */
   position:absolute;
-  left:1.27cqw;
+  left:1.12cqw;
   top:2.05cqh;
   background:transparent;
   border:0;
   box-shadow:none;
-  width:4.68cqw;
-  height:7.16cqh;
+  width:4.85cqw;
+  height:7.42cqh;
   border-radius:50%;
   overflow:hidden;
 }
