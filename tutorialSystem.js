@@ -145,7 +145,7 @@
       if(typeof updateStartScreenMode === "function") updateStartScreenMode();
     });
 
-    document.body.appendChild(popup);
+    (document.getElementById("game") || document.body).appendChild(popup);
   }
 
   function ensureTutorialGuideStyles(){
@@ -154,7 +154,7 @@
     style.id = "tutorialGuideStyles";
     style.textContent = `
       .tutorial-guide-popup{
-        position:fixed;
+        position:absolute;
         inset:0;
         z-index:2600;
         display:none;
@@ -167,6 +167,8 @@
       .tutorial-guide-dialog{
         position:relative;
         width:min(580px, 100%);
+        max-height:100%;
+        overflow-y:auto;
         border:0;
         border-radius:0;
         background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
@@ -664,7 +666,7 @@
     `;
 
     popup.querySelector(".tutorial-complete-confirm").addEventListener("click", confirmTutorialComplete);
-    document.body.appendChild(popup);
+    (document.getElementById("game") || document.body).appendChild(popup);
   }
 
   function ensureTutorialCompleteStyles(){
@@ -673,7 +675,7 @@
     style.id = "tutorialCompleteStyles";
     style.textContent = `
       .tutorial-complete-popup{
-        position:fixed;
+        position:absolute;
         inset:0;
         z-index:2700;
         display:none;
@@ -685,6 +687,8 @@
       .tutorial-complete-popup.show{display:flex;}
       .tutorial-complete-dialog{
         width:min(540px, 100%);
+        max-height:100%;
+        overflow-y:auto;
         border:0;
         border-radius:0;
         background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;

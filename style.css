@@ -12,20 +12,6 @@
     font-display: swap;
 }
 
-@font-face {
-    font-family: 'GyeongbokgungSumunjangBodyText';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyB.woff2') format('woff2');
-    font-weight: 700;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'GyeongbokgungSumunjangBodyText';
-    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyM.woff2') format('woff2');
-    font-weight: 500;
-    font-display: swap;
-}
-
 /* =========================================================================
    ?붿옄???좏겙 / ?꾩뿭
    - ?붾㈃鍮?16:9 怨좎젙, 而⑦뀒?대꼫 荑쇰━ ?⑥쐞(cqh/cqw)濡?紐⑤뱺 ?붿냼瑜?鍮꾩쑉 ?ㅼ???   - 紐⑤컮??媛濡쒖뿉?쒕룄 ?숈씪 ?덉씠?꾩썐??洹몃?濡?異뺤냼/?뺣???   ========================================================================= */
@@ -119,30 +105,38 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 }
 .start-menu-button:active{transform:scale(.97);}
 .start-menu-button-icon{
-  width:6.4cqh; height:6.4cqh; flex:none; object-fit:contain; pointer-events:none;
+  width:3.6cqh; height:3.6cqh; flex:none; object-fit:contain; pointer-events:none;
 }
 .start-menu-button-label{
   flex:none; min-width:0; text-align:left;
-  font-family:'GyeongbokgungSumunjangBodyText', var(--font-title);
-  font-weight:700; letter-spacing:.04em;
-  /* 고풍스러운 각인/금박 느낌: 유백색 테두리로 화려한 배경 위 가독성을 확보하고,
-     그 아래 은은한 갈금색 그림자로 판각된 듯한 입체감을 준다. */
+  /* 버튼 글씨체를 '혼꽃' 타이틀 로고(.start-logo-main, font-theme.css의 --font-special-title)와
+     동일한 경복궁 수문장 제목체로 통일 */
+  font-family:var(--font-special-title) !important;
+  font-weight:700; letter-spacing:0;
+  /* 고풍스러운 각인/금박 효과: 두꺼운 유백색 외곽선으로 화려한 배경 위 가독성을 확보하고,
+     깊은 갈색 그림자로 음각된 듯한 입체감을, 은은한 금빛 광채로 화려함을 더한다. */
   text-shadow:
-    .04cqh 0 0 rgba(255,252,235,.85),
-    -.04cqh 0 0 rgba(255,252,235,.85),
-    0 .04cqh 0 rgba(255,252,235,.85),
-    0 -.04cqh 0 rgba(255,252,235,.85),
-    0 .2cqh .3cqh rgba(107,66,20,.4);
+    .07cqh .07cqh 0 rgba(255,250,230,.9),
+    -.07cqh .07cqh 0 rgba(255,250,230,.9),
+    .07cqh -.07cqh 0 rgba(255,250,230,.9),
+    -.07cqh -.07cqh 0 rgba(255,250,230,.9),
+    0 .32cqh .5cqh rgba(90,55,15,.55),
+    0 0 .7cqh rgba(231,181,74,.5);
 }
+/* 이어하기 상태 배지: 저장 기록이 있을 때만 표시되며(JS에서 hidden 토글),
+   텍스트만 덩그러니 있으면 눈에 띄지 않아 도장/명패 느낌의 알약형 배경을 깔아준다 */
 .continue-status{
+  display:inline-flex; align-items:center;
   font-family:var(--font-title);
-  font-weight:600; font-size:1.5cqh; letter-spacing:0; white-space:nowrap;
-  color:var(--c-ink-soft);
+  font-weight:700; font-size:1.5cqh; letter-spacing:0; white-space:nowrap;
+  color:var(--c-gold-deep);
+  padding:.4cqh 1cqw;
+  border-radius:999px;
+  background:linear-gradient(180deg, rgba(255,251,235,.95), rgba(247,220,160,.88));
+  border:.13cqh solid rgba(176,125,29,.6);
+  box-shadow:0 .2cqh .45cqh rgba(107,66,20,.22), inset 0 .08cqh .18cqh rgba(255,255,255,.65);
 }
-.continue-status::before{content:"· ";}
-.start-continue-game.has-save .continue-status{
-  color:var(--c-gold-deep); font-weight:700;
-}
+.continue-status[hidden]{display:none;}
 /* 튜토리얼 버튼: 긴 버튼과 같은 에셋을 쓰지만 이번 수정 대상(새 게임/이어하기/랭킹 그룹)과는
    별도 규칙으로 분리해 유지한다 (튜토리얼 버튼은 이번 작업 범위 밖). */
 .start-tutorial-button{

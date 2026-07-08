@@ -7,15 +7,15 @@
    ========================================================================= */
 
 const RANKING_TABS = [
-  { period: "all", label: "역대 랭킹" },
+  { period: "daily", label: "일일 랭킹" },
   { period: "weekly", label: "주간 랭킹" },
-  { period: "daily", label: "일일 랭킹" }
+  { period: "all", label: "역대 랭킹" }
 ];
 
 const RANKING_NOTICE_TEXT = "여정이 끝나면 점수가 즉시 랭킹에 반영됩니다.";
 const RANKING_MAX_ROWS = 100;
 
-let rankingActivePeriod = "all";
+let rankingActivePeriod = "daily";
 
 function isRankingOpen(){
   const overlay = document.getElementById("rankingPageOverlay");
@@ -66,6 +66,12 @@ function buildRankingPage(){
         ).join("") +
       '</div>' +
       '<div class="ranking-page-meta">' + RANKING_NOTICE_TEXT + '</div>' +
+      '<div class="ranking-page-columns">' +
+        '<span class="ranking-page-columns-rank"></span>' +
+        '<span class="ranking-page-columns-name">닉네임</span>' +
+        '<span class="ranking-page-columns-time">플레이 타임</span>' +
+        '<span class="ranking-page-columns-score">점수</span>' +
+      '</div>' +
       '<div class="ranking-page-body"></div>' +
       '<button type="button" class="ranking-page-my-button">내 랭킹 확인</button>' +
       '<div class="ranking-page-my-result"></div>' +
@@ -246,6 +252,8 @@ function injectRankingPageStyles(){
     '.ranking-page-tab{border:.2cqh solid rgba(201,164,91,.52);border-radius:1cqh;background:rgba(255,255,255,.72);color:var(--c-ink-soft);font-family:var(--font-title);font-size:1.9cqh;font-weight:900;padding:1cqh 0;cursor:pointer;}' +
     '.ranking-page-tab.active{background:#d6a95b;color:#fff;border-color:#d6a95b;}' +
     '.ranking-page-meta{margin-top:1.2cqh;font-size:1.4cqh;font-weight:700;color:var(--c-ink-soft);text-align:center;min-height:2cqh;}' +
+    '.ranking-page-columns{display:grid;grid-template-columns:4.2cqh 1fr auto auto;align-items:center;gap:1cqw;margin-top:1cqh;padding:0 1.15cqw;font-size:1.35cqh;font-weight:800;color:var(--c-ink-soft);}' +
+    '.ranking-page-columns-time,.ranking-page-columns-score{white-space:nowrap;}' +
     '.ranking-page-body{height:28cqh;max-height:28cqh;padding:1.6cqh .6cqw .2cqh;overflow-y:auto;overflow-x:hidden;display:grid;gap:.7cqh;align-content:start;cursor:grab;user-select:none;}' +
     '.ranking-page-body.dragging{cursor:grabbing;}' +
     '.ranking-page-empty{align-self:center;padding:6cqh 1cqw;text-align:center;font-size:2cqh;font-weight:900;color:var(--c-ink-soft);}' +

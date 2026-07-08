@@ -118,6 +118,28 @@
   font-size: 1.8cqh;
 }
 
+.dmap-playtime {
+  /* 닫기 버튼과 같은 줄에 표시되는 현재까지 플레이 타임. 닫기 버튼이 translateY(1.1cqh)만큼
+     내려가 있으므로 같은 값을 줘서 가로로 나란히 정렬되어 보이게 한다.
+     닫기 버튼 자체는 translateX(-1.6cqw)로 왼쪽으로 겹쳐 들어오므로, 그만큼+여유를
+     margin-right로 비워둬야 서로 겹치지 않는다. */
+  display: flex;
+  align-items: center;
+  gap: 0.5cqw;
+  font-size: 2.2cqh;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #3b2a0a;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 3.5cqw;
+  transform: translateY(1.1cqh);
+}
+.dmap-playtime-icon {
+  font-size: 1.9cqh;
+}
+
 .dmap-close {
   width: 4.6cqh;
   height: 4.6cqh;

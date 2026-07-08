@@ -767,14 +767,20 @@ function ensureSbStyles(){
     ".sb-menu-btn span:last-child{display:none;}" +
     ".sb-menu-btn:active{transform:scale(.94);}" +
     ".sb-title-row{flex:none;position:relative;z-index:4;text-align:center;padding-top:1.4cqh;}" +
-    ".sb-title{font-size:4.4cqh;font-weight:900;letter-spacing:.3cqh;color:#f1d98c;text-shadow:0 0 1.2cqh rgba(230,190,110,.55);}" +
+    ".sb-title{font-size:4.4cqh;font-weight:900;letter-spacing:.3cqh;color:#f1d98c;" +
+      "text-shadow:0 0 1.2cqh rgba(230,190,110,.55),-.16cqh -.16cqh 0 rgba(20,14,4,.9),.16cqh -.16cqh 0 rgba(20,14,4,.9)," +
+      "-.16cqh .16cqh 0 rgba(20,14,4,.9),.16cqh .16cqh 0 rgba(20,14,4,.9),0 .2cqh .5cqh rgba(0,0,0,.85);}" +
     ".sb-header{flex:none;position:relative;z-index:4;text-align:center;padding-top:1cqh;display:flex;flex-direction:column;align-items:center;gap:.7cqh;}" +
     ".sb-subtitle,.sb-dialogue{display:inline-block;}" +
-    ".sb-subtitle{font-size:2cqh;color:#cfe3df;font-weight:700;}" +
-    ".sb-dialogue{font-size:2.15cqh;color:#9fd8c9;font-weight:800;}" +
+    ".sb-subtitle{font-size:2cqh;color:#cfe3df;font-weight:700;" +
+      "text-shadow:-.13cqh -.13cqh 0 rgba(10,10,10,.92),.13cqh -.13cqh 0 rgba(10,10,10,.92)," +
+      "-.13cqh .13cqh 0 rgba(10,10,10,.92),.13cqh .13cqh 0 rgba(10,10,10,.92),0 .16cqh .4cqh rgba(0,0,0,.85);}" +
+    ".sb-dialogue{font-size:2.15cqh;color:#9fd8c9;font-weight:800;margin-top:1.4cqh;" +
+      "text-shadow:-.13cqh -.13cqh 0 rgba(6,16,14,.92),.13cqh -.13cqh 0 rgba(6,16,14,.92)," +
+      "-.13cqh .13cqh 0 rgba(6,16,14,.92),.13cqh .13cqh 0 rgba(6,16,14,.92),0 .16cqh .4cqh rgba(0,0,0,.85);}" +
     ".sb-scene{flex:1;min-height:0;position:relative;z-index:1;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;}" +
     ".sb-spirit{width:51cqh;height:82cqh;font-size:14cqh;display:grid;place-items:center;position:relative;z-index:1;pointer-events:none;" +
-      "transform:translateY(7cqh);border:none;background:transparent;box-shadow:none;overflow:visible;}" +
+      "transform:translateY(10cqh);border:none;background:transparent;box-shadow:none;overflow:visible;}" +
     ".sb-spirit img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 1.2cqh 1.6cqh rgba(0,0,0,.45)) drop-shadow(0 0 1.8cqh rgba(180,220,255,.2));}" +
     ".sb-choices{flex:none;position:relative;z-index:3;display:flex;justify-content:center;gap:10cqw;padding:0 2cqw;margin-top:-20cqh;}" +
     ".sb-card{position:relative;flex:1;max-width:17cqw;min-height:39cqh;display:flex;flex-direction:column;align-items:center;" +
@@ -783,8 +789,8 @@ function ensureSbStyles(){
       "box-shadow:none;overflow:hidden;transition:transform .14s ease,filter .14s ease;}" +
     ".sb-card.item-frame-card{display:block;min-height:39cqh;background:transparent;}" +
     ".sb-card.item-frame-card .item-art-layer{font-size:9cqh;}" +
-    ".sb-card.item-frame-card .item-name-text{font-size:1.55cqh;}" +
-    ".sb-card.item-frame-card .item-desc-text{font-size:1.12cqh;}" +
+    ".sb-card.item-frame-card .item-name-text{font-size:2.05cqh;}" +
+    ".sb-card.item-frame-card .item-desc-text{font-size:1.5cqh;line-height:1.28;}" +
     ".sb-card:hover{transform:translateY(-.6cqh);filter:brightness(1.05) drop-shadow(0 .9cqh 1.2cqh rgba(90,65,25,.24));}" +
     ".sb-card-icon{height:12cqh;font-size:12cqh;display:flex;align-items:flex-start;justify-content:center;}" +
     ".sb-card-icon img{width:12cqh;height:12cqh;object-fit:contain;display:block;}" +
@@ -797,7 +803,7 @@ function ensureSbStyles(){
       ".sb-title{font-size:3.8cqh;}" +
       ".sb-subtitle{font-size:1.75cqh;}" +
       ".sb-dialogue{font-size:1.9cqh;}" +
-      ".sb-spirit{width:48cqh;height:76cqh;transform:translateY(6cqh);}" +
+      ".sb-spirit{width:48cqh;height:76cqh;transform:translateY(9cqh);}" +
       ".sb-choices{flex-direction:row;align-items:stretch;justify-content:center;gap:8cqw;padding:0 2cqw;margin-top:-19cqh;}" +
       ".sb-card{flex:1;max-width:17cqw;min-height:37cqh;padding:3cqh 2cqw 2.8cqh;}" +
       ".sb-card-icon{height:11cqh;font-size:11cqh;}" +
