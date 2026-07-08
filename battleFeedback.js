@@ -35,7 +35,7 @@ function injectRewardStyles(){
     #cardRewardOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.58);backdrop-filter:blur(.5cqh);}
     #cardRewardOverlay.show{display:grid;}
     .reward-panel{width:min(70cqw,90cqh);padding:3cqh 3cqw;border-radius:2cqh;background:rgba(255,255,255,.94);border:.3cqh solid var(--c-panel-line);box-shadow:0 2cqh 6cqh rgba(0,0,0,.35);text-align:center;}
-    #cardRewardOverlay.blessing-card-reward .reward-panel{width:min(74cqw,98cqh);box-sizing:border-box;padding:5.6cqh 5.2cqw 5cqh;border:0;border-radius:0;background:transparent url("assets/ui_panels/codex_popup_frame.png") center/100% 100% no-repeat;box-shadow:none;}
+    #cardRewardOverlay.blessing-card-reward .reward-panel{width:min(74cqw,98cqh);box-sizing:border-box;padding:3.2cqh 5.2cqw 5cqh;border:0;border-radius:0;background:transparent url("assets/ui_panels/codex_popup_frame.png") center/100% 100% no-repeat;box-shadow:none;}
     #cardRewardOverlay.blessing-card-reward .reward-panel h2{color:#3e2912;text-shadow:0 .08cqh 0 rgba(255,255,255,.85);}
     #cardRewardOverlay.blessing-card-reward .reward-panel p{color:#5c3c10;font-weight:800;text-shadow:0 .06cqh 0 rgba(255,255,255,.75);}
     #cardRewardOverlay.blessing-card-reward .reward-cards{margin-bottom:0;}

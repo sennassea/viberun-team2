@@ -67,6 +67,7 @@
   font-weight:900;
   color:var(--c-ink, #2b3b54);
   white-space:nowrap;
+  line-height:1;
   cursor:pointer;
 }
 .menu-profile-name:hover{
