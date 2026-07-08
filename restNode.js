@@ -29,9 +29,9 @@ function getCardRemoveCost(){
 }
 window.getCardRemoveCost = getCardRemoveCost;
 
-/* ── 끝없는 여정 잠념 침투(심도 13/20)로 추가된 카드는 일정 수량만큼 제거할 수 없다.
+/* ── 끝없는 여정 잡념 침투(심도 13/20)로 추가된 카드는 일정 수량만큼 제거할 수 없다.
    덱은 카드 키 배열이라 개별 인스턴스를 구분하지 못하므로, 덱에 남은
-   "잠념" 수가 저주로 보호된 수량을 초과할 때만 제거를 허용한다. ── */
+   "잡념" 수가 저주로 보호된 수량을 초과할 때만 제거를 허용한다. ── */
 function isEndlessRestCardRemovable(key){
   return typeof window.IS_CARD_REMOVABLE_FROM_DECK !== "function" ||
     window.IS_CARD_REMOVABLE_FROM_DECK(key);
@@ -222,7 +222,7 @@ function openRestCardRemove(){
     title: "제거할 카드 선택",
     confirmText: "제거 완료",
     helpText: "제거할 주문 1장을 선택하세요.",
-    disabledText: "끝없는 여정의 잠념은 제거할 수 없습니다.",
+    disabledText: "끝없는 여정의 잡념은 제거할 수 없습니다.",
     costText: "제거 비용: " + cost + " 복채",
     costHtml: '제거 비용: <span class="inline-resource-icon inline-resource-icon-gold" aria-hidden="true"></span>' + cost + " 복채",
     isSelectable: key => isEndlessRestCardRemovable(key),
@@ -237,7 +237,7 @@ function openRestCardRemove(){
         return;
       }
       if(!isEndlessRestCardRemovable(key)){
-        if(typeof toast === "function") toast("끝없는 여정의 잠념은 제거할 수 없습니다.");
+        if(typeof toast === "function") toast("끝없는 여정의 잡념은 제거할 수 없습니다.");
         return;
       }
       const idx = STARTER_DECK.indexOf(key);

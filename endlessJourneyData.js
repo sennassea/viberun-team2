@@ -33,7 +33,7 @@ const ENDLESS_JOURNEY_DEBUFFS = [
     effects: [{ effectType: "bossDamageMultiplier", value: 0.10 }] },
   { id: "endless_depth_12", level: 12, name: "전체 몬스터 성장 IV", desc: "최대 체력 x1.07, 최종 피해 x1.04",
     effects: [{ effectType: "enemyHpMultiplier", value: 0.07 }, { effectType: "enemyDamageMultiplier", value: 0.04 }] },
-  { id: "endless_depth_13", level: 13, name: "잠념 침투 I", desc: "제거 불가 잠념 1장 추가",
+  { id: "endless_depth_13", level: 13, name: "잡념 침투 I", desc: "제거 불가 잡념 1장 추가",
     effects: [{ effectType: "unremovableIntrusiveThoughtCount", value: 1 }] },
   { id: "endless_depth_14", level: 14, name: "보스 체력 강화", desc: "보스 최대 체력 +10%",
     effects: [{ effectType: "bossHpMultiplier", value: 0.10 }] },
@@ -47,7 +47,7 @@ const ENDLESS_JOURNEY_DEBUFFS = [
     effects: [{ effectType: "bossAfterHealRatio", value: 0.50 }] },
   { id: "endless_depth_19", level: 19, name: "전체 몬스터 성장 VII", desc: "최대 체력 x1.07, 최종 피해 x1.04",
     effects: [{ effectType: "enemyHpMultiplier", value: 0.07 }, { effectType: "enemyDamageMultiplier", value: 0.04 }] },
-  { id: "endless_depth_20", level: 20, name: "잠념 침투 II", desc: "제거 불가 잠념 1장 추가",
+  { id: "endless_depth_20", level: 20, name: "잡념 침투 II", desc: "제거 불가 잡념 1장 추가",
     effects: [{ effectType: "unremovableIntrusiveThoughtCount", value: 1 }] }
 ];
 

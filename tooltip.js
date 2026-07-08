@@ -1315,7 +1315,7 @@
     if (typeof dragState !== "undefined" && dragState !== null) return;
     if (isLockedSpiritPathCard(cardEl)) return;
 
-    var descEl = cardEl.querySelector(".desc, .card-desc-text");
+    var descEl = cardEl.querySelector(".desc, .card-desc-text, .item-desc-text, .bag-detail-desc");
     if (!descEl) return;
 
     var cardEntry = getCardDbEntryFromCardEl(cardEl);
@@ -1395,8 +1395,13 @@
   /* (월영당 확장덱 구매 확인 팝업의 .bm-deck-preview-card는 #game 밖의   */
   /*  document.body 모달이라 이 game 레벨 위임이 닿지 않는다 — 아래 별도  */
   /*  document 레벨 위임(BM_DECK_PREVIEW_CARD_SELECTOR)에서 처리한다)     */
+  /* 신령의 은혜 보상의 .sb-card, 보물상자 법구 발견의 .treasure-relic-item, */
+  /* 가방(보유 법구/약병) 상세 패널 .bag-detail도 동일하게 처리한다 —      */
+  /* 이 항목들은 .card-desc-text 대신 .item-desc-text/.bag-detail-desc를  */
+  /* 쓰므로 showCardTooltip의 설명 텍스트 셀렉터에도 포함되어 있다        */
   var DECK_OR_REWARD_CARD_SELECTOR =
-    ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card,.random-item-result-card-frame,.spirit-path-mini-card";
+    ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card,.random-item-result-card-frame,.spirit-path-mini-card," +
+    ".sb-card,.treasure-relic-item,.bag-detail";
 
   game.addEventListener("mouseover", function (e) {
     var dvCard = e.target.closest(DECK_OR_REWARD_CARD_SELECTOR);

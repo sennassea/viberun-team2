@@ -42,9 +42,9 @@ function createDefaultJourneyState(){
     // 보여주기 위한 플래그. 0이면 특별 처리 없음.
     firstVictoryPresentationEndlessLevel: 0,
     firstVictoryPresentationShown: false,
-    // 심도 도달 시 1회만 적용되는 효과(정신력 압박/잠념 침투)의 중복 적용 방지 기록
+    // 심도 도달 시 1회만 적용되는 효과(정신력 압박/잡념 침투)의 중복 적용 방지 기록
     appliedOneShotDepthEffectIds: [],
-    // 잠념 침투로 추가되어 제거할 수 없는 잠념 카드 누적 수
+    // 잡념 침투로 추가되어 제거할 수 없는 잡념 카드 누적 수
     unremovableIntrusiveThoughtCount: 0
   };
 }
