@@ -1234,16 +1234,16 @@ function ensureRrStyles(){
     ".rr-overlay.show{display:flex;}" +
     /* 결과 연출은 전투 화면 위에 얹고, 뒤 전투 화면은 살짝 어둡게 눌러준다. */
     "body.result-ui-open .top-hud{z-index:30;}" +
-    ".rr-backdrop{position:absolute;inset:0;background:rgba(8,10,16,.38);pointer-events:none;}" +
+    ".rr-backdrop{position:absolute;inset:0;background:rgba(8,10,16,.6);backdrop-filter:blur(4px);pointer-events:none;}" +
     ".rr-frame{position:relative;width:88%;height:76%;}" +
-    ".rr-character-wrap{position:absolute;left:3%;bottom:-5%;width:50%;height:118%;z-index:2;" +
+    ".rr-character-wrap{position:absolute;left:0%;bottom:-5%;width:50%;height:118%;z-index:2;" +
       "display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}" +
     ".rr-character-wrap img{width:100%;height:100%;object-fit:contain;object-position:bottom;" +
-      "filter:drop-shadow(0 1.4cqh 2cqh rgba(0,0,0,.55));}" +
+      "filter:drop-shadow(0 1.4cqh 2cqh rgba(0,0,0,.55)) drop-shadow(0 0 1.6cqh rgba(120,170,255,.4));}" +
     ".rr-character-wrap img.rr-defeat-dongjasin{width:88%;height:88%;}" +
     ".rr-character-wrap--victory{bottom:-11%;}" +
-    ".rr-character-emoji{font-size:17cqh;line-height:1;}" +
-    ".rr-dialog-panel{position:absolute;left:40%;right:7%;top:24%;bottom:12%;z-index:1;" +
+    ".rr-character-emoji{font-size:17cqh;line-height:1;filter:drop-shadow(0 0 1.6cqh rgba(120,170,255,.4));}" +
+    ".rr-dialog-panel{position:absolute;left:37%;right:10%;top:24%;bottom:12%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
       "padding:3cqh 3cqw;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
@@ -1265,7 +1265,7 @@ function ensureRrStyles(){
     "@keyframes rrPulse{0%,100%{opacity:.5;}50%{opacity:1;}}" +
 
     /* 끝없는 여정 선택 패널 (기획서 §3-1) — 승리 연출과 동일한 rr-frame 크기를 공유한다 */
-    ".rr-choice-panel{position:absolute;left:40%;right:7%;top:18%;bottom:12%;z-index:1;" +
+    ".rr-choice-panel{position:absolute;left:37%;right:10%;top:18%;bottom:12%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
       "padding:4.2cqh 3cqw 2.6cqh;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
