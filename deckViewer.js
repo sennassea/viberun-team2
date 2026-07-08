@@ -400,15 +400,15 @@
       ".deck-viewer.codex-home-mode .deck-viewer-panel{width:min(57cqw,82cqh);aspect-ratio:2.12;max-height:44cqh;background:transparent url(\"assets/ui_panels/codex_popup_frame.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.4cqh 2.8cqh rgba(0,0,0,.22);padding:3.6cqh 3.6cqw 2cqh;}" +
       ".deck-viewer.codex-home-mode .deck-viewer-head{border-bottom:0;padding-bottom:.2cqh;transform:translateY(-1.1cqh);}" +
       ".deck-viewer.codex-mode .deck-viewer-head h2{color:#4a2f0a;font-weight:900;letter-spacing:.05cqh;text-shadow:0 .12cqh 0 rgba(255,255,255,.65),0 .05cqh .3cqh rgba(74,47,10,.35);}" +
-      ".codex-section-tabs{display:none;gap:0;margin:0 0 1.1cqh;}" +
-      ".codex-section-tab{width:12.2cqw;height:4.6cqh;border:0;background:transparent;padding:0;color:transparent;font-size:0;cursor:pointer;}" +
-      ".codex-section-tab.active{filter:brightness(1.05) drop-shadow(0 .35cqh .55cqh rgba(90,65,20,.25));}" +
-      ".codex-section-tab-image{width:100%;height:100%;object-fit:fill;display:block;user-select:none;-webkit-user-drag:none;}" +
-      ".codex-home-grid{display:none;grid-template-columns:repeat(3,auto);justify-content:center;column-gap:2.2cqw;row-gap:0;min-height:28cqh;align-items:center;margin:auto 0;}" +
-      ".codex-home-card{height:23.5cqh;aspect-ratio:733/1536;justify-self:center;border:0;background:transparent;box-shadow:none;display:block;padding:0;color:var(--c-ink);font:inherit;cursor:pointer;}" +
+      ".codex-section-tabs{display:none;gap:.6cqw;margin:0 0 1.1cqh;}" +
+      ".codex-section-tab{flex:1;height:4.2cqh;padding:0 1.2cqw;border-radius:.9cqh;border:0.2cqh solid var(--c-panel-line);background:linear-gradient(180deg,#fff8ea,#f0e0bd);color:var(--c-ink);font-family:var(--font-title);font-size:2.01cqh;font-weight:800;cursor:pointer;box-shadow:0 .25cqh .5cqh rgba(120,90,40,.14);transition:background .15s, box-shadow .15s, transform .15s;}" +
+      ".codex-section-tab:hover{background:linear-gradient(180deg,#fffcf3,#f6e8c9);}" +
+      ".codex-section-tab.active{background:linear-gradient(180deg,#ffe6a8,#e7b54a);border-color:var(--c-gold-deep);color:#5b3a12;box-shadow:0 .35cqh .9cqh rgba(176,125,29,.4), inset 0 0 0 .12cqh #fff6df;transform:translateY(-.1cqh);}" +
+      ".codex-home-grid{display:none;grid-template-columns:repeat(3,auto);justify-content:center;column-gap:3.2cqw;row-gap:0;min-height:28cqh;align-items:center;margin:auto 0;}" +
+      ".codex-home-card{height:23.5cqh;width:18cqh;justify-self:center;display:flex;align-items:center;justify-content:center;border:0;background:transparent;box-shadow:none;padding:0;color:var(--c-ink);font:inherit;cursor:pointer;}" +
       ".codex-home-card:hover,.codex-home-card:focus-visible{transform:translateY(-.5cqh);filter:brightness(1.04) drop-shadow(0 1cqh 1.4cqh rgba(80,55,15,.22));outline:none;}" +
       ".codex-home-card-frame{position:relative;display:block;width:100%;height:100%;}" +
-      ".codex-home-image{width:100%;height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none;}" +
+      ".codex-home-image{width:100%;height:100%;object-fit:fill;display:block;user-select:none;-webkit-user-drag:none;}" +
       ".codex-home-label{position:absolute;left:10%;right:10%;top:75.5%;height:8.5%;display:flex;align-items:center;justify-content:center;text-align:center;font-family:var(--font-title);font-size:1.7cqh;line-height:1;font-weight:800;color:#4a2f0a;text-shadow:0 .05cqh .12cqh rgba(120,80,20,.35);pointer-events:none;white-space:nowrap;overflow:hidden;}" +
       ".deck-viewer.codex-mode .deck-viewer-grid{gap:2.8cqh 1.8cqw;}" +
       ".deck-viewer-filter.disabled{opacity:.45;pointer-events:none;}" +
@@ -858,8 +858,8 @@
 
   function codexTabButtonHtml(section){
     return '<button type="button" class="codex-section-tab" role="tab" aria-selected="false" data-codex-section="' +
-      escapeAttr(section.id) + '" aria-label="' + escapeAttr(section.label) + '">' +
-        '<img class="codex-section-tab-image" src="' + escapeAttr(section.tabImage) + '" alt="" aria-hidden="true">' +
+      escapeAttr(section.id) + '">' +
+        escapeHtml(section.label) +
       '</button>';
   }
 

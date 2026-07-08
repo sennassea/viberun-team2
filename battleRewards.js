@@ -399,7 +399,7 @@ function ensureBattleVictoryOverlay(){
   ov.innerHTML =
     '<div class="victory-reward-panel">' +
       '<div class="victory-title-area">' +
-        '<h2>여정 승리</h2>' +
+        '<h2>위령 성공</h2>' +
         '<p>한풀이가 조금 더 깊어졌습니다.</p>' +
       '</div>' +
       '<div class="victory-section victory-reward-section">' +
