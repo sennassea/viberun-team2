@@ -61,7 +61,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "2": {
-            v: 3
+            v: 4
           }
         }
       }
@@ -137,7 +137,7 @@ window.BOHYUN_BALANCE = {
             v: 3
           },
           "3": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -148,10 +148,10 @@ window.BOHYUN_BALANCE = {
             v: 4
           },
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -159,13 +159,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 21,
         moves: {
           "0": {
-            v: 3
+            v: 4
           },
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3
+            v: 4
           }
         }
       }
@@ -178,7 +178,7 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "3": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -194,7 +194,7 @@ window.BOHYUN_BALANCE = {
           "2": {
             v: 2,
             conditionalDamage: {
-              v: 3
+              v: 4
             }
           }
         }
@@ -209,7 +209,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "2": {
-            v: 3
+            v: 4
           }
         }
       }
@@ -225,7 +225,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "2": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -250,7 +250,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "2": {
-            v: 3
+            v: 4
           }
         }
       }
@@ -263,13 +263,13 @@ window.BOHYUN_BALANCE = {
             v: 5
           },
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
             v: 4
           },
           "3": {
-            v: 2
+            v: 4
           }
         }
       },
@@ -277,10 +277,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 18,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -291,12 +291,12 @@ window.BOHYUN_BALANCE = {
         maxHp: 18,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 2,
+            v: 3,
             conditionalDamage: {
-              v: 4
+              v: 5
             }
           }
         }
@@ -305,13 +305,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 17,
         moves: {
           "0": {
-            v: 2
+            v: 4
           },
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 4
+            v: 5
           }
         }
       }
@@ -324,13 +324,13 @@ window.BOHYUN_BALANCE = {
             v: 6
           },
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
             v: 4
           },
           "3": {
-            v: 2
+            v: 4
           }
         }
       },
@@ -341,10 +341,10 @@ window.BOHYUN_BALANCE = {
             v: 5
           },
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -352,10 +352,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 17,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 2
+            v: 3
           }
         }
       },
@@ -363,13 +363,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 18,
         moves: {
           "0": {
-            v: 2
+            v: 4
           },
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 4
+            v: 6
           }
         }
       }
@@ -379,17 +379,17 @@ window.BOHYUN_BALANCE = {
         maxHp: 70,
         moves: {
           "0": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 9,
+            v: 11,
             statusCardDamage: {
               per: 1,
               maxBonus: 3
             }
           },
           "3": {
-            v: 5
+            v: 6
           }
         }
       }
@@ -398,14 +398,14 @@ window.BOHYUN_BALANCE = {
       mother_spirit: {
         maxHp: 46,
         gimmick: {
-          burstDamage: 7
+          burstDamage: 9
         },
         moves: {
           "0": {
-            v: 4
+            v: 5
           },
           "2": {
-            v: 4
+            v: 5
           }
         }
       },
@@ -413,10 +413,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 44,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 4
+            v: 5
           }
         }
       }
@@ -426,16 +426,16 @@ window.BOHYUN_BALANCE = {
         maxHp: 48,
         moves: {
           "0": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 7,
+            v: 9,
             statusCardDamage: {
               per: 1
             }
           },
           "3": {
-            v: 4
+            v: 5
           }
         }
       },
@@ -443,12 +443,12 @@ window.BOHYUN_BALANCE = {
         maxHp: 42,
         moves: {
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 3,
+            v: 4,
             conditionalDamage: {
-              v: 4
+              v: 5
             }
           }
         }
@@ -459,10 +459,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 47,
         moves: {
           "1": {
-            v: 5
+            v: 7
           },
           "3": {
-            v: 9
+            v: 12
           }
         }
       },
@@ -473,10 +473,10 @@ window.BOHYUN_BALANCE = {
             v: 5
           },
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 5
+            v: 7
           }
         }
       }
@@ -486,17 +486,17 @@ window.BOHYUN_BALANCE = {
         maxHp: 55,
         moves: {
           "0": {
-            v: 2
+            v: 4
           },
           "2": {
-            v: 5,
+            v: 9,
             statusCardDamage: {
               per: 1,
               maxBonus: 2
             }
           },
           "3": {
-            v: 3
+            v: 5
           }
         }
       },
@@ -504,10 +504,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 50,
         moves: {
           "1": {
-            v: 4
+            v: 7
           },
           "3": {
-            v: 6
+            v: 12
           }
         }
       }
@@ -517,36 +517,39 @@ window.BOHYUN_BALANCE = {
         maxHp: 148,
         moves: {
           "1": {
-            v: 8
+            v: 9
           }
         },
         phaseConfig: {
-          thresholds: [103, 58],
+          thresholds: [
+            103,
+            58
+          ],
           phases: {
             "0": {
               moves: {
                 "1": {
-                  v: 8
+                  v: 9
                 }
               }
             },
             "1": {
               moves: {
                 "0": {
-                  v: 11
+                  v: 12
                 }
               }
             },
             "2": {
               moves: {
                 "0": {
-                  v: 15,
+                  v: 16,
                   summonDamage: {
                     per: 1.5
                   }
                 },
                 "1": {
-                  v: 8,
+                  v: 9,
                   summonDamage: {
                     per: 1.5
                   }
@@ -578,7 +581,7 @@ window.BOHYUN_BALANCE = {
                 "2": {
                   v: 6,
                   speedBurst: {
-                    damage: 8
+                    damage: 9
                   }
                 }
               }
@@ -591,7 +594,7 @@ window.BOHYUN_BALANCE = {
                 "2": {
                   v: 6,
                   speedBurst: {
-                    damage: 9
+                    damage: 10
                   }
                 }
               }
@@ -605,15 +608,18 @@ window.BOHYUN_BALANCE = {
                   v: 6
                 },
                 "2": {
-                  v: 7,
+                  v: 8,
                   speedBurst: {
-                    damage: 10
+                    damage: 11
                   }
                 }
               }
             }
           },
-          thresholds: [107, 54]
+          thresholds: [
+            107,
+            54
+          ]
         },
         moves: {
           "0": {
@@ -630,10 +636,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 70,
         moves: {
           "1": {
-            v: 6
+            v: 7
           },
           "3": {
-            v: 10
+            v: 12
           }
         }
       }
@@ -643,19 +649,19 @@ window.BOHYUN_BALANCE = {
         maxHp: 57,
         moves: {
           "0": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
           },
           "1": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -666,10 +672,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 33,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 2,
+            v: 4,
             statusCardDamage: {
               per: 1
             }
@@ -685,10 +691,10 @@ window.BOHYUN_BALANCE = {
             v: 5
           },
           "1": {
-            v: 4
+            v: 5
           },
           "3": {
-            v: 7,
+            v: 9,
             counterDamage: {
               per: 2
             }
@@ -699,10 +705,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 27,
         moves: {
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 4
+            v: 5
           }
         }
       }
@@ -715,10 +721,10 @@ window.BOHYUN_BALANCE = {
             v: 5
           },
           "1": {
-            v: 4
+            v: 5
           },
           "3": {
-            v: 6,
+            v: 9,
             counterDamage: {
               per: 1
             }
@@ -731,7 +737,7 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "2": {
-            v: 4,
+            v: 5,
             counterDamage: {
               per: 1
             }
@@ -745,19 +751,19 @@ window.BOHYUN_BALANCE = {
         maxHp: 57,
         moves: {
           "0": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
           },
           "1": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -768,10 +774,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 48,
         moves: {
           "1": {
-            v: 3
+            v: 4
           },
           "3": {
-            v: 4
+            v: 6
           }
         }
       }
@@ -784,7 +790,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "1": {
-            v: 2,
+            v: 3,
             counterDamage: {
               per: 1
             }
@@ -798,7 +804,7 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -844,7 +850,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "2": {
-            v: 3,
+            v: 4,
             statusCardDamage: {
               per: 1
             }
@@ -858,7 +864,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "1": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -874,7 +880,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "3": {
-            v: 4
+            v: 5
           }
         }
       },
@@ -885,7 +891,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "1": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -898,10 +904,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 24,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
             v: 4
@@ -912,10 +918,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 22,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 2,
+            v: 3,
             statusCardDamage: {
               per: 1
             }
@@ -926,10 +932,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 15,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "1": {
-            v: 2,
+            v: 3,
             counterDamage: {
               per: 1
             }
@@ -945,7 +951,7 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -956,10 +962,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 16,
         moves: {
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -967,10 +973,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 22,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3,
+            v: 4,
             statusCardDamage: {
               per: 1
             }
@@ -983,10 +989,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 23,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3
+            v: 4
           },
           "3": {
             v: 4
@@ -997,10 +1003,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 21,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3,
+            v: 4,
             statusCardDamage: {
               per: 1
             }
@@ -1014,7 +1020,7 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -1027,10 +1033,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 14,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "1": {
-            v: 2,
+            v: 3,
             counterDamage: {
               per: 1
             }
@@ -1044,7 +1050,7 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -1055,10 +1061,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 15,
         moves: {
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 2
+            v: 4
           }
         }
       },
@@ -1066,10 +1072,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 22,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 2
+            v: 4
           },
           "3": {
             v: 4
@@ -1082,10 +1088,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 21,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 2,
+            v: 3,
             statusCardDamage: {
               per: 1
             }
@@ -1096,10 +1102,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 16,
         moves: {
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 2
+            v: 4
           }
         }
       },
@@ -1110,7 +1116,7 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -1121,10 +1127,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 14,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "1": {
-            v: 2,
+            v: 3,
             counterDamage: {
               per: 1
             }
@@ -1140,34 +1146,40 @@ window.BOHYUN_BALANCE = {
             "0": {
               moves: {
                 "1": {
-                  v: 8
+                  v: 9
                 }
               }
             },
             "1": {
               moves: {
                 "1": {
-                  v: 12
+                  v: 13
                 }
               }
             },
             "2": {
               moves: {
                 "2": {
-                  v: 15
+                  v: 16
                 }
               }
             }
           },
-          thresholds: [107, 54]
+          thresholds: [
+            107,
+            54
+          ]
         },
         moves: {
           "1": {
-            v: 8
+            v: 9
           }
         },
         gimmick: {
-          thresholds: [107, 54]
+          thresholds: [
+            107,
+            54
+          ]
         }
       }
     },
@@ -1176,13 +1188,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 70,
         moves: {
           "0": {
-            v: 4
-          },
-          "1": {
             v: 5
           },
+          "1": {
+            v: 6
+          },
           "2": {
-            v: 8,
+            v: 9,
             counterDamage: {
               per: 1
             }
@@ -1195,13 +1207,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 40,
         moves: {
           "0": {
-            v: 4
+            v: 5
           },
           "1": {
-            v: 4
+            v: 5
           },
           "2": {
-            v: 6,
+            v: 8,
             counterDamage: {
               per: 1
             }
@@ -1212,12 +1224,12 @@ window.BOHYUN_BALANCE = {
         maxHp: 20,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 2,
+            v: 3,
             conditionalDamage: {
-              v: 3
+              v: 4
             }
           }
         }
@@ -1226,10 +1238,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 29,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 4
+            v: 5
           },
           "3": {
             v: 4
@@ -1242,24 +1254,24 @@ window.BOHYUN_BALANCE = {
         maxHp: 55,
         moves: {
           "1": {
-            v: 5
+            v: 7
           },
           "2": {
-            v: 7
+            v: 9
           }
         },
         gimmick: {
-          burstDamage: 8
+          burstDamage: 10
         }
       },
       nurse_spirit_soft: {
         maxHp: 32,
         moves: {
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 4
+            v: 6
           },
           "3": {
             v: 5,
@@ -1275,27 +1287,27 @@ window.BOHYUN_BALANCE = {
         maxHp: 47,
         moves: {
           "1": {
-            v: 4
+            v: 6
           },
           "2": {
-            v: 6
+            v: 9
           }
         },
         gimmick: {
-          burstDamage: 7
+          burstDamage: 10
         }
       },
       doctor_spirit_intern: {
         maxHp: 31,
         moves: {
           "0": {
-            v: 3
+            v: 4
           },
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 4
+            v: 6
           }
         }
       },
@@ -1303,10 +1315,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 27,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -1319,10 +1331,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 56,
         moves: {
           "1": {
-            v: 4
+            v: 6
           },
           "2": {
-            v: 5
+            v: 7
           }
         }
       },
@@ -1330,14 +1342,14 @@ window.BOHYUN_BALANCE = {
         maxHp: 49,
         moves: {
           "1": {
-            v: 4
+            v: 7
           },
           "2": {
-            v: 6
+            v: 9
           }
         },
         gimmick: {
-          burstDamage: 7
+          burstDamage: 10
         }
       }
     },
@@ -1376,13 +1388,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 29,
         moves: {
           "0": {
-            v: 3
+            v: 4
           },
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 4
+            v: 5
           }
         }
       },
@@ -1393,9 +1405,9 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "2": {
-            v: 2,
+            v: 3,
             conditionalDamage: {
-              v: 3
+              v: 4
             }
           }
         }
@@ -1409,7 +1421,7 @@ window.BOHYUN_BALANCE = {
             v: 2
           },
           "2": {
-            v: 3
+            v: 4
           },
           "3": {
             v: 4
@@ -1420,13 +1432,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 24,
         moves: {
           "0": {
-            v: 3
+            v: 4
           },
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 4
+            v: 5
           }
         }
       }
@@ -1436,10 +1448,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 24,
         moves: {
           "2": {
-            v: 3
+            v: 4
           },
           "3": {
-            v: 5
+            v: 6
           }
         }
       },
@@ -1447,10 +1459,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 23,
         moves: {
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 5
+            v: 6
           },
           "3": {
             v: 4,
@@ -1466,10 +1478,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 21,
         moves: {
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -1477,10 +1489,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 19,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -1491,13 +1503,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 22,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 4
+            v: 5
           }
         }
       }
@@ -1507,13 +1519,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 20,
         moves: {
           "0": {
-            v: 3
+            v: 4
           },
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 4
+            v: 5
           }
         }
       },
@@ -1521,10 +1533,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 19,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3
+            v: 4
           },
           "3": {
             v: 4,
@@ -1538,10 +1550,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 21,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3
+            v: 5
           },
           "3": {
             v: 4
@@ -1554,10 +1566,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 21,
         moves: {
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -1565,13 +1577,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 22,
         moves: {
           "0": {
-            v: 3
+            v: 4
           },
           "1": {
-            v: 3
+            v: 4
           },
           "2": {
-            v: 4
+            v: 5
           }
         }
       },
@@ -1579,10 +1591,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 20,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -1598,9 +1610,9 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "2": {
-            v: 2,
+            v: 3,
             conditionalDamage: {
-              v: 3
+              v: 4
             }
           }
         }
@@ -1609,10 +1621,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 22,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3
+            v: 5
           },
           "3": {
             v: 4
@@ -1623,10 +1635,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 19,
         moves: {
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -1634,10 +1646,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 18,
         moves: {
           "0": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3,
+            v: 4,
             counterDamage: {
               per: 1
             }
@@ -1650,13 +1662,13 @@ window.BOHYUN_BALANCE = {
         maxHp: 20,
         moves: {
           "0": {
-            v: 2
+            v: 4
           },
           "1": {
-            v: 2
+            v: 4
           },
           "2": {
-            v: 3
+            v: 5
           }
         }
       },
@@ -1664,10 +1676,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 19,
         moves: {
           "1": {
-            v: 2
+            v: 3
           },
           "2": {
-            v: 3
+            v: 4
           },
           "3": {
             v: 5,
@@ -1681,10 +1693,10 @@ window.BOHYUN_BALANCE = {
         maxHp: 19,
         moves: {
           "2": {
-            v: 2
+            v: 3
           },
           "3": {
-            v: 3
+            v: 4
           }
         }
       },
@@ -1695,9 +1707,9 @@ window.BOHYUN_BALANCE = {
             v: 1
           },
           "2": {
-            v: 2,
+            v: 3,
             conditionalDamage: {
-              v: 3
+              v: 4
             }
           }
         }
