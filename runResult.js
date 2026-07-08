@@ -881,9 +881,10 @@ function rrRouteIconHtml(info){
 
 function rrRouteNodeHtml(node){
   const info = rrGetRouteNodeInfo(node);
-  const score = Number.isFinite(Number(node && node.score))
+  // 노드를 밟기만 하고 아직 클리어(completed)하지 않았다면 점수는 0으로 표시한다.
+  const score = (node && node.completed && Number.isFinite(Number(node.score)))
     ? Number(node.score)
-    : getAct1NodeScore(node);
+    : 0;
 
   return '<div class="rr-route-node">' +
     '<div class="rr-route-node-icon">' + rrRouteIconHtml(info) + '</div>' +
@@ -901,10 +902,9 @@ function rrItemIconHtml(icon){
 
 function rrItemCardHtml(icon, name, count){
   const badge = count > 1 ? '<div class="rr-item-card-count">x' + count + '</div>' : '';
-  return '<div class="rr-item-card">' +
+  return '<div class="rr-item-card" title="' + escapeRrHtml(name || "") + '">' +
     badge +
     '<div class="rr-item-card-icon">' + rrItemIconHtml(icon) + '</div>' +
-    '<div class="rr-item-card-name">' + escapeRrHtml(name || "") + '</div>' +
   '</div>';
 }
 
@@ -1313,12 +1313,13 @@ function ensureRrStyles(){
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
     ".rr-detail-titlebar{position:absolute;top:-2.4cqh;left:50%;transform:translateX(-50%);" +
+      "display:flex;align-items:center;justify-content:center;" +
       "padding:1.1cqh 3.6cqw;border-radius:1cqh;white-space:nowrap;" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.22cqh solid #e8c874;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
-    ".rr-detail-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
+    ".rr-detail-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;line-height:1;}" +
     ".rr-detail-section{display:flex;flex-direction:column;gap:.7cqh;min-height:0;}" +
-    ".rr-detail-section-title{text-align:center;font-size:1.5cqh;font-weight:800;color:#8a6a3c;letter-spacing:.05cqh;}" +
+    ".rr-detail-section-title{text-align:center;font-size:1.5cqh;font-weight:800;color:#8a6a3c;letter-spacing:.05cqh;margin-top:1.6cqh;}" +
     ".rr-detail-grid{flex:1;min-height:0;display:grid;grid-template-columns:30% 1fr;gap:1cqh 1.2cqw;}" +
     ".rr-detail-stack{display:flex;flex-direction:column;gap:1cqh;min-height:0;}" +
     ".rr-detail-stack .rr-detail-tile,.rr-detail-stack .rr-detail-section--tight{flex:1;min-height:0;}" +
@@ -1367,7 +1368,6 @@ function ensureRrStyles(){
     ".rr-item-card-icon{width:5cqh;height:5cqh;border-radius:50%;display:grid;place-items:center;font-size:2.4cqh;" +
       "background:linear-gradient(160deg,#fff7d7,#f6e6bf);border:.16cqh solid rgba(150,110,60,.45);" +
       "box-shadow:0 .4cqh .9cqh rgba(0,0,0,.18);}" +
-    ".rr-item-card-name{font-size:1.1cqh;font-weight:800;color:#5a4326;text-align:center;line-height:1.2;}" +
     ".rr-item-card-count{position:absolute;top:-.4cqh;right:.4cqh;min-width:2.2cqh;height:2.2cqh;padding:0 .3cqh;" +
       "border-radius:1.1cqh;background:#a5322a;color:#fbe9c8;font-size:1.1cqh;font-weight:900;" +
       "display:grid;place-items:center;box-shadow:0 .2cqh .5cqh rgba(0,0,0,.3);}" +

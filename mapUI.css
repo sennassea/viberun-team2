@@ -21,7 +21,8 @@
 /* ── 헤더 ─────────────────────────────────────────────────────────────────── */
 .dmap-header {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 1.5cqw;
   padding: 0.9cqh 1.8cqw;
@@ -45,7 +46,9 @@
   color: #3b2a0a;
   white-space: nowrap;
   flex-shrink: 0;
-  transform: translate(2.6cqw, 1.1cqh);
+  justify-self: start;
+  min-width: 0;
+  transform: translateY(1.1cqh);
 }
 .dmap-loc-icon { display: none; }
 .dmap-loc-floor {
@@ -55,12 +58,11 @@
 }
 
 .dmap-title {
-  position: absolute;
-  left: 50%;
-  top: 0.1cqh;
+  position: relative;
+  grid-column: 2;
   width: 28cqh;
   height: 6.2cqh;
-  transform: translateX(-50%);
+  transform: none;
   flex: none;
   text-align: center;
   font-size: 0;
@@ -132,8 +134,9 @@
   color: #3b2a0a;
   white-space: nowrap;
   flex-shrink: 0;
-  margin-left: auto;
-  margin-right: 3.5cqw;
+  justify-self: end;
+  min-width: 0;
+  margin: 0 calc(4.6cqh + 1.5cqw) 0 0;
   transform: translateY(1.1cqh);
 }
 .dmap-playtime-icon {
@@ -141,6 +144,10 @@
 }
 
 .dmap-close {
+  position: absolute;
+  right: 1.8cqw;
+  top: 50%;
+  justify-self: auto;
   width: 4.6cqh;
   height: 4.6cqh;
   border-radius: 0.9cqh;
@@ -153,10 +160,9 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  /* .dmap-loc-badge가 배경 플레이트 중앙에 오도록 translateY(1.1cqh)만큼 내려가 있어서,
-     같은 헤더 줄에 있는 닫기 버튼도 같은 만큼 내려 두 요소의 세로선을 맞춘다.
-     가로로는 프레임 우상단 장식(구름/매듭 문양)과 겹쳐서 왼쪽으로 살짝 밀어낸다. */
-  transform: translate(-1.6cqw, 1.1cqh);
+  /* .dmap-loc-badge와 같은 세로선에 맞추되, 가로 위치는 절대 좌표로 고정해
+     proceedMode에서 버튼을 숨겨도 플레이타임과 중앙 제목이 다시 밀리지 않게 한다. */
+  transform: translateY(calc(-50% + 1.1cqh));
   transition: transform 0.12s;
 }
 .map-close.dmap-close:hover {

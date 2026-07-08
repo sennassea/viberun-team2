@@ -122,7 +122,7 @@
         bottom:2.4cqh;
         --tutorial-dongjasin-avatar-width:36cqh;
         --tutorial-dongjasin-avatar-height:64cqh;
-        --tutorial-dongjasin-avatar-left:-26cqh;
+        --tutorial-dongjasin-avatar-left:-23cqh;
         --tutorial-dongjasin-avatar-top:-41.8cqh;
         --tutorial-dongjasin-avatar-transform:none;
         transform:translateX(-50%);
@@ -175,10 +175,11 @@
         min-width:0;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-speaker{
-        margin-bottom:.7cqh;
-        font-size:1.7cqh;
+        margin-bottom:.6cqh;
+        font-size:2.3cqh;
         font-weight:900;
-        color:#2f66a8;
+        color:#a8641f;
+        text-shadow:0 0.06cqh 0 rgba(255,255,255,.5);
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-text{
         font-size:1.9cqh;
@@ -192,15 +193,18 @@
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-next{
         pointer-events:auto;
-        min-width:7.5cqw;
-        min-height:4.2cqh;
-        border:0.16cqh solid #2f66a8;
-        border-radius:.8cqh;
-        background:#4b8bd8;
-        color:#fff;
+        min-width:0;
+        height:4.4cqh;
+        aspect-ratio:918/232;
+        border:0;
+        border-radius:0;
+        background:transparent url("assets/ui_buttons/tutorial_proceed_v2.png") center/100% 100% no-repeat;
+        color:#2a1a08;
         font-size:1.7cqh;
         font-weight:900;
         cursor:pointer;
+        display:grid;
+        place-items:center;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-click-blocker{
         position:absolute;

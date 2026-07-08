@@ -365,6 +365,8 @@
       ".deck-viewer.codex-mode:not(.codex-home-mode) .deck-viewer-panel{width:min(78cqw,104cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.2);padding:2.5cqh 2.2cqw 2.8cqh;}" +
       ".deck-viewer.codex-home-mode .deck-viewer-panel{width:min(64cqw,92cqh);aspect-ratio:2.12;max-height:49cqh;background:transparent url(\"assets/ui_panels/codex_popup_frame.png\") center/100% 100% no-repeat;border:0;border-radius:0;box-shadow:0 1.4cqh 2.8cqh rgba(0,0,0,.22);padding:3.6cqh 3.6cqw 2cqh;}" +
       ".deck-viewer.codex-home-mode .deck-viewer-head{border-bottom:0;padding-bottom:.2cqh;}" +
+      ".deck-viewer.codex-mode .deck-viewer-head h2{position:relative;font-weight:900;letter-spacing:.05cqh;background:linear-gradient(90deg,#7a5510 0%,#c99a3f 22%,#fff6d8 50%,#c99a3f 78%,#7a5510 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;text-shadow:0 .05cqh .3cqh rgba(122,85,16,.35);filter:drop-shadow(0 .1cqh 0 rgba(255,255,255,.35));animation:codexTitleShine 3.4s ease-in-out infinite;}" +
+      "@keyframes codexTitleShine{0%{background-position:220% 0;}60%,100%{background-position:-40% 0;}}" +
       ".codex-section-tabs{display:none;gap:0;margin:0 0 1.1cqh;}" +
       ".codex-section-tab{width:12.2cqw;height:4.6cqh;border:0;background:transparent;padding:0;color:transparent;font-size:0;cursor:pointer;}" +
       ".codex-section-tab.active{filter:brightness(1.05) drop-shadow(0 .35cqh .55cqh rgba(90,65,20,.25));}" +
@@ -373,9 +375,10 @@
       ".codex-home-card{height:23.5cqh;border:0;background:transparent;box-shadow:none;display:block;padding:0;color:var(--c-ink);font:inherit;cursor:pointer;}" +
       ".codex-home-card:hover,.codex-home-card:focus-visible{transform:translateY(-.5cqh);filter:brightness(1.04) drop-shadow(0 1cqh 1.4cqh rgba(80,55,15,.22));outline:none;}" +
       ".codex-home-image{width:100%;height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-drag:none;}" +
-      ".codex-home-card[data-codex-section='cards'] .codex-home-image{transform:scale(1.02);}" +
+      ".codex-home-card[data-codex-section='cards'] .codex-home-image{transform:scale(1.13);}" +
       ".codex-home-card[data-codex-section='relics'] .codex-home-image{transform:scale(1.11);}" +
       ".codex-home-card[data-codex-section='potions'] .codex-home-image{transform:scale(1.12);}" +
+      ".deck-viewer.codex-mode .deck-viewer-grid{gap:2.8cqh 1.8cqw;}" +
       ".deck-viewer-filter.disabled{opacity:.45;pointer-events:none;}" +
       ".codex-item-card .cost,.codex-item-card .type{display:none;}" +
       ".codex-item-card .art{height:16cqh;font-size:8cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);}" +
