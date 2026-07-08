@@ -541,6 +541,8 @@
   text-align:center;
 }
 .bm-store-skin-title{
+  position:relative;
+  top:.3cqh;
   font-size:2.88cqh;
   font-weight:900;
   color:#4d2f1d;
