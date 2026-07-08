@@ -481,6 +481,7 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
+  characterWrap.className = "rr-character-wrap rr-character-wrap--victory";
   characterWrap.innerHTML = spirit.image
     ? '<img src="' + spirit.image + '" alt="' + (spirit.name || "") + '">'
     : '<div class="rr-character-emoji">' + (spirit.emoji || "") + '</div>';
@@ -489,7 +490,7 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
   panelSlot.innerHTML =
     '<div class="rr-dialog-panel">' +
       '<div class="rr-badge"><span id="rrBadgeText">승리</span></div>' +
-      '<div class="rr-lines" id="rrLines"></div>' +
+      '<div class="rr-lines rr-lines--victory" id="rrLines"></div>' +
       '<div class="rr-divider"></div>' +
       '<div class="rr-continue">✦ 터치하여 계속 ✦</div>' +
     '</div>';
@@ -529,6 +530,7 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
+  characterWrap.className = "rr-character-wrap";
   const defeatImage = npc.defeatImage || RR_DEFEAT.image || RR_TUTORIAL_SKIP_DONGJASIN_IMAGE;
   characterWrap.innerHTML = defeatImage
     ? '<img class="rr-defeat-dongjasin" src="' + defeatImage + '" alt="' + (npc.name || "") + '">'
@@ -536,7 +538,7 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
 
   const panelSlot = overlay.querySelector("#rrPanelSlot");
   panelSlot.innerHTML =
-    '<div class="rr-dialog-panel">' +
+    '<div class="rr-dialog-panel rr-dialog-panel--defeat">' +
       '<div class="rr-badge"><span id="rrBadgeText">패배</span></div>' +
       '<div class="rr-lines" id="rrLines"></div>' +
       '<div class="rr-divider"></div>' +
@@ -568,6 +570,7 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   const overlay = ensureRrOverlay();
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
+  characterWrap.className = "rr-character-wrap";
   characterWrap.innerHTML = npc.image
     ? '<img src="' + npc.image + '" alt="' + (npc.name || "") + '">'
     : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
@@ -1231,17 +1234,20 @@ function ensureRrStyles(){
     ".rr-character-wrap img{width:100%;height:100%;object-fit:contain;object-position:bottom;" +
       "filter:drop-shadow(0 1.4cqh 2cqh rgba(0,0,0,.55));}" +
     ".rr-character-wrap img.rr-defeat-dongjasin{width:88%;height:88%;}" +
+    ".rr-character-wrap--victory{bottom:-11%;}" +
     ".rr-character-emoji{font-size:17cqh;line-height:1;}" +
     ".rr-dialog-panel{position:absolute;left:40%;right:7%;top:24%;bottom:12%;z-index:1;" +
       "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
       "padding:3cqh 3cqw;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.2cqh rgba(0,0,0,.4);}" +
+    ".rr-dialog-panel--defeat{left:30%;right:17%;}" +
     ".rr-badge{position:absolute;top:-3.8cqh;width:9cqh;height:9cqh;transform:rotate(45deg);" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.24cqh solid #e8c874;border-radius:.4cqh;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;}" +
     ".rr-badge span{transform:rotate(-45deg);color:#fbe9c8;font-weight:900;font-size:2.2cqh;letter-spacing:.15cqh;white-space:nowrap;}" +
     ".rr-lines{text-align:center;color:#4a3524;}" +
+    ".rr-lines--victory{width:55%;}" +
     ".rr-lines p{margin:0;font-weight:800;}" +
     ".rr-lines p:first-child{font-size:3.6cqh;margin-bottom:1.2cqh;color:#3a2814;}" +
     ".rr-lines p:not(:first-child){font-size:1.8cqh;color:#6b5236;line-height:1.5;}" +
@@ -1282,16 +1288,17 @@ function ensureRrStyles(){
     "@keyframes rrShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-.6cqw);}75%{transform:translateX(.6cqw);}}" +
 
     /* 전투 요약 화면 (기획서 §4-1, §10-1) — 캐릭터 없이 중앙 패널로 표시한다 */
-    ".rr-summary-panel{position:absolute;left:50%;top:16%;bottom:1.5%;transform:translateX(-50%);" +
+    ".rr-summary-panel{position:absolute;left:50%;top:4%;bottom:1.5%;transform:translateX(-50%);" +
       "width:56%;min-width:44cqh;z-index:1;display:flex;flex-direction:column;align-items:center;" +
       "padding:4.4cqh 3.4cqw 2.4cqh;border-radius:1.8cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);}" +
     ".rr-summary-titlebar{position:absolute;top:-3.6cqh;left:50%;transform:translateX(-50%);" +
       "padding:1.1cqh 3.6cqw;border-radius:1cqh;white-space:nowrap;" +
+      "display:flex;align-items:center;justify-content:center;" +
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.22cqh solid #e8c874;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
-    ".rr-summary-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;}" +
+    ".rr-summary-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.4cqh;letter-spacing:.15cqh;line-height:1;}" +
     ".rr-summary-rows{flex:1;width:100%;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:.8cqh;}" +
     ".rr-summary-row{display:flex;align-items:center;gap:1.2cqw;padding:.65cqh 0;" +
       "border-bottom:.14cqh dashed rgba(160,120,70,.4);}" +
