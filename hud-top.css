@@ -21,31 +21,27 @@
 }
 .player-info-body{min-width:0; flex:1; display:flex; flex-direction:column; justify-content:center; gap:.42cqh;}
 .player-info-card .player-info-body{
-  /* 부모(.player-info-card)의 align-items:center는 사진 프레임을 세로 중앙에 맞추기 위한 것이라
-     유지하고, 이름/HP/재화 묶음만 카드 상단에 안정적으로 붙도록 별도로 정렬한다 */
-  align-self:flex-start;
-  margin-top:.6cqh;
+  /* 초상화(.portrait)가 카드 세로 중앙에 오도록 배치되어 있으므로, 이름/HP/재화 묶음도
+     부모(.player-info-card)의 align-items:center를 그대로 따라 세로 중앙에 맞춘다 */
+  align-self:center;
 }
 .portrait{width:11cqh; height:7cqh; border-radius:1.5cqh; display:grid; place-items:center;
   font-size:4.83cqh; background:linear-gradient(160deg,#fff,#dcecff);
   border:0.25cqh solid var(--c-gold); box-shadow:0 0 1cqh rgba(231,181,74,.6);}
 .player-info-card .portrait{
-  /* 렌더링된 카드 스크린샷을 픽셀 단위로 실측한 금테 원형 프레임 위치입니다
-     (카드 전체 대비 좌측 약 5.3%, 상단 약 17.1%, 가로 약 19.5%, 세로 약 59.7%를
-     .player-info-card 크기(24cqw x 12cqh)에 곱해 #game 기준 cqw/cqh 절대값으로
-     환산했습니다). 기존에는 .player-info-card 자신의 렌더링 폭 기준 %를 썼는데,
-     %는 .player-info-card가 실제로 페인트되는 크기 기준으로, 이름/HP바 등 나머지
-     요소는 #game 기준 cqw/cqh로 각각 별도로 반올림되다 보니 화면이 축소(브라우저/
-     OS 배율 변경)될 때 서브픽셀 오차로 초상화와 이름/HP바가 서로 다른 방향으로
-     어긋나 보였습니다. 좌표 기준을 cqw/cqh 하나로 통일해 반올림 오차를 없앱니다. */
+  /* 가로/세로를 모두 cqh 한 단위로만 지정해야 원이 찌그러지지 않는다. #game은
+     16:9로 고정되어 cqw:cqh 비율 자체는 항상 일정하지만, 폭은 cqw로 높이는 cqh로
+     따로 재서 섞어 쓰면(예: 4.85cqw x 7.42cqh) 두 값의 실제 비율이 원하는 1:1과
+     달라져 타원으로 보인다. 카드(24cqw x 12cqh) 안에서 세로 중앙(top = (12-D)/2)에
+     오도록 배치한다. */
   position:absolute;
-  left:1.12cqw;
-  top:2.05cqh;
-  background:transparent;
-  border:0;
-  box-shadow:none;
-  width:4.85cqw;
-  height:7.42cqh;
+  left:1.05cqw;
+  top:1.4cqh;
+  background:linear-gradient(160deg,#fff,#dcecff);
+  border:.3cqh solid var(--c-gold);
+  box-shadow:0 0 1cqh rgba(231,181,74,.6), 0 .4cqh 1.2cqh rgba(60,90,140,.2);
+  width:9.2cqh;
+  height:9.2cqh;
   border-radius:50%;
   overflow:hidden;
 }
