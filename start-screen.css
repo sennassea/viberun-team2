@@ -23,8 +23,8 @@
   color:rgba(247,251,255,.86);
 }
 .start-menu{
-  position:absolute; left:50%; top:42.5cqh; transform:translateX(-50%);
-  width:38cqw; display:grid; gap:1.2cqh;
+  position:absolute; left:50%; top:27cqh; transform:translateX(-50%);
+  width:47.5cqw; display:grid; gap:1.2cqh;
 }
 .start-menu-row{display:grid; gap:1.2cqw;}
 .start-menu-row.split{grid-template-columns:1fr 1fr;}

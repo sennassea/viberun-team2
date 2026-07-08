@@ -470,9 +470,9 @@ function ensurePrayerStyles(){
     ".prayer-resource .hud-resource-icon{width:2.15cqh;height:2.15cqh;flex:none;display:inline-block;font-size:0;line-height:1;background-position:center;background-size:contain;background-repeat:no-repeat;}" +
     ".prayer-stage-info{position:absolute;left:50%;top:0;transform:translateX(-50%);width:32cqw;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
       "padding:.8cqh 4.2cqw;background:transparent url(\"assets/ui/stage_info_panel.png\") center/100% 100% no-repeat;" +
-      "border:0;border-radius:0;box-shadow:none;backdrop-filter:none;font-size:2.05cqh;font-weight:900;color:var(--c-ink);}" +
-    ".prayer-stage-title-main{font-size:2.35cqh;font-weight:900;letter-spacing:0;line-height:1;}" +
-    ".prayer-stage-title-sub{font-size:1.15cqh;font-weight:800;color:#8a6b3d;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}" +
+      "border:0;border-radius:0;box-shadow:none;backdrop-filter:none;font-size:2.52cqh;font-weight:900;color:#4a2f12;text-shadow:0 .07cqh 0 rgba(255,255,255,.55);}" +
+    ".prayer-stage-title-main{font-size:2.89cqh;font-weight:900;letter-spacing:0;line-height:1;}" +
+    ".prayer-stage-title-sub{font-size:1.41cqh;font-weight:800;color:#8a6b3d;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}" +
     ".prayer-title-badge{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;" +
       "background:rgba(255,251,240,.85);border:.2cqh solid rgba(178,140,80,.45);border-radius:1.4cqh;" +
       "box-shadow:0 .4cqh 1cqh rgba(120,90,40,.18);}" +
