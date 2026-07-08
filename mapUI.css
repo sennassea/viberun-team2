@@ -31,10 +31,10 @@
 
 .dmap-loc-badge {
   /* 배경 아트(둥근 알약 모양 플레이트) 위에 얹히는 텍스트라 자체 배경/테두리는
-     그리지 않는다. 플레이트 중앙에 오도록 오른쪽/아래로 살짝 이동만 준다. */
+     그리지 않는다. 플레이타임/닫기 버튼과 같은 기준선(calc(50% + 0.6cqh))에 맞춘다. */
   position: absolute;
   left: 7%;
-  top: 65%;
+  top: calc(50% + 0.6cqh);
   display: flex;
   align-items: center;
   gap: 0.6cqw;
@@ -147,7 +147,7 @@
 
 .dmap-close {
   position: absolute;
-  right: 5.5cqw;
+  right: 4.5cqw;
   top: calc(50% + 0.6cqh);
   justify-self: auto;
   width: 4.6cqh;
@@ -291,7 +291,7 @@
   letter-spacing: 0.06em;
   /* legend 폭 비율이 넓어지면서 박스 중심이 실제 카드 에셋 장식(모서리 문양) 중심보다
      왼쪽으로 밀려 보여서, 카드 쪽으로 살짝 우측 보정한다. */
-  transform: translateX(-0.6cqw);
+  transform: translateX(0cqw);
 }
 
 .dmap-legend-item {
