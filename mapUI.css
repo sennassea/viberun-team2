@@ -45,7 +45,7 @@
   color: #3b2a0a;
   white-space: nowrap;
   flex-shrink: 0;
-  transform: translate(2.6cqw, 1.8cqh);
+  transform: translate(2.6cqw, 1.5cqh);
 }
 .dmap-loc-icon { display: none; }
 .dmap-loc-floor {
@@ -131,10 +131,10 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  /* .dmap-loc-badge가 배경 플레이트 중앙에 오도록 translateY(1.8cqh)만큼 내려가 있어서,
+  /* .dmap-loc-badge가 배경 플레이트 중앙에 오도록 translateY(1.5cqh)만큼 내려가 있어서,
      같은 헤더 줄에 있는 닫기 버튼도 같은 만큼 내려 두 요소의 세로선을 맞춘다.
      가로로는 프레임 우상단 장식(구름/매듭 문양)과 겹쳐서 왼쪽으로 살짝 밀어낸다. */
-  transform: translate(-1.6cqw, 1.8cqh);
+  transform: translate(-1.6cqw, 1.5cqh);
   transition: transform 0.12s;
 }
 .map-close.dmap-close:hover {
