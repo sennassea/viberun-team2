@@ -23,7 +23,7 @@
   color:rgba(247,251,255,.86);
 }
 .start-menu{
-  position:absolute; left:50%; top:27cqh; transform:translateX(-50%);
+  position:absolute; left:50%; top:33.3cqh; transform:translateX(-50%);
   width:47.5cqw; display:grid; gap:1.2cqh;
 }
 .start-menu-row{display:grid; gap:1.2cqw;}
@@ -35,7 +35,7 @@
   background:transparent center/contain no-repeat;
   display:flex; align-items:center; justify-content:center; gap:1.4cqw; padding:0 2.6cqh;
   color:var(--c-ink); cursor:pointer;
-  font:inherit; font-family:var(--font-title); font-size:2.4cqh; font-weight:900; letter-spacing:0;
+  font:inherit; font-family:var(--font-title); font-size:3cqh; font-weight:900; letter-spacing:0;
   box-shadow:none; backdrop-filter:none;
   transition:transform .12s, filter .12s;
 }
@@ -45,7 +45,7 @@
 }
 .start-menu-button:active{transform:scale(.97);}
 .start-menu-button-icon{
-  width:3.6cqh; height:3.6cqh; flex:none; object-fit:contain; pointer-events:none;
+  width:4.5cqh; height:4.5cqh; flex:none; object-fit:contain; pointer-events:none;
 }
 .start-menu-button-label{
   flex:none; min-width:0; text-align:left;
@@ -68,9 +68,9 @@
 .continue-status{
   display:inline-flex; align-items:center;
   font-family:var(--font-title);
-  font-weight:700; font-size:1.5cqh; letter-spacing:0; white-space:nowrap;
+  font-weight:700; font-size:1.9cqh; letter-spacing:0; white-space:nowrap;
   color:var(--c-gold-deep);
-  padding:.4cqh 1cqw;
+  padding:.5cqh 1.25cqw;
   border-radius:999px;
   background:linear-gradient(180deg, rgba(255,251,235,.95), rgba(247,220,160,.88));
   border:.13cqh solid rgba(176,125,29,.6);
@@ -109,8 +109,8 @@
 }
 .start-settings-button{
   position:absolute;
-  top:-37.7cqh;
-  right:-25.2cqw;
+  top:-28.5cqh;
+  right:-20.45cqw;
   width:6.9cqh;
   height:6.9cqh;
   padding:0;

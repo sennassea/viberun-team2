@@ -39,12 +39,12 @@
 .event-hp-row{ display:flex; align-items:center; gap:.8cqw; font-size:1.78cqh; font-weight:800; }
 .event-hp-row span:first-child{ color:var(--ev-red-deep); }
 .event-hp-bar{
-  position:relative; width:calc(100% - 2cqw); height:1.45cqh; border-radius:.8cqh; overflow:hidden;
-  background:rgba(95,95,95,.58); border:0;
+  position:relative; width:min(13.6cqw, 25cqh); height:1.65cqh; border-radius:.8cqh; overflow:hidden;
+  background:rgba(80,38,38,.42); border:0; box-shadow:inset 0 0 0 .12cqh rgba(75,40,28,.35);
 }
 .event-hp-fill{
   position:absolute; left:0; top:0; bottom:0; width:0%;
-  background:linear-gradient(180deg,#ff8079,#e24b4a); transition:width .35s ease; border-radius:.8cqh;
+  background:linear-gradient(180deg,#ff6f67 0%,#e33434 58%,#a6171f 100%); transition:width .35s ease; border-radius:.8cqh;
 }
 #eventHpText{position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center;
   color:#fff; font-size:1.32cqh; font-weight:900; line-height:1; text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}

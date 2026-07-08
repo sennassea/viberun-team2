@@ -396,11 +396,45 @@
     return !!(account && account.isLoggedIn && currentAccountId === savedAccountId);
   }
 
-  function saveProgressAndExit(){
-    if(typeof localStorage === "undefined" || typeof S === "undefined" || !S || S.over) return;
+  function buildLobbySaveState(runState){
+    const journey = typeof ensureJourneyState === "function"
+      ? cloneJourneyState(ensureJourneyState(runState))
+      : (runState.journey || null);
+    return {
+      player: { ...runState.player },
+      enemies: [], selectedId: null,
+      hand: [], draw: [], discard: [], exhaust: [],
+      energy: 0,
+      busy: false, over: null, rewardOpen: false,
+      relics: Array.isArray(runState.relics) ? runState.relics.map(relic => ({ ...relic })) : [],
+      potions: Array.isArray(runState.potions) ? runState.potions.map(potion => ({ ...potion })) : [],
+      gold: runState.gold, moonShards: runState.moonShards,
+      relicRuntime: runState.relicRuntime || {},
+      selectedSpiritPathDeckIds: Array.isArray(runState.selectedSpiritPathDeckIds)
+        ? runState.selectedSpiritPathDeckIds.slice()
+        : [],
+      alwaysIncludeGenericItems: true,
+      journey,
+      cleanseCount: typeof runState.cleanseCount === "number" ? runState.cleanseCount : 0,
+      nextBattleStartBlock: runState.nextBattleStartBlock || 0,
+      turn: 1
+    };
+  }
 
-    const state = JSON.parse(JSON.stringify(S));
-    state.busy = pauseState ? pauseState.busy : !!S.busy;
+  function saveProgressAndExit(){
+    if(typeof localStorage === "undefined") return;
+    /* 신령의 은혜 화면처럼 아직 전투가 시작되지 않은 상태에서는 배틀 상태(S)가
+       let S;로 선언만 되어 있어 typeof S가 항상 "undefined"다. 예전에는 이 가드
+       때문에 저장하기를 눌러도 조용히 아무 일도 일어나지 않았다(복원 로직인
+       restoreSavedProgress는 이미 이 문제를 인지해 대응했지만 저장 로직은
+       빠져 있었다). RUN_STATE만 있어도 저장이 되도록 배틀 미시작 상태를 만든다. */
+    const battleActive = typeof S !== "undefined" && !!S;
+    if(battleActive && S.over) return;
+    const runState = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
+    if(!battleActive && !runState) return;
+
+    const state = battleActive ? JSON.parse(JSON.stringify(S)) : buildLobbySaveState(runState);
+    state.busy = battleActive ? (pauseState ? pauseState.busy : !!S.busy) : false;
     if(typeof RUN_STATE !== "undefined" && RUN_STATE && typeof ensureJourneyState === "function"){
       state.journey = cloneJourneyState(ensureJourneyState(RUN_STATE));
     } else if(typeof ensureJourneyState === "function") {

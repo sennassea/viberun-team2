@@ -623,6 +623,16 @@ function restoreSavedRunState(saved){
   }
 
   if(typeof updateHudFloor === "function") updateHudFloor();
+
+  // 신령의 은혜 화면(로비, currentStage<0)에서 저장된 경우 아직 전투가 시작되지
+  // 않은 상태이므로, 전투 화면(renderAll)을 그리는 대신 신령의 은혜 화면을 그대로
+  // 복원한다(startBlessing.js). proceedMode는 은혜를 이미 골랐는지 여부를 뜻한다.
+  if(wantedStage < 0 && typeof window.RESUME_START_BLESSING === "function"){
+    if(typeof closeRewardOverlay === "function") closeRewardOverlay();
+    window.RESUME_START_BLESSING(wantedProceedMode);
+    return true;
+  }
+
   if(typeof renderAll === "function") renderAll();
   if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
   if(typeof window.closeDepthDropdown === "function") window.closeDepthDropdown();
