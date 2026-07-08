@@ -29,4 +29,4 @@
 /* =========================== ?꾪닾 ?ㅽ뀒?댁? =========================== */
 #field{position:absolute; inset:0; z-index:10; pointer-events:none;}
 .player-layer{position:absolute; inset:0; z-index:2; pointer-events:none; overflow:visible;}
-.monster-field{position:absolute; left:calc(50% - 10.5cqw); right:1.4cqh; top:0; bottom:35cqh; z-index:1; pointer-events:none; overflow:hidden;}
+.monster-field{position:absolute; left:calc(50% - 10.5cqw); right:1.4cqh; top:0; bottom:29cqh; z-index:1; pointer-events:none; overflow:hidden;}

@@ -180,11 +180,15 @@ function randomItemResultFaceHtml(item){
   const icon = (item && item.icon) || (source && (source.iconImage || source.icon || source.emoji)) || (item && item.type === "relic" ? "🏺" : item && item.type === "potion" ? "🧪" : "?");
   const name = (item && item.name) || (source && source.name) || "";
   const desc = (item && item.desc) || (source && (source.desc || source.effectText || source.valueText)) || "";
+  // 법구 획득/제거 결과 팝업은 아이콘+이름만 보여주고 설명 텍스트는 표시하지 않는다.
+  const descHtml = (item && item.type === "relic")
+    ? ""
+    : '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(desc).replace(/\n/g, "<br>")) + '</div>';
   return '<div class="item-art-layer">' + randomItemResultIconHtml(icon, name) + '</div>' +
     '<img class="item-frame-layer" src="' + escapeHtml(randomItemResultFramePath(item)) + '" alt="" aria-hidden="true" draggable="false">' +
     '<div class="item-text-layer">' +
       '<div class="item-name-text">' + escapeHtml(name) + '</div>' +
-      '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(desc).replace(/\n/g, "<br>")) + '</div>' +
+      descHtml +
     '</div>' +
     '<div class="item-hit-layer" aria-hidden="true"></div>';
 }
@@ -236,7 +240,7 @@ function ensureRandomItemResultPopupStyle(){
     '}' +
     '#randomItemResultPopup.show{display:flex;}' +
     '#randomItemResultPopup .random-item-result-box{' +
-      'width:max-content;max-width:min(92cqw,900px);max-height:82cqh;padding:2.6cqh 2.6cqw;' +
+      'width:max-content;max-width:min(92cqw,100cqh);max-height:82cqh;padding:2.6cqh 2.6cqw;' +
       'border-radius:2cqh;border:.22cqh solid rgba(183,146,82,.72);' +
       'background:linear-gradient(180deg,rgba(255,250,235,.98),rgba(239,224,193,.98));' +
       'box-shadow:0 1.2cqh 3cqh rgba(0,0,0,.38);' +
@@ -253,7 +257,7 @@ function ensureRandomItemResultPopupStyle(){
        박스의 최대 너비를 넘어서는 경우에만 가로 스크롤로 대응한다. */
     '#randomItemResultPopup .random-item-result-list{' +
       'display:flex;flex-wrap:nowrap;justify-content:center;gap:1.4cqh;' +
-      'max-width:100%;overflow-x:auto;overflow-y:hidden;padding:.2cqh;' +
+      'width:max-content;max-width:100%;overflow-x:auto;overflow-y:hidden;padding:.2cqh;' +
     '}' +
     '#randomItemResultPopup .random-item-result-card{' +
       'flex-shrink:0;width:13cqh;min-height:15cqh;padding:1.1cqh;border-radius:1.4cqh;' +
@@ -272,7 +276,7 @@ function ensureRandomItemResultPopupStyle(){
       'font-size:1.35cqh;font-weight:900;color:#332115;text-align:center;line-height:1.25;' +
     '}' +
     '#randomItemResultPopup .random-item-result-tag{' +
-      'font-size:1.1cqh;font-weight:900;color:#8a5c2b;text-align:center;' +
+      'font-size:1.9cqh;font-weight:900;color:#8a5c2b;text-align:center;' +
     '}' +
     '#randomItemResultPopup .random-item-result-card.remove .random-item-result-tag{color:#a3402f;}' +
     /* 주문(카드) 결과: 실제 카드 프레임 이미지 표시용

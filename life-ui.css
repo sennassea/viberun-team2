@@ -28,6 +28,8 @@
 .enemy .sprite-avatar{width:18cqh; height:22cqh; display:grid; place-items:end center; overflow:visible;}
 .enemy .sprite-avatar img{max-width:100%; max-height:100%; object-fit:contain; display:block;
   filter:drop-shadow(0 0 1.4cqh rgba(150,200,255,.75));}
+.enemy.elite .sprite-avatar{width:22cqh; height:27cqh;}
+.enemy.boss .sprite-avatar{width:27cqh; height:33cqh;}
 .enemy .combatant-info{display:flex; flex-direction:column; align-items:center; gap:.45cqh; min-height:12.2cqh;}
 .enemy .combatant-info .badges:empty{display:none;}
 .name{font-size:2.3cqh; font-weight:800; color:var(--c-ink); text-align:center; line-height:1.1;}
@@ -71,6 +73,8 @@
 /* Enemy targeting / defeat state */
 .enemy{cursor:pointer;}
 .enemy .hit{position:absolute; left:50%; transform:translateX(-50%); width:24cqh; top:4.4cqh; height:28cqh; border-radius:2.4cqh; z-index:15;}
+.enemy.elite .hit{width:28cqh; height:33cqh;}
+.enemy.boss .hit{width:33cqh; height:39cqh;}
 .enemy.targetable .avatar{animation:float 3.4s ease-in-out infinite, pulseT 1s ease-in-out infinite;}
 @keyframes pulseT{0%,100%{filter:drop-shadow(0 0 1.4cqh rgba(255,220,120,.5))}
   50%{filter:drop-shadow(0 0 2.6cqh rgba(255,200,60,1))}}
@@ -79,6 +83,8 @@
   width:24cqh; height:28cqh; z-index:16;
   background:url("assets/ui/battle/target_frame.png") center/100% 100% no-repeat;
   pointer-events:none;}
+.enemy.elite.hovered::after{width:28cqh; height:33cqh;}
+.enemy.boss.hovered::after{width:33cqh; height:39cqh;}
 .dead{opacity:.0; transition:opacity .4s; pointer-events:none;}
 
 /* Floating damage/block/heal numbers */

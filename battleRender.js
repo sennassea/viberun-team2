@@ -290,7 +290,7 @@ function renderField(){
   S.enemies.forEach((e, i) => {
     const positionIndex = e.hp > 0 ? liveIndex++ : i;
     const el = combatantEl({
-      cls:"enemy ghost"+(e.id===S.selectedId ? " selected" : ""),
+      cls:"enemy ghost"+(e.grade==="elite" ? " elite" : e.grade==="boss" ? " boss" : "")+(e.id===S.selectedId ? " selected" : ""),
       sprite:e.image, name:e.name,
       hp:e.hp, maxHp:e.maxHp, block:e.block, weak:e.weak, mark:e.mark, status:e.status,
       anxiety:e.anxiety, lethargy:e.lethargy,
