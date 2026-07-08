@@ -215,7 +215,7 @@
         '</div>' +
         '<div class="deck-viewer-controls">' +
         '<div class="deck-viewer-summary"></div>' +
-        '<label class="deck-viewer-search">검색 <input class="deck-viewer-search-input" type="search" placeholder="주문 이름"></label>' +
+        '<label class="deck-viewer-search">검색 <input class="deck-viewer-search-input" type="search" placeholder="이름"></label>' +
         '<div class="deck-viewer-sort" aria-label="주문 정렬">' +
           '<label>정렬 <select class="deck-viewer-sort-type">' + SORT_OPTIONS.map(optionHtml).join("") + '</select></label>' +
           '<label>방향 <select class="deck-viewer-sort-direction">' + SORT_DIRECTIONS.map(optionHtml).join("") + '</select></label>' +
