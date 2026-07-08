@@ -484,6 +484,8 @@
   addCardTermFallback("후회", "사용할 수 없는 카드입니다. 버려지면 정신력에 3 피해를 주고 소멸합니다.");
   addCardTermFallback("잡념", "사용할 수 없는 방해 카드입니다.");
   addCardTermFallback("불안", "다음 턴 시작 시 주문 뽑기가 감소하는 상태입니다.");
+  addCardTermFallback("성불 표식", INTENT_STATUS_INFO["성불 표식"].desc);
+  addCardTermFallback("무기력", INTENT_STATUS_INFO["무기력"].desc);
 
   /* ══════════════════════════════════════════════════════════════════════
      III. DOM 공통 준비
@@ -987,10 +989,13 @@
     var name = (info.item && info.item.name)
       || (master && master.name)
       || (info.type === "relic" ? "법구" : "약병");
+    var fullDescText = (info.item && (info.item.effectText || info.item.valueText || info.item.desc || info.item.effect))
+      || (master && (master.effectText || master.valueText || master.desc || master.effect))
+      || "";
     var desc = getShortItemDesc(info.item, master) || (info.type === "relic"
       ? "획득한 법구입니다."
       : "전투 중 사용할 수 있는 약병입니다.");
-    return makeRow(icon, name, colorizeRarityLabels(desc));
+    return makeRow(icon, name, colorizeRarityLabels(desc)) + buildCardTermHtml(fullDescText);
   }
 
   function positionItemSlotTooltip(slotEl) {
@@ -1090,9 +1095,12 @@
     return game.getBoundingClientRect();
   }
 
-  function buildCardTermHtml(descText, extraDescText) {
+  /* CARD_TERM_INFO 사전을 훑어 텍스트에 등장하는 용어 설명을 데이터로 반환.
+     법구/약병 등 카드가 아닌 다른 화면(globalTooltip.js)에서도 같은 사전을
+     재사용할 수 있도록 HTML 생성과 분리해 window에 노출한다. */
+  function getEffectKeywordTerms(descText, extraDescText) {
     var seenNames = {};
-    var rows = [];
+    var terms = [];
     [descText, extraDescText].forEach(function (text) {
       if (!text) return;
       CARD_TERM_INFO.forEach(function (t) {
@@ -1102,10 +1110,17 @@
         if (!matched) return;
         seenNames[t.name] = true;
         var desc = typeof t.desc === "function" ? t.desc(text) : t.desc;
-        rows.push(makeRow(t.icon, t.name, desc, null));
+        terms.push({ icon: t.icon, name: t.name, desc: desc });
       });
     });
-    return rows.join("");
+    return terms;
+  }
+  window.getEffectKeywordTerms = getEffectKeywordTerms;
+
+  function buildCardTermHtml(descText, extraDescText) {
+    return getEffectKeywordTerms(descText, extraDescText).map(function (t) {
+      return makeRow(t.icon, t.name, t.desc, null);
+    }).join("");
   }
 
   /* ── 카드 DOM 요소 → CARD_DB 데이터 매칭 (모든 카드 UI가 공통으로
