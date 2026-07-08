@@ -711,7 +711,7 @@ async function playCard(handIndex, targetEnemy){
     }
   }
   const cardCost = getHandCardCost(handIndex, key);
-  if(S.energy < cardCost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
+  if(S.energy < cardCost){ flashEnergy(); toast("신통력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
 
   const heatBeforePlay = getBlessingCount("heat");
@@ -722,7 +722,10 @@ async function playCard(handIndex, targetEnemy){
       : "cardUseSkill";
     window.VIBERUN_SOUND.play(cardSoundKey);
   }
-  if(card.type === "attack") applyPreAttackCardGimmicks(targetEnemy);
+  if(card.type === "attack"){
+    applyPreAttackCardGimmicks(targetEnemy);
+    if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("attack");
+  }
   const relicCardContext = { cardUid:cardInstance.uid, cardKey:key, card, handIndex, target:targetEnemy, bonusDamage:0 };
   S.spellTypesPlayedThisTurn = S.spellTypesPlayedThisTurn || {};
   S.spellTypesPlayedThisTurn[card.type] = true;
@@ -1028,6 +1031,9 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
     applyConfiguredPhaseIfNeeded(target);
     applyNextPhaseIfNeeded(target);
   } else {
+    if((result.hpLoss || 0) > 0){
+      if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("damage");
+    }
     if(result.hpLoss > 0){
       if(S && S.scoreRuntime){
         S.scoreRuntime.hpLoss = (S.scoreRuntime.hpLoss || 0) + result.hpLoss;
