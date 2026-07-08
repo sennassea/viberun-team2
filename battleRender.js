@@ -213,7 +213,7 @@ function renderEffects(){
   if(S.player.weak   > 0)        rows.push(eff("assets/status_icons/agitation.png","동요","정화 피해 25% 감소 ("+S.player.weak+"턴)"));
   if((S.player.fracture||0) > 0) rows.push(eff("assets/status_icons/fracture.png","균열","받는 정화 피해 25% 증가 ("+S.player.fracture+"턴)"));
   if((S.player.anxiety||0)  > 0) rows.push(eff("assets/status_icons/anxiety.png","불안","다음 턴 주문 뽑기 -1 ("+S.player.anxiety+"턴)"));
-  if((S.player.lethargy||0) > 0) rows.push(eff("assets/status_icons/lethargy.png","무기력","다음 턴 정신력 -1 ("+S.player.lethargy+"턴)"));
+  if((S.player.lethargy||0) > 0) rows.push(eff("assets/status_icons/lethargy.png","무기력","다음 턴 신통력 -1 ("+S.player.lethargy+"턴)"));
   $("#effList").innerHTML = rows.join("") || '<div class="eff-empty">효과 없음</div>';
 }
 function eff(ico, name, sub){

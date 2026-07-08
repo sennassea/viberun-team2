@@ -711,7 +711,7 @@ async function playCard(handIndex, targetEnemy){
     }
   }
   const cardCost = getHandCardCost(handIndex, key);
-  if(S.energy < cardCost){ flashEnergy(); toast("정신력이 부족합니다"); return false; }
+  if(S.energy < cardCost){ flashEnergy(); toast("신통력이 부족합니다"); return false; }
   if(card.target==="enemy" && (!targetEnemy || targetEnemy.hp<=0)) return false;
 
   const heatBeforePlay = getBlessingCount("heat");
