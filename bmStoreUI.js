@@ -637,19 +637,21 @@
             ? '<img src="' + escapeHtml(product.previewImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
             : '<span class="bm-store-art-icon">' + escapeHtml(product.icon || "✦") + '</span>') +
         '</div>' +
-        '<div class="bm-recommended-wide-copy">' +
-          '<div class="bm-story-dlc-badge">' + escapeHtml(product.gradeLabel || product.badge || "추천") + '</div>' +
-          '<h3>' + escapeHtml(product.name) + '</h3>' +
-          (product.skinTypeName ? '<p>' + escapeHtml(product.skinTypeName) + '</p>' : '') +
-          (product.description ? '<p>' + escapeHtml(product.description) + '</p>' : '') +
-          (product.salePeriodText ? '<p class="bm-store-sale-period">' + escapeHtml(product.salePeriodText) + '</p>' : '') +
+        '<div class="bm-recommended-wide-body">' +
+          '<div class="bm-recommended-wide-copy">' +
+            '<div class="bm-story-dlc-badge">' + escapeHtml(product.gradeLabel || product.badge || "추천") + '</div>' +
+            '<h3>' + escapeHtml(product.name) + '</h3>' +
+            (product.skinTypeName ? '<p>' + escapeHtml(product.skinTypeName) + '</p>' : '') +
+            (product.description ? '<p>' + escapeHtml(product.description) + '</p>' : '') +
+            (product.salePeriodText ? '<p class="bm-store-sale-period">' + escapeHtml(product.salePeriodText) + '</p>' : '') +
+          '</div>' +
+          '<button type="button" class="bm-store-buy-btn bm-recommended-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
+            (disabled ? ' disabled' : '') + '>' +
+            (isOwnedSkin
+              ? '<span>보유 중</span>'
+              : '<span class="bm-store-price-icon" aria-hidden="true"></span><span>' + formatCount(product.price) + '</span>') +
+          '</button>' +
         '</div>' +
-        '<button type="button" class="bm-store-buy-btn bm-recommended-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
-          (disabled ? ' disabled' : '') + '>' +
-          (isOwnedSkin
-            ? '<span>보유 중</span>'
-            : '<span class="bm-store-price-icon" aria-hidden="true"></span><span>' + formatCount(product.price) + '</span>') +
-        '</button>' +
       '</article>'
     );
   }

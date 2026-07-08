@@ -21,10 +21,10 @@
 .bm-store-npc{
   flex:none;
   align-self:flex-end;
-  height:96cqh;
+  height:93cqh;
   margin-right:-11cqw;
-  transform:translate(-6cqw, 6cqh);
-  z-index:0;
+  transform:translate(-9cqw, 9.5cqh);
+  z-index:3;
   pointer-events:none;
   filter:drop-shadow(0 .8cqh 1.4cqh rgba(20,14,8,.35));
 }
@@ -40,8 +40,7 @@
 .bm-store-panel{
   position:relative;
   flex:none;
-  z-index:2;
-  transform:translateX(-6cqw);
+  left:-6cqw;
   width:min(70cqw,118cqh);
   height:84cqh;
   display:flex;
@@ -899,14 +898,12 @@
   height:100%;
   display:grid;
   grid-template-columns:34% minmax(0,1fr);
-  grid-template-rows:1fr auto;
   gap:.8cqh 1cqw;
   padding:1cqh 1cqw;
   border:0;
   background:url("assets/ui_panels/bm_store/bm_panel_limited.png") center/100% 100% no-repeat;
 }
 .bm-recommended-wide-art{
-  grid-row:1 / span 2;
   min-height:0;
   border-radius:.75cqh;
   overflow:hidden;
@@ -918,13 +915,21 @@
   object-fit:cover;
   object-position:center top;
 }
+.bm-recommended-wide-body{
+  min-width:0;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  gap:.8cqh;
+  padding-right:.5cqw;
+}
 .bm-recommended-wide-copy{
   min-width:0;
   display:flex;
   flex-direction:column;
-  justify-content:flex-end;
   gap:.35cqh;
-  padding-right:.5cqw;
 }
 .bm-recommended-wide-copy h3{
   margin:0;
@@ -947,7 +952,7 @@
   font-size:1.2cqh;
 }
 .bm-recommended-wide-card .bm-recommended-buy-btn{
-  justify-self:start;
+  align-self:flex-start;
   height:4.1cqh;
   font-size:1.95cqh;
   border:0;
@@ -984,8 +989,8 @@
   object-position:center top;
 }
 .bm-recommended-small-art--profile img{
-  width:70%;
-  height:70%;
+  width:94%;
+  height:94%;
   object-fit:contain;
   object-position:center center;
 }
@@ -1099,7 +1104,7 @@
 }
 .bm-store-footer{
   position:relative;
-  z-index:1;
+  top:-1.4cqh;
   flex:none;
   display:flex;
   align-items:center;
@@ -1107,9 +1112,10 @@
   gap:1cqw;
   padding:.2cqh .7cqw 0;
   border-top:.16cqh solid rgba(166,111,47,.28);
-  transform:translateY(-1.4cqh);
 }
 .bm-store-notices{
+  position:relative;
+  z-index:5;
   min-width:0;
   display:flex;
   flex-direction:column;
@@ -1120,7 +1126,7 @@
   color:#5c3925;
   font-size:1.5cqh;
   line-height:1.35;
-  font-weight:400;
+  font-weight:650;
   word-break:keep-all;
 }
 .bm-store-rate-info{

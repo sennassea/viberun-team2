@@ -44,6 +44,11 @@
   max-width: min(40cqw, 460px);
 }
 
+/* 점수 보상 기준처럼 문단이 긴 툴팁: 세로로 길게 줄바꿈되지 않도록 가로폭을 넓힌다 */
+.global-tooltip.is-wide {
+  max-width: min(52cqw, 560px);
+}
+
 .global-tooltip-preview-img {
   display: block;
   width: 100%;
