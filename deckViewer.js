@@ -424,7 +424,7 @@
       ".codex-item-frame-card .item-art-layer img{width:62%;height:48%;object-fit:contain;display:block;filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.22));user-select:none;-webkit-user-drag:none;}" +
       ".codex-item-frame-card .item-frame-layer{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:fill;pointer-events:none;}" +
       ".codex-item-frame-card .item-text-layer{position:absolute;inset:0;z-index:2;pointer-events:none;font-weight:900;color:#10243f;}" +
-      ".codex-item-frame-card .item-name-text{position:absolute;left:12%;right:12%;top:6.1%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.35cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}" +
+      ".codex-item-frame-card .item-name-text{position:absolute;left:12%;right:12%;top:9%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.35cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}" +
       ".codex-item-frame-card .item-desc-text{position:absolute;left:9%;right:9%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.02cqh;line-height:1.34;white-space:pre-line;overflow:hidden;color:#10243f;}" +
       ".card-detail-card.codex-item-frame-card .item-name-text{font-size:2.15cqh;}" +
       ".card-detail-card.codex-item-frame-card .item-desc-text{font-size:1.7cqh;}" +
