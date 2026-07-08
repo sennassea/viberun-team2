@@ -169,6 +169,7 @@
         width:min(580px, 100%);
         max-height:100%;
         overflow-y:auto;
+        scrollbar-width:none;
         border:0;
         border-radius:0;
         background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
@@ -176,6 +177,7 @@
         box-shadow:none;
         padding:54px 56px;
       }
+      .tutorial-guide-dialog::-webkit-scrollbar{display:none;}
       .tutorial-guide-dongjasin{
         display:block;
         width:min(148px, 32vw);
@@ -230,6 +232,7 @@
       }
       .tutorial-guide-actions{
         display:flex;
+        align-items:center;
         gap:12px;
       }
       .tutorial-guide-button{
@@ -253,20 +256,24 @@
       }
       .tutorial-guide-button[data-tutorial-proceed],
       .tutorial-guide-button[data-tutorial-skip]{
-        min-height:74px;
+        min-height:0;
+        max-height:74px;
         border:0;
         border-radius:0;
         background-color:transparent;
         background-position:center;
         background-repeat:no-repeat;
-        background-size:100% 100%;
+        background-size:contain;
         color:transparent;
         font-size:0;
+        flex:1 1 0;
       }
       .tutorial-guide-button[data-tutorial-proceed]{
+        aspect-ratio:610/155;
         background-image:url("assets/ui_buttons/tutorial_proceed.png");
       }
       .tutorial-guide-button[data-tutorial-skip]{
+        aspect-ratio:629/160;
         background-image:url("assets/ui_buttons/tutorial_skip.png");
       }
       .tutorial-guide-dialog-skip{
@@ -348,20 +355,24 @@
       }
       .tutorial-guide-button[data-tutorial-skip-confirm-button],
       .tutorial-guide-button[data-tutorial-skip-back]{
-        min-height:66px;
+        min-height:0;
+        max-height:66px;
         border:0;
         border-radius:0;
         background-color:transparent;
         background-position:center;
         background-repeat:no-repeat;
-        background-size:100% 100%;
+        background-size:contain;
         color:transparent;
         font-size:0;
+        flex:1 1 0;
       }
       .tutorial-guide-button[data-tutorial-skip-confirm-button]{
+        aspect-ratio:644/144;
         background-image:url("assets/ui_buttons/tutorial_yes.png");
       }
       .tutorial-guide-button[data-tutorial-skip-back]{
+        aspect-ratio:633/160;
         background-image:url("assets/ui_buttons/tutorial_no.png");
       }
       .tutorial-guide-confirm[hidden],
@@ -400,6 +411,14 @@
         }
         .tutorial-guide-list{grid-template-columns:1fr;}
         .tutorial-guide-actions{flex-direction:column;}
+        .tutorial-guide-button[data-tutorial-proceed],
+        .tutorial-guide-button[data-tutorial-skip],
+        .tutorial-guide-button[data-tutorial-skip-confirm-button],
+        .tutorial-guide-button[data-tutorial-skip-back]{
+          width:100%;
+          max-height:none;
+          flex:0 0 auto;
+        }
       }
     `;
     document.head.appendChild(style);

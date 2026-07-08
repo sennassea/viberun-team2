@@ -31,7 +31,7 @@
     "viberunCardCodex",
     "viberunRunRecords"
   ];
-  const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80 };
+  const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80, muted: false };
   const volumeSettingsApi = window.VIBERUN_VOLUME_SETTINGS || (window.VIBERUN_VOLUME_SETTINGS = {
     key: VOLUME_KEY,
     defaults: { ...DEFAULT_VOLUMES },
@@ -43,6 +43,7 @@
           master: Number.isFinite(saved.master) ? saved.master : this.defaults.master,
           music: Number.isFinite(saved.music) ? saved.music : this.defaults.music,
           effect: Number.isFinite(saved.effect) ? saved.effect : this.defaults.effect,
+          muted: saved.muted === true,
         };
       } catch(error) {
         localStorage.removeItem(this.key);
@@ -55,6 +56,7 @@
         master: Number(volumes.master),
         music: Number(volumes.music),
         effect: Number(volumes.effect),
+        muted: volumes.muted === true,
       }));
     }
   });
@@ -108,7 +110,14 @@
         '</div>' +
         '<div class="settings-viewer-body">' +
           '<section class="settings-viewer-section" aria-label="음량 조절">' +
-            '<h3>음량 조절</h3>' +
+            '<div class="settings-viewer-sound-head">' +
+              '<h3>음량 조절</h3>' +
+              '<label class="settings-sound-toggle">' +
+                '<span>사운드</span>' +
+                '<input type="checkbox" class="settings-sound-toggle-input" checked>' +
+                '<span class="settings-sound-toggle-track" aria-hidden="true"></span>' +
+              '</label>' +
+            '</div>' +
             volumeControlHtml("master", "전체 음량", 80) +
             volumeControlHtml("music", "배경 음악", 70) +
             volumeControlHtml("effect", "효과음", 80) +
@@ -203,6 +212,11 @@
       saveVolumeSettings();
       applyVolumeSettings();
     });
+    overlay.addEventListener("change", event => {
+      if(!event.target.matches(".settings-sound-toggle-input")) return;
+      saveVolumeSettings();
+      applyVolumeSettings();
+    });
     overlay.querySelector(".settings-viewer-close").addEventListener("click", closeSettingsViewer);
     overlay.querySelector(".settings-viewer-help").addEventListener("click", openHelp);
     overlay.querySelector(".settings-viewer-help-close").addEventListener("click", closeHelp);
@@ -277,6 +291,7 @@
       accountLogout: overlay.querySelector(".settings-account-logout"),
       accountMessage: overlay.querySelector(".settings-account-message"),
       volumeInputs: Array.from(overlay.querySelectorAll(".settings-viewer-volume input")),
+      soundToggle: overlay.querySelector(".settings-sound-toggle-input"),
     };
   }
 
@@ -306,6 +321,7 @@
       const key = input.id.replace("settingsVolume", "");
       volumes[key] = Number(input.value);
     });
+    volumes.muted = !!(els.soundToggle && !els.soundToggle.checked);
     volumeSettingsApi.write(volumes);
   }
 
@@ -319,6 +335,7 @@
       const output = input.closest(".settings-viewer-volume").querySelector("output");
       if(output) output.textContent = value;
     });
+    if(els.soundToggle) els.soundToggle.checked = !volumes.muted;
   }
 
   function restoreSavedProgress(){
@@ -422,6 +439,15 @@
       ".settings-viewer-section:not(.settings-account-section){background:transparent url('assets/ui/settings/settings_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
       ".settings-account-section{position:relative;background:transparent url('assets/ui/settings/account_info_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
       ".settings-viewer-section h3{font-size:2.1cqh;margin-bottom:1.4cqh;color:var(--c-ink);}" +
+      ".settings-viewer-sound-head{display:flex;align-items:center;justify-content:space-between;gap:1cqw;margin-bottom:1.4cqh;}" +
+      ".settings-viewer-sound-head h3{margin-bottom:0;}" +
+      ".settings-sound-toggle{display:flex;align-items:center;gap:.8cqw;cursor:pointer;font-size:1.7cqh;font-weight:800;color:var(--c-ink-soft);}" +
+      ".settings-sound-toggle-input{position:absolute;opacity:0;width:0;height:0;}" +
+      ".settings-sound-toggle-track{position:relative;width:6.4cqh;height:3.4cqh;border-radius:1.7cqh;background:#c9d2df;border:0.16cqh solid var(--c-panel-line);transition:background .15s ease;}" +
+      ".settings-sound-toggle-track::after{content:'';position:absolute;top:50%;left:.3cqh;width:2.6cqh;height:2.6cqh;border-radius:50%;background:#fff;box-shadow:0 .2cqh .4cqh rgba(0,0,0,.28);transform:translateY(-50%);transition:transform .15s ease;}" +
+      ".settings-sound-toggle-input:checked + .settings-sound-toggle-track{background:var(--c-blue);}" +
+      ".settings-sound-toggle-input:checked + .settings-sound-toggle-track::after{transform:translateY(-50%) translateX(3cqh);}" +
+      ".settings-sound-toggle-input:focus-visible + .settings-sound-toggle-track{outline:0.2cqh solid var(--c-blue);outline-offset:.2cqh;}" +
       ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 4cqw;align-items:center;gap:1cqw;margin-top:1cqh;color:var(--c-ink-soft);font-size:1.7cqh;font-weight:800;}" +
       ".settings-viewer-volume input{width:100%;accent-color:var(--c-blue);}" +
       ".settings-viewer-volume output{text-align:right;color:var(--c-ink);font-weight:900;}" +

@@ -21,7 +21,8 @@
     return {
       master: clampVolume(source.master, DEFAULT_VOLUMES.master),
       music: clampVolume(source.music, DEFAULT_VOLUMES.music),
-      effect: clampVolume(source.effect, DEFAULT_VOLUMES.effect)
+      effect: clampVolume(source.effect, DEFAULT_VOLUMES.effect),
+      muted: source.muted === true
     };
   }
 
@@ -78,6 +79,7 @@
   }
 
   function volumeFor(sound, volumes) {
+    if (volumes.muted) return 0;
     const category = getCategory(sound);
     const volumeKey = category.volumeKey || "effect";
     return (volumes.master / 100) * ((volumes[volumeKey] ?? 100) / 100) * ((sound.volume ?? 100) / 100);

@@ -66,13 +66,15 @@ function buildRankingPage(){
         ).join("") +
       '</div>' +
       '<div class="ranking-page-meta">' + RANKING_NOTICE_TEXT + '</div>' +
-      '<div class="ranking-page-columns">' +
-        '<span class="ranking-page-columns-rank"></span>' +
-        '<span class="ranking-page-columns-name">닉네임</span>' +
-        '<span class="ranking-page-columns-time">플레이 타임</span>' +
-        '<span class="ranking-page-columns-score">점수</span>' +
+      '<div class="ranking-page-body">' +
+        '<div class="ranking-page-columns">' +
+          '<span class="ranking-page-columns-rank"></span>' +
+          '<span class="ranking-page-columns-name">닉네임</span>' +
+          '<span class="ranking-page-columns-time">플레이 타임</span>' +
+          '<span class="ranking-page-columns-score">점수</span>' +
+        '</div>' +
+        '<div class="ranking-page-rows"></div>' +
       '</div>' +
-      '<div class="ranking-page-body"></div>' +
       '<button type="button" class="ranking-page-my-button">내 랭킹 확인</button>' +
       '<div class="ranking-page-my-result"></div>' +
     '</div>';
@@ -103,24 +105,24 @@ function renderRankingTab(overlay, period){
     tab.classList.toggle("active", tab.dataset.period === period);
   });
 
-  const body = overlay.querySelector(".ranking-page-body");
-  body.innerHTML = '<p class="ranking-page-empty">불러오는 중...</p>';
+  const rowsBox = overlay.querySelector(".ranking-page-rows");
+  rowsBox.innerHTML = '<p class="ranking-page-empty">불러오는 중...</p>';
 
   const service = window.VIBERUN_RANKING_SERVICE;
   if(!service){
-    body.innerHTML = '<p class="ranking-page-empty">랭킹 데이터 연결 전입니다.</p>';
+    rowsBox.innerHTML = '<p class="ranking-page-empty">랭킹 데이터 연결 전입니다.</p>';
     return;
   }
 
   service.fetchRanking(period).then(response => {
     if(rankingActivePeriod !== period) return;
-    renderRankingRows(body, response);
+    renderRankingRows(rowsBox, response);
   });
 }
 
-function renderRankingRows(body, response){
+function renderRankingRows(rowsBox, response){
   if(!response || !response.ok){
-    body.innerHTML = '<p class="ranking-page-empty">' +
+    rowsBox.innerHTML = '<p class="ranking-page-empty">' +
       escapeRankingHtml((response && response.message) || "랭킹을 불러오지 못했습니다.") +
       '</p>';
     return;
@@ -128,11 +130,11 @@ function renderRankingRows(body, response){
 
   const rows = (Array.isArray(response.rows) ? response.rows : []).slice(0, RANKING_MAX_ROWS);
   if(!rows.length){
-    body.innerHTML = '<p class="ranking-page-empty">아직 랭킹 데이터가 없습니다.</p>';
+    rowsBox.innerHTML = '<p class="ranking-page-empty">아직 랭킹 데이터가 없습니다.</p>';
     return;
   }
 
-  body.innerHTML = rows.map((row, index) => {
+  rowsBox.innerHTML = rows.map((row, index) => {
     const playTime = formatRankingPlayTime(row.playTimeMs);
     return '<div class="ranking-page-item">' +
       '<div class="ranking-page-rank">' + (index + 1) + '</div>' +
@@ -252,16 +254,17 @@ function injectRankingPageStyles(){
     '.ranking-page-tab{border:.2cqh solid rgba(201,164,91,.52);border-radius:1cqh;background:rgba(255,255,255,.72);color:var(--c-ink-soft);font-family:var(--font-title);font-size:1.9cqh;font-weight:900;padding:1cqh 0;cursor:pointer;}' +
     '.ranking-page-tab.active{background:#d6a95b;color:#fff;border-color:#d6a95b;}' +
     '.ranking-page-meta{margin-top:1.2cqh;font-size:1.4cqh;font-weight:700;color:var(--c-ink-soft);text-align:center;min-height:2cqh;}' +
-    '.ranking-page-columns{display:grid;grid-template-columns:4.2cqh 1fr auto auto;align-items:center;gap:1cqw;margin-top:1cqh;padding:0 1.15cqw;font-size:1.35cqh;font-weight:800;color:var(--c-ink-soft);}' +
-    '.ranking-page-columns-time,.ranking-page-columns-score{white-space:nowrap;}' +
-    '.ranking-page-body{height:28cqh;max-height:28cqh;padding:1.6cqh .6cqw .2cqh;overflow-y:auto;overflow-x:hidden;display:grid;gap:.7cqh;align-content:start;cursor:grab;user-select:none;}' +
+    '.ranking-page-body{height:28cqh;max-height:28cqh;margin-top:1.4cqh;padding:0 .6cqw;overflow-y:auto;overflow-x:hidden;cursor:grab;user-select:none;}' +
     '.ranking-page-body.dragging{cursor:grabbing;}' +
+    '.ranking-page-columns{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:4.2cqh 1fr 6.4cqw 7.6cqw;align-items:center;gap:1cqw;padding:1.3cqh 1.15cqw;background:linear-gradient(180deg, rgba(255,250,238,.98), rgba(239,211,151,.95));border-bottom:.16cqh solid rgba(201,164,91,.55);box-shadow:0 .4cqh .7cqh rgba(83,49,12,.14);font-family:var(--font-title);font-size:1.85cqh;font-weight:900;color:#6b4628;}' +
+    '.ranking-page-columns-time,.ranking-page-columns-score{white-space:nowrap;text-align:right;}' +
+    '.ranking-page-rows{display:grid;gap:.7cqh;padding:1.4cqh 0 .2cqh;align-content:start;}' +
     '.ranking-page-empty{align-self:center;padding:6cqh 1cqw;text-align:center;font-size:2cqh;font-weight:900;color:var(--c-ink-soft);}' +
-    '.ranking-page-item{display:grid;grid-template-columns:4.2cqh 1fr auto auto;align-items:center;gap:1cqw;min-height:6cqh;padding:1cqh 1.15cqw;border:.14cqh solid rgba(201,164,91,.58);border-radius:1cqh;background:rgba(255,250,238,.74);box-shadow:inset 0 0 0 .08cqh rgba(255,255,255,.72);}' +
+    '.ranking-page-item{display:grid;grid-template-columns:4.2cqh 1fr 6.4cqw 7.6cqw;align-items:center;gap:1cqw;min-height:6cqh;padding:1cqh 1.15cqw;border:.14cqh solid rgba(201,164,91,.58);border-radius:1cqh;background:rgba(255,250,238,.74);box-shadow:inset 0 0 0 .08cqh rgba(255,255,255,.72);}' +
     '.ranking-page-rank{width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;background:#d6a95b;color:#fff;font-size:1.8cqh;font-weight:900;box-shadow:inset 0 -.2cqh .45cqh rgba(83,49,12,.24);}' +
     '.ranking-page-name{min-width:0;font-size:2cqh;font-weight:900;color:#52371f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
-    '.ranking-page-time{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);white-space:nowrap;}' +
-    '.ranking-page-score{font-size:1.6cqh;font-weight:900;color:#6b4628;white-space:nowrap;}' +
+    '.ranking-page-time{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);white-space:nowrap;text-align:right;}' +
+    '.ranking-page-score{font-size:1.6cqh;font-weight:900;color:#6b4628;white-space:nowrap;text-align:right;}' +
     '.ranking-page-my-button{margin-top:1.2cqh;height:6cqh;border:.24cqh solid rgba(201,164,91,.72);border-radius:1.2cqh;background:linear-gradient(180deg, rgba(255,250,238,.96), rgba(239,211,151,.94));color:#6b4628;font-family:var(--font-title);font-size:2.1cqh;font-weight:900;cursor:pointer;}' +
     '.ranking-page-my-button:hover{border-color:var(--c-gold);}' +
     '.ranking-page-my-result{margin-top:1cqh;min-height:2cqh;text-align:center;font-size:1.45cqh;font-weight:800;color:#52371f;}';

@@ -1597,6 +1597,7 @@
       volumes[key] = Number(input.value);
     });
     if(window.VIBERUN_VOLUME_SETTINGS && typeof window.VIBERUN_VOLUME_SETTINGS.write === "function"){
+      volumes.muted = getTutorialVolumeSettings().muted === true;
       window.VIBERUN_VOLUME_SETTINGS.write(volumes);
       return;
     }
