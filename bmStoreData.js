@@ -222,6 +222,7 @@
       description: "한풀이 덱 키워드가 있는 주문, 약병, 법구를 해금하는 확장팩입니다.",
       contentSummary: "한풀이 키워드 주문 / 약병 / 법구 포함",
       icon: "🌙",
+      artImage: "assets/ui_panels/bm_store/deck_hanpuri.png",
       sortOrder: 1,
       purchasable: true,
       dimmed: false,
@@ -245,6 +246,7 @@
       description: "굿판 덱 키워드가 있는 주문, 약병, 법구를 해금하는 확장팩입니다.",
       contentSummary: "굿판 키워드 주문 / 약병 / 법구 포함",
       icon: "🔔",
+      artImage: "assets/ui_panels/bm_store/deck_gutpan.png",
       sortOrder: 2,
       purchasable: true,
       dimmed: false
@@ -284,6 +286,7 @@
       ],
 
       icon: "🌙",
+      artImage: "assets/ui_panels/bm_store/bm_art_monthly_pass_gift.png",
       imageKey: "monthly_moon_promise",
 
       recommended: true,
@@ -366,6 +369,7 @@
       unitPriceLabel: "개당 12원",
       description: "소액 부족분 보충 / 첫 결제",
       imageKey: "moon_charge_small",
+      artImage: "assets/ui_panels/bm_store/moon_charge_small.png",
       sortOrder: 1,
       recommendedBadge: "첫 결제"
     },
@@ -382,6 +386,7 @@
       unitPriceLabel: "개당 11원",
       description: "플레이 재화와 혼합 구매",
       imageKey: "moon_charge_medium",
+      artImage: "assets/ui_panels/bm_store/moon_charge_medium.png",
       sortOrder: 2,
       recommendedBadge: "균형형"
     },
@@ -398,6 +403,7 @@
       unitPriceLabel: "개당 10원",
       description: "확장덱 1종 즉시 해금 앵커",
       imageKey: "moon_charge_large",
+      artImage: "assets/ui_panels/bm_store/moon_charge_large.png",
       sortOrder: 3,
       recommendedBadge: "추천"
     },
@@ -414,6 +420,7 @@
       unitPriceLabel: "개당 9원",
       description: "확장덱+스킨 복합 구매 코어 유저",
       imageKey: "moon_charge_premium",
+      artImage: "assets/ui_panels/bm_store/moon_charge_premium.png",
       sortOrder: 4,
       recommendedBadge: "최고 효율",
 
