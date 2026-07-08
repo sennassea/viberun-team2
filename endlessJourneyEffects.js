@@ -150,7 +150,7 @@ function getEndlessUnremovableIntrusiveThoughtCount(){
     : 0;
 }
 
-/* ── 심도 도달 시 1회만 적용되는 효과 (정신력 압박 / 잠념 침투) ──────────
+/* ── 심도 도달 시 1회만 적용되는 효과 (정신력 압박 / 잡념 침투) ──────────
    journey.activeDebuffIds에 새로 포함된 심도 중 아직 적용하지 않은 것만
    처리하고, journey.appliedOneShotDepthEffectIds에 기록해 중복 적용을
    막는다. S가 아직 없는 "여정 N 직접 시작" 흐름에서도 동작해야 하므로
