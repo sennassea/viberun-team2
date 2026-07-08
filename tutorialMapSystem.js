@@ -122,22 +122,26 @@
         bottom:2.4cqh;
         --tutorial-dongjasin-avatar-width:36cqh;
         --tutorial-dongjasin-avatar-height:64cqh;
-        --tutorial-dongjasin-avatar-left:-35cqh;
+        --tutorial-dongjasin-avatar-left:-26cqh;
         --tutorial-dongjasin-avatar-top:-41.8cqh;
         --tutorial-dongjasin-avatar-transform:none;
         transform:translateX(-50%);
         z-index:12;
         pointer-events:none;
         width:min(54cqw, 72cqh);
-        padding:3cqh 3.2cqw;
+        aspect-ratio:2533/621;
+        display:flex;
+        padding:1.6cqh 3.2cqw;
         border:0;
         border-radius:0;
-        background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
+        background:transparent url("assets/ui/dialog_panel_battle_intro.png") center/100% 100% no-repeat;
         color:#243247;
         box-shadow:none;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-content{
-        display:block;
+        display:flex;
+        flex-direction:column;
+        width:100%;
       }
       #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar{
         position:absolute;
@@ -164,6 +168,10 @@
         box-shadow:0 .45cqh 1cqh rgba(20,35,60,.16);
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-body{
+        display:flex;
+        flex-direction:column;
+        width:100%;
+        flex:1 1 auto;
         min-width:0;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-speaker{
@@ -180,7 +188,7 @@
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-actions{
         display:flex;
         justify-content:flex-end;
-        margin-top:1.2cqh;
+        margin-top:auto;
       }
       #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-next{
         pointer-events:auto;

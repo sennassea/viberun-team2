@@ -1422,18 +1422,6 @@ function ensureRrStyles(){
 
     ".rr-moon-claim-btn:hover:not(:disabled){filter:brightness(1.05);}" +
 
-    ".rr-moon-claim-btn:disabled{cursor:not-allowed;opacity:.55;filter:grayscale(.25);}" +
-
-    "@media (max-width:900px){" +
-      ".rr-frame{width:94%;height:84%;}" +
-      ".rr-character-wrap{width:52%;height:52%;left:50%;transform:translateX(-50%);bottom:auto;top:4%;}" +
-      ".rr-dialog-panel{right:7%;left:7%;width:auto;top:auto;bottom:5%;height:36%;}" +
-      ".rr-badge{top:-3.4cqh;}" +
-      ".rr-choice-panel{right:7%;left:7%;width:auto;top:auto;bottom:5%;height:48%;padding-top:3.2cqh;}" +
-      ".rr-choice-cards{flex-direction:column;gap:1cqh;}" +
-      ".rr-summary-panel{left:5%;right:5%;width:auto;transform:none;top:6%;bottom:1.5%;min-width:0;}" +
-      ".rr-detail-panel{left:4%;right:4%;width:auto;transform:none;top:5%;bottom:0.6%;min-width:0;padding:4cqh 2.4cqw 1.6cqh;}" +
-      ".rr-detail-grid{grid-template-columns:1fr;}" +
-    "}";
+    ".rr-moon-claim-btn:disabled{cursor:not-allowed;opacity:.55;filter:grayscale(.25);}";
   document.head.appendChild(style);
 }

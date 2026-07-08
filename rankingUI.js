@@ -265,7 +265,7 @@ function injectRankingPageStyles(){
     '.ranking-page-name{min-width:0;font-size:2cqh;font-weight:900;color:#52371f;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
     '.ranking-page-time{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);white-space:nowrap;text-align:right;}' +
     '.ranking-page-score{font-size:1.6cqh;font-weight:900;color:#6b4628;white-space:nowrap;text-align:right;}' +
-    '.ranking-page-my-button{margin-top:1.2cqh;height:6cqh;border:.24cqh solid rgba(201,164,91,.72);border-radius:1.2cqh;background:linear-gradient(180deg, rgba(255,250,238,.96), rgba(239,211,151,.94));color:#6b4628;font-family:var(--font-title);font-size:2.1cqh;font-weight:900;cursor:pointer;}' +
+    '.ranking-page-my-button{align-self:center;margin-top:1.2cqh;width:auto;min-width:16cqw;height:5.2cqh;padding:0 2cqw;border:.2cqh solid rgba(201,164,91,.72);border-radius:1cqh;background:linear-gradient(180deg, rgba(255,250,238,.96), rgba(239,211,151,.94));color:#6b4628;font-family:var(--font-title);font-size:1.7cqh;font-weight:900;cursor:pointer;}' +
     '.ranking-page-my-button:hover{border-color:var(--c-gold);}' +
     '.ranking-page-my-result{margin-top:1cqh;min-height:2cqh;text-align:center;font-size:1.45cqh;font-weight:800;color:#52371f;}';
   document.head.appendChild(style);
