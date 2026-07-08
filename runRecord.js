@@ -5,6 +5,7 @@
    ========================================================================= */
 
 const RUN_RECORD_KEY = "viberunRunRecords";
+const RUN_RECORD_MAX = 20;
 
 function saveCompletedRunRecord(result){
   if(!S || S.recordSaved) return;
@@ -28,7 +29,8 @@ function saveCompletedRunRecord(result){
       createdAt: new Date().toISOString(),
       snapshot
     });
-    localStorage.setItem(RUN_RECORD_KEY, JSON.stringify(records));
+    // 최근 20개까지만 보관한다.
+    localStorage.setItem(RUN_RECORD_KEY, JSON.stringify(records.slice(0, RUN_RECORD_MAX)));
   } catch(error) {}
 }
 
@@ -49,6 +51,43 @@ function getRunRecordFloor(){
   const match = hudFloor ? hudFloor.textContent.match(/(\d+)\s*(?:F|구역)/i) : null;
   if(match) return match[1] + "구역";
   return "신령의 은혜";
+}
+
+/* 세로 드래그 스크롤: runResult.js의 rrEnableDragScroll(가로용)과 동일한 방식을
+   세로 스크롤에 맞춰 적용한다. */
+function enableRecordPageDragScroll(container){
+  if(!container || container.dataset.recordDragReady === "1") return;
+  container.dataset.recordDragReady = "1";
+
+  let dragging = false, startY = 0, startScrollTop = 0, pointerId = null;
+
+  container.addEventListener("pointerdown", (event) => {
+    if(container.scrollHeight <= container.clientHeight) return;
+    dragging = true;
+    delete container.dataset.recordPageDragged;
+    pointerId = event.pointerId;
+    startY = event.clientY;
+    startScrollTop = container.scrollTop;
+    container.classList.add("record-page-dragging");
+    container.setPointerCapture?.(pointerId);
+  });
+  container.addEventListener("pointermove", (event) => {
+    if(!dragging) return;
+    const diff = event.clientY - startY;
+    if(Math.abs(diff) > 4) container.dataset.recordPageDragged = "1";
+    container.scrollTop = startScrollTop - diff;
+  });
+  const stopDrag = (event) => {
+    if(!dragging) return;
+    dragging = false;
+    container.classList.remove("record-page-dragging");
+    try{ container.releasePointerCapture?.(event.pointerId); }catch(error){}
+    // 드래그 직후 클릭이 카드 오픈으로 오작동하지 않도록 다음 tick에 플래그를 정리한다.
+    setTimeout(() => { delete container.dataset.recordPageDragged; }, 0);
+  };
+  container.addEventListener("pointerup", stopDrag);
+  container.addEventListener("pointercancel", stopDrag);
+  container.addEventListener("pointerleave", stopDrag);
 }
 
 function openRecordPage(){
@@ -90,7 +129,7 @@ function buildRecordPage(){
 
 function renderRecordPage(overlay){
   const body = overlay.querySelector(".record-page-body");
-  const records = readRunRecords();
+  const records = readRunRecords().slice(0, RUN_RECORD_MAX);
   if(!records.length){
     body.innerHTML = '<p class="record-page-empty">아직 완료된 기록이 없습니다.</p>';
     return;
@@ -101,19 +140,29 @@ function renderRecordPage(overlay){
     const resultLabel = record.result === "win" ? "클리어" : "";
     const date = record.createdAt ? new Date(record.createdAt).toLocaleDateString("ko-KR") : "";
     const statusText = resultLabel ? (resultLabel + (date ? ' · ' + date : '')) : date;
+    const playTimeMs = record.snapshot && record.snapshot.playTimeMs;
+    const playTimeText = typeof playTimeMs === "number" && typeof formatRrPlayTime === "function"
+      ? formatRrPlayTime(playTimeMs)
+      : "";
     return '<button type="button" class="record-page-item">' +
       '<div class="record-page-rank">' + (index + 1) + '</div>' +
       '<div class="record-page-main">' +
         '<strong>' + (record.floor || "신령의 은혜") + ' ' + (record.turn || 1) + '턴</strong>' +
         '<span>' + statusText + '</span>' +
       '</div>' +
+      (playTimeText ? '<div class="record-page-playtime">⏳ ' + playTimeText + '</div>' : '') +
       '<div class="record-page-chevron" aria-hidden="true">›</div>' +
     '</button>';
   }).join("");
 
   body.querySelectorAll(".record-page-item").forEach((item, index) => {
-    item.addEventListener("click", () => openRecordDetailOverlay(records[index]));
+    item.addEventListener("click", () => {
+      if(body.dataset.recordPageDragged === "1") return;
+      openRecordDetailOverlay(records[index]);
+    });
   });
+
+  enableRecordPageDragScroll(body);
 }
 
 function injectRecordPageStyles(){
@@ -127,15 +176,22 @@ function injectRecordPageStyles(){
     '.record-page-head{display:flex;align-items:center;justify-content:center;position:relative;padding:.15cqh 4.8cqh 1.35cqh;border-bottom:.16cqh solid rgba(201,164,91,.52);}' +
     '.record-page-head h2{font-size:3.2cqh;margin:0;font-weight:900;letter-spacing:.08em;color:#6b4628;text-shadow:0 .12cqh 0 rgba(255,255,255,.9);}' +
     '.record-page-close{position:absolute;right:-.55cqh;top:-1.05cqh;width:4.7cqh;height:4.7cqh;border:0;background:transparent url("assets/ui_buttons/close.png") center/contain no-repeat;color:transparent;font-size:0;cursor:pointer;line-height:1;}' +
-    '.record-page-body{min-height:28cqh;padding:1.6cqh .6cqw .2cqh;overflow:auto;display:grid;gap:1cqh;}' +
+    '.record-page-body{min-height:20cqh;max-height:44cqh;padding:1.6cqh .6cqw .2cqh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;display:grid;gap:1cqh;align-content:start;cursor:grab;touch-action:pan-y;' +
+      'scrollbar-width:thin;scrollbar-color:rgba(180,132,44,.85) rgba(255,255,255,.3);}' +
+    '.record-page-body.record-page-dragging{cursor:grabbing;}' +
+    '.record-page-body::-webkit-scrollbar{width:.6cqh;}' +
+    '.record-page-body::-webkit-scrollbar-track{background:rgba(255,255,255,.3);border-radius:1cqh;}' +
+    '.record-page-body::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#d4a030,#a8791a);border-radius:1cqh;border:.08cqh solid rgba(255,255,255,.5);}' +
+    '.record-page-body::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#e7b54a,#c0902a);}' +
     '.record-page-empty{align-self:center;padding:6cqh 1cqw;text-align:center;font-size:2cqh;font-weight:900;color:var(--c-ink-soft);}' +
-    '.record-page-item{display:flex;align-items:center;gap:1cqw;width:100%;min-height:7cqh;padding:1cqh 1.15cqw;border:.14cqh solid rgba(201,164,91,.58);border-radius:1cqh;background:rgba(255,250,238,.74);box-shadow:inset 0 0 0 .08cqh rgba(255,255,255,.72);font:inherit;text-align:left;cursor:pointer;transition:transform .12s,filter .12s;}' +
+    '.record-page-item{display:flex;align-items:center;gap:1cqw;width:100%;min-height:7cqh;padding:1cqh 1.15cqw;border:.14cqh solid rgba(201,164,91,.58);border-radius:1cqh;background:rgba(255,250,238,.74);box-shadow:inset 0 0 0 .08cqh rgba(255,255,255,.72);font:inherit;text-align:left;cursor:inherit;transition:transform .12s,filter .12s;}' +
     '.record-page-item:hover{transform:translateY(-.15cqh);filter:brightness(1.03);}' +
     '.record-page-item:active{transform:scale(.985);}' +
     '.record-page-rank{flex:none;width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;background:#d6a95b;color:#fff;font-size:1.8cqh;font-weight:900;box-shadow:inset 0 -.2cqh .45cqh rgba(83,49,12,.24);}' +
     '.record-page-main{flex:1;min-width:0;display:grid;gap:.25cqh;}' +
     '.record-page-main strong{font-size:2.2cqh;line-height:1.1;color:#52371f;}' +
     '.record-page-main span{font-size:1.45cqh;font-weight:800;color:var(--c-ink-soft);min-height:1.45cqh;}' +
+    '.record-page-playtime{flex:none;font-size:1.5cqh;font-weight:800;color:#8a6a3a;white-space:nowrap;}' +
     '.record-page-chevron{flex:none;font-size:2.4cqh;font-weight:900;color:rgba(201,164,91,.85);}';
   document.head.appendChild(style);
 }

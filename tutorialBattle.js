@@ -1369,7 +1369,7 @@
     style.id = "tutorialBattleIntroStyles";
     style.textContent =
       ".tutorial-battle-intro-overlay{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);display:block;cursor:default;}" +
-    ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;--tutorial-dongjasin-avatar-width:36cqh;--tutorial-dongjasin-avatar-height:64cqh;--tutorial-dongjasin-avatar-left:-35cqh;--tutorial-dongjasin-avatar-top:-41.8cqh;--tutorial-dongjasin-avatar-transform:none;transform:translateX(-50%);z-index:281;width:min(58cqw,78cqh);padding:2.7cqh 2.6cqw;border:0;border-radius:0;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;color:#243247;box-shadow:none;}" +
+    ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;--tutorial-dongjasin-avatar-width:36cqh;--tutorial-dongjasin-avatar-height:64cqh;--tutorial-dongjasin-avatar-left:-23cqh;--tutorial-dongjasin-avatar-top:-41.8cqh;--tutorial-dongjasin-avatar-transform:none;transform:translateX(-50%);z-index:281;width:min(58cqw,78cqh);aspect-ratio:2533/621;display:flex;padding:1.6cqh 3cqw;border:0;border-radius:0;background:transparent url(\"assets/ui/dialog_panel_battle_intro.png\") center/100% 100% no-repeat;color:#243247;box-shadow:none;}" +
       ".tutorial-battle-intro-dialogue.tutorial-battle-intro-dialogue-top{top:12cqh;bottom:auto;--tutorial-dongjasin-avatar-top:-18cqh;}" +
     ".tutorial-battle-system-popup{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:281;width:min(46cqw,68cqh);padding:3.2cqh 2.8cqw;border:0;border-radius:0;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;box-shadow:none;text-align:center;color:var(--c-ink);}" +
       ".tutorial-battle-system-text{font-size:1.9cqh;line-height:1.5;font-weight:850;color:var(--c-ink);}" +
@@ -1382,15 +1382,15 @@
       ".tutorial-final-attack-card{box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;z-index:120 !important;}" +
       ".tutorial-end-turn-click-blocker{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);cursor:default;pointer-events:none;}" +
       "#endTurn.tutorial-end-turn-button{position:relative;z-index:281;box-shadow:0 0 0 .35cqh #ffd25f,0 0 1.5cqh rgba(255,210,95,.9) !important;border-color:#ffd25f !important;}" +
-      ".tutorial-battle-intro-content{display:block;}" +
-      ".tutorial-battle-intro-body{min-width:0;}" +
+      ".tutorial-battle-intro-content{display:flex;flex-direction:column;width:100%;}" +
+      ".tutorial-battle-intro-body{display:flex;flex-direction:column;width:100%;flex:1 1 auto;min-width:0;}" +
       ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar{position:absolute;left:var(--tutorial-dongjasin-avatar-left);top:var(--tutorial-dongjasin-avatar-top);transform:var(--tutorial-dongjasin-avatar-transform);width:var(--tutorial-dongjasin-avatar-width);height:var(--tutorial-dongjasin-avatar-height);pointer-events:none;}" +
       ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar img{width:100%;height:100%;object-fit:contain;object-position:bottom center;display:block;}" +
       ".tutorial-battle-intro-dialogue .tutorial-dongjasin-avatar-placeholder{width:100%;height:100%;border:.22cqh solid rgba(47,102,168,.45);border-radius:46% 46% 42% 42% / 38% 38% 52% 52%;background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(220,234,250,.96));box-shadow:0 .45cqh 1cqh rgba(20,35,60,.16);}" +
-      ".tutorial-battle-intro-speaker{margin-bottom:.7cqh;font-size:1.7cqh;font-weight:900;color:#2f66a8;}" +
+      ".tutorial-battle-intro-speaker{margin-top:1cqh;margin-bottom:.6cqh;font-size:2.3cqh;color:#a8641f;text-shadow:0 0.06cqh 0 rgba(255,255,255,.5);}" +
       ".tutorial-battle-intro-text{font-size:1.9cqh;line-height:1.45;font-weight:800;}" +
-      ".tutorial-battle-intro-actions{display:flex;justify-content:flex-end;margin-top:1.2cqh;}" +
-      ".tutorial-battle-intro-next{min-width:7.5cqw;min-height:4.2cqh;border:0.16cqh solid #2f66a8;border-radius:.8cqh;background:#4b8bd8;color:#fff;font-size:1.7cqh;font-weight:900;cursor:pointer;}";
+      ".tutorial-battle-intro-actions{display:flex;justify-content:flex-end;margin-top:auto;}" +
+      ".tutorial-battle-intro-next{min-width:0;height:4.4cqh;aspect-ratio:918/232;border:0;border-radius:0;background:transparent url(\"assets/ui_buttons/tutorial_proceed_v2.png\") center/100% 100% no-repeat;color:#2a1a08;font-size:1.7cqh;font-weight:900;cursor:pointer;display:grid;place-items:center;}";
     document.head.appendChild(style);
   }
 
@@ -1597,7 +1597,7 @@
       volumes[key] = Number(input.value);
     });
     if(window.VIBERUN_VOLUME_SETTINGS && typeof window.VIBERUN_VOLUME_SETTINGS.write === "function"){
-      volumes.muted = getTutorialVolumeSettings().muted === true;
+      volumes.muted = getTutorialVolumeSettings().muted;
       window.VIBERUN_VOLUME_SETTINGS.write(volumes);
       return;
     }

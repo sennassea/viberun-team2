@@ -446,7 +446,11 @@ function renderCanvas(currentNodeId) {
 
   /* ── 닫기 버튼: 다음 노드를 반드시 선택해야 하는 상태에서는 숨김 ── */
   const closeBtn = document.getElementById("mapClose");
-  if (closeBtn) closeBtn.style.display = window.MAP_STATE.proceedMode ? "none" : "";
+  if (closeBtn) {
+    closeBtn.style.display = "";
+    closeBtn.style.visibility = window.MAP_STATE.proceedMode ? "hidden" : "";
+    closeBtn.style.pointerEvents = window.MAP_STATE.proceedMode ? "none" : "";
+  }
 
   /* ── ACT 배지 (좌상단) ── */
   const actBadge = document.getElementById("mapCurrentAct");

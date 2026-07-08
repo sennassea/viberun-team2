@@ -87,7 +87,7 @@
 .spirit-path-card-list{
   display:grid;
   grid-template-columns:repeat(5, minmax(0, 1fr));
-  gap:.46cqh;
+  gap:1.3cqh;
   align-items:stretch;
   min-height:0;
   flex:1;
