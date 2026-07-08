@@ -23,7 +23,7 @@
 .type.attack{background:var(--c-red);} .type.defense{background:var(--c-blue);} .type.skill{background:var(--c-green);}
 .card .desc{font-family:var(--font-body); font-size:1.67cqh; text-align:center; color:var(--c-ink); line-height:1.3; white-space:pre-line;}
 
-.card-frame-card{aspect-ratio:2/3; padding:0 !important; border:0 !important; overflow:hidden; background:#f5efe4; color:#10243f;}
+.card-frame-card{aspect-ratio:2/3; padding:0 !important; border:0 !important; border-radius:1cqh; overflow:hidden; background:#f5efe4; color:#10243f;}
 .card-frame-card .card-art-layer{position:absolute; inset:0; z-index:0; display:grid; place-items:center; overflow:hidden; background:linear-gradient(160deg,#eef6ff,#dcebfb); pointer-events:none;}
 .card-frame-card .card-art-layer img{width:100%; height:100%; object-fit:cover; display:block; user-select:none; -webkit-user-drag:none;}
 .card-frame-card .card-frame-layer{position:absolute; inset:0; z-index:2; width:100%; height:100%; object-fit:fill; pointer-events:none;}
@@ -33,7 +33,7 @@
 .card-frame-card .card-desc-text{position:absolute; left:8%; right:8%; top:77.8%; bottom:7.4%; display:block; text-align:center; font-family:var(--font-body); font-size:1.17cqh; line-height:1.34; white-space:pre-line; overflow:hidden; color:#10243f;}
 .card-frame-card .card-hit-layer{position:absolute; inset:0; z-index:4; background:transparent; touch-action:none; cursor:inherit;}
 
-.item-frame-card{position:relative; aspect-ratio:2/3; padding:0 !important; border:0 !important; overflow:hidden; background:transparent; color:#10243f;}
+.item-frame-card{position:relative; aspect-ratio:2/3; padding:0 !important; border:0 !important; border-radius:1cqh; overflow:hidden; background:transparent; color:#10243f;}
 .item-frame-card .item-art-layer{position:absolute; inset:0; z-index:1; display:grid; place-items:center; overflow:hidden; pointer-events:none; font-size:8cqh;}
 .item-frame-card .item-art-layer img{width:62%; height:48%; object-fit:contain; display:block; filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.22)); user-select:none; -webkit-user-drag:none;}
 .item-frame-card .item-frame-layer{position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:fill; pointer-events:none;}

@@ -174,18 +174,15 @@ function applyRelicEffect(relic, effect, context={}){
         S.relicTurnFlags[key] = true;
       }
       drawCards(effect.v || 1, { source:"relic" });
-      toast(relic.name+" 발동");
       break;
     case "heal": {
       const healValue = typeof scaleEndlessPlayerHeal === "function" ? scaleEndlessPlayerHeal(effect.v || 0) : (effect.v || 0);
       const healed = LIFE.heal(S.player, healValue);
       if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
-      toast(relic.name+" 발동");
       break;
     }
     case "block":
       gainPlayerBlock(effect.v || 0);
-      toast(relic.name+" 발동");
       break;
     case "damageRandomEnemy": {
       const targets = livingEnemies();
@@ -200,7 +197,6 @@ function applyRelicEffect(relic, effect, context={}){
       const limit = typeof POTION_SLOT_LIMIT === "number" ? POTION_SLOT_LIMIT : 3;
       if(potion && Array.isArray(S.potions) && S.potions.length < limit){
         S.potions.push({ ...potion });
-        toast(relic.name+" 발동: "+potion.name+" 획득");
         if(typeof window.OPEN_RANDOM_ITEM_RESULT_POPUP === "function"){
           window.OPEN_RANDOM_ITEM_RESULT_POPUP({
             title: "약병 획득",
@@ -245,84 +241,71 @@ function applyRelicPlannedEffect(relic, context={}){
   switch(relic.id){
     case "bronze_incense_burner":
       drawCards(e.draw || 1, { source:"relic" });
-      toast(relic.name+" 발동");
       break;
     case "moon_spirit_tablet":
       if(context.card && context.card.type === "attack" && useRelicFlag("battle", relic.id, "firstPurify")){
         context.bonusDamage = (context.bonusDamage || 0) + (e.purifyBonus || 0);
-        toast(relic.name+" 발동");
       }
       break;
     case "broken_rosary":
       if(!context.generated && useRelicFlag("turn", relic.id, "draw")){
         drawCards(e.draw || 1, { source:"relic" });
-        toast(relic.name+" 발동");
       }
       break;
     case "leftover_candle_wax": {
       const energy = Math.max(0, S.energy || 0);
       if(energy >= (c.remainingEnergyMin || 1)){
         const amount = Math.min(e.maxBlock || 999, energy * (e.blockPerRemainingEnergy || 0));
-        if(amount > 0){ gainPlayerBlock(amount); toast(relic.name+" 발동"); }
+        if(amount > 0){ gainPlayerBlock(amount); }
       }
       break;
     }
     case "tricolor_cotton_fan":
       if((c.requiredTypes || []).every(type => S.spellTypesPlayedThisTurn && S.spellTypesPlayedThisTurn[type]) && useRelicFlag("turn", relic.id, "energy")){
         S.energy = Math.min(getMaxEnergy(), (S.energy || 0) + (e.restoreEnergy || 1));
-        toast(relic.name+" 발동");
       }
       break;
     case "old_hairpin":
       applyRandomHandCostReduction(e.temporaryCostReduction || 1);
-      toast(relic.name+" 발동");
       break;
     case "ash_smeared_mirror":
       if((context.hpLoss || 0) > 0 && useRelicFlag("battle", relic.id, "hit")){
         S.nextTurnEnergyBonus = (S.nextTurnEnergyBonus || 0) + (e.nextTurnEnergyBonus || 1);
-        toast(relic.name+" 발동");
       }
       break;
     case "paper_crane_bundle":
       if(S.playerTurnActive && Array.isArray(S.hand) && S.hand.length === 0 && useRelicFlag("battle", relic.id, "empty")){
         drawCards(e.draw || 2, { source:"relic" });
-        toast(relic.name+" 발동");
       }
       break;
     case "threshold_salt":
       if((context.rawDamage || 0) <= 0) break;
       if(useRelicFlag("battle", relic.id, "reduce")){
         context.rawDamage = Math.max(0, (context.rawDamage || 0) - (e.reduceHpDamage || 0));
-        toast(relic.name+" 발동");
       }
       break;
     case "demon_sealing_tablet":
       gainPlayerBlock(e.block || 8);
-      toast(relic.name+" 발동");
       break;
     case "red_golden_rope":
       if(useRelicFlag("turn", relic.id, "damage")){
         damageRandomEnemy(e.damageRandomEnemy || 2);
-        toast(relic.name+" 발동");
       }
       break;
     case "ink_line_spool":
       if((context.beforeBlock || 0) >= (c.minBarrierBeforeConsume || 15) && useRelicFlag("battle", relic.id, "reward")){
         drawCards(e.draw || 1, { source:"relic" });
         S.energy = Math.min(getMaxEnergy(), (S.energy || 0) + (e.restoreEnergy || 1));
-        toast(relic.name+" 발동");
       }
       break;
     case "damp_letter_tie":
       if((context.before || 0) >= (c.targetRecollectionAtLeast || 3) && (context.added || 0) > 0 && useRelicFlag("turn", relic.id, "draw")){
         drawCards(e.draw || 1, { source:"relic" });
-        toast(relic.name+" 발동");
       }
       break;
     case "ward_pocket_watch":
       if(useRelicFlag("turn", relic.id, "bonus")){
         context.bonusDamage = (context.bonusDamage || 0) + (e.recollectionDamageBonus || 1);
-        toast(relic.name+" 발동");
       }
       break;
     case "tear_catcher_gourd":
@@ -331,7 +314,6 @@ function applyRelicPlannedEffect(relic, context={}){
         if(targets.length){
           const target = targets[Math.floor(Math.random() * targets.length)];
           addStatus(target, "recollection", e.transferRecollection || 2);
-          toast(relic.name+" 발동");
         }
       }
       break;
@@ -340,44 +322,39 @@ function applyRelicPlannedEffect(relic, context={}){
         const flagKey = "target:" + (context.target.id || context.target.spawnIndex || "unknown");
         if(useRelicFlag("battle", relic.id, flagKey)){
           addStatus(context.target, "mark", e.markBonus || 1, { skipRelic:true });
-          toast(relic.name+" 발동");
         }
       }
       break;
     case "lotus_seed_bead": {
       const target = livingEnemies()[0];
-      if(target){ addStatus(target, "mark", e.applyMark || 1); toast(relic.name+" 발동"); }
+      if(target){ addStatus(target, "mark", e.applyMark || 1); }
       break;
     }
     case "cheondo_bell":
       if((context.consumed || 0) >= (c.minMarksConsumed || 4) && useRelicFlag("battle", relic.id, "reserve")){
         S.nextTurnEnergyBonus = (S.nextTurnEnergyBonus || 0) + (e.nextTurnRestoreEnergy || 1);
         S.nextTurnDrawBonus = (S.nextTurnDrawBonus || 0) + (e.nextTurnDraw || 1);
-        toast(relic.name+" 발동");
       }
       break;
     case "old_letter_box":
       markRandomHanpuriGrowth(e.applyGrowthCount || 1);
       break;
     case "broken_red_thread":
-      if(useRelicFlag("turn", relic.id, "draw")){ drawCards(e.draw || 1, { source:"relic" }); toast(relic.name+" 발동"); }
+      if(useRelicFlag("turn", relic.id, "draw")){ drawCards(e.draw || 1, { source:"relic" }); }
       break;
     case "unsealed_letter":
       if(context.cardKey && context.cardUid && useRelicFlag("battle", relic.id, "return")){
         S.nextTurnReturnCard = { cardUid:context.cardUid, cardKey:context.cardKey, costReduction:e.temporaryCostReduction || 1 };
-        toast(relic.name+" 발동");
       }
       break;
     case "gilt_bell_clapper":
       if(useRelicFlag("turn", relic.id, "bonus")){
         context.bonusDamage = (context.bonusDamage || 0) + (e.purifyBonus || 2);
-        toast(relic.name+" 발동");
       }
       break;
     case "sevenstar_knot":
       if((S.cardsPlayedThisTurn || 0) + 1 === (c.spellCount || 5) && useRelicFlag("turn", relic.id, "draw")){
         drawCards(e.draw || 1, { source:"relic" });
-        toast(relic.name+" 발동");
       }
       break;
     case "torn_gut_fan":
@@ -385,25 +362,21 @@ function applyRelicPlannedEffect(relic, context={}){
          useRelicFlag("turn", relic.id, "block") &&
          useRelicFlag("battle", relic.id, "block", c.maxPerBattle || 2)){
         gainPlayerBlock(e.block || 5);
-        toast(relic.name+" 발동");
       }
       break;
     case "prayer_knot":
       S.nextBattleStartBlock = (S.nextBattleStartBlock || 0) + (e.nextBattleStartBlock || 6);
       if(RUN_STATE) RUN_STATE.nextBattleStartBlock = S.nextBattleStartBlock;
-      toast(relic.name+" 발동");
       break;
     case "empty_lucky_pouch":
       if(useRelicFlag("run", relic.id, "skip", c.maxPerRun || 4)){
         S.gold = (S.gold || 0) + (e.gold || 15);
         syncRunStateFromCombat();
-        toast(relic.name+" 발동: 복채 +" + (e.gold || 15));
       }
       break;
     case "twin_marriage_tablet":
       if(context.cardKey && !context.duplicateByRelic){
         addPermanentCard(context.cardKey, { source:"relic", duplicateByRelic:true, skipRelicEvent:true });
-        toast(relic.name+" 발동");
       }
       break;
     case "inverted_bell":
@@ -452,7 +425,6 @@ function tryApplyFatalRelic(){
   const healed = LIFE.heal(S.player, scaledHealValue);
   if(!effect || effect.consume || (relic.plannedConditions && relic.plannedConditions.consumeRelic)) S.relics.splice(relicIndex, 1);
   if(healed > 0) spawnFloat('.player', '+'+healed, 'heal');
-  toast(relic.name+" 발동");
   renderAll();
   return S.player.hp > 0;
 }
@@ -578,7 +550,6 @@ function applyBattleStartRelics(){
   if(anxietyEffect && !anxietyEffect.used){
     S.player.anxiety = (S.player.anxiety || 0) + Number(anxietyEffect.value || 1);
     anxietyEffect.used = true;
-    toast("은혜4 발동: 불안 1");
   }
 
   const hpOneEffect = effects.nextThreeNormalFirstEnemyHpOne;
@@ -587,7 +558,6 @@ function applyBattleStartRelics(){
     if(target){
       target.hp = Math.min(target.hp, 1);
       hpOneEffect.remaining -= 1;
-      toast("은혜11 발동: 첫 번째 적 정신력 1");
     }
   }
 
@@ -597,7 +567,6 @@ function applyBattleStartRelics(){
     if(typeof LIFE !== "undefined" && LIFE && typeof LIFE.addBlock === "function"){
       LIFE.addBlock(S.player, blockValue);
       blockEffect.used = true;
-      toast("은혜12 발동: 결계 " + blockValue);
     }else{
       console.warn("[BattleStart] LIFE.addBlock 함수가 없어 신령의 은혜 결계 효과를 적용하지 못했습니다.");
     }

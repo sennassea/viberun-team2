@@ -368,13 +368,11 @@ function chooseRewardCard(key){
   if(window.VIBERUN_SOUND && typeof window.VIBERUN_SOUND.play === "function") window.VIBERUN_SOUND.play("rewardPick");
   addPermanentCard(key, { source:"battleReward" });
   if(S.victoryCardRewardOpen){
-    toast(card.name+" 획득");
     finishBattleVictoryCardReward();
     return;
   }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
-  toast(card.name+" 획득");
   proceedToMap();
 }
 
@@ -888,7 +886,6 @@ function resolveCardRewardPick(key){
   if(desc) desc.textContent = "새로운 주문 1장을 선택해 덱에 추가하세요.";
   if(skip) skip.style.display = "";
   closeRewardOverlay();
-  if(typeof toast === "function") toast(card.name + " 획득");
   mode.resolve(key);
 }
 
