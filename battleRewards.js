@@ -6,8 +6,6 @@ function nodeClear(){
   if(S.encounterCleared) return;
   S.encounterCleared = true;
 
-  S.enemies.forEach(e => toast(e.name+" 성불 완료"));
-
   const nodeType = S.battleNodeType || "enemy";
   recordBattleClear(nodeType);
 

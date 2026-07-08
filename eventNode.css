@@ -39,12 +39,12 @@
 .event-hp-row{ display:flex; align-items:center; gap:.8cqw; font-size:1.78cqh; font-weight:800; }
 .event-hp-row span:first-child{ color:var(--ev-red-deep); }
 .event-hp-bar{
-  position:relative; width:calc(100% - 2cqw); height:1.45cqh; border-radius:.8cqh; overflow:hidden;
-  background:rgba(95,95,95,.58); border:0;
+  position:relative; width:min(13.6cqw, 25cqh); height:1.65cqh; border-radius:.8cqh; overflow:hidden;
+  background:rgba(80,38,38,.42); border:0; box-shadow:inset 0 0 0 .12cqh rgba(75,40,28,.35);
 }
 .event-hp-fill{
   position:absolute; left:0; top:0; bottom:0; width:0%;
-  background:linear-gradient(180deg,#ff8079,#e24b4a); transition:width .35s ease; border-radius:.8cqh;
+  background:linear-gradient(180deg,#ff6f67 0%,#e33434 58%,#a6171f 100%); transition:width .35s ease; border-radius:.8cqh;
 }
 #eventHpText{position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center;
   color:#fff; font-size:1.32cqh; font-weight:900; line-height:1; text-shadow:0 .12cqh .25cqh rgba(80,20,20,.65);}
@@ -58,10 +58,10 @@
   position:absolute; left:50%; top:0; transform:translateX(-50%); width:32cqw; height:100%;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.35cqh;
   padding:.8cqh 4.2cqw; background:transparent url("assets/ui/stage_info_panel.png") center/100% 100% no-repeat;
-  border:0; border-radius:0; box-shadow:none; backdrop-filter:none; font-size:2.36cqh; font-weight:900; color:var(--c-ink);
+  border:0; border-radius:0; box-shadow:none; backdrop-filter:none; font-size:2.9cqh; font-weight:900; color:#4a2f12; text-shadow:0 .07cqh 0 rgba(255,255,255,.55);
 }
-.event-stage-title-main{font-size:2.7cqh; font-weight:900; letter-spacing:0; line-height:1;}
-.event-stage-title-sub{font-size:1.32cqh; font-weight:800; color:var(--ev-ink-soft); line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+.event-stage-title-main{font-size:3.32cqh; font-weight:900; letter-spacing:0; line-height:1;}
+.event-stage-title-sub{font-size:1.62cqh; font-weight:800; color:var(--ev-ink-soft); line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
 
 .event-topbar-spacer{ flex:1; }
 .event-menu{ position:absolute; right:0; top:0; height:100%; display:flex; align-items:center; gap:.8cqw; }

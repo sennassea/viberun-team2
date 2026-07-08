@@ -101,6 +101,35 @@ window.OPEN_START_BLESSING = function(){
   }
 };
 
+/* ── 이어하기 복원 전용: 신령의 은혜 화면(로비)에서 저장된 진행 상황을 복원할 때
+   호출된다(battleRunState.js의 restoreSavedRunState). resolved는 저장 당시
+   은혜를 이미 골랐는지(MAP_STATE.proceedMode) 여부다. 이미 골랐다면 새로 선택
+   화면을 보여주지 않고 completeSbBlessing()과 동일하게 바로 맵을 연다. */
+window.RESUME_START_BLESSING = function(resolved){
+  sbResolved = !!resolved;
+  if(!sbSpirit){
+    const run = getSbRunState();
+    const savedSpirit = run && run.blessingSpirit;
+    sbSpirit = savedSpirit
+      ? {
+          id: savedSpirit.id,
+          name: savedSpirit.name,
+          image: savedSpirit.image,
+          emoji: savedSpirit.emoji,
+          dialogue: (savedSpirit.appearanceLines && savedSpirit.appearanceLines[0]) || ""
+        }
+      : START_BLESSING_SPIRITS[Math.floor(Math.random() * START_BLESSING_SPIRITS.length)];
+  }
+
+  ensureSbOverlay();
+  hideSbChrome();
+  renderSbOverlay();
+  sbOverlayEl.classList.add("show");
+  sbOverlayEl.setAttribute("aria-hidden", "false");
+
+  if(sbResolved) completeSbBlessing();
+};
+
 function closeSbOverlay(){
   if(!sbOverlayEl) return;
   sbOverlayEl.classList.remove("show");
@@ -162,19 +191,16 @@ function openSbMapPreview(){
 function openSbDeck(){
   const deckBtn = document.getElementById("deckViewerButton");
   if(deckBtn) deckBtn.click();
-  else if(typeof toast === "function") toast("보유 주문 확인 기능을 불러올 수 없습니다.");
 }
 
 function openSbBag(){
   if(typeof window.BAG_UI_OPEN === "function") window.BAG_UI_OPEN();
-  else if(typeof toast === "function") toast("가방을 불러올 수 없습니다.");
 }
 
 function openSbSettings(){
   const settingsBtn = Array.from(document.querySelectorAll(".hud-btn"))
     .find(b => b.textContent.includes("⚙️") || b.textContent.includes("⚙"));
   if(settingsBtn) settingsBtn.click();
-  else if(typeof toast === "function") toast("설정을 불러올 수 없습니다.");
 }
 
 /* ── 은혜 선택 → 보상 적용 → 기존 노드 선택 화면 재사용 ─────────────────── */
@@ -357,12 +383,10 @@ function removeSbRandomCards(count){
 function chooseSbStarterCardToRemove(){
   const targets = getSbStarterTargets();
   if(targets.length === 0){
-    if(typeof toast === "function") toast("제거할 기본 카드가 없습니다.");
     return null;
   }
   if(typeof window.OPEN_DECK_VIEWER_CARD_PICK !== "function"){
     console.error("[StartBlessing] 카드 선택 제거 UI를 찾을 수 없습니다.");
-    if(typeof toast === "function") toast("카드 선택 제거 UI를 불러올 수 없습니다.");
     return Promise.resolve(null);
   }
   return window.OPEN_DECK_VIEWER_CARD_PICK({
@@ -373,8 +397,7 @@ function chooseSbStarterCardToRemove(){
     onConfirm: key => {
       const run = getSbRunState();
       const index = run ? run.deck.findIndex(deckKey => deckKey === key && CARD_DB[deckKey] && (CARD_DB[deckKey].rarity === "starter" || CARD_DB[deckKey].rarity === "basic") && isSbDeckCardRemovable(deckKey)) : -1;
-      const removed = removeSbDeckCardAt(index);
-      if(removed && typeof toast === "function") toast("카드 제거: " + (CARD_DB[removed]?.name || removed));
+      removeSbDeckCardAt(index);
     }
   });
 }
@@ -404,7 +427,6 @@ function chooseSbCardRewardByRarity(rarity, options = {}){
   }
   if(typeof window.OPEN_CARD_REWARD_PICK !== "function"){
     console.error("[StartBlessing] 카드 선택 보상 UI를 찾을 수 없습니다.", rarity);
-    if(typeof toast === "function") toast("카드 선택 보상 UI를 불러올 수 없습니다.");
     return Promise.resolve(null);
   }
   return window.OPEN_CARD_REWARD_PICK({

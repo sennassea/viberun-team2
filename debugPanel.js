@@ -49,7 +49,9 @@
         { id: "monsterReplaceHN01", label: "HN01로 교체", run: () => runCheatCommand("monster.spawnPackage", "HN01", true) },
         { id: "monsterClearDead", label: "죽은 몬스터 제거", run: () => runCheatCommand("monster.clearDead") },
         { id: "monsterClearSummoned", label: "치트 소환 제거", run: () => runCheatCommand("monster.clearSummoned") },
-        { id: "monsterKillAll", label: "모든 몬스터 즉사", run: () => runCheatCommand("kill.enemy", "all") }
+        { id: "monsterKillAll", label: "모든 몬스터 즉사", run: () => runCheatCommand("kill.enemy", "all") },
+        { id: "monsterListLog", label: "몬스터 목록(콘솔)", run: () => runCheatCommand("monster.list") },
+        { id: "monsterPackagesLog", label: "패키지 목록(콘솔)", run: () => runCheatCommand("monster.packages") }
       ]
     },
     {
@@ -62,7 +64,23 @@
         { id: "playerStatusClear", label: "상태이상 지우기", run: () => runCheatCommand("status.clear", "player") },
         { id: "playerAtkAdd10", label: "공격 보정 +10", run: () => runCheatCommand("atk.player.add", 10) },
         { id: "playerAtkMul2", label: "공격 배율 x2", run: () => runCheatCommand("atk.player.mul", 2) },
+        { id: "playerAtkSet50", label: "공격 고정 50", run: () => runCheatCommand("atk.player.set", 50) },
         { id: "playerAtkReset", label: "공격 보정 초기화", run: () => runCheatCommand("atk.player.reset") }
+      ]
+    },
+    {
+      id: "status",
+      label: "상태이상",
+      commands: [
+        { id: "statusAddPlayerWeak", label: "PL 동요 +2", run: () => runCheatCommand("status.add", "player", "weak", 2) },
+        { id: "statusAddPlayerAnxiety", label: "PL 불안 +2", run: () => runCheatCommand("status.add", "player", "anxiety", 2) },
+        { id: "statusAddPlayerLethargy", label: "PL 무기력 +2", run: () => runCheatCommand("status.add", "player", "lethargy", 2) },
+        { id: "statusRemovePlayerWeak", label: "PL 동요 -2", run: () => runCheatCommand("status.remove", "player", "weak", 2) },
+        { id: "statusRemovePlayerAnxiety", label: "PL 불안 -2", run: () => runCheatCommand("status.remove", "player", "anxiety", 2) },
+        { id: "statusAddEnemyWeak", label: "적 전체 동요 +2", run: () => runCheatCommand("status.add", "enemy", "all", "weak", 2) },
+        { id: "statusAddEnemyAnxiety", label: "적 전체 불안 +2", run: () => runCheatCommand("status.add", "enemy", "all", "anxiety", 2) },
+        { id: "statusAddEnemyLethargy", label: "적 전체 무기력 +2", run: () => runCheatCommand("status.add", "enemy", "all", "lethargy", 2) },
+        { id: "statusClearEnemyAll", label: "적 전체 상태이상 제거", run: () => runCheatCommand("status.clear", "enemy", "all") }
       ]
     },
     {
@@ -71,9 +89,12 @@
       commands: [
         { id: "gold1000", label: "골드 +1000", run: grantGold },
         { id: "gold5000", label: "골드 +5000", run: () => runCheatCommand("give.gold", 5000) },
+        { id: "goldTake500", label: "골드 -500", run: () => runCheatCommand("take.gold", 500) },
         { id: "gem100", label: "달빛조각 +100", run: grantGem },
         { id: "gem1000", label: "달빛조각 +1000", run: () => runCheatCommand("wallet.moon.add", 1000) },
         { id: "gemSet5000", label: "달빛조각 5000 설정", run: () => runCheatCommand("wallet.moon.set", 5000) },
+        { id: "gemTake100", label: "계정 달빛조각 -100", run: () => runCheatCommand("wallet.moon.take", 100) },
+        { id: "gemGetLog", label: "계정 달빛조각 확인(콘솔)", run: () => runCheatCommand("wallet.moon.get") },
         { id: "walletRefresh", label: "현재 재화 새로고침", run: refreshWallet }
       ]
     },
@@ -81,9 +102,54 @@
       id: "item",
       label: "아이템",
       commands: [
-        { id: "relicRandom", label: "랜덤 법구", run: () => runCheatCommand("give.relicRandom") },
+        { id: "relicGiveSample", label: "법구: 놋쇠 향로", run: () => runCheatCommand("give.relic", "bronze_incense_burner") },
+        { id: "potionGiveSample", label: "약병: 청심환", run: () => runCheatCommand("give.potion", "cheongsim_pill") },
+        { id: "relicListLog", label: "법구 목록(콘솔)", run: () => runCheatCommand("give.relicList") },
+        { id: "potionListLog", label: "약병 목록(콘솔)", run: () => runCheatCommand("give.potionList") },
         { id: "takeRelicAll", label: "법구 모두 제거", run: () => runCheatCommand("take.relic", "all") },
         { id: "takePotionAll", label: "물약 모두 제거", run: () => runCheatCommand("take.potion", "all") }
+      ]
+    },
+    {
+      id: "card",
+      label: "주문",
+      commands: [
+        { id: "cardHandAdd", label: "손패에 혼백천도", run: () => runCheatCommand("card.hand", "soul_passing", 1) },
+        { id: "cardDeckAdd", label: "덱에 로사리 던지기", run: () => runCheatCommand("card.deck", "rosary_throw", 1) },
+        { id: "cardDrawAdd", label: "뽑을패에 혼백천도", run: () => runCheatCommand("card.draw", "soul_passing", 1) },
+        { id: "cardRemoveOne", label: "혼백천도 1장 제거", run: () => runCheatCommand("card.remove", "soul_passing") },
+        { id: "cardRemoveAll", label: "혼백천도 전량 제거", run: () => runCheatCommand("card.removeAll", "soul_passing") },
+        { id: "cardClearHand", label: "손패 비우기", run: () => runCheatCommand("card.clear", "hand") },
+        { id: "cardClearStatus", label: "상태이상 카드 정리", run: () => runCheatCommand("card.clear", "status") },
+        { id: "cardListLog", label: "주문 목록(콘솔)", run: () => runCheatCommand("card.list") },
+        { id: "cardFindLog", label: "주문 검색: 혼백(콘솔)", run: () => runCheatCommand("card.find", "혼백") }
+      ]
+    },
+    {
+      id: "endless",
+      label: "끝없는 여정",
+      commands: [
+        { id: "endlessUnlockAll", label: "전체 해금", run: () => runCheatCommand("endless.unlockAll") },
+        { id: "endlessUnlock10", label: "10까지 해금", run: () => runCheatCommand("endless.unlock", 10) },
+        { id: "endlessLockZero", label: "해금 기록 0으로", run: () => runCheatCommand("endless.lock") },
+        { id: "endlessLock3", label: "3까지로 되돌리기", run: () => runCheatCommand("endless.lock", 3) },
+        { id: "endlessReset", label: "진행도 완전 삭제", run: () => runCheatCommand("endless.reset") },
+        { id: "endlessStatusLog", label: "해금 상태 확인(콘솔)", run: () => runCheatCommand("endless.status") }
+      ]
+    },
+    {
+      id: "system",
+      label: "시스템",
+      commands: [
+        { id: "resetBattle", label: "전투 초기화", run: () => runCheatCommand("reset.battle") },
+        { id: "resetRun", label: "런 초기화", run: () => runCheatCommand("reset.run") },
+        { id: "dumpState", label: "상태 출력(콘솔)", run: () => runCheatCommand("dump.state") },
+        { id: "dumpCards", label: "카드 출력(콘솔)", run: () => runCheatCommand("dump.cards") },
+        { id: "dumpEnemies", label: "몬스터 출력(콘솔)", run: () => runCheatCommand("dump.enemies") },
+        { id: "toastInfo", label: "토스트: 안내", run: () => runCheatCommand("toast.info", "안내 테스트") },
+        { id: "toastSuccess", label: "토스트: 성공", run: () => runCheatCommand("toast.success", "성공 테스트") },
+        { id: "toastWarning", label: "토스트: 경고", run: () => runCheatCommand("toast.warning", "경고 테스트") },
+        { id: "toastError", label: "토스트: 오류", run: () => runCheatCommand("toast.error", "오류 테스트") }
       ]
     }
   ];

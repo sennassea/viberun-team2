@@ -5,11 +5,11 @@
   display:flex; align-items:center; justify-content:center; gap:.8cqw;
   padding:.8cqh 4.2cqw; background:transparent url("assets/ui/stage_info_panel.png") center/100% 100% no-repeat; border:0;
   border-radius:0; backdrop-filter:none; box-shadow:none;
-  font-size:2.36cqh; font-weight:900; color:var(--c-ink);}
+  font-size:2.9cqh; font-weight:900; color:#4a2f12; text-shadow:0 .07cqh 0 rgba(255,255,255,.55);}
 .progress-center-hud,.top-right-menu,.player-info-card{z-index:1;}
 .progress-region,.progress-floor,.progress-turn,.progress-act{display:inline-flex; align-items:center; white-space:nowrap; font-family:var(--font-title);}
-.progress-icon{font-size:2.47cqh; line-height:1; margin-right:.25cqw;}
-.progress-separator{width:.18cqh; height:2.6cqh; border-radius:.2cqh; background:var(--c-panel-line);}
+.progress-icon{font-size:3.05cqh; line-height:1; margin-right:.25cqw;}
+.progress-separator{width:.18cqh; height:2.6cqh; border-radius:.2cqh; background:#b98f42; opacity:.55;}
 #hudTurn{position:relative; left:auto; top:auto; transform:none;}
 
 /* =================== 醫뚯륫: ?꾩옱 ?④낵 / ?곗륫: ???섎룄 =================== */
