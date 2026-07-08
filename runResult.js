@@ -28,6 +28,7 @@ const NPC_DONGJASEUNG = {
   id: "npc_dongjaseung",
   name: (RR_ENDING.dongja && RR_ENDING.dongja.name) || RR_DEFEAT.speaker || "동자신",
   emoji: (RR_ENDING.dongja && RR_ENDING.dongja.emoji) || RR_DEFEAT.emoji || "🧒",
+  image: (RR_ENDING.dongja && RR_ENDING.dongja.image) || "assets/characters/dongjasin/dgs_greeting_wave.png",
   endlessTitle: (RR_ENDING.labels && RR_ENDING.labels.dongja) || "끝없는 여정",
   endlessLines: (RR_ENDING.dongja && RR_ENDING.dongja.lines) || [
     "드디어 여정이 끝났네.",
@@ -572,7 +573,7 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
   characterWrap.className = "rr-character-wrap";
   characterWrap.innerHTML = npc.image
-    ? '<img src="' + npc.image + '" alt="' + (npc.name || "") + '">'
+    ? '<img class="rr-defeat-dongjasin" src="' + npc.image + '" alt="' + (npc.name || "") + '">'
     : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
 
   overlay.classList.add("show");
