@@ -1,0 +1,62 @@
+/* 심도(디버프) 확인 버튼 및 드롭다운 — style.css에서 분리 */
+
+/* ── 심도(끝없는 여정 디버프) 확인 버튼/드롭다운 ───────────────────────── */
+.ui-depth-button{position:relative;}
+.top-menu-button.ui-depth-button .depth-button-count{
+  /* .top-menu-button 박스는 8.2cqh x 12cqh(세로가 긴 직사각형)인데 심도 아이콘은
+     정사각형이라 background-size:contain으로 인해 폭 기준으로 축소되어 세로로
+     레터박싱(위아래 여백 (12-8.2)/2 = 1.9cqh)이 생긴다. 배지를 박스 모서리가 아니라
+     실제로 보이는 아이콘 모서리에 맞춰야 한다. */
+  position:absolute; top:1.2cqh; right:-.7cqh; min-width:2.6cqh; height:2.6cqh; padding:0 .4cqh;
+  border-radius:50%; background:#3b6ea5; color:#fff; font-size:1.6cqh; font-weight:800;
+  display:flex; align-items:center; justify-content:center; line-height:1; z-index:1;
+  border:.15cqh solid #fff; box-shadow:0 .1cqh .3cqh rgba(0,0,0,.35);
+}
+.top-menu-button.ui-depth-button.depth-button-inactive .depth-button-count{background:#8a8a8a;}
+
+.dmap-action-btn.ui-depth-button .depth-button-count{
+  /* .ui-asset-button::before(실제 보이는 아이콘)는 버튼 박스보다 위/아래로 1.1cqh,
+     좌/우로 0.68cqh 더 크게 그려져 있어서(mapUI.css의 inset:-1.1cqh -0.68cqh),
+     배지를 박스 모서리가 아니라 실제로 보이는 아이콘 모서리에 맞춰야 한다. */
+  position:absolute; top:-1.35cqh; right:-0.95cqh; display:flex; align-items:center; justify-content:center;
+  box-sizing:border-box; min-width:2.2cqh; height:2.2cqh; padding:0 .35cqh; margin-left:0;
+  /* 두 자리 숫자가 되면 border-radius:50%가 좌우로 길쭉한 타원을 만들어서, 높이의 절반
+     값으로 고정해 캡슐(알약) 모양을 유지하게 한다 */
+  border-radius:1.1cqh;
+  background:#8f2f2f; color:#fff; font-size:1.25cqh; font-weight:800; z-index:1;
+  border:.15cqh solid #fff; box-shadow:0 .1cqh .3cqh rgba(0,0,0,.35);
+}
+.dmap-action-btn.ui-depth-button.depth-button-inactive .depth-button-count{background:#8a8a8a;}
+
+.depth-dropdown{
+  position:absolute; display:none; z-index:250; width:min(46cqw, 60cqh); max-width:90cqw;
+  max-height:46cqh; overflow-y:auto; overscroll-behavior:contain; padding:1.2cqh 1.1cqw;
+  background:linear-gradient(180deg,#f7ecd2,#efe0bd); border:.2cqh solid rgba(190,150,80,.65);
+  border-radius:1cqh; box-shadow:0 .8cqh 2cqh rgba(0,0,0,.35);
+  /* 기본 브라우저 스크롤바 대신 패널 톤(금색/크림)에 맞춘 얇은 스크롤바로 통일한다 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(180,132,44,.85) rgba(255,255,255,.3);
+}
+.depth-dropdown::-webkit-scrollbar{
+  width: 0.6cqh;
+}
+.depth-dropdown::-webkit-scrollbar-track{
+  background: rgba(255,255,255,.3);
+  border-radius: 1cqh;
+}
+.depth-dropdown::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg,#d4a030,#a8791a);
+  border-radius: 1cqh;
+  border: .08cqh solid rgba(255,255,255,.5);
+}
+.depth-dropdown::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(180deg,#e7b54a,#c0902a);
+}
+.depth-dropdown.show{display:block;}
+.depth-dropdown-title{font-family:var(--font-title); font-size:1.9cqh; font-weight:900; color:#5c3c10; margin-bottom:.8cqh;}
+.depth-list{display:flex; flex-direction:column; gap:.7cqh;}
+.depth-item{padding:.7cqh .8cqw; border-radius:.8cqh; background:rgba(255,255,255,.55); border:.15cqh solid rgba(190,150,80,.4);}
+.depth-item-title{font-size:1.6cqh; font-weight:900; color:#8f2f2f;}
+.depth-item-name{font-size:1.45cqh; font-weight:700; color:#5c3c10; margin-top:.2cqh;}
+.depth-item-desc{font-size:1.3cqh; color:#6b5236; margin-top:.15cqh; line-height:1.35;}
+.depth-empty{font-size:1.4cqh; color:#6b5236; text-align:center; padding:1cqh 0;}

@@ -1,0 +1,33 @@
+/* 턴 종료 버튼 + 덱/버림/소멸 더미 — style.css에서 분리 */
+
+/* ??醫낅즺 / ?붾? */
+#endTurn{position:relative; right:auto; bottom:auto; grid-column:1 / -1; width:100%; padding:1.6cqh 1.2cqw; cursor:pointer;
+  font-size:2.99cqh; font-weight:800; color:#fff; border-radius:1.4cqh;
+  background:linear-gradient(180deg,#5fa0e8,#2f6fc0); border:0.3cqh solid var(--c-gold);
+  box-shadow:0 .6cqh 1.4cqh rgba(40,70,120,.35); transition:transform .12s;}
+#endTurn:active{transform:scale(.95);}
+#endTurn[disabled]{filter:grayscale(.6) brightness(.85); cursor:default;}
+.pile{position:relative; bottom:auto; width:7cqh; text-align:center; cursor:default;}
+#deckPile{right:auto;} #discardPile{right:auto;}
+#deckPile,#discardPile{cursor:pointer;}
+.pile .stack{width:7cqh; height:7cqh; margin:0 auto; border-radius:0;
+  background:center/contain no-repeat; border:0;
+  box-shadow:none; display:grid; place-items:center;
+  font-size:2.76cqh; font-weight:900; color:#8a5b16;
+  text-shadow:0 .12cqh .18cqh rgba(255,248,222,.85),
+    -.045cqh -.045cqh 0 rgba(58,34,8,.6), .045cqh -.045cqh 0 rgba(58,34,8,.6),
+    -.045cqh  .045cqh 0 rgba(58,34,8,.6), .045cqh  .045cqh 0 rgba(58,34,8,.6);}
+#deckPile .stack{background-image:url("assets/ui_buttons/deck_pile.png");}
+#discardPile .stack{background-image:url("assets/ui_buttons/discard_pile.png");}
+.pile .plbl{display:none;}
+.exhaust-pile{width:3.5cqh; cursor:pointer;}
+.exhaust-pile .stack{width:3.5cqh; height:3.5cqh; font-size:1.38cqh;
+  background-image:url("assets/ui_buttons/discard_pile.png"); filter:grayscale(.85) brightness(.9);}
+
+/* ?섎떒 ?덈궡 */
+#hint{position:absolute; left:50%; bottom:.3cqh; transform:translateX(-50%); z-index:26;
+  font-size:2.18cqh; font-weight:700; color:var(--c-ink); background:rgba(255,255,255,.6);
+  padding:.3cqh 1.4cqw; border-radius:1cqh; white-space:nowrap;}
+#hint .r{color:var(--c-red-deep);} #hint .b{color:var(--c-blue-deep);}
+#hint.hint-hidden{display:none;}
+

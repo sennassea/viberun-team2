@@ -1,0 +1,45 @@
+/* 전역 토스트 알림 — style.css에서 분리 */
+
+/* 전역 토스트 레이어: body 최상위에 위치해 모든 모달/오버레이보다 위에 표시됩니다 */
+.global-toast-layer{
+  position:fixed;
+  left:50%;
+  top:24px;
+  transform:translateX(-50%);
+  z-index:2147483000;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  width:min(90vw,720px);
+  pointer-events:none;
+}
+.global-toast{
+  pointer-events:auto;
+  max-width:100%;
+  padding:12px 18px;
+  border-radius:12px;
+  background:rgba(40,55,80,.92);
+  color:#fff;
+  font-size:17px;
+  font-weight:700;
+  line-height:1.4;
+  text-align:center;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);
+  word-break:keep-all;
+  white-space:normal;
+  opacity:0;
+  transform:translateY(-8px);
+  transition:opacity 160ms ease, transform 160ms ease;
+}
+.global-toast.is-visible{opacity:1; transform:translateY(0);}
+.global-toast--info{background:rgba(40,55,80,.92); color:#fff;}
+.global-toast--success{background:rgba(31,107,58,.94); color:#fff;}
+.global-toast--warning{background:rgba(150,98,22,.95); color:#fff;}
+.global-toast--error{background:rgba(160,37,37,.95); color:#fff;}
+
+@media (max-width:640px){
+  .global-toast-layer{top:16px; width:calc(100vw - 32px);}
+  .global-toast{font-size:16px; padding:10px 14px;}
+  .depth-dropdown{width:min(70cqw, 80cqh); max-height:56cqh;}
+}
