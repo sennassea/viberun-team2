@@ -421,15 +421,15 @@ async function executeSinglePotionFx(fx, context={}){
         toast("버릴 손패가 없습니다.");
         return false;
       }
-      const picked = await chooseCardsMultiFromCandidates({
+      const uids = await chooseHandCardUidsViaDeckViewer({
         title: context.potion?.name || "도깨비 거울물",
         desc: "버릴 주문을 원하는 만큼 선택한 뒤 확인을 누르세요.",
         candidates
       });
-      if(!picked || !picked.length) return false;
+      if(!uids || !uids.length) return false;
       let discardedCount = 0;
-      picked.forEach(item => {
-        const removed = removeHandCardByUid(item.uid);
+      uids.forEach(uid => {
+        const removed = removeHandCardByUid(uid);
         if(!removed) return;
         discardCard(removed.key, { source:"potionDiscardChoice", instance:removed.instance });
         discardedCount += 1;
@@ -720,74 +720,6 @@ function endPotionDrag(){
   document.querySelectorAll(".targetable,.hovered").forEach(enemyEl => enemyEl.classList.remove("targetable","hovered"));
   if(potionDragState && potionDragState.slot) potionDragState.slot.classList.remove("potion-dragging");
   potionDragState = null;
-}
-
-/* 도깨비 거울물(discardAnyThenDrawSameCount) 전용 다중 선택 팝업.
-   기존 chooseCardFromCandidates()는 단일 선택만 지원하므로, 최소 범위로
-   potionBattleUI.js 내부에만 별도 다중 선택 UI를 둔다. */
-function chooseCardsMultiFromCandidates(options={}){
-  const candidates = options.candidates || [];
-  if(!candidates.length) return Promise.resolve([]);
-  if(S) S.pendingCardChoice = true;
-  updateEndBtn();
-  let ov = document.querySelector("#battleCardMultiChoiceOverlay");
-  if(!ov){
-    ov = document.createElement("div");
-    ov.id = "battleCardMultiChoiceOverlay";
-    ov.innerHTML =
-      '<div class="battle-card-choice-panel">' +
-        '<h2></h2>' +
-        '<p></p>' +
-        '<div class="battle-card-choice-cards"></div>' +
-        '<div class="battle-card-multi-choice-actions">' +
-          '<button type="button" class="battle-card-choice-cancel">취소</button>' +
-          '<button type="button" class="battle-card-multi-choice-confirm">확인</button>' +
-        '</div>' +
-      '</div>';
-    (document.querySelector("#game") || document.body).appendChild(ov);
-  }
-  const title = ov.querySelector("h2");
-  const desc = ov.querySelector("p");
-  const wrap = ov.querySelector(".battle-card-choice-cards");
-  title.textContent = options.title || "카드 선택";
-  desc.textContent = options.desc || "";
-  wrap.innerHTML = "";
-  ov.classList.add("show");
-  const selected = new Set();
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = picked => {
-      if(settled) return;
-      settled = true;
-      ov.classList.remove("show");
-      wrap.innerHTML = "";
-      if(S) S.pendingCardChoice = false;
-      updateEndBtn();
-      resolve(picked || []);
-    };
-    candidates.forEach((item, choiceIndex) => {
-      const card = CARD_DB[item.key];
-      if(!card) return;
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "battle-card-choice-card reward-card card-frame-card cost-"+card.type;
-      button.innerHTML = cardFaceHtml({ ...card, cost:item.cost ?? card.cost });
-      button.addEventListener("click", () => {
-        if(selected.has(choiceIndex)){
-          selected.delete(choiceIndex);
-          button.classList.remove("selected");
-        } else {
-          selected.add(choiceIndex);
-          button.classList.add("selected");
-        }
-      });
-      wrap.appendChild(button);
-    });
-    const cancel = ov.querySelector(".battle-card-choice-cancel");
-    cancel.onclick = () => finish([]);
-    const confirm = ov.querySelector(".battle-card-multi-choice-confirm");
-    confirm.onclick = () => finish(candidates.filter((_, idx) => selected.has(idx)));
-  });
 }
 
 function normalizeRunResources(){

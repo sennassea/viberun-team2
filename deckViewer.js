@@ -12,6 +12,7 @@
   let pickMode = null;
   let selectedPickKey = null;
   let selectedPickUid = null;
+  let selectedPickMultiIds = new Set();
 
   const SORT_OPTIONS = [
     { id: "order", label: "최신순" },
@@ -529,6 +530,7 @@
       activeTab = usingCandidates ? "candidates" : "all";
       selectedPickKey = null;
       selectedPickUid = null;
+      selectedPickMultiIds = new Set();
       pickMode = {
         title: options.title || "카드 선택",
         confirmText: options.confirmText || "확인",
@@ -540,6 +542,7 @@
         onConfirm: typeof options.onConfirm === "function" ? options.onConfirm : null,
         candidates: usingCandidates ? options.candidates : null,
         allowCancel: options.allowCancel !== undefined ? !!options.allowCancel : usingCandidates,
+        multi: !!options.multi,
         resolve
       };
 
@@ -556,7 +559,9 @@
       if(els.pickHelp) els.pickHelp.textContent = pickMode.helpText;
       if(els.pickConfirm){
         els.pickConfirm.textContent = pickMode.confirmText;
-        els.pickConfirm.disabled = true;
+        els.pickConfirm.disabled = pickMode.multi
+          ? !!(pickMode.getConfirmDisabled && pickMode.getConfirmDisabled([]))
+          : true;
       }
       if(els.pickCancel) els.pickCancel.hidden = !pickMode.allowCancel;
       if(els.pickCost){
@@ -646,6 +651,7 @@
     pickMode = null;
     selectedPickKey = null;
     selectedPickUid = null;
+    selectedPickMultiIds = new Set();
     if(!els) return;
     els.overlay.classList.remove("pick-mode");
     if(els.pickFooter) els.pickFooter.hidden = true;
@@ -667,6 +673,20 @@
       if(typeof toast === "function") toast(pickMode.disabledText);
       return;
     }
+    if(pickMode.multi){
+      if(selectedPickMultiIds.has(id)) selectedPickMultiIds.delete(id);
+      else selectedPickMultiIds.add(id);
+      if(els.pickHelp){
+        els.pickHelp.textContent = selectedPickMultiIds.size > 0
+          ? selectedPickMultiIds.size + "장 선택됨"
+          : pickMode.helpText;
+      }
+      const multiConfirmDisabled = !!(pickMode.getConfirmDisabled && pickMode.getConfirmDisabled(Array.from(selectedPickMultiIds)));
+      if(els.pickConfirm) els.pickConfirm.disabled = multiConfirmDisabled;
+      if(els.pickCost) els.pickCost.classList.toggle("insufficient", multiConfirmDisabled);
+      renderDeckViewer();
+      return;
+    }
     selectedPickKey = key;
     selectedPickUid = uid;
     if(els.pickHelp){
@@ -686,14 +706,28 @@
     closeCardDetail();
     els.overlay.classList.remove("show");
     els.overlay.setAttribute("aria-hidden", "true");
-    mode.resolve(null);
+    mode.resolve(mode.multi ? [] : null);
   }
 
   function confirmPickCard(){
     if(!pickMode) return;
-    const id = pickMode.candidates ? selectedPickUid : selectedPickKey;
-    if(!id) return;
     const mode = pickMode;
+    if(mode.multi){
+      const ids = Array.from(selectedPickMultiIds);
+      try {
+        if(mode.onConfirm) mode.onConfirm(ids);
+      } catch(error) {
+        console.warn("[DeckViewer] 카드 선택 처리 중 오류가 발생했습니다.", error);
+      }
+      clearPickMode();
+      closeCardDetail();
+      els.overlay.classList.remove("show");
+      els.overlay.setAttribute("aria-hidden", "true");
+      mode.resolve(ids);
+      return;
+    }
+    const id = mode.candidates ? selectedPickUid : selectedPickKey;
+    if(!id) return;
     try {
       if(mode.onConfirm) mode.onConfirm(id);
     } catch(error) {
@@ -813,7 +847,9 @@
       const uid = cardEl.dataset.cardUid || null;
       const id = pickMode.candidates ? uid : key;
       const selectable = !!(id && pickMode.isSelectable(id));
-      const selected = pickMode.candidates ? (selectable && uid === selectedPickUid) : (selectable && key === selectedPickKey);
+      const selected = pickMode.multi
+        ? (selectable && selectedPickMultiIds.has(id))
+        : (pickMode.candidates ? (selectable && uid === selectedPickUid) : (selectable && key === selectedPickKey));
       cardEl.classList.toggle("pick-disabled", !selectable);
       cardEl.classList.toggle("pick-selected", selected);
       cardEl.setAttribute("aria-disabled", selectable ? "false" : "true");

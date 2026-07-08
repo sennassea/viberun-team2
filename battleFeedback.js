@@ -58,7 +58,7 @@ function injectRewardStyles(){
     .reward-card.card-frame-card .card-text-layer{position:absolute;inset:0;z-index:3;pointer-events:none;font-weight:900;color:#10243f;}
     .reward-card.card-frame-card .card-cost-text{position:absolute;left:6.2%;top:2.4%;width:18.8%;height:13.9%;display:grid;place-items:center;color:#2b3848;font-size:3cqh;line-height:1;text-shadow:0 .08cqh 0 rgba(255,255,255,.95);}
     .reward-card.card-frame-card .card-name-text{position:absolute;left:12%;right:8%;top:5.9%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.85cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}
-    .reward-card.card-frame-card .card-desc-text{position:absolute;left:8%;right:8%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.25cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}
+    .reward-card.card-frame-card .card-desc-text{position:absolute;left:8%;right:8%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.34cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}
     .reward-card.card-frame-card .card-hit-layer{position:absolute;inset:0;z-index:4;background:transparent;cursor:inherit;}
     #battleCardChoiceOverlay{position:absolute;inset:0;z-index:235;display:none;place-items:center;background:rgba(10,20,40,.48);backdrop-filter:blur(.35cqh);}
     #battleCardChoiceOverlay.show{display:grid;}
@@ -67,11 +67,6 @@ function injectRewardStyles(){
     .battle-card-choice-panel p{font-size:1.65cqh;color:var(--c-ink-soft);margin-bottom:1.8cqh;}
     .battle-card-choice-card{font:inherit;}
     .battle-card-choice-cancel{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid var(--c-panel-line);background:#fff;cursor:pointer;color:var(--c-ink-soft);}
-    #battleCardMultiChoiceOverlay{position:absolute;inset:0;z-index:235;display:none;place-items:center;background:rgba(10,20,40,.48);backdrop-filter:blur(.35cqh);}
-    #battleCardMultiChoiceOverlay.show{display:grid;}
-    .battle-card-multi-choice-actions{display:flex;justify-content:center;gap:1cqw;}
-    .battle-card-multi-choice-confirm{font-size:1.8cqh;font-weight:800;padding:.9cqh 1.8cqw;border-radius:1.1cqh;border:.2cqh solid #d9b879;background:linear-gradient(180deg,#fff7e9,#f4d8a8);cursor:pointer;color:var(--c-ink);}
-    .battle-card-choice-card.selected{outline:.3cqh solid #4c8fe0;box-shadow:0 0 0 .3cqh rgba(76,143,224,.4);}
     #battleVictoryOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.64);backdrop-filter:blur(.5cqh);}
     #battleVictoryOverlay.show{display:grid;}
     .victory-reward-panel{width:min(70cqw,92cqh);max-width:94vw;box-sizing:border-box;padding:3cqh 2.4cqw;border-radius:1.8cqh;background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);text-align:center;display:flex;flex-direction:column;gap:2cqh;}

@@ -111,6 +111,28 @@ function chooseHandCardUidViaDeckViewer(options={}){
   });
 }
 
+/* 손패에서 카드를 원하는 만큼 골라 버리는 등 다중 선택 전투 효과들이
+   기존 보유 카드 UI(deckViewer.js)를 공용으로 재사용하기 위한 래퍼.
+   반환값은 선택된 카드들의 uid 배열(취소 또는 미선택 확인 시 빈 배열). */
+function chooseHandCardUidsViaDeckViewer(options={}){
+  const candidates = options.candidates || [];
+  if(!candidates.length) return Promise.resolve([]);
+  if(typeof window.OPEN_DECK_VIEWER_CARD_PICK !== "function") return Promise.resolve([]);
+  if(S) S.pendingCardChoice = true;
+  updateEndBtn();
+  return window.OPEN_DECK_VIEWER_CARD_PICK({
+    title: options.title || "카드 선택",
+    helpText: options.desc || "",
+    confirmText: options.confirmText || "확인",
+    candidates,
+    multi: true
+  }).then(uids => {
+    if(S) S.pendingCardChoice = false;
+    updateEndBtn();
+    return Array.isArray(uids) ? uids : [];
+  });
+}
+
 function autoSelectTarget(){
   const alive = livingEnemies();
   if(!alive.length){ S.selectedId = null; return; }
