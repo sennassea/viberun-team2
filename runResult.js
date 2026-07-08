@@ -31,7 +31,7 @@ const NPC_DONGJASEUNG = {
   image: (RR_ENDING.dongja && RR_ENDING.dongja.image) || "assets/characters/dongjasin/dgs_greeting_wave.png",
   endlessTitle: (RR_ENDING.labels && RR_ENDING.labels.dongja) || "끝없는 여정",
   endlessLines: (RR_ENDING.dongja && RR_ENDING.dongja.lines) || [
-    "드디어 여정이 끝났네.",
+    { text: "드디어 여정이 끝났네.", portrait: "assets/characters/dongjasin/dgs_serious_gentle.png" },
     "아가, 이번 여정은 끝났지만 아직도 수많은 미련이 남았구나.",
     "아가, 이 끝없는 여정을 시작할래?"
   ],
@@ -502,7 +502,7 @@ function renderBlessingSpiritAppearance(spirit, snapshot, onFinish){
   const dialogLines = getEndingSpiritLines(spirit);
   let lineIndex = 0;
   const renderLine = () => {
-    overlay.querySelector("#rrLines").innerHTML = '<p>' + escapeRrHtml(dialogLines[lineIndex] || "") + '</p>';
+    overlay.querySelector("#rrLines").innerHTML = '<p>' + escapeRrHtml(dialogLines[lineIndex] || "").replace(/\n/g, "<br>") + '</p>';
   };
   renderLine();
 
@@ -550,7 +550,7 @@ function renderDongjaseungDefeat(npc, snapshot, onFinish){
 
   const dialogLines = [npc.defeatLine1, npc.defeatLine2].filter(Boolean);
   overlay.querySelector("#rrLines").innerHTML =
-    dialogLines.map(line => '<p>' + escapeRrHtml(line) + '</p>').join("");
+    dialogLines.map(line => '<p>' + escapeRrHtml(line).replace(/\n/g, "<br>") + '</p>').join("");
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
@@ -572,9 +572,13 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
 
   const characterWrap = overlay.querySelector("#rrCharacterWrap");
   characterWrap.className = "rr-character-wrap";
-  characterWrap.innerHTML = npc.image
-    ? '<img class="rr-defeat-dongjasin" src="' + npc.image + '" alt="' + (npc.name || "") + '">'
-    : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
+  const renderCharacterForLine = (line) => {
+    const portrait = (line && typeof line === "object" && line.portrait) || npc.image;
+    characterWrap.innerHTML = portrait
+      ? '<img class="rr-defeat-dongjasin" src="' + portrait + '" alt="' + (npc.name || "") + '">'
+      : '<div class="rr-character-emoji">' + (npc.emoji || "") + '</div>';
+  };
+  const getLineText = (line) => typeof line === "string" ? line : ((line && line.text) || "");
 
   overlay.classList.add("show");
   overlay.setAttribute("aria-hidden", "false");
@@ -583,12 +587,14 @@ function renderEndlessJourneyChoice(npc, snapshot, onFinish){
   const lines = Array.isArray(npc.endlessLines) ? npc.endlessLines : [];
   let lineIndex = 0;
   const renderDialogue = () => {
+    const currentLine = lines[lineIndex];
+    renderCharacterForLine(currentLine);
     const panelSlot = overlay.querySelector("#rrPanelSlot");
     panelSlot.innerHTML =
       '<div class="rr-choice-panel">' +
         '<div class="rr-choice-titlebar"><span>' + escapeRrHtml(npc.endlessTitle || "끝없는 여정") + '</span></div>' +
         '<div class="rr-choice-lines">' +
-          '<p class="rr-choice-line-main">' + escapeRrHtml(lines[lineIndex] || "") + '</p>' +
+          '<p class="rr-choice-line-main">' + escapeRrHtml(getLineText(currentLine)).replace(/\n/g, "<br>") + '</p>' +
         '</div>' +
         '<div class="rr-divider"></div>' +
         '<div class="rr-continue">✦ ' + escapeRrHtml((RR_ENDING.labels && RR_ENDING.labels.continue) || "터치하여 계속") + ' ✦</div>' +
@@ -1260,7 +1266,7 @@ function ensureRrStyles(){
 
     /* 끝없는 여정 선택 패널 (기획서 §3-1) — 승리 연출과 동일한 rr-frame 크기를 공유한다 */
     ".rr-choice-panel{position:absolute;left:40%;right:7%;top:18%;bottom:12%;z-index:1;" +
-      "display:flex;flex-direction:column;align-items:center;gap:1.6cqh;" +
+      "display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.8cqh;" +
       "padding:4.2cqh 3cqw 2.6cqh;border-radius:1.6cqh;" +
       "background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);" +
       "box-shadow:0 1cqh 2.2cqh rgba(0,0,0,.4);}" +
@@ -1270,9 +1276,9 @@ function ensureRrStyles(){
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);}" +
     ".rr-choice-titlebar span{color:#fbe9c8;font-weight:900;font-size:2.2cqh;letter-spacing:.1cqh;}" +
     ".rr-choice-lines{text-align:center;color:#4a3524;flex:0 0 auto;}" +
-    ".rr-choice-lines p{margin:0;font-weight:700;}" +
-    ".rr-choice-lines p.rr-choice-line-main{font-size:2.1cqh;font-weight:900;color:#3a2814;margin-bottom:.6cqh;}" +
-    ".rr-choice-lines p:not(.rr-choice-line-main){font-size:1.4cqh;color:#6b5236;line-height:1.5;}" +
+    ".rr-choice-lines p{margin:0;font-weight:800;}" +
+    ".rr-choice-lines p.rr-choice-line-main{font-size:3.6cqh;font-weight:800;color:#3a2814;margin-bottom:1.2cqh;}" +
+    ".rr-choice-lines p:not(.rr-choice-line-main){font-size:1.8cqh;color:#6b5236;line-height:1.5;}" +
     ".rr-choice-cards{display:flex;gap:2cqw;width:100%;flex:1;min-height:0;}" +
     ".rr-choice-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7cqh;" +
       "padding:1.6cqh 1cqw;border-radius:1.2cqh;border:.16cqh solid rgba(150,110,60,.5);" +

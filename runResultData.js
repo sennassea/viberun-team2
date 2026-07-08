@@ -23,7 +23,7 @@ window.BOHYUN_RUN_RESULT_DATA = {
         lines: [
           "끝까지 물러서지 않았구나.",
           "원혼을 성불시킨 것, 네가 쌓아 온 주문의 결과다.",
-          "앞으로의 위령에서도, 네 각오를 지켜보겠다."
+          "앞으로의 위령에서도,\n네 각오를 지켜보겠다."
         ]
       },
       {
@@ -55,8 +55,8 @@ window.BOHYUN_RUN_RESULT_DATA = {
       name: "동자신",
       emoji: "🧒",
       lines: [
-        "드디어 여정이 끝났네.",
-        "아가, 이번 여정은 끝났지만 아직도 수많은 미련이 남았구나.",
+        { text: "드디어 여정이 끝났네.", portrait: "assets/characters/dongjasin/dgs_serious_gentle.png" },
+        "아가, 이번 여정은 끝났지만\n아직도 수많은 미련이 남았구나.",
         "아가, 이 끝없는 여정을 시작할래?"
       ]
     },
