@@ -276,7 +276,7 @@ function ensureRandomItemResultPopupStyle(){
       'font-size:1.35cqh;font-weight:900;color:#332115;text-align:center;line-height:1.25;' +
     '}' +
     '#randomItemResultPopup .random-item-result-tag{' +
-      'font-size:1.1cqh;font-weight:900;color:#8a5c2b;text-align:center;' +
+      'font-size:1.9cqh;font-weight:900;color:#8a5c2b;text-align:center;' +
     '}' +
     '#randomItemResultPopup .random-item-result-card.remove .random-item-result-tag{color:#a3402f;}' +
     /* 주문(카드) 결과: 실제 카드 프레임 이미지 표시용
