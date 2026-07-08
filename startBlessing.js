@@ -199,8 +199,6 @@ function completeSbBlessing(blessing){
   /* 신령의 은혜 화면은 여기서 닫지 않는다. 여정(맵) 오버레이가 그 위에
      반투명하게 떠야 하므로(플레이어가 맵만 닫고 은혜 화면으로 돌아올 수도
      있음), 실제 전투 진입 시점(startStage 후킹)에서만 배경을 정리한다. */
-  if(typeof toast === "function") toast(blessing.name + "의 은혜를 받았습니다.");
-
   if(window.MAP_STATE){
     window.MAP_STATE.currentStage = -1;   // 현재 위치: 로비(신령의 은혜)
     window.MAP_STATE.proceedMode  = true; // 다음 노드(1층) 선택 가능

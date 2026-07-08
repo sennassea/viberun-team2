@@ -3,6 +3,9 @@
    드래그 & 드롭
    ========================================================================= */
 const DRAG_THRESHOLD = 8;
+// 알트탭 등으로 창이 포커스를 잃으면 pointerup/pointercancel이 발생하지 않아
+// 드래그 상태가 정리되지 않고 조준 화살표가 화면에 남는 문제를 방지하기 위한 참조.
+let activeDragCleanup = null;
 function attachDrag(cardEl, index){
   let startX=0, startY=0, dragging=false, pid=null;
   cardEl.addEventListener("pointerdown", down);
@@ -26,6 +29,7 @@ function attachDrag(cardEl, index){
     cardEl.addEventListener("pointermove",   move);
     cardEl.addEventListener("pointerup",     up);
     cardEl.addEventListener("pointercancel", cancel);
+    activeDragCleanup = cleanup;
   }
   function move(ev){
     const dx=ev.clientX-startX, dy=ev.clientY-startY;
@@ -39,7 +43,17 @@ function attachDrag(cardEl, index){
     cardEl.removeEventListener("pointermove",   move);
     cardEl.removeEventListener("pointerup",     up);
     cardEl.removeEventListener("pointercancel", cancel);
+    if(activeDragCleanup===cleanup) activeDragCleanup=null;
   }
+}
+
+window.addEventListener("blur", forceEndActiveDrag);
+document.addEventListener("visibilitychange", function(){
+  if(document.hidden) forceEndActiveDrag();
+});
+function forceEndActiveDrag(){
+  if(activeDragCleanup){ const fn=activeDragCleanup; activeDragCleanup=null; fn(); }
+  if(dragState) endDrag();
 }
 
 let dragState = null;

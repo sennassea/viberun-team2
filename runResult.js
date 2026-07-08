@@ -905,6 +905,7 @@ function rrItemCardHtml(icon, name, count){
   return '<div class="rr-item-card" title="' + escapeRrHtml(name || "") + '">' +
     badge +
     '<div class="rr-item-card-icon">' + rrItemIconHtml(icon) + '</div>' +
+    '<span class="sr-only rr-item-card-name">' + escapeRrHtml(name || "") + '</span>' +
   '</div>';
 }
 
