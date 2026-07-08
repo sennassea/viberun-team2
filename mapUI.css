@@ -291,7 +291,7 @@
   letter-spacing: 0.06em;
   /* legend 폭 비율이 넓어지면서 박스 중심이 실제 카드 에셋 장식(모서리 문양) 중심보다
      왼쪽으로 밀려 보여서, 카드 쪽으로 살짝 우측 보정한다. */
-  transform: translateX(-0.6cqw);
+  transform: translateX(0cqw);
 }
 
 .dmap-legend-item {
