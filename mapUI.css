@@ -77,7 +77,7 @@
 }
 .dmap-title-char {
   position: absolute;
-  top: 2.1cqh;
+  top: 0.7cqh;
   display: block;
   width: 4.8cqh;
   height: 4.8cqh;
@@ -122,13 +122,12 @@
 }
 
 .dmap-playtime {
-  /* 닫기 버튼과 같은 줄에 표시되는 현재까지 플레이 타임. 닫기 버튼이 translateY(1.1cqh)만큼
-     내려가 있으므로 같은 값을 줘서 가로로 나란히 정렬되어 보이게 한다.
-     닫기 버튼 자체는 translateX(-1.6cqw)로 왼쪽으로 겹쳐 들어오므로, 그만큼+여유를
-     margin-right로 비워둬야 서로 겹치지 않는다. */
+  /* 닫기 버튼과 같은 줄(top:50%)에 표시되는 현재까지 플레이 타임.
+     닫기 버튼이 우측 상단 꽃 장식(에셋)과 겹치지 않도록 6.5cqw만큼 왼쪽으로
+     당겨져 있으므로, 플레이타임도 그만큼 왼쪽으로 당겨 서로 겹치지 않게 한다. */
   position: absolute;
-  left: 83.2%;
-  top: 68%;
+  left: 76%;
+  top: 50%;
   display: flex;
   align-items: center;
   gap: 0.5cqw;
@@ -148,8 +147,8 @@
 
 .dmap-close {
   position: absolute;
-  right: 2.2cqw;
-  top: 68%;
+  right: 6.5cqw;
+  top: 50%;
   justify-self: auto;
   width: 4.6cqh;
   height: 4.6cqh;
@@ -371,7 +370,7 @@
   /* 좌우 패딩을 범례 목록(1.4cqw)보다 넉넉히 줘서, 꽉 채워진 말풍선 배경이 카드
      테두리 장식(모서리 구름 문양)까지 닿지 않고 카드 안쪽에 가운데 정렬된
      것처럼 보이게 한다. */
-  padding: 0.6cqh 2.6cqw 0;
+  padding: 0.6cqh 0.45cqw 0;
   display: none;
   overflow: hidden;
   pointer-events: none;
