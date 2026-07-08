@@ -1031,7 +1031,7 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
     applyConfiguredPhaseIfNeeded(target);
     applyNextPhaseIfNeeded(target);
   } else {
-    if((result.hpLoss || 0) > 0 || (result.absorbed || 0) > 0){
+    if((result.hpLoss || 0) > 0){
       if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("damage");
     }
     if(result.hpLoss > 0){

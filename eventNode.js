@@ -260,7 +260,10 @@ function openEventBagPreview(){
 }
 
 function openEventSettingsPreview(){
-  alert("설정 기능은 준비 중입니다.");
+  const settingsBtn = Array.from(document.querySelectorAll(".hud-btn"))
+    .find(b => b.textContent.includes("⚙️") || b.textContent.includes("⚙"));
+  if(settingsBtn) settingsBtn.click();
+  else if(typeof toast === "function") toast("설정 기능을 열 수 없습니다.");
 }
 
 /* ── 렌더링 ──────────────────────────────────────────────────────────────── */
