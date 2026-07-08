@@ -12,6 +12,20 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: 'GyeongbokgungSumunjangBodyText';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyB.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'GyeongbokgungSumunjangBodyText';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2511-3@1.0/Sumunjang_BodyM.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+}
+
 /* =========================================================================
    ?붿옄???좏겙 / ?꾩뿭
    - ?붾㈃鍮?16:9 怨좎젙, 而⑦뀒?대꼫 荑쇰━ ?⑥쐞(cqh/cqw)濡?紐⑤뱺 ?붿냼瑜?鍮꾩쑉 ?ㅼ???   - 紐⑤컮??媛濡쒖뿉?쒕룄 ?숈씪 ?덉씠?꾩썐??洹몃?濡?異뺤냼/?뺣???   ========================================================================= */
@@ -109,18 +123,55 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 }
 .start-menu-button-label{
   flex:none; min-width:0; text-align:left;
+  font-family:'GyeongbokgungSumunjangBodyText', var(--font-title);
+  font-weight:700; letter-spacing:.04em;
+  /* 고풍스러운 각인/금박 느낌: 유백색 테두리로 화려한 배경 위 가독성을 확보하고,
+     그 아래 은은한 갈금색 그림자로 판각된 듯한 입체감을 준다. */
+  text-shadow:
+    .04cqh 0 0 rgba(255,252,235,.85),
+    -.04cqh 0 0 rgba(255,252,235,.85),
+    0 .04cqh 0 rgba(255,252,235,.85),
+    0 -.04cqh 0 rgba(255,252,235,.85),
+    0 .2cqh .3cqh rgba(107,66,20,.4);
 }
-.start-tutorial-button,
+.continue-status{
+  font-family:var(--font-title);
+  font-weight:600; font-size:1.5cqh; letter-spacing:0; white-space:nowrap;
+  color:var(--c-ink-soft);
+}
+.continue-status::before{content:"· ";}
+.start-continue-game.has-save .continue-status{
+  color:var(--c-gold-deep); font-weight:700;
+}
+/* 튜토리얼 버튼: 긴 버튼과 같은 에셋을 쓰지만 이번 수정 대상(새 게임/이어하기/랭킹 그룹)과는
+   별도 규칙으로 분리해 유지한다 (튜토리얼 버튼은 이번 작업 범위 밖). */
+.start-tutorial-button{
+  aspect-ratio:832.2/96.08;
+  background-image:url("assets/ui/start_menu/new_button_long.png");
+  /* new_button_long.png의 실제 이미지 비율(5.36:1)이 목표 비율(8.66:1)과 달라 contain이면
+     좌우에 여백이 생긴다. 에셋이 8.66:1로 재제작될 때까지 임시로 강제 채움 처리. */
+  background-size:100% 100%;
+}
+
+/* 긴 버튼 그룹: 새 게임 / 이어하기 / 랭킹 전용 */
 .start-new-game,
 .start-continue-game,
 .start-ranking-button{
   aspect-ratio:832.2/96.08; /* 긴 버튼 원본 비율 (약 8.66:1) */
   background-image:url("assets/ui/start_menu/new_button_long.png");
+  /* new_button_long.png의 실제 이미지 비율(5.36:1)이 목표 비율(8.66:1)과 달라 contain이면
+     좌우에 여백이 생긴다. 에셋이 8.66:1로 재제작될 때까지 임시로 강제 채움 처리. */
+  background-size:100% 100%;
 }
+
+/* 작은 버튼 그룹: 도감 / 기록 전용 */
 .start-codex-button,
 .start-record-button{
   aspect-ratio:402.97/96.08; /* 짧은 버튼 원본 비율 (약 4.19:1) */
   background-image:url("assets/ui/start_menu/new_button_short.png");
+  /* new_button_short.png는 실제 비율(4.21:1)이 목표(4.19:1)와 거의 같아 왜곡은 미미하지만,
+     긴 버튼과 동일한 방식으로 통일해 강제 채움 처리. */
+  background-size:100% 100%;
 }
 .start-settings-button{
   position:absolute;
@@ -302,7 +353,11 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 /* ── 심도(끝없는 여정 디버프) 확인 버튼/드롭다운 ───────────────────────── */
 .ui-depth-button{position:relative;}
 .top-menu-button.ui-depth-button .depth-button-count{
-  position:absolute; top:-.7cqh; right:-.7cqh; min-width:2.6cqh; height:2.6cqh; padding:0 .4cqh;
+  /* .top-menu-button 박스는 8.2cqh x 12cqh(세로가 긴 직사각형)인데 심도 아이콘은
+     정사각형이라 background-size:contain으로 인해 폭 기준으로 축소되어 세로로
+     레터박싱(위아래 여백 (12-8.2)/2 = 1.9cqh)이 생긴다. 배지를 박스 모서리가 아니라
+     실제로 보이는 아이콘 모서리에 맞춰야 한다. */
+  position:absolute; top:1.2cqh; right:-.7cqh; min-width:2.6cqh; height:2.6cqh; padding:0 .4cqh;
   border-radius:50%; background:#3b6ea5; color:#fff; font-size:1.6cqh; font-weight:800;
   display:flex; align-items:center; justify-content:center; line-height:1; z-index:1;
   border:.15cqh solid #fff; box-shadow:0 .1cqh .3cqh rgba(0,0,0,.35);
@@ -538,6 +593,10 @@ html,body{height:100%; background:#0c1422; overflow:hidden;
 /* ?좎삤瑜대뒗 ?④낵 ?덉씠???щ젋????吏?뚯?吏 ?딅룄濡?遺꾨━) */
 #fx{position:absolute; inset:0; z-index:60; pointer-events:none;}
 #aim{position:fixed; inset:0; z-index:79; pointer-events:none;}
+.aim-head-pivot{position:absolute; left:0; top:0; width:0; height:0; transform-origin:0 0; pointer-events:none;}
+.aim-head-img{position:absolute; left:0; top:0; height:6.9cqh; width:auto; max-width:none;
+  transform:translate(-50%,0%); pointer-events:none;
+  filter:drop-shadow(0 .3cqh .5cqh rgba(60,35,10,.4));}
 #dragClone{position:fixed; width:11.5cqw; height:25cqh; pointer-events:none; transform:translate(-50%,-50%) scale(1.05);
   filter:drop-shadow(0 1.6cqh 2cqh rgba(231,181,74,.6));}
 #dragClone .card{box-shadow:0 0 2cqh rgba(231,181,74,.9); border-color:var(--c-gold);}
