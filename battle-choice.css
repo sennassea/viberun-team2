@@ -13,7 +13,7 @@
   text-align:center; padding-bottom:.8cqh;}
 .battle-card-choice-panel p{flex:none; font-size:1.7cqh; color:var(--c-ink-soft); text-align:center; padding-bottom:1.2cqh;}
 .battle-card-choice-cards{flex:1 1 auto; min-height:0; overflow-y:auto; display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(11.5cqw, 1fr)); gap:1.2cqh; padding:.5cqh .4cqw 1cqh; justify-items:center;}
+  grid-template-columns:repeat(auto-fit, minmax(11.5cqw, 1fr)); gap:1.4cqh 1.2cqw; padding:.5cqh .4cqw 1cqh; justify-items:center;}
 .battle-card-choice-card{position:relative; width:11.5cqw; padding:0; border:0; background:none; cursor:pointer;}
 .battle-card-choice-card.selected{outline:.32cqh solid var(--c-gold); outline-offset:.2cqh; border-radius:1.2cqh;}
 .battle-card-choice-cancel{flex:none; align-self:center; min-width:8cqw; height:4.6cqh; margin-top:1cqh;
