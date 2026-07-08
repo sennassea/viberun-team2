@@ -18,6 +18,9 @@
   const RUN_SUMMARY_ROW_SELECTOR = ".rr-summary-row";
   const RUN_SCORE_BREAKDOWN_ITEM_SELECTOR = ".rr-score-breakdown-grid > div";
   const RUN_ITEM_CARD_SELECTOR = ".rr-item-card";
+  /* 도감(코덱스) 법구/약병 그리드 타일: 아이콘+이름만 표시되고 설명이 없어
+     hover 시 이름으로 RELIC_DB/POTION_DB를 조회해 설명을 보여준다 */
+  const CODEX_ITEM_CARD_SELECTOR = ".codex-item-card";
   const GAP = 10;
   let tooltipEl = null;
   let activeAnchor = null;
@@ -47,7 +50,8 @@
     const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR) ||
       target.closest(RANDOM_ITEM_RESULT_CARD_SELECTOR) || target.closest(SHOP_PRODUCT_SELECTOR) || target.closest(SHOP_DETAIL_SELECTOR) ||
       target.closest(BM_SKIN_CARD_SELECTOR) || target.closest(RUN_SUMMARY_ROW_SELECTOR) ||
-      target.closest(RUN_SCORE_BREAKDOWN_ITEM_SELECTOR) || target.closest(RUN_ITEM_CARD_SELECTOR);
+      target.closest(RUN_SCORE_BREAKDOWN_ITEM_SELECTOR) || target.closest(RUN_ITEM_CARD_SELECTOR) ||
+      target.closest(CODEX_ITEM_CARD_SELECTOR);
     if (!anchor || anchor.dataset.tooltipDisabled === "true") return null;
     return anchor;
   }
@@ -67,21 +71,33 @@
     return potionDb && potionDb.find(item => item && item.name === name) || null;
   }
 
+  /* tooltip.js의 CARD_TERM_INFO 용어 사전(주문 카드 호버 툴팁이 쓰는 것과 동일)을
+     재사용해, 효과 설명 안의 어려운 용어(성불 표식/동요/균열 등)에 대한 부연 설명을
+     본문 뒤에 이어붙인다. 새 UI 없이 기존 body(pre-wrap 텍스트) 안에서 처리한다. */
+  function appendEffectKeywordExplanations(descText) {
+    if (typeof window.getEffectKeywordTerms !== "function") return "";
+    const terms = window.getEffectKeywordTerms(descText) || [];
+    if (!terms.length) return "";
+    return "\n\n" + terms.map(t => (t.icon ? t.icon + " " : "") + t.name + " — " + t.desc).join("\n");
+  }
+
   function getItemDataByDisplayedName(anchor) {
-    const nameEl = anchor.querySelector(".random-item-result-name, .card-name-text, .shop-product-name, .shop-detail-name, .rr-item-card-name");
+    const nameEl = anchor.querySelector(".random-item-result-name, .card-name-text, .shop-product-name, .shop-detail-name, .rr-item-card-name, .item-name-text");
     const name = nameEl ? nameEl.textContent.trim() : "";
     if (!name) return null;
 
     const card = getCardDbEntryByName(name);
     if (card) {
       const icon = card.emoji ? " " + card.emoji : "";
-      return { title: card.name + icon, body: card.desc || "" };
+      const desc = card.desc || "";
+      return { title: card.name + icon, body: desc + appendEffectKeywordExplanations(desc) };
     }
 
     const item = getRelicOrPotionDbEntryByName(name);
     if (item) {
       const icon = item.emoji ? " " + item.emoji : "";
-      return { title: item.name + icon, body: item.desc || "" };
+      const desc = item.desc || "";
+      return { title: item.name + icon, body: desc + appendEffectKeywordExplanations(desc) };
     }
 
     return null;
@@ -219,6 +235,10 @@
     }
 
     if (anchor.classList && anchor.classList.contains("rr-item-card")) {
+      return getItemDataByDisplayedName(anchor);
+    }
+
+    if (anchor.classList && anchor.classList.contains("codex-item-card")) {
       return getItemDataByDisplayedName(anchor);
     }
 
