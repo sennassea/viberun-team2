@@ -74,13 +74,13 @@ function injectRewardStyles(){
     .battle-card-choice-card.selected{outline:.3cqh solid #4c8fe0;box-shadow:0 0 0 .3cqh rgba(76,143,224,.4);}
     #battleVictoryOverlay{position:absolute;inset:0;z-index:220;display:none;place-items:center;background:rgba(10,20,40,.64);backdrop-filter:blur(.5cqh);}
     #battleVictoryOverlay.show{display:grid;}
-    .victory-reward-panel{width:min(62cqw,82cqh);max-width:94vw;box-sizing:border-box;padding:3cqh 3cqw;border-radius:1.8cqh;background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);text-align:center;display:flex;flex-direction:column;gap:2cqh;}
+    .victory-reward-panel{width:min(70cqw,92cqh);max-width:94vw;box-sizing:border-box;padding:3cqh 2.4cqw;border-radius:1.8cqh;background:linear-gradient(180deg,#f7ecd2,#efe0bd);border:.22cqh solid rgba(190,150,80,.65);box-shadow:0 1cqh 2.4cqh rgba(0,0,0,.45);text-align:center;display:flex;flex-direction:column;gap:2cqh;}
     .victory-title-area h2{font-size:3.2cqh;margin-bottom:.6cqh;color:#3a2814;font-weight:900;}
     .victory-title-area p{font-size:1.7cqh;color:#6b5236;}
-    .victory-section{border:.2cqh solid rgba(190,150,80,.45);border-radius:1.4cqh;background:rgba(255,255,255,.35);padding:1.6cqh 1.5cqw;}
+    .victory-section{border:.2cqh solid rgba(190,150,80,.45);border-radius:1.4cqh;background:rgba(255,255,255,.35);padding:1.6cqh 1.2cqw;}
     .victory-section-title{font-size:1.8cqh;font-weight:900;color:#3a2814;margin-bottom:1.2cqh;}
-    .victory-reward-row{min-height:15cqh;border:.25cqh dashed rgba(190,150,80,.5);border-radius:1.2cqh;display:flex;align-items:center;justify-content:center;gap:1cqw;background:rgba(255,255,255,.3);}
-    .victory-reward-slot{position:relative;flex:0 0 10cqw;width:10cqw;height:13.8cqh;border:.2cqh solid rgba(190,150,80,.5);border-radius:1.1cqh;background:linear-gradient(180deg,#fffaf0,#f7ecd2);box-shadow:0 .5cqh 1cqh rgba(90,60,20,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5cqh;color:#3a2814;font:inherit;cursor:pointer;}
+    .victory-reward-row{min-height:15cqh;border:.25cqh dashed rgba(190,150,80,.5);border-radius:1.2cqh;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.8cqw;background:rgba(255,255,255,.3);}
+    .victory-reward-slot{position:relative;flex:0 0 9.2cqw;width:9.2cqw;height:13.8cqh;border:.2cqh solid rgba(190,150,80,.5);border-radius:1.1cqh;background:linear-gradient(180deg,#fffaf0,#f7ecd2);box-shadow:0 .5cqh 1cqh rgba(90,60,20,.16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5cqh;color:#3a2814;font:inherit;cursor:pointer;}
     .victory-reward-slot.done{filter:saturate(.65) brightness(.94);border-color:rgba(150,130,100,.5);background:linear-gradient(180deg,#eee6d6,#e0d6c0);color:#8a7350;}
     .victory-reward-check{position:absolute;top:.6cqh;right:.6cqw;width:2.3cqh;height:2.3cqh;border-radius:50%;display:none;place-items:center;background:#5d9f78;color:#fff;font-size:1.5cqh;font-weight:900;}
     .victory-reward-slot.done .victory-reward-check{display:grid;}

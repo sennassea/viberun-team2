@@ -308,12 +308,6 @@
      icon / name / desc: 툴팁에 표시할 정보                              */
   var CARD_TERM_INFO = [
     {
-      test: function (d) { return /정화/.test(d); },
-      icon: "✨",
-      name: "정화",
-      desc: "적에게 피해를 줍니다. 적의 결계를 먼저 깎은 후 나머지 피해가 체력을 감소시킵니다."
-    },
-    {
       test: function (d) { return /마음의 결계/.test(d); },
       icon: "🛡️",
       name: "마음의 결계",
@@ -336,18 +330,6 @@
       icon: "🃏",
       name: "주문 뽑기",
       desc: "덱에서 손패로 주문을 가져옵니다. 덱이 비면 버린 더미를 섞어 보충합니다. 손패는 최대 10장입니다."
-    },
-    {
-      test: function (d) { return /신통력/.test(d); },
-      icon: "⚡",
-      name: "신통력",
-      desc: "주문을 사용하는 데 필요한 자원입니다. 매 턴 시작 시 최대치(3)로 회복됩니다."
-    },
-    {
-      test: function (d) { return /미련/.test(d); },
-      icon: "🌫️",
-      name: "미련",
-      desc: "영혼이 이 세상에 남게 하는 집착입니다. 이 게임에서는 적의 체력을 가리킵니다."
     },
     {
       test: function (d) { return /소멸/.test(d); },
@@ -473,17 +455,13 @@
     });
   }
 
-  addCardTermFallback("결계", "피해를 막아주는 보호 수치입니다.", function (d) {
-    return /결계/.test(d) && !/마음의 결계/.test(d);
-  });
   addCardTermFallback("보호", "피해를 막아주는 효과입니다.");
-  addCardTermFallback("회복", "잃은 정신력을 되돌립니다.", function (d) {
-    return /회복/.test(d) && !/스트레스.{0,6}회복/.test(d);
-  });
   addCardTermFallback("회상", "매 턴 수치만큼 피해를 입습니다.");
   addCardTermFallback("후회", "사용할 수 없는 카드입니다. 버려지면 정신력에 3 피해를 주고 소멸합니다.");
   addCardTermFallback("잡념", "사용할 수 없는 방해 카드입니다.");
   addCardTermFallback("불안", "다음 턴 시작 시 주문 뽑기가 감소하는 상태입니다.");
+  addCardTermFallback("성불 표식", INTENT_STATUS_INFO["성불 표식"].desc);
+  addCardTermFallback("무기력", INTENT_STATUS_INFO["무기력"].desc);
 
   /* ══════════════════════════════════════════════════════════════════════
      III. DOM 공통 준비
@@ -981,16 +959,16 @@
         : makeRow("", "약병 슬롯", "전투 중 사용할 수 있는 약병이 표시됩니다.");
     }
     var master = getMasterItemData(info.type, info.item.id);
-    var icon = (info.item && (info.item.emoji || info.item.icon))
-      || (master && (master.emoji || master.icon))
-      || (info.type === "relic" ? "🏺" : "🧪");
     var name = (info.item && info.item.name)
       || (master && master.name)
       || (info.type === "relic" ? "법구" : "약병");
+    var fullDescText = (info.item && (info.item.effectText || info.item.valueText || info.item.desc || info.item.effect))
+      || (master && (master.effectText || master.valueText || master.desc || master.effect))
+      || "";
     var desc = getShortItemDesc(info.item, master) || (info.type === "relic"
       ? "획득한 법구입니다."
       : "전투 중 사용할 수 있는 약병입니다.");
-    return makeRow(icon, name, colorizeRarityLabels(desc));
+    return makeRow("", name, colorizeRarityLabels(desc)) + buildCardTermHtml(fullDescText, null, false);
   }
 
   function positionItemSlotTooltip(slotEl) {
@@ -1090,9 +1068,12 @@
     return game.getBoundingClientRect();
   }
 
-  function buildCardTermHtml(descText, extraDescText) {
+  /* CARD_TERM_INFO 사전을 훑어 텍스트에 등장하는 용어 설명을 데이터로 반환.
+     법구/약병 등 카드가 아닌 다른 화면(globalTooltip.js)에서도 같은 사전을
+     재사용할 수 있도록 HTML 생성과 분리해 window에 노출한다. */
+  function getEffectKeywordTerms(descText, extraDescText) {
     var seenNames = {};
-    var rows = [];
+    var terms = [];
     [descText, extraDescText].forEach(function (text) {
       if (!text) return;
       CARD_TERM_INFO.forEach(function (t) {
@@ -1102,10 +1083,17 @@
         if (!matched) return;
         seenNames[t.name] = true;
         var desc = typeof t.desc === "function" ? t.desc(text) : t.desc;
-        rows.push(makeRow(t.icon, t.name, desc, null));
+        terms.push({ icon: t.icon, name: t.name, desc: desc });
       });
     });
-    return rows.join("");
+    return terms;
+  }
+  window.getEffectKeywordTerms = getEffectKeywordTerms;
+
+  function buildCardTermHtml(descText, extraDescText, includeIcon) {
+    return getEffectKeywordTerms(descText, extraDescText).map(function (t) {
+      return makeRow(includeIcon === false ? "" : t.icon, t.name, t.desc, null);
+    }).join("");
   }
 
   /* ── 카드 DOM 요소 → CARD_DB 데이터 매칭 (모든 카드 UI가 공통으로
@@ -1300,7 +1288,7 @@
     if (typeof dragState !== "undefined" && dragState !== null) return;
     if (isLockedSpiritPathCard(cardEl)) return;
 
-    var descEl = cardEl.querySelector(".desc, .card-desc-text");
+    var descEl = cardEl.querySelector(".desc, .card-desc-text, .item-desc-text, .bag-detail-desc");
     if (!descEl) return;
 
     var cardEntry = getCardDbEntryFromCardEl(cardEl);
@@ -1320,7 +1308,9 @@
 
     var subCardEntry = getSubCardEntry(cardEntry);
 
-    var html = buildCardTermHtml(descEl.textContent.trim(), subCardEntry ? subCardEntry.desc : null);
+    /* 법구/약병 설명(.item-desc-text, .bag-detail-desc) 툴팁에는 이모지를 붙이지 않는다 */
+    var isItemDesc = descEl.classList.contains("item-desc-text") || descEl.classList.contains("bag-detail-desc");
+    var html = buildCardTermHtml(descEl.textContent.trim(), subCardEntry ? subCardEntry.desc : null, !isItemDesc);
 
     if (!html && !subCardEntry) {
       /* 설명할 용어도, 서브카드도 없는 주문은 상태만 추적하고 툴팁 미표시 */
@@ -1380,8 +1370,15 @@
   /* (월영당 확장덱 구매 확인 팝업의 .bm-deck-preview-card는 #game 밖의   */
   /*  document.body 모달이라 이 game 레벨 위임이 닿지 않는다 — 아래 별도  */
   /*  document 레벨 위임(BM_DECK_PREVIEW_CARD_SELECTOR)에서 처리한다)     */
+  /* 신령의 은혜 보상의 .sb-card, 보물상자 법구 발견의 .treasure-relic-item,   */
+  /* 가방 상세 패널 .bag-detail, 상점의 법구/약병 상품(.shop-product-item-frame)/ */
+  /* 상세 미리보기(.shop-detail-item-preview)도 동일하게 처리한다 — 이 항목들은  */
+  /* .card-desc-text 대신 .item-desc-text/.bag-detail-desc를 쓰므로            */
+  /* showCardTooltip의 설명 텍스트 셀렉터에도 포함되어 있다. 이미 화면에       */
+  /* 보이는 설명 텍스트는 그대로 두고, 그 안의 생소한 용어만 추가 설명한다     */
   var DECK_OR_REWARD_CARD_SELECTOR =
-    ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card,.random-item-result-card-frame,.spirit-path-mini-card";
+    ".deck-viewer-card,.reward-card,.shop-product-card-frame,.shop-detail-card-preview,.event-panel-cardpick .event-card,.random-item-result-card-frame,.spirit-path-mini-card," +
+    ".sb-card,.treasure-relic-item,.bag-detail,.shop-product-item-frame,.shop-detail-item-preview";
 
   game.addEventListener("mouseover", function (e) {
     var dvCard = e.target.closest(DECK_OR_REWARD_CARD_SELECTOR);
