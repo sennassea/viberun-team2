@@ -22,7 +22,7 @@
   border-color:var(--c-gold-deep); color:#5b3a12;
   box-shadow:0 .35cqh .9cqh rgba(176,125,29,.4), inset 0 0 0 .12cqh #fff6df; transform:translateY(-.1cqh);}
 .deck-viewer-summary{font-size:2.07cqh; font-weight:700; color:var(--c-ink-soft); padding:1.1cqh 0;}
-.deck-viewer-grid{display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:1.2cqh;
+.deck-viewer-grid{display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:2.8cqh 1.8cqw;
   overflow:auto; padding:.5cqh .4cqw 1cqh;}
 .deck-viewer.pick-mode .deck-viewer-grid{gap:2.8cqh 1.8cqw;}
 .deck-viewer-empty{grid-column:1 / -1; min-height:22cqh; display:grid; place-items:center;
