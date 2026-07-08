@@ -31,10 +31,18 @@
     "viberunCardCodex",
     "viberunRunRecords"
   ];
-  const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80, muted: false };
+  const DEFAULT_VOLUMES = { master: 80, music: 70, effect: 80, muted: { master: false, music: false, effect: false } };
+  function normalizeMuted(muted){
+    const source = muted && typeof muted === "object" ? muted : {};
+    return {
+      master: source.master === true,
+      music: source.music === true,
+      effect: source.effect === true,
+    };
+  }
   const volumeSettingsApi = window.VIBERUN_VOLUME_SETTINGS || (window.VIBERUN_VOLUME_SETTINGS = {
     key: VOLUME_KEY,
-    defaults: { ...DEFAULT_VOLUMES },
+    defaults: { ...DEFAULT_VOLUMES, muted: normalizeMuted(DEFAULT_VOLUMES.muted) },
     read(){
       if(typeof localStorage === "undefined") return { ...this.defaults };
       try {
@@ -43,7 +51,7 @@
           master: Number.isFinite(saved.master) ? saved.master : this.defaults.master,
           music: Number.isFinite(saved.music) ? saved.music : this.defaults.music,
           effect: Number.isFinite(saved.effect) ? saved.effect : this.defaults.effect,
-          muted: saved.muted === true,
+          muted: normalizeMuted(saved.muted),
         };
       } catch(error) {
         localStorage.removeItem(this.key);
@@ -56,7 +64,7 @@
         master: Number(volumes.master),
         music: Number(volumes.music),
         effect: Number(volumes.effect),
-        muted: volumes.muted === true,
+        muted: normalizeMuted(volumes.muted),
       }));
     }
   });
@@ -110,14 +118,7 @@
         '</div>' +
         '<div class="settings-viewer-body">' +
           '<section class="settings-viewer-section" aria-label="음량 조절">' +
-            '<div class="settings-viewer-sound-head">' +
-              '<h3>음량 조절</h3>' +
-              '<label class="settings-sound-toggle">' +
-                '<span>사운드</span>' +
-                '<input type="checkbox" class="settings-sound-toggle-input" checked>' +
-                '<span class="settings-sound-toggle-track" aria-hidden="true"></span>' +
-              '</label>' +
-            '</div>' +
+            '<h3>음량 조절</h3>' +
             volumeControlHtml("master", "전체 음량", 80) +
             volumeControlHtml("music", "배경 음악", 70) +
             volumeControlHtml("effect", "효과음", 80) +
@@ -207,15 +208,16 @@
     });
     overlay.addEventListener("input", event => {
       if(!event.target.matches(".settings-viewer-volume input")) return;
+      event.target.style.setProperty("--val", event.target.value + "%");
       const output = event.target.closest(".settings-viewer-volume").querySelector("output");
       if(output) output.textContent = event.target.value;
       saveVolumeSettings();
       applyVolumeSettings();
     });
-    overlay.addEventListener("change", event => {
-      if(!event.target.matches(".settings-sound-toggle-input")) return;
-      saveVolumeSettings();
-      applyVolumeSettings();
+    overlay.addEventListener("click", event => {
+      const muteButton = event.target.closest(".settings-viewer-volume-mute");
+      if(!muteButton) return;
+      toggleVolumeMute(muteButton.dataset.volumeKey);
     });
     overlay.querySelector(".settings-viewer-close").addEventListener("click", closeSettingsViewer);
     overlay.querySelector(".settings-viewer-help").addEventListener("click", openHelp);
@@ -291,7 +293,7 @@
       accountLogout: overlay.querySelector(".settings-account-logout"),
       accountMessage: overlay.querySelector(".settings-account-message"),
       volumeInputs: Array.from(overlay.querySelectorAll(".settings-viewer-volume input")),
-      soundToggle: overlay.querySelector(".settings-sound-toggle-input"),
+      volumeMuteButtons: Array.from(overlay.querySelectorAll(".settings-viewer-volume-mute")),
     };
   }
 
@@ -305,9 +307,26 @@
   function volumeControlHtml(id, label, value){
     return '<label class="settings-viewer-volume" for="settingsVolume' + id + '">' +
       '<span>' + label + '</span>' +
-      '<input id="settingsVolume' + id + '" type="range" min="0" max="100" value="' + value + '">' +
+      '<input id="settingsVolume' + id + '" type="range" min="0" max="100" value="' + value + '" style="--val:' + value + '%">' +
       '<output>' + value + '</output>' +
+      volumeMuteButtonHtml(id, label) +
     '</label>';
+  }
+
+  function volumeMuteButtonHtml(id, label){
+    return '<button type="button" class="settings-viewer-volume-mute" data-volume-key="' + id + '" data-muted="false" aria-pressed="false" aria-label="' + label + ' 음소거">' +
+      '<svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"></path>' +
+        '<g class="settings-viewer-volume-mute-on">' +
+          '<path d="M16.3 8.5a5 5 0 0 1 0 7"></path>' +
+          '<path d="M18.8 6a9 9 0 0 1 0 12"></path>' +
+        '</g>' +
+        '<g class="settings-viewer-volume-mute-off">' +
+          '<line x1="15.5" y1="9" x2="21.5" y2="15"></line>' +
+          '<line x1="21.5" y1="9" x2="15.5" y2="15"></line>' +
+        '</g>' +
+      '</svg>' +
+    '</button>';
   }
 
   function getVolumeSettings(){
@@ -316,13 +335,20 @@
 
   function saveVolumeSettings(){
     if(typeof localStorage === "undefined" || !els) return;
-    const volumes = {};
+    const volumes = { muted: getVolumeSettings().muted };
     els.volumeInputs.forEach(input => {
       const key = input.id.replace("settingsVolume", "");
       volumes[key] = Number(input.value);
     });
-    volumes.muted = !!(els.soundToggle && !els.soundToggle.checked);
     volumeSettingsApi.write(volumes);
+  }
+
+  function toggleVolumeMute(key){
+    if(!els || !key) return;
+    const volumes = getVolumeSettings();
+    const muted = { ...volumes.muted, [key]: !volumes.muted[key] };
+    volumeSettingsApi.write({ ...volumes, muted });
+    applyVolumeSettings();
   }
 
   function applyVolumeSettings(){
@@ -332,10 +358,16 @@
       const key = input.id.replace("settingsVolume", "");
       const value = volumes[key] ?? DEFAULT_VOLUMES[key] ?? 80;
       input.value = value;
+      input.style.setProperty("--val", value + "%");
       const output = input.closest(".settings-viewer-volume").querySelector("output");
       if(output) output.textContent = value;
     });
-    if(els.soundToggle) els.soundToggle.checked = !volumes.muted;
+    els.volumeMuteButtons.forEach(button => {
+      const key = button.dataset.volumeKey;
+      const isMuted = !!(volumes.muted && volumes.muted[key]);
+      button.dataset.muted = isMuted ? "true" : "false";
+      button.setAttribute("aria-pressed", isMuted ? "true" : "false");
+    });
   }
 
   function restoreSavedProgress(){
@@ -439,18 +471,23 @@
       ".settings-viewer-section:not(.settings-account-section){background:transparent url('assets/ui/settings/settings_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
       ".settings-account-section{position:relative;background:transparent url('assets/ui/settings/account_info_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;}" +
       ".settings-viewer-section h3{font-size:2.1cqh;margin-bottom:1.4cqh;color:var(--c-ink);}" +
-      ".settings-viewer-sound-head{display:flex;align-items:center;justify-content:space-between;gap:1cqw;margin-bottom:1.4cqh;}" +
-      ".settings-viewer-sound-head h3{margin-bottom:0;}" +
-      ".settings-sound-toggle{display:flex;align-items:center;gap:.8cqw;cursor:pointer;font-size:1.7cqh;font-weight:800;color:var(--c-ink-soft);}" +
-      ".settings-sound-toggle-input{position:absolute;opacity:0;width:0;height:0;}" +
-      ".settings-sound-toggle-track{position:relative;width:6.4cqh;height:3.4cqh;border-radius:1.7cqh;background:#c9d2df;border:0.16cqh solid var(--c-panel-line);transition:background .15s ease;}" +
-      ".settings-sound-toggle-track::after{content:'';position:absolute;top:50%;left:.3cqh;width:2.6cqh;height:2.6cqh;border-radius:50%;background:#fff;box-shadow:0 .2cqh .4cqh rgba(0,0,0,.28);transform:translateY(-50%);transition:transform .15s ease;}" +
-      ".settings-sound-toggle-input:checked + .settings-sound-toggle-track{background:var(--c-blue);}" +
-      ".settings-sound-toggle-input:checked + .settings-sound-toggle-track::after{transform:translateY(-50%) translateX(3cqh);}" +
-      ".settings-sound-toggle-input:focus-visible + .settings-sound-toggle-track{outline:0.2cqh solid var(--c-blue);outline-offset:.2cqh;}" +
-      ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 4cqw;align-items:center;gap:1cqw;margin-top:1cqh;color:var(--c-ink-soft);font-size:1.7cqh;font-weight:800;}" +
-      ".settings-viewer-volume input{width:100%;accent-color:var(--c-blue);}" +
+      ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 3.4cqw 4.2cqh;align-items:center;gap:1cqw;margin-top:1.4cqh;color:var(--c-ink-soft);font-size:1.7cqh;font-weight:800;}" +
       ".settings-viewer-volume output{text-align:right;color:var(--c-ink);font-weight:900;}" +
+      ".settings-viewer-volume input[type=\"range\"]{-webkit-appearance:none;appearance:none;width:100%;height:3.2cqh;background:transparent;margin:0;padding:0;cursor:pointer;}" +
+      ".settings-viewer-volume input[type=\"range\"]::-webkit-slider-runnable-track{height:.9cqh;border-radius:1cqh;background:linear-gradient(90deg,var(--c-gold-deep) 0%,var(--c-gold) var(--val,50%),rgba(255,255,255,.6) var(--val,50%),rgba(255,255,255,.6) 100%);border:.12cqh solid var(--c-gold-deep);box-shadow:inset 0 .12cqh .22cqh rgba(90,60,10,.28);}" +
+      ".settings-viewer-volume input[type=\"range\"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:3cqh;height:3cqh;margin-top:-1.05cqh;border-radius:50%;background:#fdf1da url('assets/ui/settings/volume_icon.png') center/68% no-repeat;border:.16cqh solid var(--c-gold-deep);box-shadow:0 .2cqh .4cqh rgba(90,60,10,.35);}" +
+      ".settings-viewer-volume input[type=\"range\"]::-moz-range-track{height:.9cqh;border-radius:1cqh;background:rgba(255,255,255,.6);border:.12cqh solid var(--c-gold-deep);box-shadow:inset 0 .12cqh .22cqh rgba(90,60,10,.28);}" +
+      ".settings-viewer-volume input[type=\"range\"]::-moz-range-progress{height:.9cqh;border-radius:1cqh 0 0 1cqh;background:linear-gradient(90deg,var(--c-gold-deep),var(--c-gold));}" +
+      ".settings-viewer-volume input[type=\"range\"]::-moz-range-thumb{width:3cqh;height:3cqh;border-radius:50%;background:#fdf1da url('assets/ui/settings/volume_icon.png') center/68% no-repeat;border:.16cqh solid var(--c-gold-deep);box-shadow:0 .2cqh .4cqh rgba(90,60,10,.35);}" +
+      ".settings-viewer-volume input[type=\"range\"]:focus-visible::-webkit-slider-thumb{outline:.2cqh solid var(--c-blue);outline-offset:.15cqh;}" +
+      ".settings-viewer-volume input[type=\"range\"]:focus-visible::-moz-range-thumb{outline:.2cqh solid var(--c-blue);outline-offset:.15cqh;}" +
+      ".settings-viewer-volume-mute{width:4.2cqh;height:4.2cqh;border-radius:50%;display:grid;place-items:center;padding:.8cqh;cursor:pointer;justify-self:center;background:linear-gradient(180deg,#fff6df,#f0c15a);border:.16cqh solid var(--c-gold-deep);color:#5b3a12;box-shadow:0 .2cqh .4cqh rgba(176,125,29,.32);transition:background .15s ease,border-color .15s ease,color .15s ease;}" +
+      ".settings-viewer-volume-mute svg{width:100%;height:100%;}" +
+      ".settings-viewer-volume-mute[data-muted=\"true\"]{background:linear-gradient(180deg,#ffe0d3,#f6b9a0);border-color:#c96a3e;color:#7a2b12;box-shadow:0 .2cqh .4cqh rgba(180,60,40,.28);}" +
+      ".settings-viewer-volume-mute .settings-viewer-volume-mute-off{display:none;}" +
+      ".settings-viewer-volume-mute[data-muted=\"true\"] .settings-viewer-volume-mute-on{display:none;}" +
+      ".settings-viewer-volume-mute[data-muted=\"true\"] .settings-viewer-volume-mute-off{display:inline;}" +
+      ".settings-viewer-volume-mute:focus-visible{outline:0.2cqh solid var(--c-blue);outline-offset:.2cqh;}" +
       ".settings-viewer-actions{display:flex;justify-content:center;align-items:center;gap:1.2cqw;margin-top:-1cqh;}" +
       ".settings-viewer-actions button{height:5.58cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
       ".settings-viewer-danger{order:2;height:5.58cqh;border-radius:2.5cqh;padding:0 2.2cqw;background:linear-gradient(180deg,#ffe0d3,#f6b9a0);border:0.22cqh solid #c96a3e;color:#7a2b12;box-shadow:0 .3cqh .6cqh rgba(180,60,40,.22),inset 0 0 0 .12cqh #ffe9d8;position:relative;top:-0.5cqh;}" +

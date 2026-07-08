@@ -280,6 +280,7 @@
         width:min(780px, calc(100% - 44px));
         min-height:360px;
         padding:34px 46px 36px;
+        background-image:url("assets/ui/dialog_panel_skip.png");
       }
       .tutorial-guide-dialog-skip .tutorial-guide-close{
         top:-16px;

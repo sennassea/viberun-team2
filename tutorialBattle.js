@@ -1369,7 +1369,7 @@
     style.id = "tutorialBattleIntroStyles";
     style.textContent =
       ".tutorial-battle-intro-overlay{position:absolute;inset:0;z-index:280;background:rgba(12,24,40,.18);display:block;cursor:default;}" +
-    ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;--tutorial-dongjasin-avatar-width:36cqh;--tutorial-dongjasin-avatar-height:64cqh;--tutorial-dongjasin-avatar-left:-35cqh;--tutorial-dongjasin-avatar-top:-41.8cqh;--tutorial-dongjasin-avatar-transform:none;transform:translateX(-50%);z-index:281;width:min(58cqw,78cqh);padding:2.7cqh 2.6cqw;border:0;border-radius:0;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;color:#243247;box-shadow:none;}" +
+    ".tutorial-battle-intro-dialogue{position:absolute;left:50%;bottom:3cqh;--tutorial-dongjasin-avatar-width:36cqh;--tutorial-dongjasin-avatar-height:64cqh;--tutorial-dongjasin-avatar-left:-35cqh;--tutorial-dongjasin-avatar-top:-41.8cqh;--tutorial-dongjasin-avatar-transform:none;transform:translateX(-50%);z-index:281;width:min(58cqw,78cqh);aspect-ratio:2533/621;display:flex;align-items:center;padding:0.6cqh 3cqw;border:0;border-radius:0;background:transparent url(\"assets/ui/dialog_panel_battle_intro.png\") center/100% 100% no-repeat;color:#243247;box-shadow:none;}" +
       ".tutorial-battle-intro-dialogue.tutorial-battle-intro-dialogue-top{top:12cqh;bottom:auto;--tutorial-dongjasin-avatar-top:-18cqh;}" +
     ".tutorial-battle-system-popup{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:281;width:min(46cqw,68cqh);padding:3.2cqh 2.8cqw;border:0;border-radius:0;background:transparent url(\"assets/ui/dialog_panel.png\") center/100% 100% no-repeat;box-shadow:none;text-align:center;color:var(--c-ink);}" +
       ".tutorial-battle-system-text{font-size:1.9cqh;line-height:1.5;font-weight:850;color:var(--c-ink);}" +
@@ -1597,7 +1597,7 @@
       volumes[key] = Number(input.value);
     });
     if(window.VIBERUN_VOLUME_SETTINGS && typeof window.VIBERUN_VOLUME_SETTINGS.write === "function"){
-      volumes.muted = getTutorialVolumeSettings().muted === true;
+      volumes.muted = getTutorialVolumeSettings().muted;
       window.VIBERUN_VOLUME_SETTINGS.write(volumes);
       return;
     }
