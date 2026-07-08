@@ -17,7 +17,10 @@
     { id: "order", label: "최신순" },
     { id: "name", label: "이름순" },
     { id: "cost", label: "코스트순" },
+    { id: "rarity", label: "등급순" },
   ];
+
+  const RARITY_ORDER = { starter: 0, common: 1, uncommon: 2, rare: 3, special: 4 };
 
   const SORT_DIRECTIONS = [
     { id: "desc", label: "내림차순" },
@@ -44,12 +47,12 @@
 
   const DECK_FILTERS = [
     { id: "all", label: "모든 덱" },
+    { id: "general", label: "범용" },
     { id: "barrier", label: "결계 덱" },
     { id: "memory", label: "회상 덱" },
     { id: "soul_mark", label: "성불 표식 덱" },
     { id: "hanpuri", label: "한풀이 덱" },
     { id: "gutpan", label: "굿판 덱" },
-    { id: "general", label: "범용" },
   ];
 
   const DECK_ID_MAP = {
@@ -984,10 +987,25 @@
       if(tabId === "codexCards" && a.locked !== b.locked){
         return a.locked ? 1 : -1;
       }
+      if(state.type === "rarity"){
+        const aRank = getEntryRarityRank(a);
+        const bRank = getEntryRarityRank(b);
+        const aMissing = aRank === null;
+        const bMissing = bRank === null;
+        if(aMissing !== bMissing) return aMissing ? 1 : -1;
+        if(!aMissing && aRank !== bRank) return (aRank - bRank) * direction;
+        return a.order - b.order;
+      }
       const compared = compareEntries(a, b, state.type);
       if(compared !== 0) return compared * direction;
       return a.order - b.order;
     });
+  }
+
+  function getEntryRarityRank(entry){
+    const data = entry.card || entry.item || {};
+    const rarity = typeof data.rarity === "string" ? data.rarity.toLowerCase() : "";
+    return Object.prototype.hasOwnProperty.call(RARITY_ORDER, rarity) ? RARITY_ORDER[rarity] : null;
   }
 
   function compareEntries(a, b, type){
