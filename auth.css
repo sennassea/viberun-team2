@@ -130,18 +130,19 @@
   display:grid;
   gap:.8cqh;
   color:#6f4210;
-  font-size:1.84cqh;
+  font-size:2.2cqh;
   font-weight:800;
 }
 .settings-account-row{
   display:grid;
-  grid-template-columns:8cqw minmax(0,1fr);
+  grid-template-columns:11cqw minmax(0,1fr);
   gap:1cqw;
   align-items:start;
 }
 .settings-account-label{
   color:#6f4210;
   font-weight:900;
+  white-space:nowrap;
 }
 .settings-account-value{
   min-width:0;

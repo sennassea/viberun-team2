@@ -180,11 +180,15 @@ function randomItemResultFaceHtml(item){
   const icon = (item && item.icon) || (source && (source.iconImage || source.icon || source.emoji)) || (item && item.type === "relic" ? "🏺" : item && item.type === "potion" ? "🧪" : "?");
   const name = (item && item.name) || (source && source.name) || "";
   const desc = (item && item.desc) || (source && (source.desc || source.effectText || source.valueText)) || "";
+  // 법구 획득/제거 결과 팝업은 아이콘+이름만 보여주고 설명 텍스트는 표시하지 않는다.
+  const descHtml = (item && item.type === "relic")
+    ? ""
+    : '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(desc).replace(/\n/g, "<br>")) + '</div>';
   return '<div class="item-art-layer">' + randomItemResultIconHtml(icon, name) + '</div>' +
     '<img class="item-frame-layer" src="' + escapeHtml(randomItemResultFramePath(item)) + '" alt="" aria-hidden="true" draggable="false">' +
     '<div class="item-text-layer">' +
       '<div class="item-name-text">' + escapeHtml(name) + '</div>' +
-      '<div class="item-desc-text">' + colorizeRarityLabels(escapeHtml(desc).replace(/\n/g, "<br>")) + '</div>' +
+      descHtml +
     '</div>' +
     '<div class="item-hit-layer" aria-hidden="true"></div>';
 }

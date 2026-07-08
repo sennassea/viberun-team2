@@ -84,21 +84,21 @@
         "background:rgba(30,20,10,.45);backdrop-filter:blur(3px);opacity:0;transition:opacity .2s ease;}" +
       ".bag-ui-overlay.show{display:grid;opacity:1;}" +
       ".bag-ui-overlay.map-mode{top:0;z-index:300!important;}" +
-      ".bag-ui-panel{position:relative;width:min(84cqw,106cqh);aspect-ratio:720/585;max-height:78cqh;box-sizing:border-box;display:flex;flex-direction:column;gap:1.3cqh;padding:2.5cqh 2.4cqw 2.8cqh;" +
+      ".bag-ui-panel{position:relative;width:min(84cqw,106cqh);max-height:92cqh;box-sizing:border-box;display:flex;flex-direction:column;gap:1.3cqh;padding:2.5cqh 2.4cqw 2.8cqh;" +
         "background:transparent url(\"assets/ui_panels/codex_section_panel.png\") center/100% 100% no-repeat;" +
         "border:0;border-radius:0;box-shadow:0 1.2cqh 2.4cqh rgba(0,0,0,.22);color:var(--bg-ink);}" +
       ".bag-ui-head{flex:none;display:flex;align-items:center;justify-content:center;position:relative;}" +
       ".bag-ui-title{font-size:2.6cqh;font-weight:900;}" +
       ".bag-ui-close{position:absolute;right:.3cqw;top:50%;transform:translateY(-50%);width:4cqh;height:4cqh;" +
         "border:0;border-radius:0;background:transparent url(\"assets/ui_buttons/close.png\") center/100% 100% no-repeat;color:transparent;font-size:0;font-weight:900;cursor:pointer;line-height:1;}" +
-      ".bag-ui-body{flex:1;min-height:0;display:grid;grid-template-columns:1.6fr 1fr;gap:1.4cqw;}" +
+      ".bag-ui-body{flex:1;min-height:0;display:grid;grid-template-columns:1.6fr 1fr;gap:1.4cqw;align-items:start;overflow-y:auto;}" +
       ".bag-ui-col{min-height:0;display:flex;flex-direction:column;gap:.8cqh;background:rgba(255,255,255,.36);" +
         "border:0.14cqh solid rgba(178,140,80,.36);border-radius:1cqh;padding:1.2cqh 1cqw;}" +
       ".bag-ui-col-title{font-size:1.7cqh;font-weight:900;}" +
-      ".bag-relic-grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:.8cqh;min-height:0;}" +
-      ".bag-relic-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;padding:.5cqh;" +
+      ".bag-relic-grid{display:grid;grid-template-columns:repeat(4,1fr);align-content:start;gap:.8cqh;min-height:0;}" +
+      ".bag-relic-card{box-sizing:border-box;width:100%;aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4cqh;padding:.5cqh;" +
         "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
-      ".bag-relic-card.item-frame-card{width:100%;height:100%;min-height:0;}" +
+      ".bag-relic-card.item-frame-card{width:100%;}" +
       ".bag-relic-card .item-text-layer,.bag-potion-card .item-text-layer{display:none;}" +
       ".bag-relic-card:hover{border-color:var(--bg-gold);}" +
       ".bag-relic-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
@@ -119,9 +119,9 @@
       ".bag-detail-desc{font-size:1.25cqh;color:var(--bg-ink-soft);font-weight:700;white-space:pre-line;line-height:1.4;}" +
       ".bag-detail-placeholder{font-size:1.25cqh;color:var(--bg-ink-soft);font-weight:700;margin:auto;}" +
       ".bag-potion-slots{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:.7cqw;}" +
-      ".bag-potion-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
-        "min-height:9cqh;background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
-      ".bag-potion-card.item-frame-card{width:100%;min-height:15cqh;}" +
+      ".bag-potion-card{box-sizing:border-box;position:relative;width:100%;aspect-ratio:2/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35cqh;" +
+        "background:rgba(255,255,255,.7);border:0.18cqh solid var(--bg-beige-deep);border-radius:1cqh;cursor:pointer;font:inherit;color:var(--bg-ink);}" +
+      ".bag-potion-card.item-frame-card{width:100%;}" +
       ".bag-potion-card:hover{border-color:var(--bg-gold);}" +
       ".bag-potion-card.selected{border-color:var(--bg-gold-deep);box-shadow:0 0 0 0.18cqh var(--bg-gold);background:rgba(255,250,235,.95);}" +
       ".bag-potion-card.empty{cursor:default;background:rgba(255,255,255,.28);border-style:dashed;}" +
