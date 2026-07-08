@@ -216,7 +216,6 @@ function onTreasureChestClick(){
     S.gold = (S.gold || 0) + TREASURE_GOLD_AMOUNT;
     state.goldGranted = true;
     if(typeof renderHud === "function") renderHud();
-    if(typeof toast === "function") toast("복채 " + TREASURE_GOLD_AMOUNT + "을(를) 얻었습니다.");
   }
 
   if(state.offeredRelicId === null){
@@ -339,7 +338,6 @@ function onTreasureRelicTake(){
     return;
   }
 
-  if(typeof toast === "function") toast((relic.emoji || "🏺") + " " + relic.name + " 법구를 획득했습니다.");
   finishTreasureNode();
 }
 
