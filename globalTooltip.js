@@ -7,9 +7,13 @@
   /* 카드형 결과 항목(.random-item-result-card-frame)은 카드 앞면이 이미 이름/설명을
      보여주므로 제외 — tooltip.js의 카드 용어 툴팁이 별도로 처리한다 */
   const RANDOM_ITEM_RESULT_CARD_SELECTOR = ".random-item-result-card:not(.random-item-result-card-frame)";
-  /* 상점 상품 카드(주문 카드형은 tooltip.js가 별도 처리하므로 제외) */
-  const SHOP_PRODUCT_SELECTOR = ".shop-product:not(.shop-product-card-frame)";
-  const SHOP_DETAIL_SELECTOR = "#shopDetail";
+  /* 법구/약병 획득·제거 결과 카드(.random-item-result-card-face.item-frame-card)는
+     아이콘+이름만 보여주고 하단 설명이 없어, 이름으로 RELIC_DB/POTION_DB를 조회해
+     설명을 툴팁으로 보여준다 */
+  const RANDOM_ITEM_RESULT_ITEM_FACE_SELECTOR = ".random-item-result-card-face.item-frame-card";
+  /* 상점/가방의 법구·약병은 화면에 설명이 이미 보이므로 여기서는 처리하지 않는다.
+     생소한 용어 보충 설명은 tooltip.js의 카드 용어 툴팁이 담당한다
+     (.shop-product-item-frame, .shop-detail-item-preview, .bag-detail) */
   /* 월영당(BM 스토어) 스킨 프리뷰 대상: 스킨 탭 카드 + 추천 탭의 마법무녀 스킨(한정) 카드.
      추천 탭의 다른 카드에는 툴팁을 붙이지 않는다. 주문 팩(.bm-store-product)은
      덱 프리뷰 패널 전용 로직(하단)에서 별도로 처리하므로 여기 포함하지 않는다 */
@@ -48,7 +52,7 @@
   function findAnchor(target) {
     if (!target || typeof target.closest !== "function") return null;
     const anchor = target.closest(SELECTOR) || target.closest(SKIN_OPTION_SELECTOR) || target.closest(SPIRIT_PATH_CARD_PREVIEW_SELECTOR) ||
-      target.closest(RANDOM_ITEM_RESULT_CARD_SELECTOR) || target.closest(SHOP_PRODUCT_SELECTOR) || target.closest(SHOP_DETAIL_SELECTOR) ||
+      target.closest(RANDOM_ITEM_RESULT_CARD_SELECTOR) || target.closest(RANDOM_ITEM_RESULT_ITEM_FACE_SELECTOR) ||
       target.closest(BM_SKIN_CARD_SELECTOR) || target.closest(RUN_SUMMARY_ROW_SELECTOR) ||
       target.closest(RUN_SCORE_BREAKDOWN_ITEM_SELECTOR) || target.closest(RUN_ITEM_CARD_SELECTOR) ||
       target.closest(CODEX_ITEM_CARD_SELECTOR);
@@ -74,11 +78,11 @@
   /* tooltip.js의 CARD_TERM_INFO 용어 사전(주문 카드 호버 툴팁이 쓰는 것과 동일)을
      재사용해, 효과 설명 안의 어려운 용어(성불 표식/동요/균열 등)에 대한 부연 설명을
      본문 뒤에 이어붙인다. 새 UI 없이 기존 body(pre-wrap 텍스트) 안에서 처리한다. */
-  function appendEffectKeywordExplanations(descText) {
+  function appendEffectKeywordExplanations(descText, includeIcon) {
     if (typeof window.getEffectKeywordTerms !== "function") return "";
     const terms = window.getEffectKeywordTerms(descText) || [];
     if (!terms.length) return "";
-    return "\n\n" + terms.map(t => (t.icon ? t.icon + " " : "") + t.name + " — " + t.desc).join("\n");
+    return "\n\n" + terms.map(t => (includeIcon && t.icon ? t.icon + " " : "") + t.name + " — " + t.desc).join("\n");
   }
 
   function getItemDataByDisplayedName(anchor) {
@@ -90,14 +94,14 @@
     if (card) {
       const icon = card.emoji ? " " + card.emoji : "";
       const desc = card.desc || "";
-      return { title: card.name + icon, body: desc + appendEffectKeywordExplanations(desc) };
+      return { title: card.name + icon, body: desc + appendEffectKeywordExplanations(desc, true) };
     }
 
+    /* 법구/약병 툴팁에는 이모지를 붙이지 않는다 */
     const item = getRelicOrPotionDbEntryByName(name);
     if (item) {
-      const icon = item.emoji ? " " + item.emoji : "";
       const desc = item.desc || "";
-      return { title: item.name + icon, body: desc + appendEffectKeywordExplanations(desc) };
+      return { title: item.name, body: desc + appendEffectKeywordExplanations(desc, false) };
     }
 
     return null;
@@ -222,11 +226,7 @@
       return getItemDataByDisplayedName(anchor);
     }
 
-    if (anchor.classList && anchor.classList.contains("shop-product")) {
-      return getItemDataByDisplayedName(anchor);
-    }
-
-    if (anchor.id === "shopDetail" && !anchor.querySelector(".shop-detail-card-preview")) {
+    if (anchor.classList && anchor.classList.contains("random-item-result-card-face") && anchor.classList.contains("item-frame-card")) {
       return getItemDataByDisplayedName(anchor);
     }
 
@@ -593,7 +593,7 @@
     const imgHtml = iconSrc
       ? '<img class="bm-deck-preview-item-icon" src="' + escapeHtml(iconSrc) + '" alt="" onerror="this.remove()">'
       : "";
-    const tooltipTitle = escapeHtml((item.name || "") + (item.emoji ? " " + item.emoji : ""));
+    const tooltipTitle = escapeHtml(item.name || "");
     return (
       '<div class="bm-deck-preview-item" data-tooltip-title="' + tooltipTitle + '" data-tooltip="' + escapeHtml(item.desc || "") + '">' +
         '<div class="bm-deck-preview-item-visual">' +
