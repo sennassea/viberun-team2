@@ -47,7 +47,7 @@
   display:flex;
   flex-direction:column;
   gap:1.4cqh;
-  padding:2.4cqh 2.2cqw 1.6cqh;
+  padding:2.4cqh 2.2cqw 2.6cqh;
   border:0;
   border-radius:1.2cqh;
   color:#4d2f1e;
@@ -70,6 +70,7 @@
   min-height:9.4cqh;
   padding:1.1cqh 0 1.3cqh;
   border-bottom:.18cqh solid rgba(166,111,47,.36);
+  transform:translateY(1.4cqh);
 }
 .bm-store-heading{
   width:100%;
@@ -83,7 +84,7 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  margin:0 0 .95cqh;
+  margin:0 0 1.75cqh;
   padding:0;
   border:0;
   border-radius:0;
@@ -97,10 +98,12 @@
   text-shadow:0 .14cqh 0 rgba(255,255,255,.86);
 }
 .bm-store-heading p{
+  position:relative;
+  top:.5cqh;
   margin:0;
-  font-size:2.59cqh;
+  font-size:2.1cqh;
   line-height:1.35;
-  font-weight:850;
+  font-weight:600;
   color:#5c3925;
   word-break:keep-all;
 }
@@ -355,6 +358,7 @@
   grid-row:auto;
   width:100%;
   min-height:22cqh;
+  border-radius:1.6cqh;
 }
 .bm-store-product-grid--order_pack .bm-store-art-icon{
   font-size:8.63cqh;
@@ -688,6 +692,27 @@
   box-shadow:inset 0 0 0 .12cqh rgba(255,255,255,.48), 0 .35cqh .8cqh rgba(89,55,27,.12);
   overflow:hidden;
 }
+.bm-monthly-pass-badge{
+  top:0;
+  right:0;
+  min-width:0;
+  width:auto;
+  height:auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  padding:.5cqh 1.1cqw .45cqh;
+  border-radius:0 .65cqh 0 .8cqh;
+  line-height:1.2;
+}
+.bm-monthly-pass-badge span{
+  font-size:1.5cqh;
+}
+.bm-monthly-pass-badge span:first-child{
+  font-size:1.9cqh;
+}
 .bm-monthly-pass-card{
   min-height:0;
   display:flex;
@@ -895,7 +920,7 @@
   min-width:0;
   display:flex;
   flex-direction:column;
-  justify-content:center;
+  justify-content:flex-end;
   gap:.35cqh;
   padding-right:.5cqw;
 }
@@ -961,6 +986,9 @@
   height:70%;
   object-fit:contain;
   object-position:center center;
+}
+.bm-recommended-small-art--moonshard img{
+  object-position:center 15%;
 }
 .bm-recommended-small-art .bm-store-art-icon,
 .bm-recommended-small-art .bm-store-art-moon{
@@ -1072,11 +1100,12 @@
   z-index:1;
   flex:none;
   display:flex;
-  align-items:flex-end;
+  align-items:center;
   justify-content:space-between;
   gap:1cqw;
-  padding:.7cqh .7cqw 0;
+  padding:.2cqh .7cqw 0;
   border-top:.16cqh solid rgba(166,111,47,.28);
+  transform:translateY(-1.4cqh);
 }
 .bm-store-notices{
   min-width:0;
@@ -1087,16 +1116,15 @@
 .bm-store-notices p{
   margin:0;
   color:#5c3925;
-  font-size:1.78cqh;
+  font-size:1.5cqh;
   line-height:1.35;
-  font-weight:800;
+  font-weight:400;
   word-break:keep-all;
 }
 .bm-store-rate-info{
   flex:none;
   min-width:12cqw;
   height:4.2cqh;
-  margin-bottom:1.4cqh;
   border:0;
   border-radius:.55cqh;
   background:url("assets/ui_panels/bm_store/bm_btn_rate_info.png") center/100% 100% no-repeat;
@@ -1113,7 +1141,7 @@
   .bm-store-panel{
     width:92cqw;
     height:86cqh;
-    padding:2cqh 1.8cqw 1.4cqh;
+    padding:2cqh 1.8cqw 2.2cqh;
   }
   .bm-store-title-ornament{ display:none; }
   .bm-store-head{
@@ -1125,7 +1153,7 @@
     min-height:5.2cqh;
     font-size:4.37cqh;
   }
-  .bm-store-heading p{ font-size:2.18cqh; }
+  .bm-store-heading p{ font-size:1.78cqh; font-weight:600; }
   .bm-store-head-actions{
     right:0;
     top:.4cqh;

@@ -153,7 +153,7 @@
       imageKey: "skin_premium_wolyeong_academy_transfer",
       previewImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
 
-      profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
+      profileIcon: "assets/map_icons/player_marker_wolyeong_academy_transfer.png",
       profileSortOrder: 2,
       profileLabel: "월영학당 전학생",
 
@@ -231,6 +231,7 @@
       contentSummary: "한풀이 키워드 주문 / 약병 / 법구 포함",
       icon: "🌙",
       artImage: "assets/ui_panels/bm_store/deck_hanpuri.png",
+      previewImage: "assets/ui_panels/bm_store/deck_hanpuri.png",
       sortOrder: 1,
       purchasable: true,
       dimmed: false,
@@ -429,6 +430,7 @@
       description: "확장덱+스킨 복합 구매 코어 유저",
       imageKey: "moon_charge_premium",
       artImage: "assets/ui_panels/bm_store/moon_charge_premium.png",
+      previewImage: "assets/ui_panels/bm_store/moon_charge_premium.png",
       sortOrder: 4,
       recommendedBadge: "최고 효율",
 

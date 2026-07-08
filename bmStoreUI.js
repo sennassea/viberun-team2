@@ -547,12 +547,27 @@
       '</div>';
   }
 
+  /* 월영의 약속 카드 배지 전용 렌더링입니다. 원형 배지에 긴 문구가 눌려 들어가
+     가독성이 떨어지던 문제를 고쳐, 첫 단어/나머지 단어를 두 줄로 나눠 보여줍니다. */
+  function renderMonthlyPassBadge(text){
+    if(!text) return "";
+    const words = text.split(" ");
+    const line1 = words[0];
+    const line2 = words.slice(1).join(" ");
+    return (
+      '<div class="bm-store-badge bm-monthly-pass-badge">' +
+        '<span>' + escapeHtml(line1) + '</span>' +
+        (line2 ? '<span>' + escapeHtml(line2) + '</span>' : "") +
+      '</div>'
+    );
+  }
+
   function renderMonthlyPassCard(product){
     const isBusy = purchasingProductId === product.id;
     const detailLines = Array.isArray(product.detailLines) ? product.detailLines : [];
     return (
       '<article class="bm-product-card bm-monthly-pass-card">' +
-        (product.recommendBadge ? '<div class="bm-store-badge">' + escapeHtml(product.recommendBadge) + '</div>' : "") +
+        renderMonthlyPassBadge(product.recommendBadge) +
         '<div class="bm-monthly-pass-art" aria-hidden="true">' +
           (product.artImage
             ? '<img src="' + escapeHtml(product.artImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
@@ -662,7 +677,10 @@
     return (
       '<article class="bm-product-card bm-recommended-small-card' + (isOwned ? ' is-owned' : '') + '">' +
         (isOwned ? '<div class="bm-store-owned-flag">보유 중</div>' : '') +
-        '<div class="bm-recommended-small-art' + (isCharacterSkin && product.profileIcon ? ' bm-recommended-small-art--profile' : '') + '">' +
+        '<div class="bm-recommended-small-art' +
+          (isCharacterSkin && product.profileIcon ? ' bm-recommended-small-art--profile' : '') +
+          (product.rewardType === "moon_shard" ? ' bm-recommended-small-art--moonshard' : '') +
+        '">' +
           (isCharacterSkin && product.profileIcon
             ? '<img src="' + escapeHtml(product.profileIcon) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
             : product.previewImage

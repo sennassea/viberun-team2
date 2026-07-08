@@ -49,8 +49,9 @@
 
 .mailbox-ui-body{
   flex:1; min-height:24cqh; overflow-y:auto; display:flex; flex-direction:column; gap:1cqh;
-  padding-right:.3cqw;
+  padding-right:.3cqw; cursor:grab; user-select:none;
 }
+.mailbox-ui-body.dragging{ cursor:grabbing; }
 .mailbox-status-msg{ margin:auto; text-align:center; color:#4f3410; font-size:2.07cqh; font-weight:900; text-shadow:0 .06cqh 0 rgba(255,255,255,.7); }
 .mailbox-status-error{ color:var(--c-red-deep); }
 .mailbox-retry-btn{
