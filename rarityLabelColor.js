@@ -59,9 +59,16 @@ function colorizeCombatNumbers(text){
   return out;
 }
 
+/* "일반 전투"/"일반 몬스터"/"일반 적"처럼 등급이 아니라 전투 종류·대상을 가리키는
+   관용구는 등급 명칭과 우연히 겹치는 단어일 뿐이므로 색을 입히지 않는다.
+   "적"은 적립/적절 등 무관한 단어의 앞부분과도 겹치므로, 뒤에 다른 음절이
+   이어지지 않고 끝나거나 공백/구두점으로 끊길 때만 "적(enemy)"으로 간주한다. */
+var RARITY_LABEL_NON_GRADE_AFTER_RE = /^\s*(?:전투|몬스터|적(?=[\s.,()（）]|$))/;
+
 function colorizeRarityLabels(text){
   var str = colorizeCombatNumbers(String(text ?? ""));
-  return str.replace(/일반|희귀|유일/g, function(word){
+  return str.replace(/일반|희귀|유일/g, function(word, offset, whole){
+    if(RARITY_LABEL_NON_GRADE_AFTER_RE.test(whole.slice(offset + word.length))) return word;
     return '<span style="color:' + RARITY_LABEL_COLOR[word] + ';font-weight:700;">' + word + '</span>';
   });
 }
