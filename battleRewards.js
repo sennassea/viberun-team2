@@ -14,10 +14,8 @@ function nodeClear(){
   }
 
   applyRelicTrigger("battleEnd");
-  if(nodeType==="boss"){
-    grantBattleGoldReward();
-    return endGame("win");
-  }
+  // ACT 확장 이후 보스도 다른 스테이지와 동일하게 승리 보상을 먼저 받는다(기획서 §10).
+  // 골드는 보상 UI의 "복채" 슬롯이 지급하므로 여기서 별도로 지급하지 않는다.
   openBattleVictoryReward();
 }
 
@@ -784,6 +782,7 @@ function onBattleVictoryNextClick(){
   }
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
+  if(S.battleNodeType === "boss"){ endGame("win"); return; }
   proceedToMap();
 }
 
@@ -807,6 +806,7 @@ function onBattleVictoryLeaveConfirmed(){
   closeBattleVictoryLeaveConfirm();
   S.rewardOpen = false; S.busy = false;
   closeRewardOverlay();
+  if(S.battleNodeType === "boss"){ endGame("win"); return; }
   proceedToMap();
 }
 

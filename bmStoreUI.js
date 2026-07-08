@@ -79,6 +79,7 @@
     overlay.className = "bm-store-overlay";
     overlay.setAttribute("aria-hidden", "true");
     overlay.innerHTML =
+      '<div class="bm-store-npc" aria-hidden="true"><img src="assets/ui_panels/bm_store/bm_npc.png" alt=""></div>' +
       '<div class="bm-store-panel" role="dialog" aria-modal="true" aria-labelledby="bmStoreTitle">' +
         '<div class="bm-store-title-ornament" aria-hidden="true"></div>' +
         '<div class="bm-store-head">' +
@@ -552,7 +553,11 @@
     return (
       '<article class="bm-product-card bm-monthly-pass-card">' +
         (product.recommendBadge ? '<div class="bm-store-badge">' + escapeHtml(product.recommendBadge) + '</div>' : "") +
-        '<div class="bm-monthly-pass-art" aria-hidden="true"><span class="bm-store-art-icon">' + escapeHtml(product.icon || "🌙") + '</span></div>' +
+        '<div class="bm-monthly-pass-art" aria-hidden="true">' +
+          (product.artImage
+            ? '<img src="' + escapeHtml(product.artImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+            : '<span class="bm-store-art-icon">' + escapeHtml(product.icon || "🌙") + '</span>') +
+        '</div>' +
         '<div class="bm-monthly-pass-copy">' +
           '<h3>' + escapeHtml(product.name) + '</h3>' +
           '<ul class="bm-monthly-pass-detail">' +
@@ -701,8 +706,9 @@
         '<h3 class="bm-moon-charge-title">' + escapeHtml(product.name) + '</h3>' +
 
         '<div class="bm-moon-charge-art" aria-hidden="true">' +
-          '<span class="bm-store-art-moon"></span>' +
-          '<span class="bm-moon-charge-amount">' + formatCount(rewardAmount) + '</span>' +
+          (product.artImage
+            ? '<img src="' + escapeHtml(product.artImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+            : '<span class="bm-store-art-moon"></span><span class="bm-moon-charge-amount">' + formatCount(rewardAmount) + '</span>') +
         '</div>' +
 
         '<button type="button" class="bm-store-buy-btn bm-moon-charge-buy-btn" data-product-id="' + escapeHtml(product.id) + '"' +
@@ -740,9 +746,11 @@
         (badgeText ? '<div class="bm-store-badge">' + escapeHtml(badgeText) + '</div>' : "") +
         (isOwned ? '<div class="bm-store-owned-flag">보유 중</div>' : "") +
         '<div class="bm-store-product-art" aria-hidden="true">' +
-          (product.icon
-            ? '<span class="bm-store-art-icon">' + escapeHtml(product.icon) + '</span>'
-            : '<span class="bm-store-art-moon"></span><span class="bm-store-art-box">✦</span>') +
+          (product.artImage
+            ? '<img src="' + escapeHtml(product.artImage) + '" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'
+            : product.icon
+              ? '<span class="bm-store-art-icon">' + escapeHtml(product.icon) + '</span>'
+              : '<span class="bm-store-art-moon"></span><span class="bm-store-art-box">✦</span>') +
         '</div>' +
         '<div class="bm-store-product-copy">' +
           '<h3>' + escapeHtml(product.name) + '</h3>' +
