@@ -6,6 +6,11 @@
    ========================================================================= */
 (function () {
 
+  /* 터치(hover 불가) 환경 감지 — 이런 환경에서는 mouseover 대신 탭(click)으로
+     정보성 툴팁을 띄우고, 다른 곳을 탭하면 닫히도록 한다(하단 XI절 참고) */
+  var isTouchEnv = !!(window.matchMedia &&
+    (window.matchMedia("(hover: none)").matches || window.matchMedia("(pointer: coarse)").matches));
+
   /* ══════════════════════════════════════════════════════════════════════
      I. 전투원 툴팁 데이터
      ══════════════════════════════════════════════════════════════════════ */
@@ -734,6 +739,17 @@
 
   field.addEventListener("mouseleave", hideCombatantTooltip);
 
+  /* 터치 환경: 탭하면 표시(다른 곳 탭 시 닫힘은 XI절 공통 처리) */
+  field.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    var cb = e.target.closest(".combatant");
+    if (!cb || cb.classList.contains("dead") || !cb.classList.contains("enemy") || !isEnemyTooltipHit(e.target, cb)) return;
+    var newId = cb.dataset.id;
+    if (newId === activeId) return;
+    activeId = newId;
+    showCombatantFor(cb);
+  });
+
   /* ── renderField() 재렌더 시 실시간 갱신 ─────────────────────────────── */
   new MutationObserver(function () {
     if (activeId === null) return;
@@ -906,6 +922,14 @@
     hideEnergyTooltip();
   });
 
+  /* 터치 환경: 신통력 표시 탭 시 표시 */
+  game.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    var energyEl = e.target.closest("#energy");
+    if (!energyEl || energyEl === activeEnergyEl) return;
+    showEnergyTooltip(energyEl);
+  });
+
   function getItemSlotInfo(slotEl) {
     var host = slotEl && slotEl.closest("#sideRelicSlots,#sidePotionSlots");
     if (!host) return null;
@@ -1040,6 +1064,14 @@
     var to = e.relatedTarget;
     if (to && slotEl.contains(to)) return;
     hideItemSlotTooltip();
+  });
+
+  /* 터치 환경: 법구/약병 슬롯 탭 시 표시(사용/버리기 버튼은 별도 클릭 핸들러가 처리하므로 방해되지 않음) */
+  game.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    var slotEl = e.target.closest("#sideRelicSlots .side-item-slot,#sidePotionSlots .side-item-slot");
+    if (!slotEl || slotEl === activeItemSlotEl) return;
+    showItemSlotTooltip(slotEl);
   });
 
   /* ── #game 밖 카드(월영당 확장덱 구매 확인 팝업 등)에 대한 툴팁 레이어 전환 ──── */
@@ -1359,6 +1391,14 @@
 
   handEl.addEventListener("mouseleave", hideCardTooltip);
 
+  /* 터치 환경: 손패 카드 탭 시 표시(카드 사용은 드래그로 처리되므로 방해되지 않음) */
+  handEl.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    var card = e.target.closest(".card");
+    if (!card || card === cardActiveEl) return;
+    showCardTooltip(card);
+  });
+
   /* ── 덱 뷰어 / 카드 선택(보상·제거) 주문 이벤트 위임 ─────────────────── */
   /* 이 UI들은 모두 동적으로 열리므로 game 레벨에서 위임 처리             */
   /* 대상: 덱 보유 주문/뽑을 주문/버린 주문 탭의 .deck-viewer-card,       */
@@ -1396,6 +1436,14 @@
     hideCardTooltip();
   });
 
+  /* 터치 환경: 위 카드들 탭 시 표시 */
+  game.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    var dvCard = e.target.closest(DECK_OR_REWARD_CARD_SELECTOR);
+    if (!dvCard || dvCard === cardActiveEl) return;
+    showCardTooltip(dvCard);
+  });
+
   /* 월영당 확장덱 구매 확인 팝업(.bm-purchase-confirm)은 bmStoreUI.js가 #game이 아니라
      document.body에 직접 붙이는 모달이라 위 game 레벨 위임이 닿지 않는다. 이 팝업의 주문
      카드(.bm-deck-preview-card)만 document 레벨에서 같은 방식으로 위임 처리한다. */
@@ -1415,6 +1463,13 @@
     var to = e.relatedTarget;
     if (to && bmCard.contains(to)) return;
     hideCardTooltip();
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    var bmCard = e.target.closest(BM_DECK_PREVIEW_CARD_SELECTOR);
+    if (!bmCard || bmCard === cardActiveEl) return;
+    showCardTooltip(bmCard);
   });
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -1525,6 +1580,26 @@
     var to = e.relatedTarget;
     if (to && activeHudEl.contains && activeHudEl.contains(to)) return;
     hideHudTooltip();
+  });
+
+  /* 터치 환경: HP바/자원 아이콘 탭 시 표시 */
+  game.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    var target = e.target;
+    if (!target || !target.closest) return;
+
+    var hpEl = target.closest(HP_BAR_SELECTOR);
+    if (hpEl) {
+      if (hpEl === activeHudEl) return;
+      showHudTooltip(hpEl, buildHudHpHtml(hpEl));
+      return;
+    }
+
+    var match = findHudResourceMatch(target);
+    if (match && match.el !== activeHudEl) {
+      var html = buildHudResourceHtml(match);
+      if (html) showHudTooltip(match.el, html);
+    }
   });
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -1645,6 +1720,14 @@
     var to = e.relatedTarget;
     if (to && progressEl.contains(to)) return;
     hideProgressTooltip();
+  });
+
+  /* 터치 환경: 현재 위치/진행 정보 탭 시 표시 */
+  game.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    var progressEl = e.target && e.target.closest && e.target.closest(PROGRESS_CONTAINER_SELECTOR);
+    if (!progressEl || progressEl === activeProgressEl) return;
+    showProgressTooltip(progressEl);
   });
 
   /* ══════════════════════════════════════════════════════════════════════
@@ -1802,6 +1885,30 @@
     var to = e.relatedTarget;
     if (to && activeDockEl.contains && activeDockEl.contains(to)) return;
     hideDockTooltip();
+  });
+
+  /* ══════════════════════════════════════════════════════════════════════
+     XI. 터치 환경 공통: 다른 곳 탭 시 열려 있는 정보성 툴팁 닫기
+     ══════════════════════════════════════════════════════════════════════
+     턴 종료/주문 더미 확인/상단 메뉴 이동처럼 자체 클릭 동작이 있는 버튼은
+     제외한다(탭하면 원래 동작만 실행되고 별도 설명 툴팁은 붙이지 않음). */
+  var TOUCH_INFO_TOOLTIP_SELECTOR =
+    ".combatant,.card," + DECK_OR_REWARD_CARD_SELECTOR + "," + BM_DECK_PREVIEW_CARD_SELECTOR + "," +
+    "#sideRelicSlots .side-item-slot,#sidePotionSlots .side-item-slot,#energy," +
+    HP_BAR_SELECTOR + "," + RESOURCE_CONTAINER_SELECTOR + ",#profileStatusEffects .status-icon," +
+    PROGRESS_CONTAINER_SELECTOR;
+
+  document.addEventListener("click", function (e) {
+    if (!isTouchEnv) return;
+    if (tooltip.contains(e.target) || subCardPreview.contains(e.target)) return;
+    if (e.target.closest && e.target.closest(TOUCH_INFO_TOOLTIP_SELECTOR)) return;
+    hideCombatantTooltip();
+    hideCardTooltip();
+    hideStatusIconTooltip();
+    hideItemSlotTooltip();
+    hideEnergyTooltip();
+    hideHudTooltip();
+    hideProgressTooltip();
   });
 
 })();

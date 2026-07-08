@@ -428,6 +428,9 @@
   });
 
   document.addEventListener("pointerdown", event => {
+    /* 툴팁 내부를 탭한 경우(스크롤/읽기 등)에는 닫지 않는다 */
+    if (tooltipEl && tooltipEl.contains(event.target)) return;
+
     const avatarBtn = event.target && typeof event.target.closest === "function"
       ? event.target.closest(".menu-profile-avatar-btn")
       : null;
