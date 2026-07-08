@@ -107,15 +107,32 @@ function enemyUnder(x, y){
 
 function drawAim(x1, y1, x2, y2){
   const dx=x2-x1, dy=y2-y1;
-  const bow=Math.min(Math.hypot(dx,dy)*0.22, 90);
-  const mx=(x1+x2)/2 + dy*(bow/(Math.hypot(dx,dy)||1));
-  const my=(y1+y2)/2 - dx*(bow/(Math.hypot(dx,dy)||1));
+  const dist=Math.hypot(dx,dy)||1;
+  const bow=Math.min(dist*0.22, 90);
+  const mx=(x1+x2)/2 + dy*(bow/dist);
+  const my=(y1+y2)/2 - dx*(bow/dist);
+  // 곡선(베지어) 끝점의 접선 방향(제어점->끝점)으로 회전시켜 화살촉이 곡선과 이어지도록 함.
+  // 화살촉 에셋 기본 방향(위쪽)을 그 접선 각도에 맞추기 위한 보정(+90deg)
+  const headDeg = Math.atan2(y2-my, x2-mx) * 180/Math.PI + 90;
+  const pathD = 'M'+x1+' '+y1+' Q'+mx+' '+my+' '+x2+' '+y2;
   $("#aim").innerHTML =
     '<svg width="100%" height="100%" style="position:absolute;inset:0">'+
-    '<defs><marker id="ah" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">'+
-    '<path d="M2 2 L10 6 L2 10 Z" fill="#e7b54a"/></marker></defs>'+
-    '<path d="M'+x1+' '+y1+' Q'+mx+' '+my+' '+x2+' '+y2+'" fill="none" '+
-    'stroke="#e7b54a" stroke-width="5" stroke-dasharray="10 8" stroke-linecap="round" '+
-    'marker-end="url(#ah)" opacity="0.9"/></svg>';
+    '<defs>'+
+    '<linearGradient id="aimLineGrad" x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" gradientUnits="userSpaceOnUse">'+
+    '<stop offset="0%" stop-color="#fff3d0"/><stop offset="55%" stop-color="#e7b54a"/><stop offset="100%" stop-color="#b07d1d"/>'+
+    '</linearGradient>'+
+    '<filter id="aimGlow" x="-60%" y="-60%" width="220%" height="220%">'+
+    '<feGaussianBlur stdDeviation="2.4" result="blur"/>'+
+    '<feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>'+
+    '</filter>'+
+    '</defs>'+
+    '<path d="'+pathD+'" fill="none" stroke="url(#aimLineGrad)" stroke-width="7" '+
+    'stroke-dasharray="3 10" stroke-linecap="round" filter="url(#aimGlow)" opacity="0.95"/>'+
+    '<path d="'+pathD+'" fill="none" stroke="#fff8e4" stroke-width="2" '+
+    'stroke-dasharray="3 10" stroke-linecap="round" opacity="0.6"/>'+
+    '</svg>'+
+    '<div class="aim-head-pivot" style="left:'+x2+'px;top:'+y2+'px;transform:rotate('+headDeg+'deg)">'+
+    '<img class="aim-head-img" src="assets/ui/battle/target_arrow_head.png" alt="">'+
+    '</div>';
 }
 

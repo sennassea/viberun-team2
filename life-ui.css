@@ -77,15 +77,7 @@
 .enemy.hovered .avatar{transform:scale(1.06);}
 .enemy.hovered::after{content:""; position:absolute; top:4.4cqh; left:50%; transform:translateX(-50%);
   width:24cqh; height:28cqh; z-index:16;
-  background:
-    linear-gradient(#e7b54a,#e7b54a) 0    0   /0.35cqh 28% no-repeat,
-    linear-gradient(#e7b54a,#e7b54a) 0    0   /28%  0.35cqh no-repeat,
-    linear-gradient(#e7b54a,#e7b54a) 100% 0   /0.35cqh 28% no-repeat,
-    linear-gradient(#e7b54a,#e7b54a) 100% 0   /28%  0.35cqh no-repeat,
-    linear-gradient(#e7b54a,#e7b54a) 0    100%/0.35cqh 28% no-repeat,
-    linear-gradient(#e7b54a,#e7b54a) 0    100%/28%  0.35cqh no-repeat,
-    linear-gradient(#e7b54a,#e7b54a) 100% 100%/0.35cqh 28% no-repeat,
-    linear-gradient(#e7b54a,#e7b54a) 100% 100%/28%  0.35cqh no-repeat;
+  background:url("assets/ui/battle/target_frame.png") center/100% 100% no-repeat;
   pointer-events:none;}
 .dead{opacity:.0; transition:opacity .4s; pointer-events:none;}
 

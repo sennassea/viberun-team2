@@ -50,14 +50,15 @@
   position: relative;
   grid-column: 1 / -1;
   width: 100%;
+  aspect-ratio: 320 / 103; /* end_turn.png 원본 비율(320x103) */
   right: auto;
   left: auto;
   bottom: auto;
-  height: 4.8cqh;
+  height: auto;
   padding: 0;
   font-size: 0;
   color: transparent;
-  background: transparent url("assets/ui_buttons/end_turn.png") center/100% 100% no-repeat;
+  background: transparent url("assets/ui_buttons/end_turn.png") center/contain no-repeat;
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -69,4 +70,5 @@
   left: auto;
   bottom: auto;
   width: 100%;
+  height: auto;
 }

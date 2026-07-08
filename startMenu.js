@@ -271,11 +271,13 @@ function updateContinueButtonInfo(options={}){
   const saved = options.ignoreSavedProgress ? null : readSavedProgress();
   if(!saved){
     button.classList.remove("has-save");
-    status.textContent = "신령의 은혜";
+    status.hidden = true;
+    status.textContent = "";
     return;
   }
 
   button.classList.add("has-save");
+  status.hidden = false;
   const label = formatSavedProgressLabel(saved);
   const turn = saved.state && saved.state.turn ? saved.state.turn : 1;
   status.textContent = label + " / " + turn + "턴";

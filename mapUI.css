@@ -45,7 +45,7 @@
   color: #3b2a0a;
   white-space: nowrap;
   flex-shrink: 0;
-  transform: translate(2.6cqw, 1.2cqh);
+  transform: translate(2.6cqw, 1.1cqh);
 }
 .dmap-loc-icon { display: none; }
 .dmap-loc-floor {
@@ -118,6 +118,28 @@
   font-size: 1.8cqh;
 }
 
+.dmap-playtime {
+  /* 닫기 버튼과 같은 줄에 표시되는 현재까지 플레이 타임. 닫기 버튼이 translateY(1.1cqh)만큼
+     내려가 있으므로 같은 값을 줘서 가로로 나란히 정렬되어 보이게 한다.
+     닫기 버튼 자체는 translateX(-1.6cqw)로 왼쪽으로 겹쳐 들어오므로, 그만큼+여유를
+     margin-right로 비워둬야 서로 겹치지 않는다. */
+  display: flex;
+  align-items: center;
+  gap: 0.5cqw;
+  font-size: 2.2cqh;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #3b2a0a;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 3.5cqw;
+  transform: translateY(1.1cqh);
+}
+.dmap-playtime-icon {
+  font-size: 1.9cqh;
+}
+
 .dmap-close {
   width: 4.6cqh;
   height: 4.6cqh;
@@ -131,10 +153,10 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  /* .dmap-loc-badge가 배경 플레이트 중앙에 오도록 translateY(1.2cqh)만큼 내려가 있어서,
+  /* .dmap-loc-badge가 배경 플레이트 중앙에 오도록 translateY(1.1cqh)만큼 내려가 있어서,
      같은 헤더 줄에 있는 닫기 버튼도 같은 만큼 내려 두 요소의 세로선을 맞춘다.
      가로로는 프레임 우상단 장식(구름/매듭 문양)과 겹쳐서 왼쪽으로 살짝 밀어낸다. */
-  transform: translate(-1.6cqw, 1.2cqh);
+  transform: translate(-1.6cqw, 1.1cqh);
   transition: transform 0.12s;
 }
 .map-close.dmap-close:hover {
