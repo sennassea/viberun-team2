@@ -496,8 +496,8 @@
       ".settings-viewer.show{display:grid;}" +
       ".settings-viewer.start-mode{z-index:300!important;}" +
       ".settings-viewer-panel{position:relative;width:min(86cqw,124cqh);max-height:86cqh;display:flex;flex-direction:column;background:transparent url('assets/ui/settings/outer_panel.png') center/100% 100% no-repeat;border:0;border-radius:1.6cqh;box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:3.2cqh 3cqw 2.8cqh;}" +
-      ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding-top:1.6cqh;padding-bottom:1.2cqh;}" +
-      ".settings-viewer-head h2{font-size:3.8cqh;line-height:1;flex:1;color:#4a2b07;}" +
+      ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding:7cqh 5cqw 1.2cqh;}" +
+      ".settings-viewer-head h2{font-size:4.8cqh;line-height:1;flex:1;color:#4a2b07;}" +
       ".settings-viewer-help{width:4.4cqh;height:4.4cqh;border:0;background:transparent url('assets/ui/settings/help.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
       ".settings-viewer-close{width:4.8cqh;height:4.8cqh;border:0;background:transparent url('assets/ui/settings/close.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
       ".settings-viewer-body{padding:2cqh 0 0;min-height:18cqh;display:flex;flex-direction:column;gap:2cqh;}" +
