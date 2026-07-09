@@ -56,7 +56,7 @@ async function endTurn(){
   renderAll();
   await wait(250);
 
-  if(S.player.hp<=0 && !tryApplyFatalRelic()) return endGame("lose");
+  if(S.player.hp<=0 && !tryApplyFatalRelic()) return playDeathThenEndGame();
 
   // 생존 적을 spawnIndex 순서대로 행동 (기획서 §8-5)
   const actingEnemies = livingEnemies().sort((a,b) => (a.spawnIndex||0)-(b.spawnIndex||0));
@@ -105,7 +105,7 @@ async function endTurn(){
     notifyMonsterBattleEvent("enemyActionEnd", { enemy:e, move:mv });
     decayEnemyStatuses(e, "afterEnemyAction");
     renderAll();
-    if(S.player.hp<=0 && !tryApplyFatalRelic()) return endGame("lose");
+    if(S.player.hp<=0 && !tryApplyFatalRelic()) return playDeathThenEndGame();
     await wait(450);
   }
 
@@ -177,6 +177,22 @@ async function endTurn(){
      typeof window.TUTORIAL_BATTLE.onEnemyTurnCompleted === "function"){
     window.TUTORIAL_BATTLE.onEnemyTurnCompleted();
   }
+}
+
+/* 플레이어 사망 시 패배 연출(동자신 대사/여정 요약 오버레이 등)로 넘어가기 전,
+   1) 치명타로 트리거된 피격(damage) 모션이 있으면 끝까지 재생되도록 기다리고
+   2) 그 다음 dead 스탠딩 이미지로 쓰러진 모습을 지정 시간만큼 보여준 뒤
+   3) endGame("lose")을 호출한다.
+   순서를 지키지 않으면 피격 모션이 끝나기도 전에 dead 모션으로 덮어써져
+   두 모션이 뒤섞이거나 죽는 연출이 묻혀 보이지 않는 문제가 있었다. */
+async function playDeathThenEndGame(){
+  const durations = (typeof PLAYER_BATTLE_MOTION_DURATION !== "undefined") ? PLAYER_BATTLE_MOTION_DURATION : null;
+  if(S.playerBattleMotion === "damage" && durations && durations.damage){
+    await wait(durations.damage);
+  }
+  if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("dead");
+  await wait((durations && durations.dead) || 1500);
+  return endGame("lose");
 }
 
 function endGame(result){

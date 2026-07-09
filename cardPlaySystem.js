@@ -724,8 +724,8 @@ async function playCard(handIndex, targetEnemy){
   }
   if(card.type === "attack"){
     applyPreAttackCardGimmicks(targetEnemy);
-    if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("attack");
   }
+  if(card.type !== "status" && typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("attack");
   const relicCardContext = { cardUid:cardInstance.uid, cardKey:key, card, handIndex, target:targetEnemy, bonusDamage:0 };
   S.spellTypesPlayedThisTurn = S.spellTypesPlayedThisTurn || {};
   S.spellTypesPlayedThisTurn[card.type] = true;
@@ -1035,6 +1035,8 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
   } else {
     if((result.hpLoss || 0) > 0){
       if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("damage");
+    } else if((result.absorbed || 0) > 0){
+      if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("block");
     }
     if(result.hpLoss > 0){
       if(S && S.scoreRuntime){

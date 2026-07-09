@@ -260,20 +260,25 @@ function renderIntents(){
   }).join("");
   $("#intentList").innerHTML = html || '<div class="eff-empty">성불 완료</div>';
 }
-/* 플레이어 공격/피격 모션: idle → attack/damage 스탠딩 이미지로 잠깐 전환하고
-   .motion-attack/.motion-damage 클래스로 살짝 확대+이동하는 CSS 애니메이션을 재생한 뒤
-   지정 시간이 지나면 자동으로 idle 상태로 되돌린다(life-ui.css의 keyframes 참고). */
-const PLAYER_BATTLE_MOTION_DURATION = { attack:750, damage:650 };
+/* 플레이어 공격/피격/방어성공/사망 모션: idle → attack/damage/block/dead 스탠딩 이미지로 전환하고
+   .motion-attack/.motion-damage/.motion-block/.motion-dead 클래스로 CSS 애니메이션을 재생한 뒤
+   지정 시간이 지나면 자동으로 idle 상태로 되돌린다(life-ui.css의 keyframes 참고).
+   block(결계로 완전 방어 성공)은 피격 모션과 동일한 재생 시간을 사용한다.
+   dead(사망)는 패배 연출로 바로 이어지므로 idle로 되돌리지 않고 쓰러진 모습을 그대로 유지한다. */
+const PLAYER_BATTLE_MOTION_DURATION = { attack:750, damage:650, block:650, dead:1500 };
 let playerBattleMotionTimer = null;
 function triggerPlayerBattleMotion(type){
   if(!S || !S.player || !PLAYER_BATTLE_MOTION_DURATION[type]) return;
   S.playerBattleMotion = type;
   if(playerBattleMotionTimer) clearTimeout(playerBattleMotionTimer);
-  playerBattleMotionTimer = setTimeout(() => {
-    playerBattleMotionTimer = null;
-    if(S) S.playerBattleMotion = null;
-    renderField();
-  }, PLAYER_BATTLE_MOTION_DURATION[type]);
+  playerBattleMotionTimer = null;
+  if(type !== "dead"){
+    playerBattleMotionTimer = setTimeout(() => {
+      playerBattleMotionTimer = null;
+      if(S) S.playerBattleMotion = null;
+      renderField();
+    }, PLAYER_BATTLE_MOTION_DURATION[type]);
+  }
   renderField();
 }
 
@@ -296,9 +301,13 @@ function renderField(){
   const playerMotion = S.playerBattleMotion || null;
   const playerSprite = playerMotion === "attack" ? resolveBattleStandingImageAttack(equippedSkinId)
     : playerMotion === "damage" ? resolveBattleStandingImageDamage(equippedSkinId)
+    : playerMotion === "block" ? resolveBattleStandingImageBlock(equippedSkinId)
+    : playerMotion === "dead" ? resolveBattleStandingImageDead(equippedSkinId)
     : resolveBattleStandingImage(equippedSkinId);
   const playerSpriteFallback = playerMotion === "attack" ? resolveBattleStandingImageAttack(null)
     : playerMotion === "damage" ? resolveBattleStandingImageDamage(null)
+    : playerMotion === "block" ? resolveBattleStandingImageBlock(null)
+    : playerMotion === "dead" ? resolveBattleStandingImageDead(null)
     : resolveBattleStandingImage(null);
   const playerCls = "player"+(playerMotion ? " motion-"+playerMotion : "");
 

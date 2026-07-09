@@ -80,6 +80,32 @@ function hidePotionActionPanel(){
   hidePotionDiscardButton();
 }
 
+/* 사용/버리기 버튼은 클릭 시점의 약병 아이콘 좌표를 px로 스냅샷해 배치한다.
+   화면 비율(리사이즈/회전/모바일 주소창 접힘 등)이 바뀌면 아이콘은 cqh 기준으로
+   즉시 다시 배치되지만 버튼은 그대로 남아 어긋나므로, 열려 있는 동안은
+   실제 앵커 아이콘을 다시 찾아 위치/높이를 맞춘다. */
+function getActivePotionActionAnchor(){
+  const useBtn = document.querySelector("#potionUseButton");
+  const discardBtn = document.querySelector("#potionDiscardButton");
+  const activeBtn =
+    (useBtn && useBtn.classList.contains("show")) ? useBtn :
+    (discardBtn && discardBtn.classList.contains("show")) ? discardBtn : null;
+  if(!activeBtn) return null;
+  const index = Number(activeBtn.dataset.potionIndex);
+  if(!Number.isFinite(index)) return null;
+  return document.querySelector('#sidePotionSlots [data-potion-index="'+index+'"]');
+}
+
+function repositionPotionActionPanel(){
+  const anchor = getActivePotionActionAnchor();
+  if(!anchor) return;
+  positionPotionActionPanel(anchor);
+}
+
+window.addEventListener("resize", repositionPotionActionPanel);
+window.addEventListener("orientationchange", repositionPotionActionPanel);
+if(window.visualViewport) window.visualViewport.addEventListener("resize", repositionPotionActionPanel);
+
 function ensurePotionUseButton(){
   let btn = document.querySelector("#potionUseButton");
   if(btn) return btn;
