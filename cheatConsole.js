@@ -115,16 +115,19 @@
     return Math.max(0, Math.round(rawDamage * CHEAT_ATK_PLAYER.mul + CHEAT_ATK_PLAYER.add));
   }
 
-  if(typeof applyDamageWithFeedback === "function" && typeof LIFE !== "undefined"){
-    applyDamageWithFeedback = function cheatWrappedApplyDamage(target, rawDamage, attackerWeak){
+  // cheatEnabledFlag가 꺼져 있으면 원본 applyDamageWithFeedback을 건드리지 않는다.
+  // (이전에는 이 가드가 없어서 치트 모드가 꺼진 상태에서도 원본 함수가 항상
+  //  이 단순화 버전으로 교체되어, 유물/축복 트리거·적 처치 감지·플레이어 피격
+  //  모션 등 원본에만 있는 부수효과가 전부 유실되는 버그가 있었다.)
+  // newGame()과 동일하게 원본 함수를 감싸서(wrap) 그대로 호출하고, 피해량만
+  // 가로채 보정한다 — 원본의 나머지 부수효과는 그대로 보존된다.
+  if(cheatEnabledFlag && typeof applyDamageWithFeedback === "function" && typeof LIFE !== "undefined"){
+    const ORIGINAL_APPLY_DAMAGE_WITH_FEEDBACK = applyDamageWithFeedback;
+    applyDamageWithFeedback = function cheatWrappedApplyDamage(target, rawDamage, attackerWeak, options){
       const dmg = (typeof S !== "undefined" && S && target !== S.player)
         ? cheatComputePlayerDamage(rawDamage)
         : rawDamage;
-      const result = LIFE.applyDamage(target, dmg, attackerWeak);
-      const sel = (typeof S !== "undefined" && S && target === S.player) ? '.player' : '[data-id="' + target.id + '"]';
-      if(result.absorbed > 0) spawnFloat(sel, '-' + result.absorbed, 'blk');
-      if(result.hpLoss   > 0) spawnFloat(sel, '-' + result.hpLoss,   'dmg');
-      if(result.absorbed === 0 && result.hpLoss === 0) spawnFloat(sel, '0', 'blk');
+      return ORIGINAL_APPLY_DAMAGE_WITH_FEEDBACK(target, dmg, attackerWeak, options);
     };
   }
 

@@ -19,10 +19,28 @@
 @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-1.4cqh)}}
 .ghost .avatar{opacity:.92; filter:drop-shadow(0 0 1.4cqh rgba(150,200,255,.8));}
 .player{min-width:42cqw; z-index:3; pointer-events:auto;}
-.player .sprite-avatar{width:68.99cqh; height:90.99cqh; display:grid; place-items:end center; overflow:visible;}
-.player .sprite-avatar img{max-width:100%; max-height:100%; object-fit:contain; display:block;
+.player .sprite-avatar{width:68.99cqh; height:90.99cqh; display:grid; place-items:end center; overflow:visible;
+  will-change:transform;}
+.player .sprite-avatar img{width:100%; height:100%; object-fit:contain; display:block;
   transform:translateY(12cqh);
   filter:drop-shadow(0 1.4cqh 1.6cqh rgba(40,70,120,.32));}
+
+/* 플레이어 공격 모션: attack 스탠딩 이미지로 전환된 상태에서 살짝 커지며 앞으로 나갔다가 복귀 */
+.player.motion-attack .avatar{animation:playerAttackLunge .75s cubic-bezier(.25,.85,.35,1.15) both;}
+@keyframes playerAttackLunge{
+  0%   {transform:translateY(0) translateX(0) scale(1);}
+  38%  {transform:translateY(-.8cqh) translateX(3.2cqw) scale(1.13);}
+  62%  {transform:translateY(-.8cqh) translateX(3.2cqw) scale(1.13);}
+  100% {transform:translateY(0) translateX(0) scale(1);}
+}
+/* 플레이어 피격 모션: damage 스탠딩 이미지로 전환된 상태에서 뒤로 살짝 움찔하며 복귀 */
+.player.motion-damage .avatar{animation:playerHitFlinch .65s ease-out both;}
+@keyframes playerHitFlinch{
+  0%   {transform:translateX(0) scale(1); filter:none;}
+  22%  {transform:translateX(-2cqw) scale(.94); filter:brightness(1.5) saturate(.5);}
+  55%  {transform:translateX(.6cqw) scale(.98); filter:brightness(1.1);}
+  100% {transform:translateX(0) scale(1); filter:none;}
+}
 .enemy{min-width:16cqw; height:43cqh; z-index:2; pointer-events:auto;}
 .enemy .avatar{font-size:14.72cqh;}
 .enemy .sprite-avatar{width:18cqh; height:22cqh; display:grid; place-items:end center; overflow:visible;}

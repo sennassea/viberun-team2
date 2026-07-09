@@ -137,7 +137,7 @@ async function endTurn(){
   S.pendingDrawPenalty = 0;
   if(anxietyPenalty>0)  toast("불안으로 주문 뽑기 -1");
   if(drawPenalty>0)     toast("수술등 압박으로 주문 뽑기 -"+drawPenalty);
-  if(lethargyPenalty>0) toast("무기력으로 정신력 -1");
+  if(lethargyPenalty>0) toast("무기력으로 신통력 -1");
   S.turn += 1;
   S.playerTurnActive = true;
   const bonusEnergy = S.nextTurnEnergyBonus || 0;

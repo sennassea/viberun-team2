@@ -200,7 +200,7 @@
   function getTooltipData(anchor) {
     const title = anchor.dataset.tooltipTitle || "";
     const body = anchor.dataset.tooltip || anchor.dataset.globalTooltip || "";
-    if (title || body) return { title, body };
+    if (title || body) return { title, body, wide: anchor.dataset.tooltipWide === "true" };
 
     if (anchor.classList && (anchor.classList.contains("bm-store-skin-card") ||
       anchor.classList.contains("bm-recommended-wide-card") || anchor.classList.contains("bm-recommended-small-card"))) {
@@ -379,6 +379,7 @@
     const tip = ensureTooltip();
     tip.innerHTML = buildHtml(data);
     tip.classList.toggle("is-preview", !!data.isBmPreview);
+    tip.classList.toggle("is-wide", !!data.wide);
     tip.classList.add("is-show");
     positionTooltip(anchor);
   }

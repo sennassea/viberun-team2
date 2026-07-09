@@ -123,6 +123,8 @@
 
       battleProfileIcon: "assets/profile/profile_limited_moonlight_vow_magic_maiden.png",
       battleStandingImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png",
+      battleStandingImageAttack: "assets/skins/skin_limited_moonlight_vow_magic_maiden_attack.png",
+      battleStandingImageDamage: "assets/skins/skin_limited_moonlight_vow_magic_maiden_damage.png",
       mapMarkerImage: "assets/map_icons/player_marker_moonlight_vow_magic_maiden.png",
 
       purchasable: true,
@@ -157,6 +159,8 @@
 
       battleProfileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
       battleStandingImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
+      battleStandingImageAttack: "assets/skins/skin_premium_wolyeong_academy_transfer_attack.png",
+      battleStandingImageDamage: "assets/skins/skin_premium_wolyeong_academy_transfer_damage.png",
       mapMarkerImage: "assets/map_icons/player_marker_wolyeong_academy_transfer.png",
 
       purchasable: true,
@@ -191,6 +195,8 @@
 
       battleProfileIcon: "assets/profile/profile_common_prayer_robe.png",
       battleStandingImage: "assets/skins/skin_common_prayer_robe.png",
+      battleStandingImageAttack: "assets/skins/skin_common_prayer_robe_attack.png",
+      battleStandingImageDamage: "assets/skins/skin_common_prayer_robe_damage.png",
       mapMarkerImage: "assets/map_icons/player_marker_common_prayer_robe.png",
 
       purchasable: true,
@@ -202,6 +208,8 @@
      equippedSkinId가 없거나 매핑에 실패했을 때 이 값으로 fallback합니다. */
   const DEFAULT_PROFILE_ICON = "assets/profile/profile_default.png";
   const DEFAULT_BATTLE_STANDING_IMAGE = "assets/characters/player-temp-cutout.png";
+  const DEFAULT_BATTLE_STANDING_IMAGE_ATTACK = "assets/characters/player-temp-cutout-attack.png";
+  const DEFAULT_BATTLE_STANDING_IMAGE_DAMAGE = "assets/characters/player-temp-cutout-damage.png";
   const DEFAULT_MAP_MARKER_IMAGE = "assets/map_icons/player_marker.png";
 
   /* 주문 팩 탭 임시 구현입니다(작업명: 주문 덱 BM 임시 구현).
@@ -223,6 +231,7 @@
       contentSummary: "한풀이 키워드 주문 / 약병 / 법구 포함",
       icon: "🌙",
       artImage: "assets/ui_panels/bm_store/deck_hanpuri.png",
+      previewImage: "assets/ui_panels/bm_store/deck_hanpuri.png",
       sortOrder: 1,
       purchasable: true,
       dimmed: false,
@@ -421,6 +430,7 @@
       description: "확장덱+스킨 복합 구매 코어 유저",
       imageKey: "moon_charge_premium",
       artImage: "assets/ui_panels/bm_store/moon_charge_premium.png",
+      previewImage: "assets/ui_panels/bm_store/moon_charge_premium.png",
       sortOrder: 4,
       recommendedBadge: "최고 효율",
 
@@ -481,6 +491,12 @@
     },
     getDefaultBattleStandingImage(){
       return DEFAULT_BATTLE_STANDING_IMAGE;
+    },
+    getDefaultBattleStandingImageAttack(){
+      return DEFAULT_BATTLE_STANDING_IMAGE_ATTACK;
+    },
+    getDefaultBattleStandingImageDamage(){
+      return DEFAULT_BATTLE_STANDING_IMAGE_DAMAGE;
     },
     getDefaultMapMarkerImage(){
       return DEFAULT_MAP_MARKER_IMAGE;

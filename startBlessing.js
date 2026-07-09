@@ -823,7 +823,7 @@ function ensureSbStyles(){
     ".sb-card.item-frame-card{display:block;min-height:39cqh;background:transparent;}" +
     ".sb-card.item-frame-card .item-art-layer{font-size:9cqh;}" +
     ".sb-card.item-frame-card .item-name-text{font-size:2.05cqh;}" +
-    ".sb-card.item-frame-card .item-desc-text{font-size:1.5cqh;line-height:1.28;}" +
+    ".sb-card.item-frame-card .item-desc-text{font-size:1.62cqh;line-height:1.28;}" +
     ".sb-card:hover{transform:translateY(-.6cqh);filter:brightness(1.05) drop-shadow(0 .9cqh 1.2cqh rgba(90,65,25,.24));}" +
     ".sb-card-icon{height:12cqh;font-size:12cqh;display:flex;align-items:flex-start;justify-content:center;}" +
     ".sb-card-icon img{width:12cqh;height:12cqh;object-fit:contain;display:block;}" +

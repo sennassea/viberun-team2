@@ -95,7 +95,6 @@ button,
 .settings-viewer-section h3,
 .settings-viewer-confirm-panel h3,
 .settings-viewer-help-head h3,
-.record-page-head h2,
 .record-page-main strong,
 .rr-badge span,
 .rr-choice-titlebar span,
@@ -144,6 +143,11 @@ textarea,
   font-weight: 400;
 }
 
+/* 월영당 안내 문구: Paperozi SemiBold(600)로 두께만 올림 */
+.bm-store-heading p {
+  font-weight: 600 !important;
+}
+
 /* =========================================================================
    포인트 폰트 (경복궁 수문장 제목체)
    1. 게임 타이틀
@@ -166,8 +170,10 @@ textarea,
    18. 각 노드(전투/상점/이벤트/기도터) 프로필 닉네임
    19. 이벤트 UI 제목 (예: 열면 안되는 병실 서랍)
    20. 튜토리얼 대사창 화자명 ('동자신')
+   21. 기록 UI 제목
    ========================================================================= */
 .start-logo-main,
+.record-page-head h2,
 .monthly-pass-claim-title,
 .mailbox-ui-title,
 .bm-store-heading h2,

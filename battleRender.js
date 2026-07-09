@@ -213,7 +213,7 @@ function renderEffects(){
   if(S.player.weak   > 0)        rows.push(eff("assets/status_icons/agitation.png","동요","정화 피해 25% 감소 ("+S.player.weak+"턴)"));
   if((S.player.fracture||0) > 0) rows.push(eff("assets/status_icons/fracture.png","균열","받는 정화 피해 25% 증가 ("+S.player.fracture+"턴)"));
   if((S.player.anxiety||0)  > 0) rows.push(eff("assets/status_icons/anxiety.png","불안","다음 턴 주문 뽑기 -1 ("+S.player.anxiety+"턴)"));
-  if((S.player.lethargy||0) > 0) rows.push(eff("assets/status_icons/lethargy.png","무기력","다음 턴 정신력 -1 ("+S.player.lethargy+"턴)"));
+  if((S.player.lethargy||0) > 0) rows.push(eff("assets/status_icons/lethargy.png","무기력","다음 턴 신통력 -1 ("+S.player.lethargy+"턴)"));
   $("#effList").innerHTML = rows.join("") || '<div class="eff-empty">효과 없음</div>';
 }
 function eff(ico, name, sub){
@@ -260,29 +260,77 @@ function renderIntents(){
   }).join("");
   $("#intentList").innerHTML = html || '<div class="eff-empty">성불 완료</div>';
 }
+/* 플레이어 공격/피격 모션: idle → attack/damage 스탠딩 이미지로 잠깐 전환하고
+   .motion-attack/.motion-damage 클래스로 살짝 확대+이동하는 CSS 애니메이션을 재생한 뒤
+   지정 시간이 지나면 자동으로 idle 상태로 되돌린다(life-ui.css의 keyframes 참고). */
+const PLAYER_BATTLE_MOTION_DURATION = { attack:750, damage:650 };
+let playerBattleMotionTimer = null;
+function triggerPlayerBattleMotion(type){
+  if(!S || !S.player || !PLAYER_BATTLE_MOTION_DURATION[type]) return;
+  S.playerBattleMotion = type;
+  if(playerBattleMotionTimer) clearTimeout(playerBattleMotionTimer);
+  playerBattleMotionTimer = setTimeout(() => {
+    playerBattleMotionTimer = null;
+    if(S) S.playerBattleMotion = null;
+    renderField();
+  }, PLAYER_BATTLE_MOTION_DURATION[type]);
+  renderField();
+}
+
 function renderField(){
   const f = $("#field");
-  f.innerHTML = "";
-  const playerLayer = document.createElement("div");
-  playerLayer.className = "player-layer";
-  const monsterField = document.createElement("div");
-  monsterField.className = "monster-field";
-  f.appendChild(playerLayer);
-  f.appendChild(monsterField);
+  let playerLayer  = f.querySelector(":scope > .player-layer");
+  let monsterField = f.querySelector(":scope > .monster-field");
+  if(!playerLayer || !monsterField){
+    f.innerHTML = "";
+    playerLayer = document.createElement("div");
+    playerLayer.className = "player-layer";
+    monsterField = document.createElement("div");
+    monsterField.className = "monster-field";
+    f.appendChild(playerLayer);
+    f.appendChild(monsterField);
+  }
 
   // 플레이어 (좌측 고정)
   const equippedSkinId = S.playerAppearance ? S.playerAppearance.equippedSkinId : null;
-  playerLayer.appendChild(combatantEl({
-    cls:"player", emoji:S.player.emoji||"👼",
-    sprite:resolveBattleStandingImage(equippedSkinId),
-    spriteFallback:resolveBattleStandingImage(null),
-    name:S.player.name, hp:S.player.hp, maxHp:S.player.maxHp,
-    block:S.player.block, weak:S.player.weak,
-    anxiety:S.player.anxiety, lethargy:S.player.lethargy,
-    x:18, bottom:"0", intent:null, hideHud:true,
-  }));
+  const playerMotion = S.playerBattleMotion || null;
+  const playerSprite = playerMotion === "attack" ? resolveBattleStandingImageAttack(equippedSkinId)
+    : playerMotion === "damage" ? resolveBattleStandingImageDamage(equippedSkinId)
+    : resolveBattleStandingImage(equippedSkinId);
+  const playerSpriteFallback = playerMotion === "attack" ? resolveBattleStandingImageAttack(null)
+    : playerMotion === "damage" ? resolveBattleStandingImageDamage(null)
+    : resolveBattleStandingImage(null);
+  const playerCls = "player"+(playerMotion ? " motion-"+playerMotion : "");
+
+  // 공격/피격 모션 중에는 .avatar에서 scale CSS 애니메이션(playerAttackLunge/playerHitFlinch)이
+  // 재생되는데, 모션과 무관한 renderField() 재호출(피해 처리, 유물 트리거 등)마다 플레이어
+  // 엘리먼트를 통째로 새로 만들면 애니메이션이 매번 0%부터 재시작되어, idle로 되돌리는
+  // 고정 시간 setTimeout(PLAYER_BATTLE_MOTION_DURATION)과 실제 진행률이 어긋난다. 그 결과
+  // idle로 전환되는 순간 애니메이션의 축소 구간(scale<1)에서 스왑되어 캐릭터가 간헐적으로
+  // 작아진 것처럼 보이는 문제가 있었다. 모션/스프라이트 상태가 이전 렌더와 동일하면 기존
+  // 엘리먼트를 그대로 두어(재생성하지 않아) 진행 중인 애니메이션을 건드리지 않는다.
+  const existingPlayerEl = playerLayer.querySelector(":scope > .combatant.player");
+  const canReusePlayerEl = existingPlayerEl
+    && existingPlayerEl.dataset.motionCls === playerCls
+    && existingPlayerEl.dataset.sprite === (playerSprite || "");
+  if(!canReusePlayerEl){
+    if(existingPlayerEl) existingPlayerEl.remove();
+    const el = combatantEl({
+      cls:playerCls, emoji:S.player.emoji||"👼",
+      sprite:playerSprite,
+      spriteFallback:playerSpriteFallback,
+      name:S.player.name, hp:S.player.hp, maxHp:S.player.maxHp,
+      block:S.player.block, weak:S.player.weak,
+      anxiety:S.player.anxiety, lethargy:S.player.lethargy,
+      x:18, bottom:"0", intent:null, hideHud:true,
+    });
+    el.dataset.motionCls = playerCls;
+    el.dataset.sprite = playerSprite || "";
+    playerLayer.appendChild(el);
+  }
 
   // 몬스터 수별 X 배치 (기획서 §9-1)
+  monsterField.innerHTML = "";
   const X_POS = { 1:[55], 2:[42,68], 3:[33,55,78], 4:[24,45,66,87] };
   const xList = X_POS[Math.min(livingEnemies().length, 4)] || X_POS[4];
   let liveIndex = 0;
