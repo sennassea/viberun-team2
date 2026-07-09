@@ -50,6 +50,15 @@
   65%  {transform:translateY(-.6cqh) scale(1.03); filter:brightness(1.15) drop-shadow(0 0 1.4cqh rgba(255,214,150,.55));}
   100% {transform:translateY(0) scale(1); filter:none;}
 }
+/* 플레이어 사망 모션: dead 스탠딩 이미지(주저앉은 패배 포즈)로 전환되며 힘없이 가라앉듯
+   서서히 채도/밝기가 빠지고 살짝 무너져 내린 뒤 그 상태로 멈춘다(패배 연출로 바로 이어지므로
+   idle로 복귀시키지 않음). */
+.player.motion-dead .avatar{animation:playerDefeatCollapse 1.2s cubic-bezier(.4,0,.2,1) both;}
+@keyframes playerDefeatCollapse{
+  0%   {transform:translateY(0) scale(1); filter:none; opacity:1;}
+  45%  {transform:translateY(.8cqh) scale(.97); filter:grayscale(.35) brightness(.88); opacity:1;}
+  100% {transform:translateY(1.4cqh) scale(.94); filter:grayscale(.6) brightness(.72); opacity:.9;}
+}
 .enemy{min-width:16cqw; height:43cqh; z-index:2; pointer-events:auto;}
 .enemy .avatar{font-size:14.72cqh;}
 .enemy .sprite-avatar{width:18cqh; height:22cqh; display:grid; place-items:end center; overflow:visible;}

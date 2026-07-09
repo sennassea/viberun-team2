@@ -56,7 +56,7 @@ async function endTurn(){
   renderAll();
   await wait(250);
 
-  if(S.player.hp<=0 && !tryApplyFatalRelic()) return endGame("lose");
+  if(S.player.hp<=0 && !tryApplyFatalRelic()) return playDeathThenEndGame();
 
   // 생존 적을 spawnIndex 순서대로 행동 (기획서 §8-5)
   const actingEnemies = livingEnemies().sort((a,b) => (a.spawnIndex||0)-(b.spawnIndex||0));
@@ -105,7 +105,7 @@ async function endTurn(){
     notifyMonsterBattleEvent("enemyActionEnd", { enemy:e, move:mv });
     decayEnemyStatuses(e, "afterEnemyAction");
     renderAll();
-    if(S.player.hp<=0 && !tryApplyFatalRelic()) return endGame("lose");
+    if(S.player.hp<=0 && !tryApplyFatalRelic()) return playDeathThenEndGame();
     await wait(450);
   }
 
@@ -177,6 +177,14 @@ async function endTurn(){
      typeof window.TUTORIAL_BATTLE.onEnemyTurnCompleted === "function"){
     window.TUTORIAL_BATTLE.onEnemyTurnCompleted();
   }
+}
+
+/* 플레이어 사망 시 패배 연출(동자신 대사/여정 요약 오버레이 등)로 넘어가기 전,
+   dead 스탠딩 이미지로 쓰러진 모습을 잠깐 보여준 뒤 endGame("lose")을 호출한다. */
+async function playDeathThenEndGame(){
+  if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("dead");
+  await wait((typeof PLAYER_BATTLE_MOTION_DURATION !== "undefined" && PLAYER_BATTLE_MOTION_DURATION.dead) || 1200);
+  return endGame("lose");
 }
 
 function endGame(result){
