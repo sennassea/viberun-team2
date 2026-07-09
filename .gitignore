@@ -8,3 +8,6 @@ android/local.properties
 
 *.apk
 qa/server.log
+qa/inject.js
+qa/runDeck.js
+qa/test_barrier.json
