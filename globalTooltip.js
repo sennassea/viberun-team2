@@ -29,6 +29,9 @@
   let tooltipEl = null;
   let activeAnchor = null;
   let hideTimer = null;
+  /* 클릭/탭으로 띄운 툴팁은 "고정" 상태로 취급해, 마우스가 벗어나거나(PC) 터치가
+     끝나도(모바일) 자동으로 닫히지 않고 다른 곳을 클릭/탭할 때만 닫히게 한다 */
+  let pinned = false;
 
   function ensureTooltip() {
     if (tooltipEl) return tooltipEl;
@@ -386,11 +389,13 @@
 
   function hide() {
     activeAnchor = null;
+    pinned = false;
     if (!tooltipEl) return;
     tooltipEl.classList.remove("is-show");
   }
 
   function scheduleHide() {
+    if (pinned) return;
     window.clearTimeout(hideTimer);
     hideTimer = window.setTimeout(hide, 60);
   }
@@ -402,6 +407,9 @@
   }
 
   document.addEventListener("pointerover", event => {
+    /* 클릭/탭으로 고정된 툴팁은 마우스가 다른 요소 위를 지나가도 바뀌지 않는다 */
+    if (pinned) return;
+
     const nameEl = event.target && typeof event.target.closest === "function"
       ? event.target.closest(".menu-profile-name")
       : null;
@@ -413,6 +421,7 @@
   });
 
   document.addEventListener("pointerout", event => {
+    if (pinned) return;
     if (!activeAnchor) return;
     const next = event.relatedTarget;
     if (next && activeAnchor.contains(next)) return;
@@ -420,11 +429,13 @@
   });
 
   document.addEventListener("focusin", event => {
+    if (pinned) return;
     const anchor = findAnchor(event.target);
     if (anchor) show(anchor);
   });
 
   document.addEventListener("focusout", event => {
+    if (pinned) return;
     if (activeAnchor && activeAnchor.contains(event.target)) scheduleHide();
   });
 
@@ -441,8 +452,13 @@
     }
 
     const anchor = findAnchor(event.target);
-    if (anchor) show(anchor);
-    else hide();
+    if (anchor) {
+      show(anchor);
+      /* 클릭/탭으로 띄운 툴팁은 고정 — 다른 곳을 클릭/탭하기 전까지 유지된다 */
+      pinned = true;
+    } else {
+      hide();
+    }
   }, true);
 
   document.addEventListener("scroll", refresh, true);
