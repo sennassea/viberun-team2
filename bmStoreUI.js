@@ -709,10 +709,10 @@
     const sortedProducts = state.products.slice().sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
     els.body.innerHTML =
+      '<p class="bm-moon-charge-notice">' + escapeHtml(MOON_CHARGE_NOTICE) + '</p>' +
       '<div class="bm-moon-charge-layout">' +
         sortedProducts.map(renderMoonChargeCard).join("") +
-      '</div>' +
-      '<p class="bm-moon-charge-notice">' + escapeHtml(MOON_CHARGE_NOTICE) + '</p>';
+      '</div>';
   }
 
   function renderMoonChargeCard(product){

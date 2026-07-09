@@ -82,17 +82,17 @@
    내용물 높이에 맞춰 위치한다 (선택지 4개까지도 과하게 길어지지 않도록). */
 .event-stage{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; transform:translateY(2cqh); }
 .event-panel-wrap{
-  flex:none; margin-left:0; width:54%; min-width:720px; max-width:1000px; min-height:74cqh; max-height:100%; display:flex;
+  flex:none; margin-left:0; width:54%; min-height:74cqh; max-height:100%; display:flex;
 }
 /* 카드 보상 선택창은 카드 3장이 답답해 보이지 않도록 패널 폭을 조금 더 넓힌다 */
-.event-panel-wrap:has(.event-panel-cardpick){ width:66%; max-width:1180px; }
+.event-panel-wrap:has(.event-panel-cardpick){ width:66%; }
 
 /* ── 본문 패널 ─────────────────────────────────────────────────────────── */
 .event-body{ flex:1; min-height:0; max-height:100%; display:flex; align-items:stretch; justify-content:center; }
 .event-panel{
   flex:1; min-width:0; min-height:0; max-height:100%; display:flex; flex-direction:column; gap:1.3cqh;
   padding:9cqh 3.2cqw; overflow-y:auto;
-  background:transparent url("assets/ui/dialog_panel.png") center/100% 100% no-repeat;
+  background:transparent url("assets/ui/dialog_panel.png") center/cover no-repeat;
   border:0; border-radius:0; box-shadow:none;
 }
 .event-kicker{
@@ -198,7 +198,8 @@
 .event-btn-confirm:disabled{ background:#cfd6cd; border-color:#b3bcae; color:#8a9284; cursor:not-allowed; }
 
 @media (max-width:900px){
-  .event-panel-wrap{ width:100%; min-width:0; max-width:none; margin-left:0; }
+  .event-panel-wrap{ width:100%; margin-left:0; }
+  .event-panel-wrap:has(.event-panel-cardpick){ width:100%; }
   .event-menu-btn{ width:6.4cqh; }
   .event-choice{ width:100%; flex-wrap:wrap; height:auto; min-height:7.2cqh; max-height:none; padding-left:8.2cqh; padding-right:1.2cqw; }
   .event-choice-icon{ left:7.4cqh; transform:translate(-100%, -50%); }

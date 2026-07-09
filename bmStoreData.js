@@ -153,7 +153,7 @@
       imageKey: "skin_premium_wolyeong_academy_transfer",
       previewImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
 
-      profileIcon: "assets/map_icons/player_marker_wolyeong_academy_transfer.png",
+      profileIcon: "assets/profile/profile_premium_wolyeong_academy_transfer.png",
       profileSortOrder: 2,
       profileLabel: "월영학당 전학생",
 
