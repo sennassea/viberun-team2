@@ -25,6 +25,12 @@
   transform:translateY(12cqh);
   filter:drop-shadow(0 1.4cqh 1.6cqh rgba(40,70,120,.32));}
 
+/* 방어 성공(block) 에셋은 캐릭터 주위에 결계 이펙트가 크게 그려져 있어, 같은 캔버스 비율이라도
+   실제 캐릭터가 다른 모션(idle/attack/damage)보다 작게 보인다. 발 위치는 유지한 채(하단 기준
+   확대) 캐릭터 체감 크기를 다른 모션과 맞추기 위해 이 상태에서만 확대한다. 스킨 공통 이슈라
+   전 스킨에 동일하게 적용한다. */
+.player.motion-block .sprite-avatar img{transform-origin:center; transform:translateY(12cqh) scale(1.18);}
+
 /* 플레이어 공격 모션: attack 스탠딩 이미지로 전환된 상태에서 살짝 커지며 앞으로 나갔다가 복귀 */
 .player.motion-attack .avatar{animation:playerAttackLunge .75s cubic-bezier(.25,.85,.35,1.15) both;}
 @keyframes playerAttackLunge{
@@ -42,16 +48,16 @@
   100% {transform:translateX(0) scale(1); filter:none;}
 }
 /* 플레이어 방어 성공 모션(결계로 완전 방어): block 스탠딩 이미지로 전환된 상태에서
-   공격 모션처럼 앞으로 나가지 않고, 신통력 부족 시 흔들리는 연출(dock-energy.css의 shake)처럼
-   제자리에서 살짝 커지며 좌우로 흔들린다. 결계 빛도 과하지 않게 은은한 정도로만 낸다.
-   피격 모션과 재생 시간을 맞춘다. */
+   신통력 부족 시 흔들리는 연출(dock-energy.css의 shake)처럼 좌우로 흔들리되, 공격 모션의
+   전진 거리(3.2cqw)보다 더 앞으로 나가서 결계를 앞세우는 느낌을 준다. 결계 빛도 과하지
+   않게 은은한 정도로만 낸다. 피격 모션과 재생 시간을 맞춘다. */
 .player.motion-block .avatar{animation:playerBlockGuard .65s ease-in-out both;}
 @keyframes playerBlockGuard{
   0%   {transform:translateX(0) scale(1); filter:none;}
-  15%  {transform:translateX(-1cqw) scale(1.06); filter:brightness(1.1) drop-shadow(0 0 1cqh rgba(255,214,150,.45));}
-  35%  {transform:translateX(1cqw) scale(1.06); filter:brightness(1.1) drop-shadow(0 0 1cqh rgba(255,214,150,.45));}
-  55%  {transform:translateX(-.7cqw) scale(1.04); filter:brightness(1.05) drop-shadow(0 0 .7cqh rgba(255,214,150,.3));}
-  75%  {transform:translateX(.4cqw) scale(1.02); filter:brightness(1.02);}
+  15%  {transform:translateX(5.5cqw) scale(1.06); filter:brightness(1.1) drop-shadow(0 0 1cqh rgba(255,214,150,.45));}
+  35%  {transform:translateX(7.2cqw) scale(1.06); filter:brightness(1.1) drop-shadow(0 0 1cqh rgba(255,214,150,.45));}
+  55%  {transform:translateX(6.3cqw) scale(1.04); filter:brightness(1.05) drop-shadow(0 0 .7cqh rgba(255,214,150,.3));}
+  75%  {transform:translateX(1.2cqw) scale(1.02); filter:brightness(1.02);}
   100% {transform:translateX(0) scale(1); filter:none;}
 }
 /* 플레이어 사망 모션: dead 스탠딩 이미지(주저앉은 패배 포즈)로 전환되며 힘없이 가라앉듯
