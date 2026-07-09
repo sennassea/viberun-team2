@@ -184,10 +184,12 @@ function eventShellHtml(){
         '<button type="button" class="event-menu-btn ui-asset-button ui-settings-button" id="eventSettingsBtn"><span class="ico">⚙️</span><span>설정</span></button>' +
       '</div>' +
     '</div>' +
-    '<div class="event-stage">' +
+    '<div class="event-stage" id="eventStage">' +
+      '<div class="event-tip event-tip-left" id="eventTipLeft"></div>' +
       '<div class="event-panel-wrap">' +
         '<div class="event-body" id="eventBody"></div>' +
       '</div>' +
+      '<div class="event-tip event-tip-right" id="eventTipRight"></div>' +
     '</div>'
   );
 }
@@ -276,6 +278,7 @@ function renderEventOverlay(){
   else if(eventState.step === "potionPick") body.innerHTML = eventPotionPickHtml();
   else if(eventState.step === "result") body.innerHTML = eventResultHtml();
   else body.innerHTML = eventChoicesHtml();
+  renderEventPotionTip();
 }
 
 function renderEventHeader(){
@@ -317,6 +320,45 @@ function escapeEventHtml(str){
   ));
 }
 
+/* 이벤트 선택지 중 약병을 얻을 수 있는 효과 타입 (고정 지급 potionSpecific,
+   무작위 지급 potionRandom, 선택 지급 potionChoice 모두 포함) */
+const EVENT_POTION_REWARD_TYPES = ["potionRandom", "potionSpecific", "potionChoice"];
+
+function eventChoiceHasPotionReward(choice){
+  const outcomes = Array.isArray(choice && choice.outcomes) ? choice.outcomes : [];
+  return outcomes.some(o => (Array.isArray(o.effects) ? o.effects : []).some(e => e && EVENT_POTION_REWARD_TYPES.includes(e.type)));
+}
+
+function eventHasPotionReward(ev){
+  return (ev && Array.isArray(ev.choices) ? ev.choices : []).some(eventChoiceHasPotionReward);
+}
+
+/* 휴식 노드 TIP 유령 UI(assets/prayer_icons/ghost_*.png)를 그대로 재사용한다.
+   .event-stage 내부, .event-panel-wrap 바깥의 좌우 여백에 배치되므로
+   이벤트 본문/선택지/결과 태그와는 겹치지 않는다. */
+function renderEventPotionTip(){
+  if(!eventOverlayEl || !eventState) return;
+  const showTip = eventState.step === "choices" && eventHasPotionReward(eventState.event);
+  const tipLeft = eventOverlayEl.querySelector("#eventTipLeft");
+  const tipRight = eventOverlayEl.querySelector("#eventTipRight");
+  if(!tipLeft || !tipRight) return;
+  if(!showTip){
+    tipLeft.innerHTML = "";
+    tipRight.innerHTML = "";
+    tipLeft.classList.remove("show");
+    tipRight.classList.remove("show");
+    return;
+  }
+  tipLeft.innerHTML =
+    '<span class="event-tip-ghost" style="background-image:url(\'assets/prayer_icons/ghost_left.png\')"></span>' +
+    '<span class="event-tip-text"><b>TIP</b> 약병을 이미 3개 보유하고 있다면<br>이벤트 보상 약병을 받을 수 없어요.</span>';
+  tipRight.innerHTML =
+    '<span class="event-tip-text">가방을 열어 미리 약병 칸을 비워두면<br>약병 보상을 받을 수 있어요.</span>' +
+    '<span class="event-tip-ghost" style="background-image:url(\'assets/prayer_icons/ghost_right.png\')"></span>';
+  tipLeft.classList.add("show");
+  tipRight.classList.add("show");
+}
+
 function eventChoicesHtml(){
   const ev = eventState.event;
   const storyHtml = (ev.story || []).map(line => "<p>" + escapeEventHtml(line) + "</p>").join("");
@@ -331,6 +373,21 @@ function eventChoicesHtml(){
   );
 }
 
+/* potionSpecific 효과가 걸린 outcome이 있으면 POTION_DB에서 실제 효과 설명을
+   찾아 choice.desc 아래 줄에 덧붙인다 (choice.desc 문자열 자체는 그대로 유지). */
+function eventChoicePotionEffectDesc(choice){
+  const outcomes = Array.isArray(choice && choice.outcomes) ? choice.outcomes : [];
+  const db = typeof POTION_DB !== "undefined" ? POTION_DB : [];
+  for(const o of outcomes){
+    const effects = Array.isArray(o.effects) ? o.effects : [];
+    const potionEffect = effects.find(e => e && e.type === "potionSpecific");
+    if(!potionEffect) continue;
+    const potion = db.find(p => p.id === potionEffect.potionId);
+    if(potion && potion.desc) return potion.name + " 효과: " + potion.desc;
+  }
+  return "";
+}
+
 function eventChoiceRowHtml(choice, idx){
   const icon = EVENT_CHOICE_ICONS[idx] || "❓";
   const outcomes = Array.isArray(choice.outcomes) ? choice.outcomes : [];
@@ -341,6 +398,10 @@ function eventChoiceRowHtml(choice, idx){
   const outcomesHtml = outcomes.length
     ? '<div class="event-outcomes">' + outcomes.map(eventOutcomeChipHtml).join("") + '</div>'
     : '';
+  const potionEffectDesc = eventChoicePotionEffectDesc(choice);
+  const potionEffectHtml = potionEffectDesc
+    ? '<div class="event-choice-effect">' + colorizeRarityLabels(escapeEventHtml(potionEffectDesc)) + '</div>'
+    : '';
   return (
     '<button type="button" class="event-choice' + (disabledReason ? ' disabled' : '') + '" data-choice-id="' + escapeEventHtml(choice.id) + '"' +
       (disabledReason ? ' disabled aria-disabled="true" title="' + escapeEventHtml(disabledReason) + '"' : '') + '>' +
@@ -348,6 +409,7 @@ function eventChoiceRowHtml(choice, idx){
       '<div class="event-choice-body">' +
         '<div class="event-choice-label">' + escapeEventHtml(choice.label || "") + '</div>' +
         '<div class="event-choice-desc">' + colorizeRarityLabels(escapeEventHtml(choice.desc || "")) + '</div>' +
+        potionEffectHtml +
         lockHtml +
       '</div>' +
       outcomesHtml +
