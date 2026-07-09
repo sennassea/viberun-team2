@@ -80,7 +80,7 @@
 /* ── 무대: 배경은 event-overlay 전체가 담당(전체화면 비주얼 영역),
    이벤트 패널은 화면 중앙 쪽에 띄운다. 패널은 세로로 화면을 꽉 채우지 않고
    내용물 높이에 맞춰 위치한다 (선택지 4개까지도 과하게 길어지지 않도록). */
-.event-stage{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; transform:translateY(2cqh); }
+.event-stage{ position:relative; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; transform:translateY(2cqh); }
 .event-panel-wrap{
   flex:none; margin-left:0; width:54%; min-height:58cqh; max-height:100%; display:flex;
 }
@@ -134,7 +134,29 @@
 .event-choice-body{ flex:0 1 auto; max-width:60%; min-width:0; display:flex; flex-direction:column; gap:.1cqh; padding-right:.1cqw; }
 .event-choice-label{ font-size:1.9cqh; font-weight:900; line-height:1.1; }
 .event-choice-desc{ font-size:1.32cqh; font-weight:700; color:var(--ev-ink-soft); line-height:1.15; }
+.event-choice-effect{ font-size:1.2cqh; font-weight:700; color:var(--ev-gold-deep); line-height:1.15; }
 .event-choice-lock{ font-size:1.32cqh; font-weight:900; color:var(--ev-red-deep); line-height:1.15; }
+
+/* ── 약병 보상 TIP 유령 (휴식 노드 .prayer-tip 재사용, event-stage 여백에 배치) ── */
+.event-tip{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:8;
+  display:none; align-items:center; gap:0; max-width:25cqw; pointer-events:none;
+}
+.event-tip.show{ display:flex; }
+.event-tip-left{ left:-1.4cqw; }
+.event-tip-right{ right:1.6cqw; flex-direction:row-reverse; text-align:right; }
+.event-tip-ghost{
+  flex:none; width:16cqh; height:16cqh; background-position:center; background-size:contain;
+  background-repeat:no-repeat; position:relative; z-index:1;
+}
+.event-tip-left .event-tip-ghost{ margin-right:-1.5cqw; }
+.event-tip-right .event-tip-ghost{ margin-right:-1.8cqw; }
+.event-tip-text{
+  position:relative; z-index:0; font-size:1.5cqh; font-weight:800; color:var(--ev-ink-soft);
+  background:rgba(255,251,240,.88); border-radius:1cqh; padding:.7cqh 1cqw;
+  border:.15cqh solid rgba(178,140,80,.4); line-height:1.35; word-break:keep-all;
+}
+.event-tip-text b{ color:var(--ev-red-deep); margin-right:.3cqw; }
 .event-outcomes{ flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-start; gap:.14cqh; max-width:37%; margin-left:auto; margin-right:15.5%; padding-right:0; }
 .event-outcome-chip{
   display:inline-flex; align-items:center; gap:.18cqw; padding:.16cqh .38cqw; border-radius:.7cqh;
