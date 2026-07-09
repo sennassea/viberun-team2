@@ -22,7 +22,7 @@
 
 .spirit-path-panel{
   position:relative;
-  width:min(118cqh, 98vw);
+  width:min(118cqh, 98cqw);
   max-height:98cqh;
   display:flex;
   flex-direction:column;
@@ -59,8 +59,8 @@
   margin:0;
   font-size:2.72cqh;
   font-weight:900;
-  color:#f9d989;
-  text-shadow:0 .18cqh .3cqh rgba(0,0,0,.6);
+  color:#7a5225;
+  text-shadow:0 .12cqh .2cqh rgba(255, 244, 214, .5);
 }
 
 .spirit-path-desc{
@@ -68,7 +68,7 @@
   font-size:1.06cqh;
   line-height:1.16;
   font-weight:700;
-  color:#d9c196;
+  color:#8a6f4a;
 }
 
 .spirit-path-count{
@@ -135,7 +135,7 @@
   top:-.16cqh;
   z-index:8;
   width:10.7cqh;
-  aspect-ratio:1092 / 619;
+  aspect-ratio:1092 / 651;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -553,7 +553,7 @@
 .spirit-path-main-note{
   margin-top:.3cqh;
   padding-top:0;
-  height:50px;
+  height:4.63cqh;
   overflow:hidden;
   display:flex;
   align-items:center;
@@ -565,11 +565,10 @@
 
 .spirit-path-act-section{
   margin-top:0;
-  padding:.4cqh .78cqh;
-  border:.14cqh solid rgba(230, 190, 110, .62);
-  border-radius:.7cqh;
-  background:linear-gradient(180deg, rgba(27, 68, 60, .58), rgba(14, 36, 31, .66));
-  box-shadow:0 .3cqh .75cqh rgba(0, 0, 0, .3), inset 0 .08cqh 0 rgba(255, 238, 190, .16);
+  padding:0;
+  border:0;
+  background:none;
+  box-shadow:none;
 }
 
 .spirit-path-act-title{
@@ -600,18 +599,15 @@
   top:50%;
   transform:translateY(-50%);
   width:6.86cqh;
-  height:6.86cqh;
-  border:.16cqh solid rgba(240, 202, 121, .8);
-  border-radius:.7cqh;
-  background:linear-gradient(180deg, rgba(255, 241, 199, .32), rgba(196, 140, 58, .26));
-  box-shadow:0 .18cqh .4cqh rgba(0, 0, 0, .35), inset 0 .07cqh 0 rgba(255, 255, 255, .3);
-  color:#fff2c9;
-  text-shadow:0 .12cqh .2cqh rgba(0, 0, 0, .6);
-  font:inherit;
-  font-size:4.02cqh;
-  font-weight:900;
-  line-height:1;
+  border:0;
+  border-radius:0;
+  background-color:transparent;
+  background-position:center;
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+  padding:0;
   cursor:pointer;
+  transition:filter .15s ease;
 }
 
 .spirit-path-depth-arrow::before{
@@ -622,15 +618,22 @@
 
 .spirit-path-depth-arrow[data-depth-step="-1"]{
   left:.5cqh;
+  aspect-ratio:1220 / 1254;
+  background-image:url("assets/ui/spirit_path/arrow_left.png");
 }
 
 .spirit-path-depth-arrow[data-depth-step="1"]{
   right:.5cqh;
+  aspect-ratio:853 / 892;
+  background-image:url("assets/ui/spirit_path/arrow_right.png");
 }
 
 .spirit-path-depth-arrow:not(:disabled):hover{
-  border-color:#fce0a0;
-  background:linear-gradient(180deg, rgba(255, 241, 199, .48), rgba(214, 156, 68, .38));
+  filter:brightness(1.14);
+}
+
+.spirit-path-depth-arrow:not(:disabled):active{
+  filter:brightness(.92);
 }
 
 .spirit-path-depth-arrow:disabled{
@@ -756,8 +759,11 @@
 
 .spirit-path-bottom-center{
   min-width:0;
+  box-sizing:border-box;
+  padding:1cqh 1.6cqh .8cqh;
   word-break:keep-all;
   overflow-wrap:break-word;
+  background:transparent url("assets/ui/spirit_path/journey_panel.png") center/100% 100% no-repeat;
 }
 
 .spirit-path-wallet{
@@ -788,11 +794,14 @@
   align-items:center;
   justify-content:center;
   width:27.18cqh;
-  height:7.02cqh;
-  min-width:27.18cqh;
-  min-height:7.02cqh;
-  border:.14cqh solid rgba(255, 240, 205, .38);
-  border-radius:.65cqh;
+  min-width:0;
+  min-height:0;
+  border:0;
+  border-radius:0;
+  background-position:center;
+  background-size:100% 100%;
+  background-repeat:no-repeat;
+  background-color:transparent;
   font:inherit;
   font-size:3cqh;
   line-height:1;
@@ -801,17 +810,36 @@
   padding:0 2.6cqh;
   flex-shrink:0;
   white-space:nowrap;
-  box-shadow:0 .3cqh .7cqh rgba(0, 0, 0, .32), inset 0 .1cqh 0 rgba(255, 255, 255, .28);
+  box-shadow:none;
+  transition:filter .15s ease;
 }
 
 .spirit-path-back{
-  background:linear-gradient(180deg, #ddc394, #b8935a);
+  aspect-ratio:2017 / 544;
+  background-image:url("assets/ui/spirit_path/back_button.png");
   color:#302010;
 }
 
 .spirit-path-start{
-  background:linear-gradient(180deg,#3b7b70,#22554f);
+  aspect-ratio:2008 / 547;
+  background-image:url("assets/ui/spirit_path/start_journey_button.png");
   color:#fff8dc;
+}
+
+.spirit-path-back:hover{
+  filter:brightness(1.08);
+}
+
+.spirit-path-back:active{
+  filter:brightness(.94);
+}
+
+.spirit-path-start:not(:disabled):hover{
+  filter:brightness(1.08);
+}
+
+.spirit-path-start:not(:disabled):active{
+  filter:brightness(.94);
 }
 
 .spirit-path-start:disabled{
@@ -877,11 +905,10 @@
 
   .spirit-path-back,
   .spirit-path-start{
-    width:clamp(134px, 27.18cqh, 180px);
-    height:clamp(60px, 7.02cqh, 70px);
-    min-width:clamp(134px, 27.18cqh, 180px);
-    min-height:clamp(60px, 7.02cqh, 70px);
-    font-size:clamp(16px, 2.4cqh, 24px);
+    width:27.18cqh;
+    min-width:0;
+    min-height:0;
+    font-size:2.4cqh;
     padding:0 1.8cqh;
   }
 
@@ -897,8 +924,8 @@
     font-size:1.18cqh;
   }
 
-  .spirit-path-act-section{
-    padding:.28cqh .5cqh;
+  .spirit-path-bottom-center{
+    padding:.7cqh 1.1cqh .55cqh;
   }
 
   .spirit-path-depth-selector{
@@ -908,8 +935,6 @@
 
   .spirit-path-depth-arrow{
     width:5.88cqh;
-    height:5.88cqh;
-    font-size:3.63cqh;
   }
 
   .spirit-path-depth-title{
@@ -932,13 +957,13 @@
 
 @media (max-width: 1100px){
   .spirit-path-panel{
-    width:min(112cqh, 96vw);
+    width:min(112cqh, 96cqw);
   }
 }
 
 @media (max-width: 820px){
   .spirit-path-panel{
-    width:96vw;
+    width:min(112cqh, 96cqw);
   }
 
   .spirit-path-main-content{

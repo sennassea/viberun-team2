@@ -1235,7 +1235,8 @@
     var gRect = getPositionOrigin(isCardOutsideGame(cardEl));
     var cRect = cardEl.getBoundingClientRect();
     var pad = 10;
-    var previewWidth = Math.max(220, Math.min(window.innerWidth * 0.22, window.innerHeight * 0.32, 360));
+    var previewWidth = Math.min(gRect.width * 0.22, gRect.height * 0.30, 360);
+    previewWidth = Math.max(Math.min(gRect.width * 0.14, 150), previewWidth);
 
     subCardPreview.style.width = previewWidth + "px";
     var pRect = subCardPreview.getBoundingClientRect();

@@ -230,7 +230,7 @@
         '<h2 class="spirit-path-act-title">시작 여정</h2>' +
         '<p class="spirit-path-act-desc">클리어한 끝없는 여정까지 선택할 수 있습니다.</p>' +
         '<div class="spirit-path-depth-selector">' +
-          '<button type="button" class="spirit-path-depth-arrow" data-depth-step="-1"' + (currentIndex <= 0 ? ' disabled' : '') + ' aria-label="이전 심도">‹</button>' +
+          '<button type="button" class="spirit-path-depth-arrow" data-depth-step="-1"' + (currentIndex <= 0 ? ' disabled' : '') + ' aria-label="이전 심도"></button>' +
           '<div class="spirit-path-depth-body">' +
             '<strong class="spirit-path-depth-title">' + escapeHtml(title) + '</strong>' +
             '<div class="spirit-path-depth-value">' + escapeHtml(value) + '</div>' +
@@ -238,7 +238,7 @@
             '<p class="spirit-path-depth-effect-desc">' + escapeHtml(effectDesc) + '</p>' +
             '<p class="spirit-path-depth-cumulative-note">' + escapeHtml(cumulativeNote) + '</p>' +
           '</div>' +
-          '<button type="button" class="spirit-path-depth-arrow" data-depth-step="1"' + (currentIndex >= levels.length - 1 ? ' disabled' : '') + ' aria-label="다음 심도">›</button>' +
+          '<button type="button" class="spirit-path-depth-arrow" data-depth-step="1"' + (currentIndex >= levels.length - 1 ? ' disabled' : '') + ' aria-label="다음 심도"></button>' +
         '</div>' +
       '</div>'
     );
