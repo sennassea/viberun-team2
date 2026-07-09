@@ -205,6 +205,13 @@ function ensureRunScoreStats(){
     };
   }
 
+  // 심도별 원점수 누적 (ACT1은 "0"). recomputeRunScoreTotal()이 심도 가중치를
+  // 곱할 때 이 버킷 단위로 계산한다 - 이미 지난 심도의 점수는 나중에 심도가
+  // 올라가도 다시 계산되지 않는다.
+  if(!stats.scoreByDepth || typeof stats.scoreByDepth !== "object"){
+    stats.scoreByDepth = {};
+  }
+
   if(!Array.isArray(stats.nodeScores)) stats.nodeScores = [];
   if(!stats.completedScoreKeys) stats.completedScoreKeys = {};
   if(!Array.isArray(stats.route)) stats.route = [{ stageIndex: -1, type: "start", score: 0, completed: true }];
@@ -221,20 +228,52 @@ function ensureRunScoreStats(){
   return stats;
 }
 
+/* 현재 원점수가 귀속되는 심도. ACT1(또는 아직 끝없는 여정에 진입하지 않은 상태)은
+   항상 0 - getEndlessScoreWeightForLevel(0)이 x1.00을 반환한다. */
+function getCurrentScoreDepthLevel(){
+  if(!RUN_STATE || !RUN_STATE.journey) return 0;
+  if(RUN_STATE.journey.mode !== "endless") return 0;
+  const level = Number(RUN_STATE.journey.endlessLevel);
+  return Number.isFinite(level) && level > 0 ? level : 0;
+}
+
+/* 원점수를 심도별 버킷에도 함께 누적한다. scoreBreakdown[category] 갱신 직후
+   호출해야 두 값이 항상 같은 합을 유지한다. */
+function addScoreToCurrentDepthBucket(stats, amount){
+  const safeAmount = safeRunScoreNumber(amount, 0);
+  if(!stats || safeAmount === 0) return;
+  const depthKey = String(getCurrentScoreDepthLevel());
+  stats.scoreByDepth[depthKey] = safeRunScoreNumber(stats.scoreByDepth[depthKey], 0) + safeAmount;
+}
+
+/* 최종 점수 = Σ(심도별 원점수 × 해당 심도 가중치), ACT1(심도0)은 항상 x1.00.
+   이미 지난 심도에서 획득한 점수는 이후 심도가 올라가도 다시 계산되지 않는다
+   (scoreByDepth가 심도별로 분리 저장되어 있으므로 자연히 보장됨).
+   내부 계산은 소수점을 유지하고, 최종 표시값(b.total)만 1회 반올림(버림)한다. */
 function recomputeRunScoreTotal(){
   const stats = ensureRunScoreStats();
   if(!stats) return 0;
 
   const b = stats.scoreBreakdown;
-  b.total =
+  b.rawTotal = Math.floor(
     safeRunScoreNumber(b.nodeProgress, 0) +
     safeRunScoreNumber(b.act1Clear, 0) +
     safeRunScoreNumber(b.monsterKill, 0) +
     safeRunScoreNumber(b.combatPerformance, 0) +
     safeRunScoreNumber(b.bossEndHp, 0) +
-    safeRunScoreNumber(b.journeyAction, 0);
+    safeRunScoreNumber(b.journeyAction, 0)
+  );
 
-  b.total = Math.floor(b.total);
+  let weightedTotal = 0;
+  Object.keys(stats.scoreByDepth).forEach(depthKey => {
+    const depthScore = safeRunScoreNumber(stats.scoreByDepth[depthKey], 0);
+    const weight = typeof getEndlessScoreWeightForLevel === "function"
+      ? getEndlessScoreWeightForLevel(Number(depthKey))
+      : 1;
+    weightedTotal += depthScore * weight;
+  });
+
+  b.total = Math.floor(weightedTotal);
   return b.total;
 }
 
@@ -306,6 +345,7 @@ function addRunNodeScore({ key, stageIndex, type, score, category, label, reason
 
   if(!stats.scoreBreakdown[entry.category]) stats.scoreBreakdown[entry.category] = 0;
   stats.scoreBreakdown[entry.category] += safeScore;
+  addScoreToCurrentDepthBucket(stats, safeScore);
 
   if(entry.category === "nodeProgress"){
     addRunRouteScore(entry.stageIndex, entry.type, safeScore);
@@ -394,6 +434,7 @@ function addCombatPerformanceScore(score){
 
   stats.combatPerformanceTotal = current + add;
   stats.scoreBreakdown.combatPerformance += add;
+  addScoreToCurrentDepthBucket(stats, add);
   recomputeRunScoreTotal();
 
   return add;
@@ -445,6 +486,7 @@ function recordJourneyActionScore(action, options = {}){
   counts[countKey] += 1;
 
   stats.scoreBreakdown.journeyAction += add;
+  addScoreToCurrentDepthBucket(stats, add);
 
   stats.nodeScores.push({
     key: "journey:" + action + ":" + counts[countKey],
