@@ -193,6 +193,17 @@
     return year + "-" + month + "-" + day;
   }
 
+  /* KST 달력 날짜의 자정(00:00 KST) 시각을 ms로 반환합니다.
+     시/분/초를 버리고 날짜만 비교해야 "서버 날짜가 하루 지났는지"를
+     정확히 판단할 수 있습니다 (구매 시각의 시/분에 좌우되지 않도록). */
+  function kstMidnightMs(time){
+    return Date.parse(getKstDateKey(time) + "T00:00:00.000+09:00");
+  }
+
+  function kstCalendarDaysDiff(fromTime, toTime){
+    return Math.round((kstMidnightMs(toTime) - kstMidnightMs(fromTime)) / 86400000);
+  }
+
   function normalizeMonthlyPass(row){
     const source = row && typeof row === "object" ? row : {};
     const expiresAtTime = source.expires_at ? Date.parse(source.expires_at) : 0;
@@ -202,7 +213,7 @@
     const claimedDays = Math.max(0, Math.floor(Number(source.claimed_days) || 0));
     const todayKey = getKstDateKey(Date.now());
     const lastClaimDate = source.last_claim_date ? String(source.last_claim_date) : "";
-    const daysRemaining = active ? Math.max(0, Math.ceil((expiresAtTime - Date.now()) / 86400000)) : durationDays;
+    const daysRemaining = active ? Math.max(0, kstCalendarDaysDiff(Date.now(), expiresAtTime)) : durationDays;
 
     return {
       active,

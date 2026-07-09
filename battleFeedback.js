@@ -38,7 +38,7 @@ function injectRewardStyles(){
     #cardRewardOverlay.blessing-card-reward .reward-panel{width:min(74cqw,98cqh);box-sizing:border-box;padding:3.2cqh 5.2cqw 5cqh;border:0;border-radius:0;background:transparent url("assets/ui_panels/codex_popup_frame.png") center/100% 100% no-repeat;box-shadow:none;}
     #cardRewardOverlay.blessing-card-reward .reward-panel h2{color:#3e2912;text-shadow:0 .08cqh 0 rgba(255,255,255,.85);}
     #cardRewardOverlay.blessing-card-reward .reward-panel p{color:#5c3c10;font-weight:800;text-shadow:0 .06cqh 0 rgba(255,255,255,.75);}
-    #cardRewardOverlay.blessing-card-reward .reward-cards{margin-bottom:0;}
+    #cardRewardOverlay.blessing-card-reward .reward-cards{margin-top:4.8cqh;margin-bottom:1.6cqh;}
     .reward-panel h2{font-size:3.2cqh;margin-bottom:.8cqh;color:#3a2814;font-weight:900;}
     .reward-panel p{font-size:1.7cqh;color:#6b5236;margin-bottom:2cqh;}
     .reward-cards{display:flex;justify-content:center;align-items:stretch;gap:1.4cqw;margin-bottom:1.6cqh;}
