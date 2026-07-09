@@ -447,9 +447,13 @@
       '<section class="spirit-path-panel" role="dialog" aria-modal="true" aria-label="신령의 길">' +
         '<div class="spirit-path-main-frame">' +
           '<div class="spirit-path-main-content">' +
-            '<h1 class="spirit-path-title">신령의 길</h1>' +
-            '<p class="spirit-path-desc">당신을 인도할 길을 선택하세요.<br>당신이 선택한 길에 따라 이번 정화 여정 운명이 정해집니다</p>' +
-            '<div class="spirit-path-count">' + selectedDeckIds.length + '/' + REQUIRED_SELECTION_COUNT + ' 선택 완료</div>' +
+            '<div class="spirit-path-header-row">' +
+              '<div class="spirit-path-title-group">' +
+                '<h1 class="spirit-path-title">신령의 길</h1>' +
+                '<p class="spirit-path-desc">당신을 인도할 길을 선택하세요.<br>당신이 선택한 길에 따라 이번 정화 여정 운명이 정해집니다</p>' +
+              '</div>' +
+              '<div class="spirit-path-count">' + selectedDeckIds.length + '/' + REQUIRED_SELECTION_COUNT + ' 선택 완료</div>' +
+            '</div>' +
             '<div class="spirit-path-card-list">' + cardsHtml + '</div>' +
             '<p class="spirit-path-note spirit-path-main-note">※ 범용 주문, 약병, 법구는 항상 이번 여정에 포함됩니다.</p>' +
           '</div>' +

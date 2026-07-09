@@ -49,10 +49,24 @@
 
 .spirit-path-main-content{
   position:relative;
-  padding:3.2cqh 5.3cqh 1.4cqh;
+  padding:3.2cqh 3.4cqh 1.4cqh;
   display:flex;
   flex-direction:column;
   box-sizing:border-box;
+}
+
+.spirit-path-header-row{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:1.2cqh;
+  margin-bottom:.54cqh;
+}
+
+.spirit-path-title-group{
+  min-width:0;
+  max-width:56cqh;
 }
 
 .spirit-path-title{
@@ -64,7 +78,7 @@
 }
 
 .spirit-path-desc{
-  margin:.34cqh 0 .46cqh;
+  margin:.34cqh 0 0;
   font-size:1.06cqh;
   line-height:1.16;
   font-weight:700;
@@ -72,8 +86,12 @@
 }
 
 .spirit-path-count{
+  position:absolute;
+  right:1.9cqh;
+  top:50%;
+  transform:translateY(-50%);
   width:max-content;
-  margin:0 auto .54cqh;
+  margin:0;
   padding:.28cqh 1.3cqh;
   border:.13cqh solid rgba(230, 190, 110, .68);
   border-radius:999px;
@@ -277,7 +295,8 @@
   position:relative;
   z-index:2;
   display:grid;
-  grid-template-columns:minmax(0, 2.1fr) minmax(0, .55fr) minmax(0, .55fr);
+  grid-template-columns:minmax(0, 2.1fr) minmax(0, .55fr);
+  grid-template-rows:repeat(2, minmax(0, 1fr));
   gap:.24cqh;
   align-items:start;
   min-height:0;
@@ -287,6 +306,21 @@
 .spirit-path-preview-section{
   min-height:0;
   min-width:0;
+}
+
+.spirit-path-preview-section--cards{
+  grid-column:1;
+  grid-row:1 / -1;
+}
+
+.spirit-path-preview-section--relics{
+  grid-column:2;
+  grid-row:1;
+}
+
+.spirit-path-preview-section--potions{
+  grid-column:2;
+  grid-row:2;
 }
 
 .spirit-path-preview-title{
@@ -534,7 +568,7 @@
 .spirit-path-journey-panel{
   position:relative;
   width:100%;
-  padding:.85cqh 2.15cqh .85cqh;
+  padding:.85cqh 1.4cqh .85cqh;
   aspect-ratio:2121 / 451;
   box-sizing:border-box;
   display:flex;
@@ -750,11 +784,13 @@
 }
 
 .spirit-path-bottom-side--left{
-  justify-content:flex-start;
+  justify-content:flex-end;
+  padding-right:3.4cqh;
 }
 
 .spirit-path-bottom-side--right{
-  justify-content:flex-end;
+  justify-content:flex-start;
+  padding-left:3.4cqh;
 }
 
 .spirit-path-bottom-center{
@@ -967,7 +1003,15 @@
   }
 
   .spirit-path-main-content{
-    padding:2.7cqh 4.4cqh 1.2cqh;
+    padding:2.7cqh 3.2cqh 1.2cqh;
+  }
+
+  .spirit-path-header-row{
+    flex-direction:column;
+  }
+
+  .spirit-path-title-group{
+    max-width:100%;
   }
 
   .spirit-path-desc{
@@ -976,8 +1020,10 @@
   }
 
   .spirit-path-count{
+    position:static;
+    transform:none;
     font-size:1.78cqh;
-    margin-bottom:.34cqh;
+    margin:.34cqh 0 0;
     padding:.22cqh 1cqh;
   }
 
