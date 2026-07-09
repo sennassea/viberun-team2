@@ -351,7 +351,30 @@ const BATTLE_VICTORY_POTION_CANDIDATES = (typeof window.POTION_DB !== "undefined
   { id:"ghost_gate_talisman", name:"귀문부", icon:"符", emoji:"符", desc:"이번 턴 다음 공격 주문의 정화량이 2배가 됩니다.", type:"nextAttackDouble", effect:"nextAttackDouble", value:2, target:"player" },
 ];
 
-function chooseRewardCard(key){
+let selectedRewardCardKey = null;
+
+/* 카드를 탭/클릭하면 즉시 지급하지 않고 "선택" 상태만 표시한다.
+   실제 지급은 confirmRewardCard()(하단 "받기" 버튼)에서만 처리한다. */
+function selectRewardCard(key){
+  selectedRewardCardKey = key;
+  const ov = document.querySelector("#cardRewardOverlay");
+  if(!ov) return;
+  ov.querySelectorAll(".reward-card").forEach(btn =>
+    btn.classList.toggle("selected", btn.dataset.card === key)
+  );
+  updateRewardConfirmButton(ov);
+}
+
+function updateRewardConfirmButton(ov){
+  const btn = ov && ov.querySelector(".reward-confirm");
+  if(!btn) return;
+  btn.disabled = !selectedRewardCardKey;
+  btn.classList.toggle("active", !!selectedRewardCardKey);
+}
+
+function confirmRewardCard(){
+  if(!selectedRewardCardKey) return;
+  const key = selectedRewardCardKey;
   if(cardRewardPickMode){
     resolveCardRewardPick(key);
     return;
@@ -820,10 +843,14 @@ function ensureRewardOverlay(){
       '<h2>정화 보상</h2>' +
       '<p>새로운 주문 1장을 선택해 덱에 추가하세요.</p>' +
       '<div class="reward-cards"></div>' +
-      '<button type="button" class="reward-skip">건너뛰기</button>' +
+      '<div class="reward-actions">' +
+        '<button type="button" class="reward-skip">건너뛰기</button>' +
+        '<button type="button" class="reward-confirm" disabled>받기</button>' +
+      '</div>' +
     '</div>';
   document.querySelector("#game").appendChild(ov);
   ov.querySelector(".reward-skip").addEventListener("click", skipRewardCard);
+  ov.querySelector(".reward-confirm").addEventListener("click", confirmRewardCard);
   return ov;
 }
 
@@ -833,8 +860,10 @@ function renderRewardOverlay(keys){
   const ov   = ensureRewardOverlay();
   const wrap = ov.querySelector(".reward-cards");
   wrap.innerHTML = keys.map(rewardCardHtml).join("");
+  selectedRewardCardKey = null;
+  updateRewardConfirmButton(ov);
   wrap.querySelectorAll(".reward-card").forEach(btn =>
-    btn.addEventListener("click", () => chooseRewardCard(btn.dataset.card))
+    btn.addEventListener("click", () => selectRewardCard(btn.dataset.card))
   );
   ov.classList.add("show");
 }
@@ -896,6 +925,7 @@ function rewardCardHtml(key){
 }
 
 function closeRewardOverlay(){
+  selectedRewardCardKey = null;
   const ov = document.querySelector("#cardRewardOverlay");
   if(ov) ov.classList.remove("show", "blessing-card-reward");
   const victoryOv = document.querySelector("#battleVictoryOverlay");

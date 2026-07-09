@@ -1,0 +1,92 @@
+/* =============================================================================
+   공통 스크롤 디자인
+   기준: 보유 주문 창(.deck-viewer-grid)의 스크롤 디자인.
+   기본 브라우저 스크롤바가 노출되던 팝업/목록들에 동일한 톤을 일괄 적용한다.
+   ========================================================================= */
+.bag-ui-body,
+.battle-card-choice-cards,
+.bm-store-body,
+.bm-purchase-deck-scroll,
+.debug-command-list,
+.card-detail-scroll,
+.event-panel,
+.mailbox-ui-body,
+.menu-profile-popup,
+.settings-viewer-help-content,
+.prayer-body,
+.ranking-page-body,
+.tutorial-battle-help-content,
+.shop-products{
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(180,140,70,.65) rgba(70,45,20,.12);
+}
+.bag-ui-body::-webkit-scrollbar,
+.battle-card-choice-cards::-webkit-scrollbar,
+.bm-store-body::-webkit-scrollbar,
+.bm-purchase-deck-scroll::-webkit-scrollbar,
+.debug-command-list::-webkit-scrollbar,
+.card-detail-scroll::-webkit-scrollbar,
+.event-panel::-webkit-scrollbar,
+.mailbox-ui-body::-webkit-scrollbar,
+.menu-profile-popup::-webkit-scrollbar,
+.settings-viewer-help-content::-webkit-scrollbar,
+.prayer-body::-webkit-scrollbar,
+.ranking-page-body::-webkit-scrollbar,
+.tutorial-battle-help-content::-webkit-scrollbar,
+.shop-products::-webkit-scrollbar{
+  width:.9cqh;
+}
+.bag-ui-body::-webkit-scrollbar-track,
+.battle-card-choice-cards::-webkit-scrollbar-track,
+.bm-store-body::-webkit-scrollbar-track,
+.bm-purchase-deck-scroll::-webkit-scrollbar-track,
+.debug-command-list::-webkit-scrollbar-track,
+.card-detail-scroll::-webkit-scrollbar-track,
+.event-panel::-webkit-scrollbar-track,
+.mailbox-ui-body::-webkit-scrollbar-track,
+.menu-profile-popup::-webkit-scrollbar-track,
+.settings-viewer-help-content::-webkit-scrollbar-track,
+.prayer-body::-webkit-scrollbar-track,
+.ranking-page-body::-webkit-scrollbar-track,
+.tutorial-battle-help-content::-webkit-scrollbar-track,
+.shop-products::-webkit-scrollbar-track{
+  background:rgba(70,45,20,.12);
+  border-radius:1cqh;
+}
+.bag-ui-body::-webkit-scrollbar-thumb,
+.battle-card-choice-cards::-webkit-scrollbar-thumb,
+.bm-store-body::-webkit-scrollbar-thumb,
+.bm-purchase-deck-scroll::-webkit-scrollbar-thumb,
+.debug-command-list::-webkit-scrollbar-thumb,
+.card-detail-scroll::-webkit-scrollbar-thumb,
+.event-panel::-webkit-scrollbar-thumb,
+.mailbox-ui-body::-webkit-scrollbar-thumb,
+.menu-profile-popup::-webkit-scrollbar-thumb,
+.settings-viewer-help-content::-webkit-scrollbar-thumb,
+.prayer-body::-webkit-scrollbar-thumb,
+.ranking-page-body::-webkit-scrollbar-thumb,
+.tutorial-battle-help-content::-webkit-scrollbar-thumb,
+.shop-products::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg,#d9b467,#a9772f);
+  border-radius:1cqh;
+  border:.15cqh solid rgba(70,45,20,.18);
+}
+.bag-ui-body::-webkit-scrollbar-thumb:hover,
+.battle-card-choice-cards::-webkit-scrollbar-thumb:hover,
+.bm-store-body::-webkit-scrollbar-thumb:hover,
+.bm-purchase-deck-scroll::-webkit-scrollbar-thumb:hover,
+.debug-command-list::-webkit-scrollbar-thumb:hover,
+.card-detail-scroll::-webkit-scrollbar-thumb:hover,
+.event-panel::-webkit-scrollbar-thumb:hover,
+.mailbox-ui-body::-webkit-scrollbar-thumb:hover,
+.menu-profile-popup::-webkit-scrollbar-thumb:hover,
+.settings-viewer-help-content::-webkit-scrollbar-thumb:hover,
+.prayer-body::-webkit-scrollbar-thumb:hover,
+.ranking-page-body::-webkit-scrollbar-thumb:hover,
+.tutorial-battle-help-content::-webkit-scrollbar-thumb:hover,
+.shop-products::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg,#e6c583,#bd8638);
+}
