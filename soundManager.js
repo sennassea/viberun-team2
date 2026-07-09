@@ -179,6 +179,60 @@
     currentBgm = null;
   }
 
+  /* =========================================================================
+     모바일 백그라운드 대응
+     - 게임 화면이 숨겨지거나(탭 전환/앱 전환/홈 버튼) BGM만 자동 일시정지한다.
+     - 사용자가 직접 stopBgm()/playBgm()으로 전환한 경우와 구분하기 위해
+       "백그라운드 때문에 멈춘 곡의 key"만 별도로 기억해 두었다가, 복귀 시
+       그 곡이 여전히 currentBgm이고 음악 설정이 켜져 있을 때만 재개한다.
+     ========================================================================= */
+  let backgroundPausedBgmKey = null;
+
+  function isMusicMuted(volumes) {
+    const muted = (volumes || readVolumes()).muted || {};
+    return !!(muted.master || muted.music);
+  }
+
+  function pauseBgmForBackground() {
+    if (!currentBgm || currentBgm.audio.paused) return;
+    currentBgm.audio.pause();
+    backgroundPausedBgmKey = currentBgm.key;
+  }
+
+  function resumeBgmFromBackground() {
+    if (!backgroundPausedBgmKey) return;
+    const key = backgroundPausedBgmKey;
+    backgroundPausedBgmKey = null;
+    if (typeof document !== "undefined" && document.hidden) return;
+    if (!currentBgm || currentBgm.key !== key) return;
+    if (isMusicMuted(readVolumes())) return;
+    play(key, { restart: false, allowOverlap: true, loop: true });
+  }
+
+  function handleVisibilityChange() {
+    if (document.hidden) pauseBgmForBackground();
+    else resumeBgmFromBackground();
+  }
+
+  function bindBackgroundHandlers() {
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", pauseBgmForBackground);
+    window.addEventListener("blur", pauseBgmForBackground);
+    window.addEventListener("pageshow", resumeBgmFromBackground);
+    window.addEventListener("focus", resumeBgmFromBackground);
+
+    /* Capacitor 등 네이티브 래퍼가 주입되어 있으면(현재 프로젝트엔 미포함)
+       appStateChange도 함께 사용한다. 없으면 아무 동작도 하지 않는다. */
+    const capacitorApp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+    if (capacitorApp && typeof capacitorApp.addListener === "function") {
+      capacitorApp.addListener("appStateChange", state => {
+        if (!state) return;
+        if (state.isActive) resumeBgmFromBackground();
+        else pauseBgmForBackground();
+      });
+    }
+  }
+
   function bindAutoClickSound() {
     document.addEventListener("click", event => {
       const selector = CONFIG.autoClickSelector;
@@ -201,4 +255,5 @@
   };
 
   bindAutoClickSound();
+  bindBackgroundHandlers();
 })();

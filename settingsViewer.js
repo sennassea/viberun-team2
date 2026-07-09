@@ -522,14 +522,14 @@
       ".settings-viewer-volume-mute[data-muted=\"true\"] .settings-viewer-volume-mute-on{display:none;}" +
       ".settings-viewer-volume-mute[data-muted=\"true\"] .settings-viewer-volume-mute-off{display:inline;}" +
       ".settings-viewer-volume-mute:focus-visible{outline:0.2cqh solid var(--c-blue);outline-offset:.2cqh;}" +
-      ".settings-viewer-actions{display:flex;justify-content:center;align-items:center;gap:1.2cqw;margin-top:-2.5cqh;}" +
-      ".settings-viewer-actions button{height:5.58cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.8cqh;font-weight:900;cursor:pointer;}" +
-      ".settings-viewer-danger{order:2;height:5.58cqh;border-radius:2.5cqh;padding:0 2.2cqw;background:linear-gradient(180deg,#ffe0d3,#f6b9a0);border:0.22cqh solid #c96a3e;color:#7a2b12;box-shadow:0 .3cqh .6cqh rgba(180,60,40,.22),inset 0 0 0 .12cqh #ffe9d8;position:relative;top:-0.5cqh;}" +
-      ".settings-viewer-danger:hover{background:linear-gradient(180deg,#ffe9de,#f7c7b1);}" +
+      ".settings-viewer-actions{display:flex;justify-content:center;align-items:center;gap:1.6cqw;margin-top:-1.8cqh;}" +
+      ".settings-viewer-actions button{height:3.9cqh;border-radius:1cqh;border:0.2cqh solid var(--c-panel-line);padding:0 1.6cqw;font-size:1.4cqh;font-weight:900;cursor:pointer;}" +
+      ".settings-viewer-danger{order:2;height:3.9cqh;border-radius:1cqh;padding:0 2.2cqw;background:linear-gradient(180deg,#f2e2d6,#e2bfa9);border:0.2cqh solid #b9835f;color:#6b3c22;box-shadow:0 .25cqh .5cqh rgba(140,90,60,.2),inset 0 0 0 .12cqh #f8ecdf;}" +
+      ".settings-viewer-danger:hover{background:linear-gradient(180deg,#f7ebe0,#e8cab5);}" +
       ".settings-viewer-actions .settings-viewer-tutorial{order:1;width:21.8cqh;max-width:none;height:5.58cqh;border:0!important;border-radius:0!important;background:transparent url('assets/ui/settings/replay_tutorial.png') center/100% 100% no-repeat;color:transparent;font-size:0;padding:0!important;}" +
       ".settings-viewer-actions .settings-viewer-reset{order:4;width:21.8cqh;max-width:none;height:5.58cqh;border:0!important;border-radius:0!important;background:transparent url('assets/ui/settings/reset_record.png') center/100% 100% no-repeat;color:transparent;font-size:0;padding:0!important;}" +
-      ".settings-viewer-primary{order:3;height:5.58cqh;border-radius:1.2cqh;padding:0 2.2cqw;background:linear-gradient(180deg,#fff6df,#f0c15a);border-color:var(--c-gold-deep);color:#5b3a12;box-shadow:0 .3cqh .7cqh rgba(176,125,29,.38);position:relative;top:-0.5cqh;}" +
-      ".settings-viewer-primary:hover{background:linear-gradient(180deg,#fffaea,#f6cf72);}" +
+      ".settings-viewer-primary{order:3;height:3.9cqh;border-radius:1cqh;padding:0 2.2cqw;background:linear-gradient(180deg,#f3e2b8,#d9b666);border-color:rgba(176,125,29,.7);color:#5b3a12;box-shadow:0 .25cqh .5cqh rgba(176,125,29,.28);}" +
+      ".settings-viewer-primary:hover{background:linear-gradient(180deg,#f7ebc9,#e0c078);}" +
       ".settings-account-google,.settings-account-facebook,.settings-account-logout{width:17.6cqh;max-width:none;height:3.9cqh;border:0!important;background-color:transparent!important;background-position:center!important;background-repeat:no-repeat!important;background-size:100% 100%!important;color:transparent!important;font-size:0!important;padding:0!important;}" +
       ".settings-account-google{background-image:url('assets/ui/settings/google_play.png')!important;}" +
       ".settings-account-facebook{background-image:url('assets/ui/settings/facebook.png')!important;}" +
