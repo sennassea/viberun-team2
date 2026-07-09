@@ -82,7 +82,7 @@
    내용물 높이에 맞춰 위치한다 (선택지 4개까지도 과하게 길어지지 않도록). */
 .event-stage{ flex:1; min-height:0; display:flex; align-items:center; justify-content:center; transform:translateY(2cqh); }
 .event-panel-wrap{
-  flex:none; margin-left:0; width:54%; min-height:74cqh; max-height:100%; display:flex;
+  flex:none; margin-left:0; width:54%; min-height:58cqh; max-height:100%; display:flex;
 }
 /* 카드 보상 선택창은 카드 3장이 답답해 보이지 않도록 패널 폭을 조금 더 넓힌다 */
 .event-panel-wrap:has(.event-panel-cardpick){ width:66%; }
@@ -92,22 +92,22 @@
 .event-panel{
   flex:1; min-width:0; min-height:0; max-height:100%; display:flex; flex-direction:column; gap:1.3cqh;
   padding:9cqh 3.2cqw; overflow-y:auto;
-  background:transparent url("assets/ui/dialog_panel.png") center/cover no-repeat;
+  background:transparent url("assets/ui_panels/codex_section_panel.png") center/100% 100% no-repeat;
   border:0; border-radius:0; box-shadow:none;
 }
 .event-kicker{
-  align-self:center; font-size:1.6cqh; font-weight:900; letter-spacing:.2cqh; color:var(--ev-gold-deep);
-  background:rgba(255,251,240,.85); border:.16cqh solid rgba(178,140,80,.4); border-radius:1cqh; padding:.3cqh 1.1cqw;
+  align-self:center; font-size:2.2cqh; font-weight:900; letter-spacing:.28cqh; color:var(--ev-gold-deep);
+  background:rgba(255,251,240,.85); border:.22cqh solid rgba(178,140,80,.4); border-radius:1.4cqh; padding:.42cqh 1.5cqw;
 }
 .event-title{ text-align:center; font-size:3.2cqh; font-weight:900; }
 .event-story{ display:flex; flex-direction:column; gap:.5cqh; text-align:center; }
 .event-story p{ margin:0; font-size:1.9cqh; font-weight:700; color:var(--ev-ink-soft); line-height:1.45; }
 
 /* ── 선택지 ────────────────────────────────────────────────────────────── */
-.event-choices{ display:flex; flex-direction:column; gap:.85cqh; margin-top:.3cqh; }
+.event-choices{ display:flex; flex-direction:column; gap:1.7cqh; margin-top:.3cqh; }
 .event-choice{
   position:relative;
-  width:80%; height:7cqh; min-height:56px; max-height:72px; box-sizing:border-box;
+  width:80%; height:8.8cqh; min-height:70px; max-height:92px; box-sizing:border-box;
   align-self:center;
   display:flex; align-items:center; gap:.35cqw; padding:.62cqh 2.8% .62cqh 18%;
   background:transparent url("assets/ui/event_choice_panel.png") center/100% 100% no-repeat;
@@ -157,16 +157,17 @@
 /* ── 주문 보상 화면 ────────────────────────────────────────────────────── */
 .event-panel-cardpick{ align-items:center; }
 .event-guide{ text-align:center; font-size:1.73cqh; font-weight:700; color:var(--ev-ink-soft); }
-.event-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:1.7cqw; width:100%; max-width:88cqw; }
+.event-cards{ display:flex; flex-wrap:wrap; justify-content:center; gap:1.7cqw; width:100%; max-width:88cqw; }
 .event-card{
   display:flex; flex-direction:column; align-items:center; gap:.7cqh; padding:1.6cqh 1cqw;
+  flex:0 0 auto; width:min(24cqw,21cqh);
   background:rgba(255,255,255,.7); border:.22cqh solid var(--ev-beige-deep); border-radius:1.4cqh;
   cursor:pointer; font:inherit; color:var(--ev-ink); transition:transform .14s ease, border-color .14s ease, box-shadow .14s ease;
 }
 .event-card:hover{ transform:translateY(-.4cqh); border-color:var(--ev-gold); }
 .event-card.selected{ border-color:var(--ev-gold-deep); box-shadow:0 0 0 .22cqh var(--ev-gold); background:rgba(255,250,235,.95); }
 .event-card.event-card-frame{
-  position:relative; display:block; justify-self:center; width:min(15cqw,21cqh); height:auto; aspect-ratio:2/3;
+  position:relative; display:block; flex:0 0 auto; width:min(15cqw,21cqh); height:auto; aspect-ratio:2/3;
   padding:0; gap:0; border:0; border-radius:0; overflow:hidden; background:#f5efe4;
 }
 .event-card.event-card-frame.event-item-frame{ background:transparent; }
@@ -196,14 +197,3 @@
 .event-btn-skip{ background:var(--ev-beige); color:var(--ev-ink-soft); }
 .event-btn-confirm{ background:var(--ev-green); border-color:var(--ev-green-deep); color:#fff; }
 .event-btn-confirm:disabled{ background:#cfd6cd; border-color:#b3bcae; color:#8a9284; cursor:not-allowed; }
-
-@media (max-width:900px){
-  .event-panel-wrap{ width:100%; margin-left:0; }
-  .event-panel-wrap:has(.event-panel-cardpick){ width:100%; }
-  .event-menu-btn{ width:6.4cqh; }
-  .event-choice{ width:100%; flex-wrap:wrap; height:auto; min-height:7.2cqh; max-height:none; padding-left:8.2cqh; padding-right:1.2cqw; }
-  .event-choice-icon{ left:7.4cqh; transform:translate(-100%, -50%); }
-  .event-choice-body,.event-outcomes{ flex:1 1 100%; }
-  .event-outcomes{ max-width:100%; align-items:flex-start; margin-left:0; }
-  .event-cards{ grid-template-columns:1fr; }
-}

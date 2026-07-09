@@ -32,7 +32,7 @@
       image: "assets/monster/child_spirit_lost.png",
       grade: "normal",
       roles: ["basicAttacker"],
-      maxHp: 28,
+      maxHp: 18,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -51,7 +51,7 @@
       image: "assets/monster/child_spirit_night.png",
       grade: "normal",
       roles: ["anxietyDebuffer", "basicAttacker"],
-      maxHp: 28,
+      maxHp: 18,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -70,7 +70,7 @@
       image: "assets/monster/child_spirit_underbed.png",
       grade: "normal",
       roles: ["defender", "tank"],
-      maxHp: 36,
+      maxHp: 23,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -88,7 +88,7 @@
       image: "assets/monster/child_spirit_swallowed.png",
       grade: "normal",
       roles: ["slowScaler", "burstWarning"],
-      maxHp: 32,
+      maxHp: 21,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -107,7 +107,7 @@
       image: "assets/monster/child_spirit_window.png",
       grade: "elite",
       roles: ["burstWarning", "regretInjector"],
-      maxHp: 52,
+      maxHp: 47,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -127,7 +127,7 @@
       image: "assets/monster/grandmother_spirit.png",
       grade: "normal",
       roles: ["defender", "weakDebuffer"],
-      maxHp: 50,
+      maxHp: 33,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -145,7 +145,7 @@
       image: "assets/monster/grandmother_spirit_memory.png",
       grade: "normal",
       roles: ["deckClogger", "intrusiveThoughtInjector"],
-      maxHp: 40,
+      maxHp: 26,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -164,7 +164,7 @@
       image: "assets/monster/grandmother_spirit_dream.png",
       grade: "normal",
       roles: ["weakDebuffer", "defender"],
-      maxHp: 44,
+      maxHp: 29,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -182,7 +182,7 @@
       image: "assets/monster/grandmother_spirit_visit.png",
       grade: "normal",
       roles: ["anxietyDebuffer", "statusPressure"],
-      maxHp: 39,
+      maxHp: 25,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -202,11 +202,11 @@
       image: "assets/monster/grandmother_spirit_echo.png",
       grade: "elite",
       roles: ["defender", "weakDebuffer", "statusPressure"],
-      maxHp: 66,
+      maxHp: 56,
       x: 72,
       first: 0,
       patternMode: "fixed",
-      gimmick: { type: "echo", ratio: 0.5, minValue: 1, repeatStatusCard: false }, // TEMP_BALANCE
+      gimmick: { type: "echo", ratio: 0.35, minValue: 1, repeatStatusCard: false }, // TEMP_BALANCE — QA: SE08 클리어 턴수 과다(목표 8-9턴 대비 12턴)로 메아리 배율 0.5→0.35 하향
       moves: [
         { t: "debuff", v: 1, name: "잊혀진 이름", role: "weak" },
         { t: "attack", v: 8, name: "오래된 교가", role: "normalAttack" },
@@ -221,7 +221,7 @@
       image: "assets/monster/nurse_spirit.png",
       grade: "normal",
       roles: ["basicAttacker"],
-      maxHp: 36,
+      maxHp: 23,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -239,7 +239,7 @@
       image: "assets/monster/nurse_spirit_lamp.png",
       grade: "normal",
       roles: ["defender", "hesitationInjector"],
-      maxHp: 44,
+      maxHp: 29,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -257,7 +257,7 @@
       image: "assets/monster/nurse_spirit_soft.png",
       grade: "normal",
       roles: ["anxietyDebuffer", "support"],
-      maxHp: 38,
+      maxHp: 25,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -275,7 +275,7 @@
       image: "assets/monster/nurse_spirit_callbell.png",
       grade: "normal",
       roles: ["summoner", "hesitationInjector"],
-      maxHp: 34,
+      maxHp: 22,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -294,7 +294,7 @@
       image: "assets/monster/nurse_spirit_watch.png",
       grade: "elite",
       roles: ["lethargyDebuffer", "support", "basicAttacker"],
-      maxHp: 58,
+      maxHp: 49,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -314,7 +314,7 @@
       image: "assets/monster/patient_spirit_waiting.png",
       grade: "normal",
       roles: ["anxietyDebuffer", "basicAttacker"],
-      maxHp: 38,
+      maxHp: 25,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -332,7 +332,7 @@
       image: "assets/monster/patient_spirit_iv.png",
       grade: "normal",
       roles: ["deckClogger", "intrusiveThoughtInjector"],
-      maxHp: 41,
+      maxHp: 24,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -351,7 +351,7 @@
       image: "assets/monster/mother_spirit.png",
       grade: "elite",
       roles: ["choicePressure", "regretInjector", "burstWarning"],
-      maxHp: 56,
+      maxHp: 48,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -370,7 +370,7 @@
       image: "assets/monster/grandfather_spirit.png",
       grade: "elite",
       roles: ["defender", "basicAttacker"],
-      maxHp: 68,
+      maxHp: 58,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -390,7 +390,7 @@
       image: "assets/monster/doctor_spirit_intern.png",
       grade: "normal",
       roles: ["basicAttacker", "burstWarning"],
-      maxHp: 36,
+      maxHp: 23,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -408,7 +408,7 @@
       image: "assets/monster/doctor_spirit.png",
       grade: "elite",
       roles: ["burstWarning", "deckClogger"],
-      maxHp: 54,
+      maxHp: 49,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -427,7 +427,7 @@
       image: "assets/monster/visitor_spirit_flower.png",
       grade: "normal",
       roles: ["anxietyDebuffer", "hesitationInjector"],
-      maxHp: 37,
+      maxHp: 24,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -445,7 +445,7 @@
       image: "assets/monster/surgery_light_spirit.png",
       grade: "elite",
       roles: ["burstWarning", "deckClogger", "spaceControl"],
-      maxHp: 60,
+      maxHp: 51,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -464,11 +464,11 @@
       image: "assets/monster/fountain_reflection_spirit.png",
       grade: "elite",
       roles: ["defender", "deckClogger", "anxietyDebuffer"],
-      maxHp: 58,
+      maxHp: 52,
       x: 72,
       first: 0,
       patternMode: "fixed",
-      gimmick: { type: "reflection", oncePerPlayerTurn: true, block: 6 }, // TEMP_BALANCE
+      gimmick: { type: "reflection", oncePerPlayerTurn: true, block: 3 }, // TEMP_BALANCE — QA: PE02/PE08 클리어 턴수 과다(목표 6-9턴 대비 10-16턴)로 자가 결계 6→3 하향
       moves: [
         { t: "debuff", v: 1, name: "물결에 비친 이름", role: "anxiety" },
         { t: "attack", v: 8, name: "젖은 손짓", role: "normalAttack" },
@@ -483,7 +483,7 @@
       image: "assets/monster/lost_picnic_spirit.png",
       grade: "elite",
       roles: ["regretInjector", "support"],
-      maxHp: 62,
+      maxHp: 53,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -503,7 +503,7 @@
       image: "assets/monster/locker_spirit.png",
       grade: "normal",
       roles: ["hesitationInjector", "anxietyDebuffer"],
-      maxHp: 35,
+      maxHp: 23,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -523,7 +523,7 @@
       image: "assets/monster/cafeteria_spirit.png",
       grade: "normal",
       roles: ["basicAttacker", "anxietyDebuffer"],
-      maxHp: 33,
+      maxHp: 21,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -543,13 +543,13 @@
       image: "assets/monster/ward_wraith.png",
       grade: "boss",
       roles: ["boss", "summoner", "spaceControl", "deckClogger", "anxietyDebuffer"],
-      maxHp: 92,
+      maxHp: 50,
       x: 72,
       first: 0,
       patternMode: "fixed",
       phaseConfig: {
         mode: "hpThresholdPatterns",
-        thresholds: [64, 36], // TEMP_BALANCE
+        thresholds: [35, 20], // TEMP_BALANCE (밸런스 조정: maxHp 92->50에 맞춰 비율 유지 재조정)
         phases: [
           {
             moves: [
@@ -571,7 +571,8 @@
             moves: [
               { t: "attack", v: 18, name: "404호의 문", role: "burst", summonDamage: { group: "empty_bed_shadow", per: 2 }, statusCard: "intrusive_accident" }, // TEMP_BALANCE
               { t: "attack", v: 10, name: "커튼 뒤의 인기척", role: "normalAttack", summonDamage: { group: "empty_bed_shadow", per: 2 }, conditionalStatus: { role: "anxiety", v: 1 } }, // TEMP_BALANCE
-              { t: "defend", v: 8, name: "빈 병상", role: "defense" }
+              { t: "defend", v: 8, name: "빈 병상", role: "defense" },
+              { t: "attack", v: 14, name: "밀려드는 병실 벽", role: "burst", pierceRatio: 0.5 } // TEMP_BALANCE: 결계 관통 50%, 막판 소모전 방지용
             ],
             summonConfig: null
           }
@@ -591,7 +592,7 @@
       image: "assets/monster/runner_spirit.png",
       grade: "boss",
       roles: ["boss", "phaseShift", "burstWarning", "regretInjector"],
-      maxHp: 84,
+      maxHp: 45,
       x: 72,
       first: 0,
       patternMode: "fixed",
@@ -599,7 +600,7 @@
       counters: { speed: 0 },
       phaseConfig: {
         mode: "hpThresholdPatterns",
-        thresholds: [56, 28], // TEMP_BALANCE
+        thresholds: [30, 15], // TEMP_BALANCE (밸런스 조정: maxHp 84->45에 맞춰 비율 유지 재조정)
         phases: [
           { moves: [
             { t: "attack", v: 11, name: "멈추지 못한 출발", role: "normalAttack" },
@@ -614,7 +615,8 @@
           { moves: [
             { t: "attack", v: 13, name: "멈추지 못한 출발", role: "normalAttack" },
             { t: "attack", v: 15, name: "비틀린 보폭", role: "normalAttack" },
-            { t: "attack", v: 20, name: "마지막 질주", role: "burst", statusCard: "regret", speedBurst: { threshold: 3, damage: 28, reset: true } } // TEMP_BALANCE
+            { t: "attack", v: 20, name: "마지막 질주", role: "burst", statusCard: "regret", speedBurst: { threshold: 3, damage: 28, reset: true } }, // TEMP_BALANCE
+            { t: "attack", v: 16, name: "따라잡는 발소리", role: "burst", pierceRatio: 0.55 } // TEMP_BALANCE: 결계 관통 55%, 막판 소모전 방지용
           ] }
         ]
       },
@@ -631,13 +633,13 @@
       image: "assets/monster/blank_exam_wraith.png",
       grade: "boss",
       roles: ["boss", "deckClogger", "hesitationInjector", "regretInjector", "statusPressure"],
-      maxHp: 90,
+      maxHp: 49,
       x: 72,
       first: 0,
       patternMode: "fixed",
       gimmick: {
         type: "exam",
-        thresholds: [60, 30], // TEMP_BALANCE
+        thresholds: [33, 16], // TEMP_BALANCE (밸런스 조정: maxHp 90->49에 맞춰 비율 유지 재조정)
         sequences: [
           [{ mode: "require", types: ["attack"], failStatusCards: ["hesitation"] }, { mode: "require", types: ["nonAttack"], failStatusCards: ["hesitation"] }],
           [{ mode: "forbid", types: ["attack"], failStatusCards: ["regret"] }, { mode: "forbid", types: ["nonAttack"], failStatusCards: ["regret"] }],
@@ -650,7 +652,7 @@
       counters: { examIndex: 0 },
       phaseConfig: {
         mode: "hpThresholdPatterns",
-        thresholds: [60, 30], // TEMP_BALANCE
+        thresholds: [33, 16], // TEMP_BALANCE (밸런스 조정: maxHp 90->49에 맞춰 비율 유지 재조정)
         phases: [
           { moves: [
             { t: "exam", name: "시험 시작", role: "exam" },
@@ -665,7 +667,8 @@
           { moves: [
             { t: "exam", name: "백지 문항", role: "exam" },
             { t: "exam", name: "백지 문항", role: "exam" },
-            { t: "attack", v: 17, name: "백지 제출", role: "burst", statusCard: "regret", statusCardDamage: { statusCards: ["hesitation", "regret"], per: 2, maxCount: 5 } } // TEMP_BALANCE
+            { t: "attack", v: 17, name: "백지 제출", role: "burst", statusCard: "regret", statusCardDamage: { statusCards: ["hesitation", "regret"], per: 2, maxCount: 5 } }, // TEMP_BALANCE
+            { t: "attack", v: 15, name: "돌이킬 수 없는 채점", role: "burst", pierceRatio: 0.5 } // TEMP_BALANCE: 결계 관통 50%, 막판 소모전 방지용
           ] }
         ]
       },

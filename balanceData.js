@@ -376,7 +376,7 @@ window.BOHYUN_BALANCE = {
     },
     HE02: {
       doctor_spirit: {
-        maxHp: 70,
+        maxHp: 75,
         moves: {
           "0": {
             v: 4
@@ -423,7 +423,7 @@ window.BOHYUN_BALANCE = {
     },
     HE05: {
       doctor_spirit: {
-        maxHp: 48,
+        maxHp: 54,
         moves: {
           "0": {
             v: 4
@@ -632,8 +632,10 @@ window.BOHYUN_BALANCE = {
       }
     },
     PE02: {
+      // QA: PE02가 목표(6-7턴) 대비 10-15턴으로 Act1 초반 엘리트 중 가장 늘어짐(재현성 확인됨).
+      // 자가 결계 반사 기믹(monsterData.js에서 6→3으로 공통 하향)과 함께 체력도 낮춘다.
       fountain_reflection_spirit: {
-        maxHp: 70,
+        maxHp: 50,
         moves: {
           "1": {
             v: 7
@@ -684,8 +686,12 @@ window.BOHYUN_BALANCE = {
       }
     },
     PE06: {
+      // 신규 기믹: 역할 전환(roleShift) — 짝을 이루는 둘 중 하나가 먼저 쓰러지면
+      // 남은 쪽이 그 죽음에 반응한다. 약한 관리인이 먼저 죽으면 롱피크닉이 분노해 공격력이 오르고,
+      // 롱피크닉이 먼저 죽으면 관리인이 움츠러들어 결계를 자동으로 얻는다.
       lost_picnic_spirit: {
         maxHp: 50,
+        roleShift: { onAllyDeath: { type: "attackBoost", perMove: 3 } },
         moves: {
           "0": {
             v: 5
@@ -703,6 +709,7 @@ window.BOHYUN_BALANCE = {
       },
       nurse_spirit_callbell: {
         maxHp: 27,
+        roleShift: { onAllyDeath: { type: "autoBlock", value: 8 } },
         moves: {
           "2": {
             v: 3
@@ -714,8 +721,11 @@ window.BOHYUN_BALANCE = {
       }
     },
     PE07: {
+      // PE06과 동일한 역할 전환(roleShift) 기믹. 짝이 child_spirit_swallowed로 바뀌어도
+      // "약한 쪽이 먼저 죽으면 롱피크닉 분노 / 롱피크닉이 먼저 죽으면 약한 쪽 웅크림" 구도는 동일하다.
       lost_picnic_spirit: {
-        maxHp: 53,
+        maxHp: 60,
+        roleShift: { onAllyDeath: { type: "attackBoost", perMove: 3 } },
         moves: {
           "0": {
             v: 5
@@ -732,6 +742,7 @@ window.BOHYUN_BALANCE = {
         }
       },
       child_spirit_swallowed: {
+        roleShift: { onAllyDeath: { type: "autoBlock", value: 8 } },
         moves: {
           "0": {
             v: 1
@@ -748,7 +759,12 @@ window.BOHYUN_BALANCE = {
     },
     PE08: {
       grandfather_spirit: {
-        maxHp: 57,
+        maxHp: 45,
+        // QA: PE08가 목표(8-9턴) 대비 15-16턴으로 Act1 엘리트 중 가장 심각하게 늘어짐.
+        // 이미 데미지는 낮게 조정돼 있어(v4) 체력과 성장 기믹의 지속 시간을 함께 줄인다.
+        gimmick: {
+          maxStack: 2
+        },
         moves: {
           "0": {
             v: 4,
@@ -771,7 +787,7 @@ window.BOHYUN_BALANCE = {
         }
       },
       fountain_reflection_spirit: {
-        maxHp: 48,
+        maxHp: 36,
         moves: {
           "1": {
             v: 4
@@ -1185,7 +1201,12 @@ window.BOHYUN_BALANCE = {
     },
     SE01: {
       child_spirit_window: {
-        maxHp: 70,
+        maxHp: 78,
+        // QA: SE01이 목표(6-7턴) 대비 5턴으로 다소 빠르게 끝남 + 자동 플레이 특성상
+        // 질문 기믹의 오답 페널티가 거의 발동하지 않아 소폭 상향. 오답 시 폭발 계수도 2→3으로 강화.
+        gimmick: {
+          burstPerStack: 3
+        },
         moves: {
           "0": {
             v: 5
@@ -1327,8 +1348,10 @@ window.BOHYUN_BALANCE = {
       }
     },
     SE08: {
+      // QA: SE08이 목표(8-9턴) 대비 12턴으로 늘어짐. 메아리 배율 자체는 monsterData.js에서
+      // 0.5→0.35로 공통 하향했고, 여기서는 체력을 소폭 추가로 낮춘다.
       grandmother_spirit_echo: {
-        maxHp: 56,
+        maxHp: 50,
         moves: {
           "1": {
             v: 6

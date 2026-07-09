@@ -230,7 +230,38 @@ function handleEnemyDied(context){
     if(gimmick.type === "emptySeat" && enemy !== dead && gimmick.counterId){
       addMonsterCounter(enemy, gimmick.counterId, 1, gimmick.maxStack);
     }
+    if(enemy !== dead) applyRoleShiftOnAllyDeath(enemy, dead);
   });
+}
+
+/* =========================================================================
+   역할 전환(roleShift) — 2인조 엘리트 전용 신규 기믹.
+   짝을 이루던 동료가 먼저 쓰러지면 생존한 쪽이 그 죽음에 반응해 역할이 바뀐다.
+   - attackBoost: 남은 몬스터가 분노해 이후 공격 주문 피해량이 영구적으로 증가한다.
+   - autoBlock  : 남은 몬스터가 위축되어 즉시 결계를 얻는다(다음 행동 시 소멸하는 일반 결계와 동일 규칙).
+   전투당 몬스터 1체에 1회만 발동하며, balanceData.js의 패키지 오버라이드로
+   monster.roleShift = { onAllyDeath: { type, ... } } 를 부여해 패키지별로만 적용한다.
+   ========================================================================= */
+function applyRoleShiftOnAllyDeath(enemy, dead){
+  if(!enemy || enemy.hp <= 0 || enemy.roleShiftTriggered) return;
+  const effect = enemy.roleShift && enemy.roleShift.onAllyDeath;
+  if(!effect || !effect.type) return;
+  enemy.roleShiftTriggered = true;
+
+  if(effect.type === "attackBoost"){
+    const bonus = Number.isFinite(effect.perMove) ? effect.perMove : 0;
+    if(bonus <= 0) return;
+    (enemy.moves || []).forEach(move => {
+      if(move && move.t === "attack") move.v = (move.v || 0) + bonus;
+    });
+    if(enemy.intent && enemy.intent.t === "attack") enemy.intent.v = (enemy.intent.v || 0) + bonus;
+    spawnFloat('[data-id="'+enemy.id+'"]', '분노', 'dmg');
+  } else if(effect.type === "autoBlock"){
+    const value = Number.isFinite(effect.value) ? effect.value : 0;
+    if(value <= 0) return;
+    const granted = grantEnemyBlock(enemy, value);
+    if(granted > 0) spawnFloat('[data-id="'+enemy.id+'"]', '+'+granted, 'blk');
+  }
 }
 
 function emitEnemyDiedOnce(enemy, context={}){
@@ -443,7 +474,7 @@ function getMonsterIntentStatusCardKey(move){
 
 function executeMonsterAttack(enemy, move){
   notifyMonsterBattleEvent("beforeMonsterDamage", { enemy, move });
-  const result = applyDamageWithFeedback(S.player, getMonsterIntentRawDamage(enemy, move), enemy.weak);
+  const result = applyDamageWithFeedback(S.player, getMonsterIntentRawDamage(enemy, move), enemy.weak, { pierceRatio: move.pierceRatio || 0 });
   applyIntentStatusCard(move);
   if(move.conditionalStatus && move.conditionalStatus.role === "anxiety"){
     LIFE.addAnxiety(S.player, move.conditionalStatus.v || 1);
