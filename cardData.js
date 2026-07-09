@@ -44,7 +44,7 @@ const CARD_DB = {
   guardian_script:{name:"수호경", cost:1, type:"defense", emoji:"📖", target:"self", attr:"결계 덱", rarity:"starter",
           desc:"결계를 7 얻습니다.", fx:[{t:"block",v:7}]},
   five_direction_barrier:{name:"오방결계", cost:1, type:"defense", emoji:"🧭", target:"self", attr:"결계 덱", rarity:"starter",
-          desc:"결계를 6 얻습니다.\n동요를 1 제거합니다.", fx:[{t:"block",v:6},{t:"removeWeak",v:1}]},
+          desc:"결계를 6 얻습니다.\n내게 부여된 무작위 디버프를 1 제거합니다.", fx:[{t:"block",v:6},{t:"removeRandomDebuff",v:1}]},
   reverse_barrier:{name:"역결계", cost:2, type:"defense", emoji:"↩️", target:"enemy", attr:"결계 덱", rarity:"uncommon",
           desc:"결계를 5 얻습니다. 그 후 현재 결계의 135%만큼 유령 하나를 정화합니다.", fx:[{t:"block",v:5},{t:"damageByBlockRatio",v:1.35}]},
   silent_ward:{name:"정적의 방", cost:1, type:"skill", emoji:"🚪", target:"self", attr:"결계 덱", rarity:"uncommon",

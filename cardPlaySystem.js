@@ -927,6 +927,20 @@ async function playCard(handIndex, targetEnemy){
         break;
       case "removeWeak":
         LIFE.reduceWeak(S.player, e.v); break;
+      case "removeRandomDebuff": {
+        const debuffPool = [
+          { key:"weak", name:"동요", reduce:(v) => LIFE.reduceWeak(S.player, v) },
+          { key:"anxiety", name:"불안", reduce:(v) => LIFE.reduceAnxiety(S.player, v) },
+          { key:"lethargy", name:"무기력", reduce:(v) => LIFE.reduceLethargy(S.player, v) },
+          { key:"fracture", name:"균열", reduce:(v) => LIFE.reduceFracture(S.player, v) },
+        ].filter(d => (S.player[d.key] || 0) > 0);
+        if(debuffPool.length > 0){
+          const picked = debuffPool[Math.floor(Math.random() * debuffPool.length)];
+          picked.reduce(e.v || 1);
+          spawnFloat('.player', picked.name + ' -' + (e.v || 1), 'heal');
+        }
+        break;
+      }
       default:
         console.warn("[Card FX] Unsupported effect", e.t, key);
         break;
