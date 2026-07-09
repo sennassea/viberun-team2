@@ -124,7 +124,7 @@ function scaleEndlessPlayerStartBlock(value){
   return scaleEndlessNumber(value, "playerStartBlockMultiplier");
 }
 
-/* ── 엘리트 노드 가중치: 심도 1/16은 더하지 않고 곱한다 (x1.35 * x1.20) ── */
+/* ── 엘리트 노드 가중치: 심도 2/16은 더하지 않고 곱한다 (x1.35 * x1.20) ── */
 function getEndlessEliteNodeWeightMultiplierForIds(ids){
   return getEndlessJourneyEffectsForIds(ids)
     .filter(effect => effect.effectType === "eliteNodeWeightMultiplier")
