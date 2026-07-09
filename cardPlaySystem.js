@@ -1035,6 +1035,8 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
   } else {
     if((result.hpLoss || 0) > 0){
       if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("damage");
+    } else if((result.absorbed || 0) > 0){
+      if(typeof triggerPlayerBattleMotion === "function") triggerPlayerBattleMotion("block");
     }
     if(result.hpLoss > 0){
       if(S && S.scoreRuntime){

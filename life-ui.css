@@ -41,6 +41,15 @@
   55%  {transform:translateX(.6cqw) scale(.98); filter:brightness(1.1);}
   100% {transform:translateX(0) scale(1); filter:none;}
 }
+/* 플레이어 방어 성공 모션(결계로 완전 방어): block 스탠딩 이미지로 전환된 상태에서
+   흔들림 없이 살짝 떠오르며 결계 빛으로 은은하게 빛났다가 복귀. 피격 모션과 재생 시간을 맞춘다. */
+.player.motion-block .avatar{animation:playerBlockGuard .65s ease-out both;}
+@keyframes playerBlockGuard{
+  0%   {transform:translateY(0) scale(1); filter:none;}
+  30%  {transform:translateY(-1cqh) scale(1.05); filter:brightness(1.35) drop-shadow(0 0 2.2cqh rgba(255,214,150,.85));}
+  65%  {transform:translateY(-.6cqh) scale(1.03); filter:brightness(1.15) drop-shadow(0 0 1.4cqh rgba(255,214,150,.55));}
+  100% {transform:translateY(0) scale(1); filter:none;}
+}
 .enemy{min-width:16cqw; height:43cqh; z-index:2; pointer-events:auto;}
 .enemy .avatar{font-size:14.72cqh;}
 .enemy .sprite-avatar{width:18cqh; height:22cqh; display:grid; place-items:end center; overflow:visible;}

@@ -125,6 +125,7 @@
       battleStandingImage: "assets/skins/skin_limited_moonlight_vow_magic_maiden.png",
       battleStandingImageAttack: "assets/skins/skin_limited_moonlight_vow_magic_maiden_attack.png",
       battleStandingImageDamage: "assets/skins/skin_limited_moonlight_vow_magic_maiden_damage.png",
+      battleStandingImageBlock: "assets/skins/skin_limited_moonlight_vow_magic_maiden_block.png",
       mapMarkerImage: "assets/map_icons/player_marker_moonlight_vow_magic_maiden.png",
 
       purchasable: true,
@@ -161,6 +162,7 @@
       battleStandingImage: "assets/skins/skin_premium_wolyeong_academy_transfer.png",
       battleStandingImageAttack: "assets/skins/skin_premium_wolyeong_academy_transfer_attack.png",
       battleStandingImageDamage: "assets/skins/skin_premium_wolyeong_academy_transfer_damage.png",
+      battleStandingImageBlock: "assets/skins/skin_premium_wolyeong_academy_transfer_block.png",
       mapMarkerImage: "assets/map_icons/player_marker_wolyeong_academy_transfer.png",
 
       purchasable: true,
@@ -197,6 +199,7 @@
       battleStandingImage: "assets/skins/skin_common_prayer_robe.png",
       battleStandingImageAttack: "assets/skins/skin_common_prayer_robe_attack.png",
       battleStandingImageDamage: "assets/skins/skin_common_prayer_robe_damage.png",
+      battleStandingImageBlock: "assets/skins/skin_common_prayer_robe_block.png",
       mapMarkerImage: "assets/map_icons/player_marker_common_prayer_robe.png",
 
       purchasable: true,
@@ -210,6 +213,7 @@
   const DEFAULT_BATTLE_STANDING_IMAGE = "assets/characters/player-temp-cutout.png";
   const DEFAULT_BATTLE_STANDING_IMAGE_ATTACK = "assets/characters/player-temp-cutout-attack.png";
   const DEFAULT_BATTLE_STANDING_IMAGE_DAMAGE = "assets/characters/player-temp-cutout-damage.png";
+  const DEFAULT_BATTLE_STANDING_IMAGE_BLOCK = "assets/characters/player-temp-cutout-block.png";
   const DEFAULT_MAP_MARKER_IMAGE = "assets/map_icons/player_marker.png";
 
   /* 주문 팩 탭 임시 구현입니다(작업명: 주문 덱 BM 임시 구현).
@@ -497,6 +501,9 @@
     },
     getDefaultBattleStandingImageDamage(){
       return DEFAULT_BATTLE_STANDING_IMAGE_DAMAGE;
+    },
+    getDefaultBattleStandingImageBlock(){
+      return DEFAULT_BATTLE_STANDING_IMAGE_BLOCK;
     },
     getDefaultMapMarkerImage(){
       return DEFAULT_MAP_MARKER_IMAGE;
