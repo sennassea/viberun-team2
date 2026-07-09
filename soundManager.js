@@ -123,6 +123,7 @@
     audio.loop = options.loop ?? sound.loop ?? category.loop ?? false;
     if (options.restart !== false) audio.currentTime = 0;
     const promise = audio.play();
+    if (currentBgm && currentBgm.key === key) currentBgm.playPromise = promise;
     if (promise && typeof promise.catch === "function") {
       promise.catch(err => {
         /* play()가 곧바로 이어진 pause()에 의해 중단된 경우(AbortError)는 다른 BGM으로
@@ -156,11 +157,31 @@
     document.addEventListener("keydown", retry, true);
   }
 
+  function stopOutgoingBgm(entry) {
+    /* 로딩이 끝나기 전에 pause()를 호출하면 브라우저가 해당 리소스 요청을
+       net::ERR_ABORTED로 강제 취소한다. 재생 시도가 실제로 끝난(성공/실패)
+       뒤에 정지시키면 이 취소 없이 자연스럽게 넘어갈 수 있다. 그 사이 소리가
+       겹쳐 들리지 않도록 즉시 음소거만 해둔다. */
+    if (!entry || !entry.audio) return;
+    const audio = entry.audio;
+    audio.muted = true;
+    const settle = () => {
+      audio.pause();
+      audio.muted = false;
+    };
+    const promise = entry.playPromise;
+    if (promise && typeof promise.then === "function") {
+      promise.then(settle, settle);
+    } else {
+      settle();
+    }
+  }
+
   function playBgm(key, options = {}) {
-    if (currentBgm && currentBgm.key !== key) currentBgm.audio.pause();
+    if (currentBgm && currentBgm.key !== key) stopOutgoingBgm(currentBgm);
     const audio = getAudio(key);
     if (!audio) return false;
-    currentBgm = { key, audio };
+    currentBgm = { key, audio, playPromise: null };
     return play(key, { ...options, loop: options.loop ?? true, restart: options.restart ?? false, allowOverlap: true });
   }
 
@@ -201,9 +222,13 @@
 
   function resumeBgmFromBackground() {
     if (!backgroundPausedBgmKey) return;
+    /* pageshow/focus가 visibilitychange보다 먼저(즉, 아직 document.hidden===true인
+       상태에서) 발생하는 브라우저가 있다. 이때 key를 미리 비워버리면 뒤이어 실제로
+       화면이 보이게 되는 visibilitychange가 와도 재생할 대상이 사라져 복귀 후 음악이
+       재생되지 않는다. 아직 숨김 상태라면 key를 그대로 남겨두고 다음 이벤트를 기다린다. */
+    if (typeof document !== "undefined" && document.hidden) return;
     const key = backgroundPausedBgmKey;
     backgroundPausedBgmKey = null;
-    if (typeof document !== "undefined" && document.hidden) return;
     if (!currentBgm || currentBgm.key !== key) return;
     if (isMusicMuted(readVolumes())) return;
     play(key, { restart: false, allowOverlap: true, loop: true });
