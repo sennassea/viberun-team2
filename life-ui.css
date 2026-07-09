@@ -54,10 +54,10 @@
 .player.motion-block .avatar{animation:playerBlockGuard .65s ease-in-out both;}
 @keyframes playerBlockGuard{
   0%   {transform:translateX(0) scale(1); filter:none;}
-  15%  {transform:translateX(5.5cqw) scale(1.06); filter:brightness(1.1) drop-shadow(0 0 1cqh rgba(255,214,150,.45));}
-  35%  {transform:translateX(7.2cqw) scale(1.06); filter:brightness(1.1) drop-shadow(0 0 1cqh rgba(255,214,150,.45));}
-  55%  {transform:translateX(6.3cqw) scale(1.04); filter:brightness(1.05) drop-shadow(0 0 .7cqh rgba(255,214,150,.3));}
-  75%  {transform:translateX(1.2cqw) scale(1.02); filter:brightness(1.02);}
+  15%  {transform:translateX(4.4cqw) scale(1.06); filter:brightness(1.1) drop-shadow(0 0 1cqh rgba(255,214,150,.45));}
+  35%  {transform:translateX(5.8cqw) scale(1.06); filter:brightness(1.1) drop-shadow(0 0 1cqh rgba(255,214,150,.45));}
+  55%  {transform:translateX(5.0cqw) scale(1.04); filter:brightness(1.05) drop-shadow(0 0 .7cqh rgba(255,214,150,.3));}
+  75%  {transform:translateX(.8cqw) scale(1.02); filter:brightness(1.02);}
   100% {transform:translateX(0) scale(1); filter:none;}
 }
 /* 플레이어 사망 모션: dead 스탠딩 이미지(주저앉은 패배 포즈)로 전환되며 힘없이 가라앉듯

@@ -1283,6 +1283,7 @@
       case "applyWeak": return "동요 " + effect.v + " 부여";
       case "applyWeakAll": return "모든 적에게 동요 " + effect.v;
       case "removeWeak": return "동요 " + effect.v + " 제거";
+      case "removeRandomDebuff": return "무작위 디버프 " + effect.v + " 제거";
       default: return "";
     }
   }
@@ -1304,6 +1305,7 @@
     if(type === "draw") return "주문 뽑기";
     if(type === "energy") return "정신력";
     if(type === "applyWeak" || type === "applyWeakAll" || type === "removeWeak") return "동요";
+    if(type === "removeRandomDebuff") return "디버프";
     return "효과";
   }
 
