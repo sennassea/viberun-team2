@@ -18,12 +18,17 @@
   transition: transform .2s ease, box-shadow .2s ease;
 }
 
-/* 호버: 주문 직립 + 적당히 확대 + 살짝 들어올림 */
-#hand .card:hover {
-  transform: rotate(0deg) translateY(-1.4cqh) scale(1.06);
-  z-index: 99 !important;
-  box-shadow: 0 1.5cqh 3cqh rgba(40,70,120,.45);
-  transition: transform .2s ease, box-shadow .2s ease;
+/* 호버: 주문 직립 + 적당히 확대 + 살짝 들어올림
+   (hover:hover)로 감싸 실제 마우스 기기에서만 적용 — 터치 기기는 hover가
+   "고착"되어(:hover가 탭 이후에도 풀리지 않음) 카드가 계속 확대된 채로 남는
+   문제가 있어 마우스 포인터 환경에서만 이 효과를 적용한다. */
+@media (hover: hover) {
+  #hand .card:hover {
+    transform: rotate(0deg) translateY(-1.4cqh) scale(1.06);
+    z-index: 99 !important;
+    box-shadow: 0 1.5cqh 3cqh rgba(40,70,120,.45);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
 }
 
 /* 드래그 중: 팬 회전만 유지, 반투명 */

@@ -496,7 +496,7 @@
       ".settings-viewer.show{display:grid;}" +
       ".settings-viewer.start-mode{z-index:300!important;}" +
       ".settings-viewer-panel{position:relative;width:min(86cqw,124cqh);max-height:86cqh;display:flex;flex-direction:column;background:transparent url('assets/ui/settings/outer_panel.png') center/100% 100% no-repeat;border:0;border-radius:1.6cqh;box-shadow:0 2cqh 4cqh rgba(0,0,0,.28);padding:3.2cqh 3cqw 2.8cqh;}" +
-      ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding:2.2cqh 5cqw 1.2cqh;}" +
+      ".settings-viewer-head{display:flex;align-items:center;gap:1cqw;padding:2.2cqh 4.4cqw 1.2cqh;}" +
       ".settings-viewer-head h2{font-size:4.8cqh;line-height:1;flex:1;color:#4a2b07;}" +
       ".settings-viewer-help{width:4.4cqh;height:4.4cqh;border:0;background:transparent url('assets/ui/settings/help.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
       ".settings-viewer-close{width:4.8cqh;height:4.8cqh;border:0;background:transparent url('assets/ui/settings/close.png') center/contain no-repeat;color:transparent;font-size:0;line-height:1;cursor:pointer;}" +
@@ -505,7 +505,7 @@
       ".settings-viewer-section:not(.settings-account-section){background:transparent url('assets/ui/settings/settings_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;margin-top:-1.5cqh;margin-bottom:1.5cqh;}" +
       ".settings-account-section{position:relative;background:transparent url('assets/ui/settings/account_info_panel.png') center/100% 100% no-repeat;border:0;padding:2.1cqh 2cqw;margin-top:-2.3cqh;}" +
       ".settings-viewer-section h3{font-size:2.6cqh;margin-bottom:1.4cqh;color:#4a2b07;}" +
-      ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 3.4cqw 4.2cqh;align-items:center;gap:1cqw;margin-top:1.4cqh;color:#6f4210;font-size:2.1cqh;font-weight:800;}" +
+      ".settings-viewer-volume{display:grid;grid-template-columns:8cqw minmax(0,1fr) 3.4cqw 4.2cqh;align-items:center;gap:1cqw;margin-top:1.4cqh;color:#6f4210;font-size:2.4cqh;font-weight:800;}" +
       ".settings-viewer-volume output{text-align:right;color:#3a2408;font-weight:900;}" +
       ".settings-viewer-volume input[type=\"range\"]{-webkit-appearance:none;appearance:none;width:100%;height:3.2cqh;background:transparent;margin:0;padding:0;cursor:pointer;}" +
       ".settings-viewer-volume input[type=\"range\"]::-webkit-slider-runnable-track{height:.9cqh;border-radius:1cqh;background:linear-gradient(90deg,var(--c-gold-deep) 0%,var(--c-gold) var(--val,50%),rgba(255,255,255,.6) var(--val,50%),rgba(255,255,255,.6) 100%);border:.12cqh solid var(--c-gold-deep);box-shadow:inset 0 .12cqh .22cqh rgba(90,60,10,.28);}" +

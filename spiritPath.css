@@ -79,8 +79,8 @@
 
 .spirit-path-desc{
   margin:.34cqh 0 0;
-  font-size:1.06cqh;
-  line-height:1.16;
+  font-size:1.32cqh;
+  line-height:1.2;
   font-weight:700;
   color:#8a6f4a;
 }
@@ -164,15 +164,18 @@
 .spirit-path-selected-ribbon span{
   position:absolute;
   left:70%;
-  top:29%;
+  top:33%;
   transform:translate(-50%, -50%) rotate(33deg);
   transform-origin:center;
-  color:#3a260d;
+  color:#fff8e0;
   font-size:1.62cqh;
   line-height:1;
   font-weight:900;
   white-space:nowrap;
-  text-shadow:0 .08cqh 0 rgba(255,255,255,.65);
+  text-shadow:
+    0 .09cqh .16cqh rgba(0, 0, 0, .85),
+    0 0 .3cqh rgba(0, 0, 0, .6),
+    0 .02cqh 0 rgba(0, 0, 0, .9);
 }
 
 .spirit-path-lock-seal{
@@ -236,7 +239,7 @@
 
 .spirit-path-card-title{
   display:block;
-  font-size:1.68cqh;
+  font-size:1.95cqh;
   line-height:1.1;
   font-weight:900;
   color:#4a2c0e;
@@ -253,7 +256,7 @@
   width:100%;
   min-height:1.9cqh;
   margin-top:.36cqh;
-  font-size:.96cqh;
+  font-size:1.15cqh;
   line-height:1.25;
   font-family:inherit;
   font-weight:800;
@@ -274,13 +277,13 @@
 }
 
 .spirit-path-card-tags em{
-  padding:.13cqh .36cqh;
+  padding:.15cqh .42cqh;
   border:.1cqh solid rgba(126, 80, 28, .38);
   border-radius:999px;
   background:rgba(255, 245, 211, .45);
   color:#59360f;
   font-style:normal;
-  font-size:.86cqh;
+  font-size:1.06cqh;
   line-height:1.15;
   font-weight:900;
 }
@@ -317,17 +320,19 @@
 .spirit-path-preview-section--relics{
   grid-column:2;
   grid-row:1;
+  align-self:end;
 }
 
 .spirit-path-preview-section--potions{
   grid-column:2;
   grid-row:2;
+  align-self:start;
 }
 
 .spirit-path-preview-title{
   margin-bottom:.22cqh;
   color:#4d2e0f;
-  font-size:.86cqh;
+  font-size:1.3cqh;
   line-height:1.1;
   font-weight:900;
   text-align:center;
@@ -335,6 +340,12 @@
 
 .spirit-path-card.is-locked .spirit-path-preview-title{
   color:#dfc388;
+}
+
+/* '법구'/'약병' 라벨은 카드 본문 글씨 확대 대상에서 제외하고 기존 크기 유지 */
+.spirit-path-preview-section--relics .spirit-path-preview-title,
+.spirit-path-preview-section--potions .spirit-path-preview-title{
+  font-size:1.12cqh;
 }
 
 .spirit-path-preview-grid{
@@ -496,7 +507,18 @@
 }
 
 .spirit-path-card.is-locked .spirit-path-card-content{
-  filter:grayscale(.35) brightness(.72);
+  position:relative;
+  filter:grayscale(.75) brightness(.5);
+}
+
+.spirit-path-card.is-locked .spirit-path-card-content::after{
+  content:"";
+  position:absolute;
+  inset:-.3cqh -.25cqh;
+  z-index:5;
+  border-radius:.3cqh;
+  background:rgba(40, 38, 34, .55);
+  pointer-events:none;
 }
 
 .spirit-path-card.is-locked .spirit-path-mini-card,
@@ -619,7 +641,7 @@
   margin:0 0 .28cqh;
   font-size:1.41cqh;
   font-weight:700;
-  color:#d5bd8a;
+  color:#3a2a12;
 }
 
 .spirit-path-depth-selector{
@@ -713,14 +735,14 @@
 .spirit-path-depth-effect-desc,
 .spirit-path-depth-cumulative-note{
   margin:0;
-  color:#d5bd8a;
+  color:#3a2a12;
   font-size:1.34cqh;
   line-height:1.16;
   font-weight:700;
 }
 
 .spirit-path-depth-cumulative-note{
-  color:#ead39f;
+  color:#2c2009;
 }
 
 .spirit-path-act-list{
@@ -902,13 +924,13 @@
   }
 
   .spirit-path-card-title{
-    font-size:1.45cqh;
+    font-size:1.68cqh;
   }
 
   .spirit-path-card-subtitle{
     min-height:1.65cqh;
     margin-top:.12cqh;
-    font-size:.75cqh;
+    font-size:.9cqh;
     line-height:1.14;
   }
 
@@ -918,8 +940,8 @@
   }
 
   .spirit-path-card-tags em{
-    padding:.08cqh .24cqh;
-    font-size:.68cqh;
+    padding:.09cqh .28cqh;
+    font-size:.84cqh;
     line-height:1.05;
   }
 
@@ -930,7 +952,12 @@
 
   .spirit-path-preview-title{
     margin-bottom:.08cqh;
-    font-size:.72cqh;
+    font-size:1.1cqh;
+  }
+
+  .spirit-path-preview-section--relics .spirit-path-preview-title,
+  .spirit-path-preview-section--potions .spirit-path-preview-title{
+    font-size:.94cqh;
   }
 
   .spirit-path-preview-grid{
@@ -1018,8 +1045,8 @@
   }
 
   .spirit-path-desc{
-    font-size:.84cqh;
-    line-height:1.12;
+    font-size:1.05cqh;
+    line-height:1.16;
   }
 
   .spirit-path-count{

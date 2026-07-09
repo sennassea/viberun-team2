@@ -684,6 +684,7 @@
       id: "empty_bed_shadow",
       name: "빈 침대의 그림자",
       family: "그림자",
+      image: "assets/monster/child_spirit_underbed.png", // TEMP: 전용 에셋 확정 전까지 임시 연결
       emoji: "🛏️",
       grade: "summon",
       roles: ["summon", "anxietyDebuffer"],
@@ -695,12 +696,12 @@
         { t: "attack", v: 4, name: "침대 밑 손짓", role: "normalAttack" },
         { t: "debuff", v: 1, name: "빈 병상", role: "anxiety" }
       ]
-      // TODO: 전용 이미지 에셋 확정 전까지 emoji fallback 사용
     },
     {
       id: "lost_item_echo",
       name: "분실물의 잔상",
       family: "잔상",
+      image: "assets/monster/lost_picnic_spirit.png", // TEMP: 전용 에셋 확정 전까지 임시 연결
       emoji: "🎒",
       grade: "summon",
       roles: ["summon", "hesitationInjector"],
@@ -713,7 +714,6 @@
         { t: "attack", v: 3, name: "망설이는 울림", role: "normalAttack", statusCard: "hesitation" }
       ],
       runtimeFlags: { expireAfterActions: 2 }
-      // TODO: 전용 이미지 에셋 확정 전까지 emoji fallback 사용
     }
   ];
 
