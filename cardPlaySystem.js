@@ -1017,7 +1017,9 @@ function applyDamageWithFeedback(target, rawDamage, attackerWeak, options={}){
   const beforeRecollection = target && target !== S.player ? getStatus(target, "recollection") : 0;
   const damageContext = { target, rawDamage, attackerWeak };
   if(target === S.player) applyRelicTrigger("beforePlayerHpDamage", damageContext);
-  const result = LIFE.applyDamage(target, damageContext.rawDamage, attackerWeak);
+  const result = (options.pierceRatio > 0 && typeof LIFE.applyPiercingDamage === "function")
+    ? LIFE.applyPiercingDamage(target, damageContext.rawDamage, attackerWeak, options.pierceRatio)
+    : LIFE.applyDamage(target, damageContext.rawDamage, attackerWeak);
   const sel = target===S.player ? '.player' : '[data-id="'+target.id+'"]';
   if(result.absorbed > 0)                          spawnFloat(sel, '-'+result.absorbed, 'blk');
   if(result.hpLoss   > 0)                          spawnFloat(sel, '-'+result.hpLoss,   'dmg');

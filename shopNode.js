@@ -840,9 +840,6 @@ function ensureShopStyles() {
     ".shop-cost{margin-left:.4cqw;font-size:1.9cqh;}" +
     ".shop-cost .shop-price-icon{width:2.6cqh;height:2.6cqh;}" +
     ".shop-exit-btn{background:linear-gradient(180deg,#f2ac9c 0%,#d97a63 52%,#b85a45 100%);color:#fff;text-shadow:0 .12cqh 0 rgba(90,30,20,.35);border-color:#8a3d2c;" +
-      "box-shadow:inset 0 .1cqh 0 rgba(255,255,255,.5),inset 0 -.2cqh .35cqh rgba(90,30,20,.3),0 .3cqh .6cqh rgba(90,40,25,.3);}" +
-
-    "@media (max-width:900px){.shop-body{flex-direction:column;}.shop-merchant{width:auto;flex-direction:row;flex-wrap:wrap;}" +
-      ".shop-panels{flex-direction:column;align-items:stretch;justify-content:flex-start;width:auto;}.shop-detail{width:auto;}}";
+      "box-shadow:inset 0 .1cqh 0 rgba(255,255,255,.5),inset 0 -.2cqh .35cqh rgba(90,30,20,.3),0 .3cqh .6cqh rgba(90,40,25,.3);}";
   document.head.appendChild(style);
 }

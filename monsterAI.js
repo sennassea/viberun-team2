@@ -443,7 +443,7 @@ function getMonsterIntentStatusCardKey(move){
 
 function executeMonsterAttack(enemy, move){
   notifyMonsterBattleEvent("beforeMonsterDamage", { enemy, move });
-  const result = applyDamageWithFeedback(S.player, getMonsterIntentRawDamage(enemy, move), enemy.weak);
+  const result = applyDamageWithFeedback(S.player, getMonsterIntentRawDamage(enemy, move), enemy.weak, { pierceRatio: move.pierceRatio || 0 });
   applyIntentStatusCard(move);
   if(move.conditionalStatus && move.conditionalStatus.role === "anxiety"){
     LIFE.addAnxiety(S.player, move.conditionalStatus.v || 1);

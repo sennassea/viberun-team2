@@ -177,6 +177,28 @@
       return { rawDamage, finalDamage, absorbed, hpLoss };
     },
 
+    /* 결계 관통 피해: finalDamage 중 pierceRatio 비율만큼은 결계와 무관하게
+       반드시 정신력으로 들어간다. 나머지는 기존 결계 흡수 로직을 그대로 탄다.
+       보스 막판 페이즈처럼 "결계로 무한정 버티지 못하게" 만드는 패턴 전용. */
+    applyPiercingDamage(target, rawDamage, attackerWeak, pierceRatio){
+      if(!target || rawDamage <= 0){
+        return { rawDamage: 0, finalDamage: 0, absorbed: 0, hpLoss: 0 };
+      }
+
+      const finalDamage = this.previewDamage(target, rawDamage, attackerWeak).finalDamage;
+      const ratio = Math.min(1, Math.max(0, pierceRatio || 0));
+      const piercedHp = Math.ceil(finalDamage * ratio);
+      const remaining = finalDamage - piercedHp;
+
+      const absorbed = Math.min(target.block || 0, remaining);
+      const hpLoss = Math.max(0, remaining - absorbed) + piercedHp;
+
+      target.block = Math.max(0, (target.block || 0) - absorbed);
+      target.hp = Math.max(0, target.hp - hpLoss);
+
+      return { rawDamage, finalDamage, absorbed, hpLoss };
+    },
+
     addBlock(target, value){
       if(!target || value <= 0) return 0;
       const before = target.block || 0;

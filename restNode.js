@@ -520,15 +520,6 @@ function ensurePrayerStyles(){
     ".prayer-btn{min-width:16cqw;height:5.6cqh;border-radius:1.3cqh;font-size:2cqh;font-weight:900;cursor:pointer;" +
       "font:inherit;border:.22cqh solid rgba(178,140,80,.5);}" +
     ".prayer-btn-confirm{height:5.6cqh;width:auto;min-width:0;aspect-ratio:384/107;background:transparent url(\"assets/ui_buttons/prayer_select.png\") center/100% 100% no-repeat;color:transparent;border:0;border-radius:0;box-shadow:none;font-size:0;}" +
-    ".prayer-btn-confirm:disabled{filter:grayscale(.5) brightness(.92);cursor:default;opacity:.7;}" +
-    "@media (max-width:900px){" +
-      ".prayer-body{align-items:flex-start;justify-content:flex-start;overflow-y:auto;}" +
-      ".prayer-cards{flex-direction:column;align-items:center;width:100%;max-width:100%;gap:1.4cqh;padding:1cqh 0 .4cqh;}" +
-      ".prayer-card{width:64cqw;max-width:64cqw;min-height:auto;padding:2.6cqh 3cqw 2.2cqh;gap:.7cqh;}" +
-      ".prayer-card-icon{width:11cqh;height:11cqh;}" +
-      ".prayer-tip{display:none;}" +
-      ".prayer-actions{margin-top:.6cqh;}" +
-      ".prayer-btn-confirm{height:7.6cqh;}" +
-      "}";
+    ".prayer-btn-confirm:disabled{filter:grayscale(.5) brightness(.92);cursor:default;opacity:.7;}";
   document.head.appendChild(style);
 }
