@@ -140,6 +140,8 @@
         plannedTargetId: monsterData.plannedTargetId || null,
         runtimeFlags: cloneRuntimeData(monsterData.runtimeFlags || {}),
         nextPhase: cloneRuntimeData(monsterData.nextPhase || null),
+        roleShift: cloneRuntimeData(monsterData.roleShift || null),
+        roleShiftTriggered: false,
         intent: moves[firstIndex] || null,
         lastIntentType: null,
         intentRepeatCount: 0

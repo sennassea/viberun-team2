@@ -206,7 +206,7 @@
       x: 72,
       first: 0,
       patternMode: "fixed",
-      gimmick: { type: "echo", ratio: 0.5, minValue: 1, repeatStatusCard: false }, // TEMP_BALANCE
+      gimmick: { type: "echo", ratio: 0.35, minValue: 1, repeatStatusCard: false }, // TEMP_BALANCE — QA: SE08 클리어 턴수 과다(목표 8-9턴 대비 12턴)로 메아리 배율 0.5→0.35 하향
       moves: [
         { t: "debuff", v: 1, name: "잊혀진 이름", role: "weak" },
         { t: "attack", v: 8, name: "오래된 교가", role: "normalAttack" },
@@ -468,7 +468,7 @@
       x: 72,
       first: 0,
       patternMode: "fixed",
-      gimmick: { type: "reflection", oncePerPlayerTurn: true, block: 6 }, // TEMP_BALANCE
+      gimmick: { type: "reflection", oncePerPlayerTurn: true, block: 3 }, // TEMP_BALANCE — QA: PE02/PE08 클리어 턴수 과다(목표 6-9턴 대비 10-16턴)로 자가 결계 6→3 하향
       moves: [
         { t: "debuff", v: 1, name: "물결에 비친 이름", role: "anxiety" },
         { t: "attack", v: 8, name: "젖은 손짓", role: "normalAttack" },
