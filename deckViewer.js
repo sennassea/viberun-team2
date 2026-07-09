@@ -445,7 +445,7 @@
       ".card-detail-close{position:absolute;top:1cqh;right:1cqh;width:4cqh;height:4cqh;background:transparent url(\"assets/ui_buttons/close.png\") center/100% 100% no-repeat;border:0;border-radius:0;color:transparent;font-size:0;font-weight:900;line-height:1;cursor:pointer;box-shadow:none;}" +
       ".card-detail-spread{display:grid;grid-template-columns:minmax(18cqh,24cqw) minmax(0,1fr);gap:2cqw;align-items:stretch;}" +
       ".card-detail-front{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2cqh;min-height:46cqh;}" +
-      ".card-detail-back{min-height:46cqh;border-radius:1.2cqh;background:linear-gradient(150deg,rgba(255,255,255,.78),rgba(235,248,255,.74));border:.22cqh solid var(--c-panel-line);box-shadow:inset 0 0 0 .35cqh rgba(255,255,255,.36);padding:2cqh 1.6cqw 1.6cqh;display:flex;flex-direction:column;}" +
+      ".card-detail-back{min-height:46cqh;border-radius:1.2cqh;background:linear-gradient(150deg,rgba(255,250,236,.85),rgba(243,228,196,.8));border:.22cqh solid rgba(176,125,29,.4);box-shadow:inset 0 0 0 .35cqh rgba(255,250,235,.4);padding:2cqh 1.6cqw 1.6cqh;display:flex;flex-direction:column;}" +
       ".card-detail-card{position:relative;width:min(21cqw,28cqh);height:45cqh;border-radius:1.4cqh;background:linear-gradient(180deg,#fbfcff,#eef4fb);border:.35cqh solid #cdddf0;box-shadow:0 .9cqh 1.8cqh rgba(40,70,120,.25);display:flex;flex-direction:column;align-items:center;padding:1cqh .9cqw;color:var(--c-ink);}" +
       ".card-detail-card.cost-attack{border-color:#f0b9b0;}.card-detail-card.cost-defense{border-color:#a9cdf0;}.card-detail-card.cost-skill{border-color:#a9e0c2;}" +
       ".card-detail-card.upgraded{border-color:var(--c-gold);box-shadow:0 0 0 .35cqh rgba(231,181,74,.24),0 1cqh 2cqh rgba(40,70,120,.28);background:linear-gradient(180deg,#fffdf2,#edf8ff);}" +
@@ -486,16 +486,21 @@
       ".card-detail-art{height:13cqh;border-radius:1.2cqh;display:grid;place-items:center;font-size:7.5cqh;background:linear-gradient(160deg,#fff7d7,#dff3ff);border:.2cqh solid #d6e6f5;}" +
       ".card-detail-title h3{font-size:3.2cqh;line-height:1.1;margin-bottom:.8cqh;}" +
       ".card-detail-badges{display:flex;flex-wrap:wrap;gap:.6cqh;}" +
-      ".card-detail-badge{min-height:3cqh;display:inline-flex;align-items:center;border-radius:1.5cqh;padding:.2cqh .9cqw;background:rgba(255,255,255,.82);border:.15cqh solid var(--c-panel-line);font-size:1.55cqh;font-weight:900;color:var(--c-ink-soft);}" +
+      ".card-detail-badge{min-height:3cqh;display:inline-flex;align-items:center;border-radius:1.5cqh;padding:.2cqh .9cqw;background:rgba(255,250,235,.85);border:.15cqh solid rgba(176,125,29,.35);font-size:1.55cqh;font-weight:900;color:var(--c-ink-soft);}" +
       ".card-detail-badge.type-attack{color:#a82e2e;border-color:#f0b9b0;background:#fff1ef;}" +
       ".card-detail-badge.type-defense{color:#1f5fa5;border-color:#a9cdf0;background:#eef7ff;}" +
       ".card-detail-badge.type-skill{color:#2c7b55;border-color:#a9e0c2;background:#effbf4;}" +
       ".card-detail-badge.upgrade{color:#7a5510;border-color:var(--c-gold);background:#fff6cf;}" +
-      ".card-detail-desc{margin-top:1.8cqh;padding:1.4cqh 1.2cqw;border-radius:1cqh;background:rgba(255,255,255,.68);border:.15cqh solid var(--c-panel-line);font-size:1.9cqh;font-weight:800;line-height:1.45;white-space:pre-line;text-align:center;}" +
+      ".card-detail-desc{margin-top:1.8cqh;padding:1.4cqh 1.2cqw;border-radius:1cqh;background:linear-gradient(180deg,rgba(255,251,240,.92),rgba(243,228,196,.85));border:.15cqh solid rgba(176,125,29,.35);box-shadow:inset 0 0 0 .1cqh rgba(255,255,255,.4);font-size:1.9cqh;font-weight:800;line-height:1.45;white-space:pre-line;text-align:center;}" +
       ".card-detail-info{display:grid;grid-template-columns:1fr;gap:1cqh;margin-top:1.2cqh;}" +
-      ".card-detail-info section{border-radius:1cqh;background:rgba(255,255,255,.62);border:.15cqh solid var(--c-panel-line);padding:1.1cqh 1cqw;}" +
+      ".card-detail-info section{border-radius:1cqh;background:linear-gradient(180deg,rgba(255,251,240,.85),rgba(243,228,196,.75));border:.15cqh solid rgba(176,125,29,.3);padding:1.1cqh 1cqw;}" +
       ".card-detail-info h4{font-size:1.65cqh;margin-bottom:.5cqh;color:var(--c-ink-soft);}" +
       ".card-detail-info p{font-size:1.65cqh;line-height:1.45;color:var(--c-ink);font-weight:700;}" +
+      ".card-detail-subcard-wrap{margin-top:auto;padding-top:1.2cqh;display:flex;align-items:center;gap:.8cqw;}" +
+      ".card-detail-subcard-label{font-size:1.4cqh;font-weight:800;color:var(--c-ink-soft);}" +
+      ".card-detail-card.card-detail-subcard{width:6.4cqh;height:9.6cqh;flex:none;box-shadow:0 .5cqh 1cqh rgba(40,70,120,.2);}" +
+      ".card-detail-card.card-frame-card.card-detail-subcard .card-cost-text,.card-detail-card.card-frame-card.card-detail-subcard .card-name-text,.card-detail-card.card-frame-card.card-detail-subcard .card-desc-text{display:none;}" +
+      "@media (max-width:700px){.card-detail-subcard-wrap{padding-top:.8cqh;}}" +
       "@media (max-width:700px){.card-detail-panel{width:78cqw;max-height:72cqh;overflow:auto;}.card-detail-spread{grid-template-columns:1fr;}.card-detail-front{min-height:auto;}.card-detail-back{min-height:auto;}.card-detail-card{width:min(42cqw,28cqh);height:40cqh;}.card-detail-card .art{height:12cqh;font-size:7cqh;}.card-detail-upgrade-toggle{min-width:28cqw;}.card-detail-prev{left:.8cqh;}.card-detail-next{right:.8cqh;}.card-detail-nav{top:auto;bottom:1cqh;transform:none;width:4.4cqh;height:4.4cqh;}.card-detail-nav::before{font-size:3.3cqh;}.card-detail-info{grid-template-columns:1fr;}.card-detail-top{grid-template-columns:10cqh minmax(0,1fr);}.card-detail-art{height:10cqh;font-size:6cqh;}}";
     document.head.appendChild(style);
   }
@@ -1140,6 +1145,26 @@
       '<button type="button" class="card-detail-nav card-detail-next" data-card-detail-nav="next" aria-label="다음 항목">›</button>';
   }
 
+  /* fx 항목 중 t가 "createCard"로 시작하고 key가 있는 항목을 범용으로 찾는다.
+     (tooltip.js의 서브카드 호버 미리보기와 동일한 탐지 패턴) */
+  function getSubCardEntry(card){
+    if(!card || !Array.isArray(card.fx) || typeof CARD_DB !== "object" || !CARD_DB) return null;
+    const fxItem = card.fx.find(f => f && typeof f.t === "string" && /^createCard/i.test(f.t) && f.key);
+    if(!fxItem) return null;
+    return CARD_DB[fxItem.key] || null;
+  }
+
+  function cardDetailSubCardHtml(card){
+    const subCard = getSubCardEntry(card);
+    if(!subCard) return "";
+    return '<div class="card-detail-subcard-wrap">' +
+      '<span class="card-detail-subcard-label">사용 시 생성<br>' + escapeHtml(subCard.name || "") + '</span>' +
+      '<div class="card-detail-subcard card-detail-card card-frame-card cost-' + escapeAttr(subCard.type) + '">' +
+        cardFaceHtml(subCard) +
+      '</div>' +
+    '</div>';
+  }
+
   function cardDetailHtml(entry, index, total, isUpgrade){
     const card = isUpgrade ? getUpgradePreviewCard(entry.card) : entry.card;
     const typeId = getCardFilterType(card) || card.type;
@@ -1169,6 +1194,7 @@
             (isUpgrade ? '<section><h4>강화 변화</h4><p>' + escapeHtml(changeText) + '</p></section>' : '') +
             '<section><h4>주문 종류</h4><p>' + escapeHtml(getTypeDescription(card)) + '</p></section>' +
           '</div>' +
+          cardDetailSubCardHtml(card) +
         '</div>' +
       '</div>' +
       '<button type="button" class="card-detail-nav card-detail-next" data-card-detail-nav="next" aria-label="다음 주문">›</button>';
