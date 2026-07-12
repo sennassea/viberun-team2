@@ -220,6 +220,9 @@ textarea,
    - 그래도 설명이 넘치는 경우를 위해 세로 스크롤을 항상 열어두고(overflow-y),
      실제로 넘칠 때만 cardDescScroll.js가 .desc-scrollable을 붙여 드래그 스크롤을
      활성화한다(짧은 설명에서는 기존 카드 드래그 제스처를 그대로 통과시키기 위함).
+   - 드래그 스크롤이 열린 상태에서 모바일 브라우저의 "꾹 눌러 텍스트 선택"
+     제스처(단어 선택/돋보기/복사 메뉴)가 함께 발동해 스크롤과 충돌하므로,
+     이 텍스트는 애초에 선택 대상에서 완전히 제외한다.
    ========================================================================= */
 .card-desc-text,
 .item-desc-text {
@@ -231,6 +234,9 @@ textarea,
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(16,36,63,.4) transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .card-desc-text::-webkit-scrollbar,
 .item-desc-text::-webkit-scrollbar { width: .4cqh; }

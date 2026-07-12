@@ -55,6 +55,7 @@
      클릭-드래그로 스크롤되지 않고, 손패 카드의 touch-action:none 때문에
      터치 스와이프도 브라우저가 기본으로 처리해주지 않는다. 마우스/터치를
      포인터 이벤트 하나로 통일해 직접 scrollTop을 옮긴다. */
+  const DRAG_CLICK_THRESHOLD = 6; // 이 이상 움직이면 "탭"이 아니라 "드래그"로 간주
   let drag = null;
   document.addEventListener(
     "pointerdown",
@@ -63,7 +64,7 @@
       if (!el || !el.classList.contains("desc-scrollable")) return;
       // 카드 드래그(전투 중 카드 사용 등)로 이벤트가 넘어가지 않도록 여기서 막는다.
       e.stopPropagation();
-      drag = { el, startY: e.clientY, startScroll: el.scrollTop };
+      drag = { el, startY: e.clientY, startScroll: el.scrollTop, moved: false };
       try {
         el.setPointerCapture(e.pointerId);
       } catch (_) {}
@@ -78,13 +79,21 @@
       e.stopPropagation();
       e.preventDefault();
       const dy = e.clientY - drag.startY;
+      if (!drag.moved && Math.abs(dy) > DRAG_CLICK_THRESHOLD) drag.moved = true;
       drag.el.scrollTop = drag.startScroll - dy;
     },
     true
   );
 
+  // 설명을 드래그해 스크롤한 뒤에도 브라우저가 pointerup 다음에 click을 한 번
+  // 더 발생시킨다. 이 click이 그대로 카드 클릭 위임(도감 상세 열기, 보상/선택
+  // 모달의 카드 선택 등)까지 전달돼 "스크롤하려 했는데 카드가 선택/열림" 문제가
+  // 생기므로, 실제로 드래그(=moved)가 있었을 때만 다음 click 1회를 삼킨다.
+  // 살짝 눌렀다 뗀 순수 탭은 moved가 false라 기존처럼 그대로 통과한다.
+  let suppressNextClick = false;
   function endDrag(e) {
     if (!drag) return;
+    if (drag.moved) suppressNextClick = true;
     try {
       drag.el.releasePointerCapture(e.pointerId);
     } catch (_) {}
@@ -92,6 +101,16 @@
   }
   document.addEventListener("pointerup", endDrag, true);
   document.addEventListener("pointercancel", endDrag, true);
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!suppressNextClick) return;
+      suppressNextClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    },
+    true
+  );
 
   // 데스크톱 휠 스크롤 보조.
   document.addEventListener(
