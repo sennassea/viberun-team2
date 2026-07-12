@@ -29,10 +29,10 @@
 .card-frame-card .card-art-layer{position:absolute; inset:0; z-index:0; display:grid; place-items:center; overflow:hidden; background:linear-gradient(160deg,#eef6ff,#dcebfb); pointer-events:none;}
 .card-frame-card .card-art-layer img{width:100%; height:100%; object-fit:cover; display:block; user-select:none; -webkit-user-drag:none;}
 .card-frame-card .card-frame-layer{position:absolute; inset:0; z-index:2; width:100%; height:100%; object-fit:fill; pointer-events:none;}
-.card-frame-card .card-text-layer{position:absolute; inset:0; z-index:3; pointer-events:none; font-family:inherit; font-weight:900; color:#10243f;}
+.card-frame-card .card-text-layer{position:absolute; inset:0; z-index:5; pointer-events:none; font-family:inherit; font-weight:900; color:#10243f;}
 .card-frame-card .card-cost-text{position:absolute; left:6.2%; top:2.4%; width:18.8%; height:13.9%; display:grid; place-items:center; color:#2b3848; font-size:3.2cqh; line-height:1; text-shadow:0 .08cqh 0 rgba(255,255,255,.95);}
 .card-frame-card .card-name-text{position:absolute; left:12%; right:8%; top:5.9%; height:10%; display:grid; place-items:center; text-align:center; font-family:var(--font-title); font-size:1.9cqh; line-height:1.05; white-space:normal; overflow:hidden; text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}
-.card-frame-card .card-desc-text{position:absolute; left:8%; right:8%; top:77.8%; bottom:7.4%; display:block; text-align:center; font-family:var(--font-body); font-size:1.32cqh; line-height:1.34; white-space:pre-line; overflow:hidden; color:#10243f;}
+.card-frame-card .card-desc-text{position:absolute; left:8%; right:8%; top:77.8%; bottom:7.4%; display:block; text-align:center; font-family:var(--font-body); font-size:1.5cqh; line-height:1.34; white-space:pre-line; overflow-y:auto; color:#10243f;}
 .card-frame-card .card-hit-layer{position:absolute; inset:0; z-index:4; background:transparent; touch-action:none; cursor:inherit;}
 /* 손패 카드는 서로 붙어있어 터치 정확도가 중요 — 히트 영역을 카드 테두리보다 살짝 넓혀 탭하기 쉽게 한다 */
 #hand .card-frame-card .card-hit-layer{inset:-.7cqh -1cqw;}
@@ -41,8 +41,8 @@
 .item-frame-card .item-art-layer{position:absolute; inset:0; z-index:1; display:grid; place-items:center; overflow:hidden; pointer-events:none; font-size:8cqh;}
 .item-frame-card .item-art-layer img{width:62%; height:48%; object-fit:contain; display:block; filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.22)); user-select:none; -webkit-user-drag:none;}
 .item-frame-card .item-frame-layer{position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:fill; pointer-events:none;}
-.item-frame-card .item-text-layer{position:absolute; inset:0; z-index:2; pointer-events:none; font-family:inherit; font-weight:900; color:#10243f;}
+.item-frame-card .item-text-layer{position:absolute; inset:0; z-index:5; pointer-events:none; font-family:inherit; font-weight:900; color:#10243f;}
 .item-frame-card .item-name-text{position:absolute; left:12%; right:12%; top:9%; height:10%; display:grid; place-items:center; text-align:center; font-family:var(--font-title); font-size:1.67cqh; line-height:1.05; white-space:normal; overflow:hidden; text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}
-.item-frame-card .item-desc-text{position:absolute; left:9%; right:9%; top:77.8%; bottom:7.4%; display:block; text-align:center; font-family:var(--font-body); font-size:1.17cqh; line-height:1.34; white-space:pre-line; overflow:hidden; color:#10243f;}
+.item-frame-card .item-desc-text{position:absolute; left:9%; right:9%; top:77.8%; bottom:7.4%; display:block; text-align:center; font-family:var(--font-body); font-size:1.32cqh; line-height:1.34; white-space:pre-line; overflow-y:auto; color:#10243f;}
 .item-frame-card .item-hit-layer{position:absolute; inset:0; z-index:4; background:transparent; touch-action:none; cursor:inherit;}
 

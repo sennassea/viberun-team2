@@ -709,6 +709,99 @@ function buildOverlay() {
   return div;
 }
 
+/* ── HUD 층수/구역 표시 갱신 ────────────────────────────────────────────── */
+function updateHudFloor(){
+  const el = document.getElementById("hudFloor"); if(!el) return;
+  el.textContent = typeof formatCurrentDisplayArea === "function"
+    ? formatCurrentDisplayArea()
+    : "1구역";
+  const actEl = document.getElementById("hudAct");
+  if(actEl && typeof getCurrentActName === "function") actEl.textContent = getCurrentActName();
+  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
+}
+
+/* ── 몬스터 팝업 (현재 미사용: 어떤 화면에서도 호출되지 않는 상태로
+   mapSystem.js에 있던 것을 그대로 옮김 — 추후 노드 hover 미리보기 등에
+   재사용하려면 여기서 시작) ──────────────────────────────────────────── */
+function showNodePopup(e, el){
+  removePopup();
+  const si       = +el.dataset.stage;
+  const monsters = POPUP_GETTERS[si] ? POPUP_GETTERS[si]() : [];
+  if(!monsters.length) return;
+
+  const stage = MAP_STAGES[si];
+  const ico   = stage?.type === "boss" ? "💀" : stage?.type === "elite" ? "👹" : "👺";
+
+  const popup = document.createElement("div");
+  popup.className = "map-node-popup"; popup.id = "mapNodePopup";
+  let html = `<div class="popup-title">${ico} ${stage?.label || ""}</div>`;
+  monsters.forEach(m => {
+    html += `<div class="popup-monster">${m.emoji} ${m.name}<span class="popup-hp"> HP ${m.maxHp}</span></div>`;
+  });
+  popup.innerHTML = html;
+
+  const panel = document.querySelector(".map-panel");
+  const svg   = document.getElementById("mapCanvas");
+  if(!panel || !svg) return;
+
+  const sr = svg.getBoundingClientRect(), pr = panel.getBoundingClientRect();
+  const nid = el.dataset.nodeid;
+  let nx = sr.left + sr.width / 2, ny = sr.top;
+
+  // SVG viewBox 좌표 → 화면 px 변환은 mapUI.js의 대각선 레이아웃 기준으로
+  // 다시 계산해야 하므로, 이 팝업을 실제로 사용하게 되면 getDiagNodePos를
+  // 참고해 좌표 변환 로직을 갱신할 것.
+  popup.style.cssText = `position:absolute; left:${nx - pr.left + 12}px; top:${ny - pr.top - 10}px;`;
+  panel.style.position = "relative";
+  panel.appendChild(popup);
+  setTimeout(() => document.addEventListener("click", removePopup, { once: true }), 0);
+}
+function removePopup(){ const p = document.getElementById("mapNodePopup"); if(p) p.remove(); }
+
+/* ── 승리 화면: '다시 시작' → '진행' 교체 ────────────────────────────── */
+function setupWinInterception(){
+  const overEl     = document.getElementById("over");
+  const restartBtn = document.getElementById("restart");
+  if(!overEl || !restartBtn) return;
+
+  const proceedBtn = document.createElement("button");
+  proceedBtn.id = "proceedBtn";
+  proceedBtn.textContent = "진행";
+  proceedBtn.style.display = "none";
+  restartBtn.parentNode.insertBefore(proceedBtn, restartBtn.nextSibling);
+
+  new MutationObserver(() => {
+    if(!overEl.classList.contains("show")) return;
+    const isWin = typeof S !== "undefined" && S.over === "win";
+    if(isWin && hasNextTier()){
+      restartBtn.style.display = "none";
+      proceedBtn.style.display = "";
+    } else {
+      restartBtn.style.display = "";
+      proceedBtn.style.display = "none";
+    }
+  }).observe(overEl, { attributes: true, attributeFilter: ["class"] });
+
+  proceedBtn.addEventListener("click", () => {
+    overEl.classList.remove("show");
+    window.MAP_STATE.proceedMode = true;
+    openMap();
+  });
+
+  // 캡처 페이즈: script.js 핸들러보다 먼저 실행
+  restartBtn.addEventListener("click", () => {
+    const isWin = typeof S !== "undefined" && S.over === "win";
+    if(isWin && !hasNextTier()){
+      // 보스 클리어 후 재시작 → 새 맵 생성
+      generateMap();
+      window.MAP_STATE.currentStage = 0;
+      loadStageMonsters(0);
+    }
+    window.MAP_STATE.proceedMode = false;
+    updateHudFloor();
+  }, true);
+}
+
 function closeMapPopupViews(except) {
   if (except !== "deck" && typeof window.DECK_VIEWER_CLOSE === "function") {
     window.DECK_VIEWER_CLOSE();

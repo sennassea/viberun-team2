@@ -12,10 +12,6 @@
   backdrop-filter:blur(.45cqh);
 }
 .auth-login-modal.show{display:grid;}
-.auth-login-modal.is-required{
-  background:transparent;
-  backdrop-filter:none;
-}
 .auth-login-modal.is-required .auth-login-close{display:none;}
 .auth-login-panel{
   width:min(58cqw,68cqh);

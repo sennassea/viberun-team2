@@ -1,0 +1,58 @@
+/* 주문(카드) 꾹 눌러 확대 미리보기 — cardZoomPreview.js와 짝을 이루는 스타일 */
+
+.card-frame-card.card-zoom-charging,
+.bm-deck-preview-card.card-zoom-charging {
+  transform: scale(1.12);
+  z-index: 20;
+  box-shadow: 0 1.4cqh 3cqh rgba(20, 40, 80, .4);
+  transition: transform .4s cubic-bezier(.22, .8, .32, 1), box-shadow .4s ease;
+}
+
+/* #game 안에 붙여야 카드 내부 cqh/cqw(글씨 크기 등)가 원본과 동일한 기준으로
+   계산된다 — cardZoomPreview.js 상단 주석 참고 */
+#cardZoomOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 200000;
+  display: none;
+}
+#cardZoomOverlay.show { display: block; }
+
+.card-zoom-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 12, 22, .6);
+  backdrop-filter: blur(2px);
+}
+
+.card-zoom-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.card-zoom-scale-wrapper {
+  --zoom-scale: 1;
+  transform-origin: center center;
+  animation: cardZoomPop .18s cubic-bezier(.22, .8, .32, 1) forwards;
+}
+.card-zoom-scale-wrapper > * {
+  /* 원본 카드가 드래그 중/튜토리얼 강조 등 상태 클래스로 position:absolute나
+     transform을 갖고 있을 수 있으므로, 복제본은 항상 정적 배치로 리셋한다.
+     크기는 원래 카드와 동일하게 자연 크기로 두고(글씨 등 cqh/cqw 비율이
+     원본과 같아지도록) 부모 wrapper의 transform:scale()로 통째로 키운다 */
+  position: static !important;
+  inset: auto !important;
+  top: auto !important; left: auto !important; right: auto !important; bottom: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  box-shadow: 0 2cqh 4cqh rgba(0, 0, 0, .55);
+}
+
+@keyframes cardZoomPop {
+  from { transform: scale(calc(var(--zoom-scale) * .82)); opacity: 0; }
+  to   { transform: scale(var(--zoom-scale)); opacity: 1; }
+}

@@ -1,0 +1,312 @@
+"use strict";
+/* =========================================================================
+   Tutorial Map UI 레이어 — tutorialMapSystem.js에서 분리된 DOM 렌더링.
+   튜토리얼 맵 진행 상태(어떤 대사 다음인지, 노드 클릭 차단 여부 등)는
+   tutorialMapSystem.js에 남아있고 이 파일은 대사 상자/클릭 차단막/강조
+   표시만 그린다.
+   유니티 이식 시 이 파일은 통째로 버리고 uGUI로 새로 짜면 된다.
+   ========================================================================= */
+
+function ensureTutorialMapStyles(){
+  if(document.getElementById("tutorialMapStyles")) return;
+  const style = document.createElement("style");
+  style.id = "tutorialMapStyles";
+  style.textContent = `
+    #mapOverlay.tutorial-map-mode{
+      z-index:220;
+    }
+    #mapOverlay.tutorial-map-mode .mfloor-lbl{
+      display:none;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-dialogue{
+      position:absolute;
+      left:50%;
+      bottom:2.4cqh;
+      --tutorial-dongjasin-avatar-width:36cqh;
+      --tutorial-dongjasin-avatar-height:64cqh;
+      --tutorial-dongjasin-avatar-left:-23cqh;
+      --tutorial-dongjasin-avatar-top:-41.8cqh;
+      --tutorial-dongjasin-avatar-transform:none;
+      transform:translateX(-50%);
+      z-index:12;
+      pointer-events:none;
+      width:min(54cqw, 72cqh);
+      aspect-ratio:2533/621;
+      display:flex;
+      padding:1.6cqh 3.2cqw;
+      border:0;
+      border-radius:0;
+      background:transparent url("assets/ui/dialog_panel_battle_intro.png") center/100% 100% no-repeat;
+      color:#243247;
+      box-shadow:none;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-content{
+      display:flex;
+      flex-direction:column;
+      width:100%;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar{
+      position:absolute;
+      left:var(--tutorial-dongjasin-avatar-left);
+      top:var(--tutorial-dongjasin-avatar-top);
+      transform:var(--tutorial-dongjasin-avatar-transform);
+      width:var(--tutorial-dongjasin-avatar-width);
+      height:var(--tutorial-dongjasin-avatar-height);
+      pointer-events:none;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      object-position:bottom center;
+      display:block;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-dongjasin-avatar-placeholder{
+      width:100%;
+      height:100%;
+      border:.22cqh solid rgba(47,102,168,.45);
+      border-radius:46% 46% 42% 42% / 38% 38% 52% 52%;
+      background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(220,234,250,.96));
+      box-shadow:0 .45cqh 1cqh rgba(20,35,60,.16);
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-body{
+      display:flex;
+      flex-direction:column;
+      width:100%;
+      flex:1 1 auto;
+      min-width:0;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-speaker{
+      margin-top:1cqh;
+      margin-bottom:.6cqh;
+      font-size:2.3cqh;
+      color:#a8641f;
+      text-shadow:0 0.06cqh 0 rgba(255,255,255,.5);
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-text{
+      font-size:1.9cqh;
+      line-height:1.45;
+      font-weight:800;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-actions{
+      display:flex;
+      justify-content:flex-end;
+      margin-top:auto;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-dialogue-next{
+      pointer-events:auto;
+      min-width:0;
+      height:4.4cqh;
+      aspect-ratio:918/232;
+      border:0;
+      border-radius:0;
+      background:transparent url("assets/ui_buttons/tutorial_proceed_v2.png") center/100% 100% no-repeat;
+      color:#2a1a08;
+      font-size:1.7cqh;
+      font-weight:900;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-click-blocker{
+      position:absolute;
+      inset:0;
+      z-index:11;
+      background:rgba(12,24,40,.12);
+      cursor:default;
+    }
+    #mapOverlay.tutorial-map-mode.tutorial-map-focus-active .mnode:not(.tutorial-map-focus-node){
+      opacity:.45;
+      filter:saturate(.75);
+    }
+    #mapOverlay.tutorial-map-mode.tutorial-map-focus-active .mpath{
+      opacity:.35;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-focus-path{
+      opacity:1 !important;
+      stroke:#ffd25f !important;
+      stroke-width:5 !important;
+      filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.78));
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend{
+      /* position은 절대 건드리지 않는다: .dmap-legend는 mapUI.css에서
+         position:absolute + transform으로 고정 배치되어 있는데, 여기서
+         position:relative를 주면 그 배치가 깨져서 범례가 화면 좌상단으로
+         튀어나가는 버그가 있었다. isolation은 position:static이 아니기만
+         하면(이미 absolute) 새 스태킹 컨텍스트를 만들므로 position 재지정이
+         필요 없다. */
+      z-index:13;
+      isolation:isolate;
+      opacity:1 !important;
+      filter:none !important;
+      background:transparent !important;
+      border-color:transparent !important;
+      box-shadow:none !important;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-panel{
+      z-index:13;
+      isolation:isolate;
+      opacity:1 !important;
+      filter:none !important;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-items .dmap-legend-item:not(.tutorial-map-focus-legend-item){
+      opacity:.42;
+      filter:saturate(.72);
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-focus-legend-item{
+      position:relative;
+      z-index:14;
+      opacity:1 !important;
+      filter:none !important;
+      background:rgba(255,248,214,.96) !important;
+      box-shadow:0 0 0 .24cqh #ffd25f,0 0 1.2cqh rgba(255,210,95,.9) !important;
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-focus-node{
+      opacity:1;
+      filter:drop-shadow(0 0 .8cqh rgba(255,210,95,.82));
+    }
+    #mapOverlay.tutorial-map-mode .tutorial-map-focus-node .mnode-bg{
+      stroke:#ffd25f !important;
+      stroke-width:5 !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function escapeTutorialMapHtml(value){
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderTutorialMapText(text){
+  return escapeTutorialMapHtml(text).replace(/&lt;br&gt;/g, "<br>");
+}
+
+function renderTutorialMapDialogue(dialogue, onNext){
+  const overlay = document.getElementById("mapOverlay");
+  if(!overlay || !overlay.classList.contains("tutorial-map-mode")) return;
+
+  removeTutorialMapDialogue();
+
+  const box = document.createElement("div");
+  box.className = "tutorial-map-dialogue";
+  const avatarImage = dialogue.dongjasinAssetPath
+    ? '<img src="' + escapeTutorialMapHtml(dialogue.dongjasinAssetPath) + '" alt="">'
+    : '<div class="tutorial-dongjasin-avatar-placeholder"></div>';
+  const avatarHtml = dialogue.speaker === "동자신"
+    ? '<div class="tutorial-dongjasin-avatar" aria-hidden="true">' + avatarImage + '</div>'
+    : "";
+  box.innerHTML =
+    avatarHtml +
+    '<div class="tutorial-map-dialogue-content">' +
+      '<div class="tutorial-map-dialogue-body">' +
+        '<div class="tutorial-map-dialogue-speaker">' + escapeTutorialMapHtml(dialogue.speaker || "") + '</div>' +
+        '<div class="tutorial-map-dialogue-text">' + renderTutorialMapText(dialogue.text || "") + '</div>' +
+        '<div class="tutorial-map-dialogue-actions">' +
+          '<button type="button" class="tutorial-map-dialogue-next">다음</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  const nextButton = box.querySelector(".tutorial-map-dialogue-next");
+  if(nextButton) nextButton.addEventListener("click", onNext);
+  overlay.appendChild(box);
+}
+
+function removeTutorialMapDialogue(){
+  const dialogue = document.querySelector("#mapOverlay .tutorial-map-dialogue");
+  if(dialogue) dialogue.remove();
+}
+
+function showTutorialMapClickBlocker(){
+  const overlay = document.getElementById("mapOverlay");
+  if(!overlay || !overlay.classList.contains("tutorial-map-mode")) return;
+  if(overlay.querySelector(".tutorial-map-click-blocker")) return;
+
+  const blocker = document.createElement("div");
+  blocker.className = "tutorial-map-click-blocker";
+  TUTORIAL_MAP_BLOCK_EVENTS.forEach(eventName => {
+    blocker.addEventListener(eventName, event => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
+  });
+  overlay.appendChild(blocker);
+}
+
+function removeTutorialMapClickBlocker(){
+  const blocker = document.querySelector("#mapOverlay .tutorial-map-click-blocker");
+  if(blocker) blocker.remove();
+}
+
+function applyTutorialMapHighlight(dialogueId){
+  clearTutorialMapHighlight();
+  const overlay = document.getElementById("mapOverlay");
+  if(!overlay || !overlay.classList.contains("tutorial-map-mode")) return;
+
+  let node = null;
+  if(dialogueId === "M-002" || dialogueId === "M-003"){
+    node = overlay.querySelector("#mapCanvas .mnode-current");
+  } else if(dialogueId === "M-004" || dialogueId === "M-014" || dialogueId === "M-015"){
+    node = overlay.querySelector('#mapCanvas [data-nodeid="tutorial_battle"]');
+  } else if(dialogueId === "M-005"){
+    const path = overlay.querySelector("#mapCanvas .mpath");
+    if(path){
+      overlay.classList.add("tutorial-map-focus-active");
+      path.classList.add("tutorial-map-focus-path");
+    }
+    return;
+  } else if(dialogueId === "M-006" || dialogueId === "M-007"){
+    const legend = overlay.querySelector("#dMapLegend, .dmap-legend, .map-legend");
+    if(legend){
+      overlay.classList.add("tutorial-map-focus-active");
+      legend.classList.add("tutorial-map-focus-legend");
+    }
+    return;
+  } else if(MAP_LEGEND_DIALOGUE_TYPES[dialogueId]){
+    applyTutorialMapLegendItemHighlight(MAP_LEGEND_DIALOGUE_TYPES[dialogueId]);
+    return;
+  }
+
+  if(!node) return;
+  overlay.classList.add("tutorial-map-focus-active");
+  node.classList.add("tutorial-map-focus-node");
+}
+
+function clearTutorialMapHighlight(){
+  const overlay = document.getElementById("mapOverlay");
+  if(!overlay) return;
+  overlay.classList.remove("tutorial-map-focus-active");
+  overlay.querySelectorAll(".tutorial-map-focus-node").forEach(node => {
+    node.classList.remove("tutorial-map-focus-node");
+  });
+  overlay.querySelectorAll(".tutorial-map-focus-path").forEach(path => {
+    path.classList.remove("tutorial-map-focus-path");
+  });
+  overlay.querySelectorAll(".tutorial-map-focus-legend").forEach(legend => {
+    legend.classList.remove("tutorial-map-focus-legend");
+  });
+  overlay.querySelectorAll(".tutorial-map-focus-legend-panel").forEach(legend => {
+    legend.classList.remove("tutorial-map-focus-legend-panel", "tutorial-map-focus-legend-items");
+  });
+  overlay.querySelectorAll(".tutorial-map-focus-legend-item").forEach(item => {
+    item.classList.remove("tutorial-map-focus-legend-item");
+  });
+}
+
+function applyTutorialMapLegendItemHighlight(type){
+  const overlay = document.getElementById("mapOverlay");
+  if(!overlay || !overlay.classList.contains("tutorial-map-mode")) return;
+  const legend = overlay.querySelector("#dMapLegend, .dmap-legend, .map-legend");
+  if(!legend) return;
+  const item = legend.querySelector('.dmap-legend-item[data-type="' + type + '"], .legend-item[data-type="' + type + '"]');
+  if(!item) return;
+
+  overlay.classList.add("tutorial-map-focus-active");
+  legend.classList.add("tutorial-map-focus-legend-panel", "tutorial-map-focus-legend-items");
+  item.classList.add("tutorial-map-focus-legend-item");
+}

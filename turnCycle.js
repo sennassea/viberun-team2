@@ -1,6 +1,7 @@
 "use strict";
 /* =========================================================================
    턴 종료 → 생존 적 행동(spawnIndex 순) → 새 플레이어 턴
+   레거시 종료 오버레이(#over) DOM 렌더링은 turnCycleUI.js로 분리되어 있다.
    ========================================================================= */
 async function endTurn(){
   const tutorialEndTurnStepActive = window.TUTORIAL_BATTLE &&
@@ -105,6 +106,15 @@ async function endTurn(){
     notifyMonsterBattleEvent("enemyActionEnd", { enemy:e, move:mv });
     decayEnemyStatuses(e, "afterEnemyAction");
     renderAll();
+
+    // 회상 등 턴 종료 시 지속 피해로 마지막 적이 쓰러진 경우에도 즉시 클리어 처리한다.
+    // (기존에는 카드 사용 직후에만 생존 적 0명을 검사해, 회상으로 적이 죽으면
+    //  차례마침을 눌러도 전투가 끝나지 않는 문제가 있었다.)
+    if(livingEnemies().length===0){
+      nodeClear();
+      renderAll();
+      return;
+    }
     if(S.player.hp<=0 && !tryApplyFatalRelic()) return playDeathThenEndGame();
     await wait(450);
   }
@@ -215,37 +225,4 @@ function endGame(result){
 
   showLegacyEndOverlay(result, giveUpToStartOnly);
   return true;
-}
-
-function showLegacyEndOverlay(result, giveUpToStartOnly){
-  $("#overTitle").textContent = result==="win" ? "🎉 승리!" : "💀 패배...";
-  $("#overDesc").textContent  = result==="win" ? "모든 영혼을 성불시켰습니다." : PLAYER_DEF.name+"이 쓰러졌습니다.";
-  updateRestartButtonForEndGame(result === "lose" || giveUpToStartOnly);
-  $("#returnStart").style.display = result==="lose" ? "block" : "none";
-  $("#over").classList.add("show");
-}
-
-function updateRestartButtonForEndGame(removeRestart){
-  const restartButton = document.getElementById("restart");
-  if(removeRestart){
-    if(restartButton) restartButton.remove();
-    return;
-  }
-  if(restartButton){
-    restartButton.hidden = false;
-    restartButton.disabled = false;
-    restartButton.style.display = "";
-    return;
-  }
-  const returnStartButton = document.getElementById("returnStart");
-  if(!returnStartButton || !returnStartButton.parentNode) return;
-  const restoredButton = document.createElement("button");
-  restoredButton.id = "restart";
-  restoredButton.textContent = "다시 시작";
-  restoredButton.addEventListener("click", () => {
-    const over = document.querySelector("#over");
-    if(over) over.classList.remove("show");
-    newGame({ resetRun:true });
-  });
-  returnStartButton.parentNode.insertBefore(restoredButton, returnStartButton);
 }
