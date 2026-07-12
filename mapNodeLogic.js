@@ -481,6 +481,12 @@ window.ACT1_REGENERATE_MAP = function(options = {}) {
 window.ACT1_START_NEW_GAME = function(options = {}) {
   try { localStorage.removeItem("viberunSaveState"); } catch (e) {}
 
+  /* 상점/휴식/이벤트는 완료 전에 설정→저장이 가능해 오버레이가 열린 채로
+     남을 수 있다. 새 게임 시작 시 이전 게임의 노드 화면이 비치지 않도록 닫는다. */
+  if (typeof closeShopNode === "function") closeShopNode();
+  if (typeof closePrayerNode === "function") closePrayerNode();
+  if (typeof closeEventOverlayOnly === "function") closeEventOverlayOnly();
+
   if (typeof beginNewRun === "function") beginNewRun();
 
   /* 신령의 길 UI에서 선택한 시작 여정 레벨(끝없는 여정 N 직접 시작)을 적용한다.

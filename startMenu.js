@@ -153,9 +153,16 @@ function showStartNotice(message){
   notice._hideTimer = setTimeout(() => notice.classList.remove("show"), 1500);
 }
 
+function closeOpenNodeOverlays(){
+  if(typeof closeShopNode === "function") closeShopNode();
+  if(typeof closePrayerNode === "function") closePrayerNode();
+  if(typeof closeEventOverlayOnly === "function") closeEventOverlayOnly();
+}
+
 function showStartScreenAfterSave(){
   $("#over").classList.remove("show");
   closeRewardOverlay();
+  closeOpenNodeOverlays();
   updateContinueButtonInfo();
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.remove("hidden");
@@ -165,6 +172,7 @@ function showStartScreenAfterSave(){
 function showStartMenu(options={}){
   $("#over").classList.remove("show");
   closeRewardOverlay();
+  closeOpenNodeOverlays();
   const startScreen = $("#startScreen");
   if(startScreen) startScreen.classList.remove("hidden");
   updateContinueButtonInfo({ ignoreSavedProgress: !!options.ignoreSavedProgress });
