@@ -25,17 +25,12 @@ function isAttackPotion(item){
 
 function onPotionSlotClick(item, index, slot){
   hidePotionUseButton();
-  if(isSelfUsePotion(item)){
+  if(isSelfUsePotion(item) || isAttackPotion(item)){
     if(!canUsePotionNow()){
       toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
       return;
     }
     showPotionUseButton(index, slot);
-    showPotionDiscardButton(index, slot);
-    refreshPotionTooltipPosition();
-    return;
-  }
-  if(isAttackPotion(item)){
     showPotionDiscardButton(index, slot);
     refreshPotionTooltipPosition();
   }
@@ -117,8 +112,13 @@ function ensurePotionUseButton(){
   btn.addEventListener("click", async ev => {
     ev.stopPropagation();
     if(btn.disabled) return;
-    btn.disabled = true;
     const index = Number(btn.dataset.potionIndex);
+    const potion = Array.isArray(S.potions) ? S.potions[index] : null;
+    if(potion && isAttackPotion(potion)){
+      beginPotionTargeting(index, ev.clientX, ev.clientY);
+      return;
+    }
+    btn.disabled = true;
     if(!(await useSelfPotion(index))) btn.disabled = false;
   });
   panel.appendChild(btn);
@@ -643,11 +643,71 @@ function confirmDiscardPotion(index, potion){
   renderAll();
 }
 
+/* "사용" 버튼을 눌러 시작하는 클릭 기반 조준. 드래그 없이도 화살표가 포인터를
+   따라다니다가 몬스터를 클릭하면 던지고, 몬스터가 아닌 곳을 클릭하면 취소된다. */
+let potionTargetState = null;
+
+function beginPotionTargeting(index, x, y){
+  if(!canUsePotionNow()){
+    toast("전투 중 플레이어 턴에만 사용할 수 있습니다.");
+    return;
+  }
+  const slot = document.querySelector('#sidePotionSlots [data-potion-index="'+index+'"]');
+  if(!slot) return;
+  endPotionTargeting();
+  hidePotionActionPanel();
+  slot.classList.add("potion-dragging");
+  document.querySelectorAll(".enemy").forEach(enemyEl => {
+    if(!enemyEl.classList.contains("dead")) enemyEl.classList.add("targetable");
+  });
+  potionTargetState = { slot, index, origin: slot.getBoundingClientRect() };
+  document.addEventListener("pointermove", onPotionTargetMove);
+  // 카드/약병 드래그 전부 클릭이 아닌 포인터 이벤트로 처리되는 환경(터치 등)과
+  // 일관되게 동작하도록, 대상 확정도 click 대신 pointerdown으로 처리한다.
+  document.addEventListener("pointerdown", onPotionTargetPointerDown, true);
+  if(Number.isFinite(x) && Number.isFinite(y)) onPotionTargetMove({ clientX:x, clientY:y });
+}
+
+function onPotionTargetMove(ev){
+  if(!potionTargetState) return;
+  const en = enemyUnder(ev.clientX, ev.clientY);
+  document.querySelectorAll(".enemy.hovered").forEach(enemyEl => enemyEl.classList.remove("hovered"));
+  if(en) en.el.classList.add("hovered");
+  const o = potionTargetState.origin;
+  drawAim(o.left + o.width / 2, o.top + o.height / 2, ev.clientX, ev.clientY);
+}
+
+function onPotionTargetPointerDown(ev){
+  const state = potionTargetState;
+  if(!state) return;
+  const en = enemyUnder(ev.clientX, ev.clientY);
+  ev.preventDefault();
+  ev.stopPropagation();
+  endPotionTargeting();
+  if(en) useTargetPotion(state.index, en.enemy);
+}
+
+function endPotionTargeting(){
+  if(!potionTargetState) return;
+  document.removeEventListener("pointermove", onPotionTargetMove);
+  document.removeEventListener("pointerdown", onPotionTargetPointerDown, true);
+  $("#aim").innerHTML = "";
+  document.querySelectorAll(".targetable,.hovered").forEach(enemyEl => enemyEl.classList.remove("targetable","hovered"));
+  if(potionTargetState.slot) potionTargetState.slot.classList.remove("potion-dragging");
+  potionTargetState = null;
+}
+
+window.addEventListener("blur", endPotionTargeting);
+document.addEventListener("visibilitychange", function(){
+  if(document.hidden) endPotionTargeting();
+});
+
 let potionDragState = null;
 function attachPotionDrag(slot, item, index){
   let startX=0, startY=0, dragging=false, pid=null;
   slot.addEventListener("pointerdown", down);
   function down(ev){
+    endPotionTargeting();
     hidePotionUseButton();
     hidePotionDiscardButton();
     if(!canUsePotionNow()){
