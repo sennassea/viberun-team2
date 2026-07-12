@@ -555,6 +555,10 @@
       return Promise.resolve({ ok: false, provider, message: config.message });
     }
 
+    /* 네이티브 브리지/외부 SDK 로그인도 새 Activity·커스텀 탭 등으로 창이
+       전환될 수 있으므로, 실제 로그인 호출 전에 진행 상태를 미리 저장해둔다. */
+    persistProgressBeforeRedirect();
+
     try {
       const signIn = directSignIn || facebookSdkSignIn || bridgeSignIn;
       const signInResult = signIn();
@@ -640,6 +644,16 @@
     return window.location.href.split("#")[0];
   }
 
+  /* signInWithOAuth는 기본적으로 현재 페이지를 통째로 provider 로그인 페이지로
+     리다이렉트한다(팝업이 아님). 그 순간 인메모리 게임 진행 상태(RUN_STATE/S)가
+     전부 날아가므로, 리다이렉트를 트리거하기 직전에 settingsViewer.js가 노출한
+     저장 스냅샷을 조용히 남겨 리다이렉트 후 페이지가 새로 로드돼도 복원되게 한다. */
+  function persistProgressBeforeRedirect(){
+    if(typeof window.VIBERUN_SAVE_PROGRESS_SNAPSHOT === "function"){
+      try { window.VIBERUN_SAVE_PROGRESS_SNAPSHOT(); } catch(error) {}
+    }
+  }
+
   function signInWithSupabaseOAuth(provider){
     const client = getSupabaseClient();
     const config = PROVIDER_CONFIG[provider] || PROVIDER_CONFIG.googlePlay;
@@ -647,6 +661,7 @@
       return requestProviderLogin(provider === "google" ? "googlePlay" : provider);
     }
 
+    persistProgressBeforeRedirect();
     return client.auth.signInWithOAuth({
       provider,
       options: {

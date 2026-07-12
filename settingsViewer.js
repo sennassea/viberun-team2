@@ -421,17 +421,20 @@
     };
   }
 
-  function saveProgressAndExit(){
-    if(typeof localStorage === "undefined") return;
+  /* localStorage 저장만 담당한다(UI 전환/토스트는 하지 않는다). 구글 로그인처럼
+     페이지가 리다이렉트로 통째로 날아가기 직전에도 조용히 호출할 수 있도록
+     saveProgressAndExit에서 분리했다. 저장 성공 여부를 boolean으로 반환한다. */
+  function persistProgressSnapshot(){
+    if(typeof localStorage === "undefined") return false;
     /* 신령의 은혜 화면처럼 아직 전투가 시작되지 않은 상태에서는 배틀 상태(S)가
        let S;로 선언만 되어 있어 typeof S가 항상 "undefined"다. 예전에는 이 가드
        때문에 저장하기를 눌러도 조용히 아무 일도 일어나지 않았다(복원 로직인
        restoreSavedProgress는 이미 이 문제를 인지해 대응했지만 저장 로직은
        빠져 있었다). RUN_STATE만 있어도 저장이 되도록 배틀 미시작 상태를 만든다. */
     const battleActive = typeof S !== "undefined" && !!S;
-    if(battleActive && S.over) return;
+    if(battleActive && S.over) return false;
     const runState = typeof RUN_STATE !== "undefined" ? RUN_STATE : null;
-    if(!battleActive && !runState) return;
+    if(!battleActive && !runState) return false;
 
     const state = battleActive ? JSON.parse(JSON.stringify(S)) : buildLobbySaveState(runState);
     state.busy = battleActive ? (pauseState ? pauseState.busy : !!S.busy) : false;
@@ -475,16 +478,30 @@
         starterDeck,
         mapState,
       }));
-      closeSettingsViewer();
-      if(typeof showStartScreenAfterSave === "function"){
-        showStartScreenAfterSave();
-      } else if(typeof toast === "function") {
-        toast("진행 상태가 저장되었습니다.");
-      }
+      return true;
     } catch(error) {
-      if(typeof toast === "function") toast("저장에 실패했습니다.");
+      return false;
     }
   }
+
+  function saveProgressAndExit(){
+    const saved = persistProgressSnapshot();
+    if(!saved){
+      if(typeof toast === "function") toast("저장에 실패했습니다.");
+      return;
+    }
+    closeSettingsViewer();
+    if(typeof showStartScreenAfterSave === "function"){
+      showStartScreenAfterSave();
+    } else if(typeof toast === "function") {
+      toast("진행 상태가 저장되었습니다.");
+    }
+  }
+
+  /* 구글 로그인 등 OAuth 풀 페이지 리다이렉트 직전에 authService.js가 조용히
+     호출할 수 있도록 전역에 노출한다. 리다이렉트로 페이지가 통째로 날아가면
+     인메모리 게임 상태가 사라지므로, 리다이렉트 전에 스냅샷을 남겨둔다. */
+  window.VIBERUN_SAVE_PROGRESS_SNAPSHOT = persistProgressSnapshot;
 
   function ensureSettingsViewerStyles(){
     if(document.querySelector("#settingsViewerStyles")) return;
