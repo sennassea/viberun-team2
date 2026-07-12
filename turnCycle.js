@@ -106,6 +106,15 @@ async function endTurn(){
     notifyMonsterBattleEvent("enemyActionEnd", { enemy:e, move:mv });
     decayEnemyStatuses(e, "afterEnemyAction");
     renderAll();
+
+    // 회상 등 턴 종료 시 지속 피해로 마지막 적이 쓰러진 경우에도 즉시 클리어 처리한다.
+    // (기존에는 카드 사용 직후에만 생존 적 0명을 검사해, 회상으로 적이 죽으면
+    //  차례마침을 눌러도 전투가 끝나지 않는 문제가 있었다.)
+    if(livingEnemies().length===0){
+      nodeClear();
+      renderAll();
+      return;
+    }
     if(S.player.hp<=0 && !tryApplyFatalRelic()) return playDeathThenEndGame();
     await wait(450);
   }
