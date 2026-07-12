@@ -435,7 +435,7 @@
       ".card-detail-card.codex-item-frame-card .item-art-layer{font-size:11cqh;}" +
       ".codex-item-frame-card .item-art-layer img{width:62%;height:48%;object-fit:contain;display:block;filter:drop-shadow(0 .35cqh .55cqh rgba(80,55,24,.22));user-select:none;-webkit-user-drag:none;}" +
       ".codex-item-frame-card .item-frame-layer{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:fill;pointer-events:none;}" +
-      ".codex-item-frame-card .item-text-layer{position:absolute;inset:0;z-index:2;pointer-events:none;font-weight:900;color:#10243f;}" +
+      ".codex-item-frame-card .item-text-layer{position:absolute;inset:0;z-index:5;pointer-events:none;font-weight:900;color:#10243f;}" +
       ".codex-item-frame-card .item-name-text{position:absolute;left:12%;right:12%;top:9%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.35cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}" +
       ".codex-item-frame-card .item-desc-text{position:absolute;left:9%;right:9%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.02cqh;line-height:1.34;white-space:pre-line;overflow:hidden;color:#10243f;}" +
       ".card-detail-card.codex-item-frame-card .item-name-text{font-size:2.15cqh;}" +
@@ -471,7 +471,7 @@
       ".deck-viewer-card.cost-status .card-art-layer,.card-detail-card.cost-status .card-art-layer{background:radial-gradient(circle at 50% 32%,#3a1c28,#160a10);}" +
       ".deck-viewer-card.card-frame-card .card-art-layer img,.card-detail-card.card-frame-card .card-art-layer img{width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-drag:none;}" +
       ".deck-viewer-card.card-frame-card .card-frame-layer,.card-detail-card.card-frame-card .card-frame-layer{position:absolute;inset:0;z-index:2;width:100%;height:100%;object-fit:fill;pointer-events:none;}" +
-      ".deck-viewer-card.card-frame-card .card-text-layer,.card-detail-card.card-frame-card .card-text-layer{position:absolute;inset:0;z-index:3;pointer-events:none;font-weight:900;color:#10243f;}" +
+      ".deck-viewer-card.card-frame-card .card-text-layer,.card-detail-card.card-frame-card .card-text-layer{position:absolute;inset:0;z-index:5;pointer-events:none;font-weight:900;color:#10243f;}" +
       ".deck-viewer-card.card-frame-card .card-cost-text{position:absolute;left:6.2%;top:2.4%;width:18.8%;height:13.9%;display:grid;place-items:center;color:#2b3848;font-size:2.25cqh;line-height:1;text-shadow:0 .08cqh 0 rgba(255,255,255,.95);}" +
       ".deck-viewer-card.card-frame-card .card-name-text{position:absolute;left:12%;right:8%;top:5.9%;height:10%;display:grid;place-items:center;text-align:center;font-size:1.35cqh;line-height:1.05;overflow:hidden;text-shadow:0 .08cqh 0 rgba(255,255,255,.75);}" +
       ".deck-viewer-card.card-frame-card .card-desc-text{position:absolute;left:8%;right:8%;top:77.8%;bottom:7.4%;display:block;text-align:center;font-size:1.02cqh;line-height:1.34;white-space:pre-line;overflow:hidden;}" +
