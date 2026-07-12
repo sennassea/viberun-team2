@@ -594,9 +594,9 @@ function ensureRrStyles(){
       "background:linear-gradient(160deg,#cf5b52,#8f2f2f);border:.24cqh solid #e8c874;border-radius:.4cqh;" +
       "box-shadow:0 .6cqh 1.4cqh rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;}" +
     ".rr-badge span{transform:rotate(-45deg);color:#fbe9c8;font-weight:900;font-size:2.2cqh;letter-spacing:.15cqh;white-space:nowrap;}" +
-    ".rr-lines{text-align:center;color:#4a3524;}" +
+    ".rr-lines{text-align:center;color:#4a3524;width:82%;}" +
     ".rr-lines--victory{width:55%;}" +
-    ".rr-lines p{margin:0;font-weight:800;white-space:nowrap;word-break:keep-all;}" +
+    ".rr-lines p{margin:0;font-weight:800;word-break:keep-all;}" +
     ".rr-lines p:first-child{font-size:3.6cqh;margin-bottom:1.2cqh;color:#3a2814;}" +
     ".rr-lines p:not(:first-child){font-size:1.8cqh;color:#6b5236;line-height:1.5;}" +
     ".rr-divider{position:relative;width:60%;height:.16cqh;background:linear-gradient(90deg,transparent,rgba(180,140,80,.6),transparent);}" +
