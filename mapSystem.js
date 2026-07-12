@@ -2,28 +2,25 @@
 /* =========================================================================
    여정 시스템 (mapSystem.js) – 5층 동적 맵
    - 1층: 일반 적, 2~4층: 일반 2회 + 엘리트 1회 (랜덤 배치), 5층: 보스
-   - 드래그로 스크롤 가능한 SVG 여정
+   - 여기서는 맵 데이터 생성/진행 상태만 다룬다. 실제 캔버스 렌더링/드래그
+     스크롤/팝업 등 DOM 관련 코드는 mapUI.js에 있다(전역 함수 오버라이드
+     방식이 아니라 이 파일에서 렌더링 함수를 아예 제거함 — 과거에는
+     getViewBox/centerScrollOnFloor/setupDragScroll/buildOverlay/renderCanvas
+     가 이 파일과 mapUI.js에 동일한 이름으로 중복 정의되어 있었고, 나중에
+     로드되는 mapUI.js가 전역 함수를 덮어써서 이 파일의 정의는 항상
+     죽은 코드였다. showNodePopup/removePopup은 아예 어디서도 호출되지
+     않는 고아 함수였다. 유니티 이식 혼선을 막기 위해 정리했다).
    ========================================================================= */
-
-/* ── SVG 좌표 상수 ─────────────────────────────────────────────────────── */
-const MAP_W          = 360;
-let   MAP_FULL_H     = 980;
-const MAP_VIEW_H     = 480;
-let   MAP_MAX_SCROLL = MAP_FULL_H - MAP_VIEW_H;  // 500
-const PT = 80, PB = 60, PX = 65;                  // top/bottom/x 패딩
-
-let mapScrollY = 0;  // 0=하단(입구) → MAP_MAX_SCROLL=상단(보스)
-
-function getViewBox(){
-  const s = Math.max(0, Math.min(MAP_MAX_SCROLL, mapScrollY));
-  return `0 ${MAP_FULL_H - MAP_VIEW_H - s} ${MAP_W} ${MAP_VIEW_H}`;
-}
 
 /* ── 동적 여정 데이터 ──────────────────────────────────────────────────── */
 let MAP_FLOORS    = [];
 let MAP_PATHS     = [];
 let MAP_STAGES    = [];
 let POPUP_GETTERS = [];
+
+/* mapUI.js가 SVG 렌더링에 쓰는 좌표/스크롤 상수·상태는 mapUI.js 소유.
+   mapScrollY만 이 파일과 mapUI.js가 공유하는 진행 스크롤 상태다. */
+let mapScrollY = 0;
 
 /* ── 전역 진행 상태 ────────────────────────────────────────────────────── */
 window.MAP_STATE = { currentStage: 0, proceedMode: false };
@@ -55,7 +52,6 @@ function generateMap(){
       MAP_PATHS     = paths;
       MAP_STAGES    = stages;
       POPUP_GETTERS = popupGetters;
-      if(dims && dims.mapFullH){ MAP_FULL_H = dims.mapFullH; MAP_MAX_SCROLL = MAP_FULL_H - MAP_VIEW_H; }
       mapScrollY = 0;
     });
     return;
@@ -200,16 +196,6 @@ function getCurrentNodeId(){
   return MAP_FLOORS[1]?.[0]?.id || "start";
 }
 
-function updateHudFloor(){
-  const el = document.getElementById("hudFloor"); if(!el) return;
-  el.textContent = typeof formatCurrentDisplayArea === "function"
-    ? formatCurrentDisplayArea()
-    : "1구역";
-  const actEl = document.getElementById("hudAct");
-  if(actEl && typeof getCurrentActName === "function") actEl.textContent = getCurrentActName();
-  if(typeof window.renderDepthButtonState === "function") window.renderDepthButtonState();
-}
-
 function hasNextTier(){
   const myFloor = nodeFloorIdx(getCurrentNodeId());
   return MAP_FLOORS.some((f, fi) =>
@@ -225,15 +211,6 @@ function getCurrentLabel(nodeId){
     return n.label;
   }
   return "";
-}
-
-// 현재 층이 화면 중앙에 오도록 스크롤 오프셋 계산
-function centerScrollOnFloor(fi){
-  const floorN = MAP_FLOORS.length;
-  const useH   = MAP_FULL_H - PT - PB;
-  const nodeY  = PT + useH * (1 - fi / (floorN - 1));
-  const targetViewBoxY = nodeY - MAP_VIEW_H / 2;
-  mapScrollY = Math.max(0, Math.min(MAP_MAX_SCROLL, MAP_FULL_H - MAP_VIEW_H - targetViewBoxY));
 }
 
 /* ── 몬스터 배열 in-place 교체 ────────────────────────────────────────── */
@@ -308,309 +285,6 @@ function closeMap(){
       if(typeof updateContinueButtonInfo === "function") updateContinueButtonInfo();
     }
   }, 280);
-}
-
-/* ── 오버레이 DOM ──────────────────────────────────────────────────────── */
-function buildOverlay(){
-  const div = document.createElement("div");
-  div.id = "mapOverlay"; div.style.opacity = "0";
-  div.innerHTML = `
-    <div class="map-panel">
-      <div class="map-header">
-        <span class="map-title">🗺️ 여정</span>
-        <button class="map-close" id="mapClose">✕</button>
-      </div>
-      <div class="map-body">
-        <div class="map-canvas-wrap" id="mapCanvasWrap">
-          <svg id="mapCanvas" xmlns="http://www.w3.org/2000/svg"
-               style="width:100%;height:100%;display:block"></svg>
-        </div>
-        <div class="map-legend">
-          <div class="legend-title">길목 안내</div>
-          <div class="legend-item"><span class="leg-ico enemy">👺</span>미련이 느껴지는 곳</div>
-          <div class="legend-item"><span class="leg-ico elite">👹</span>기운이 더 무거워 보이는 곳</div>
-          <div class="legend-item"><span class="leg-ico boss">💀</span>기운이 엄청 무거운 곳</div>
-          <div class="legend-item"><span class="leg-ico event">❓</span>이벤트</div>
-          <div class="legend-item"><span class="leg-ico shop">🛒</span>상점</div>
-          <div class="legend-item"><span class="leg-ico rest">🛖</span>기도터</div>
-        </div>
-      </div>
-      <div class="map-footer" id="mapFooter"></div>
-    </div>`;
-  div.addEventListener("click", e => { if(e.target === div && !window.MAP_STATE.proceedMode) closeMap(); });
-  div.querySelector("#mapClose").addEventListener("click", () => { if(!window.MAP_STATE.proceedMode) closeMap(); });
-  setupDragScroll(
-    div.querySelector("#mapCanvasWrap"),
-    div.querySelector("#mapCanvas")
-  );
-  return div;
-}
-
-/* ── 드래그 스크롤 ──────────────────────────────────────────────────────── */
-function setupDragScroll(wrap, svgEl){
-  let dragging = false, startY = 0, startScroll = 0;
-
-  const onMove = e => {
-    if(!dragging) return;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    mapScrollY = Math.max(0, Math.min(MAP_MAX_SCROLL, startScroll + (clientY - startY)));
-    svgEl.setAttribute("viewBox", getViewBox());
-  };
-  const onEnd = () => {
-    if(!dragging) return;
-    dragging = false;
-    wrap.style.cursor = "grab";
-    window.removeEventListener("mousemove", onMove);
-    window.removeEventListener("mouseup", onEnd);
-  };
-
-  wrap.addEventListener("mousedown", e => {
-    e.preventDefault();
-    dragging = true;
-    startY = e.clientY;
-    startScroll = mapScrollY;
-    wrap.style.cursor = "grabbing";
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onEnd);
-  });
-
-  wrap.addEventListener("touchstart", e => {
-    startY = e.touches[0].clientY;
-    startScroll = mapScrollY;
-    dragging = true;
-  }, { passive: true });
-  wrap.addEventListener("touchmove", e => {
-    e.preventDefault();
-    onMove(e);
-  }, { passive: false });
-  wrap.addEventListener("touchend", () => { dragging = false; });
-}
-
-/* ── SVG 캔버스 렌더링 ─────────────────────────────────────────────────── */
-function renderCanvas(currentNodeId){
-  const svg = document.getElementById("mapCanvas"); if(!svg) return;
-
-  const floorN = MAP_FLOORS.length;
-  const useH   = MAP_FULL_H - PT - PB;
-
-  // 노드 SVG 좌표 계산
-  const pos = {};
-  MAP_FLOORS.forEach((floor, fi) => {
-    const y = PT + useH * (1 - fi / (floorN - 1));
-    floor.forEach((node, ni) => {
-      const cnt = floor.length;
-      pos[node.id] = {
-        x: cnt === 1 ? MAP_W / 2 : PX + (MAP_W - PX * 2) * ni / (cnt - 1),
-        y
-      };
-    });
-  });
-
-  const myFloor = nodeFloorIdx(currentNodeId);
-  const isPast  = id   => nodeFloorIdx(id) < myFloor;
-  const isCur   = id   => id === currentNodeId;
-
-  // 현재 노드와 실제로 선(MAP_PATHS)으로 연결된 다음 노드만 선택 가능하도록 집합 구성
-  const nextNodeIds = new Set();
-  if(window.MAP_STATE.proceedMode && myFloor >= 0){
-    const myIdx = MAP_FLOORS[myFloor]?.findIndex(n => n.id === currentNodeId);
-    if(myIdx >= 0){
-      MAP_PATHS.forEach(([[f1, n1], [f2, n2]]) => {
-        if(f1 === myFloor && n1 === myIdx){
-          const target = MAP_FLOORS[f2]?.[n2];
-          if(target) nextNodeIds.add(target.id);
-        }
-      });
-    }
-  }
-  const isNext  = node =>
-    window.MAP_STATE.proceedMode &&
-    node.stageIndex !== undefined &&
-    nextNodeIds.has(node.id);
-
-  // 경로 선
-  let paths = "";
-  MAP_PATHS.forEach(([[f1, n1], [f2, n2]]) => {
-    const a = MAP_FLOORS[f1]?.[n1], b = MAP_FLOORS[f2]?.[n2];
-    if(!a || !b) return;
-    const p1 = pos[a.id], p2 = pos[b.id];
-    const active = isPast(a.id) || isCur(a.id);
-    paths += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}"
-      class="mpath${active ? " mpath-active" : ""}"
-      stroke-dasharray="7 5" stroke-linecap="round"/>`;
-  });
-
-  // 층 번호 레이블 (좌측)
-  let floorLbls = "";
-  MAP_FLOORS.forEach((_, fi) => {
-    if(fi === 0) return;
-    const y = PT + useH * (1 - fi / (floorN - 1));
-    floorLbls += `<text x="14" y="${y + 4}" class="mfloor-lbl">${fi}F</text>`;
-  });
-
-  // 노드
-  let nodes = "";
-  MAP_FLOORS.forEach(floor => floor.forEach(node => {
-    const { x, y } = pos[node.id];
-    const cur  = isCur(node.id);
-    const past = isPast(node.id);
-    const next = isNext(node);
-    const r    = cur ? 24 : 20;
-
-    const cls = ["mnode", `mnode-${node.type}`,
-      cur  ? "mnode-current" : "",
-      past ? "mnode-past"    : "",
-      next ? "mnode-next"    : "",
-      (node.isDimmed && !past) ? "mnode-dimmed" : "",
-    ].filter(Boolean).join(" ");
-
-    const attrs = [];
-    if(node.stageIndex !== undefined){
-      attrs.push(`data-stage="${node.stageIndex}"`, `data-nodeid="${node.id}"`);
-    }
-    if(next && node.stageIndex !== undefined) attrs.push(`data-nextstage="${node.stageIndex}"`);
-
-    /* 딤드 노드: "준비중" 배지 표시 */
-    const dimmedBadge = (node.isDimmed && !past && !cur)
-      ? `<text text-anchor="middle" y="${-(r + 5)}" font-size="8" class="mnode-dimmed-badge">준비중</text>`
-      : "";
-
-    nodes += `<g class="${cls}" transform="translate(${x},${y})" ${attrs.join(" ")}>
-      ${cur  ? `<circle r="32" class="mnode-pulse"/>` : ""}
-      ${next ? `<circle r="28" class="mnode-pulse-next"/>` : ""}
-      <circle r="${r}" class="mnode-bg"/>
-      <text text-anchor="middle" dominant-baseline="central"
-            font-size="${cur ? 16 : 13}" class="mnode-emoji">${node.emoji}</text>
-      <text text-anchor="middle" y="${r + 14}" font-size="10" class="mnode-lbl">${node.label}</text>
-      ${dimmedBadge}
-    </g>`;
-  }));
-
-  // 플레이어 핀
-  let pin = "";
-  if(pos[currentNodeId]){
-    const { x, y } = pos[currentNodeId];
-    pin = `<g transform="translate(${x},${y - 40})">
-      <polygon points="0,-14 12,8 -12,8" fill="#e7b54a" stroke="#b07d1d" stroke-width="1.5"/>
-      <text text-anchor="middle" y="-1" font-size="12">👼</text>
-    </g>`;
-  }
-
-  svg.innerHTML = paths + floorLbls + nodes + pin;
-  svg.setAttribute("viewBox", getViewBox());
-
-  // 닫기 버튼: 다음 노드를 반드시 선택해야 하는 상태에서는 숨김
-  const closeBtn = document.getElementById("mapClose");
-  if(closeBtn) closeBtn.style.display = window.MAP_STATE.proceedMode ? "none" : "";
-
-  // 푸터 업데이트
-  const footer = document.getElementById("mapFooter");
-  if(footer) footer.textContent = window.MAP_STATE.proceedMode
-    ? "⬆️ 다음 구역을 클릭하여 진행하세요"
-    : (getCurrentLabel(currentNodeId) ? "📍 현재 위치: " + getCurrentLabel(currentNodeId) : "");
-
-  // 다음 스테이지 클릭 이벤트
-  svg.querySelectorAll("[data-nextstage]").forEach(el => {
-    el.style.cursor = "pointer";
-    el.addEventListener("click", e => {
-      e.stopPropagation();
-      startStage(+el.dataset.nextstage);
-    });
-  });
-
-  // 노드 팝업 (다음 스테이지가 아닌 노드)
-}
-
-/* ── 몬스터 팝업 ────────────────────────────────────────────────────────── */
-function showNodePopup(e, el){
-  removePopup();
-  const si       = +el.dataset.stage;
-  const monsters = POPUP_GETTERS[si] ? POPUP_GETTERS[si]() : [];
-  if(!monsters.length) return;
-
-  const stage = MAP_STAGES[si];
-  const ico   = stage?.type === "boss" ? "💀" : stage?.type === "elite" ? "👹" : "👺";
-
-  const popup = document.createElement("div");
-  popup.className = "map-node-popup"; popup.id = "mapNodePopup";
-  let html = `<div class="popup-title">${ico} ${stage?.label || ""}</div>`;
-  monsters.forEach(m => {
-    html += `<div class="popup-monster">${m.emoji} ${m.name}<span class="popup-hp"> HP ${m.maxHp}</span></div>`;
-  });
-  popup.innerHTML = html;
-
-  const panel = document.querySelector(".map-panel");
-  const svg   = document.getElementById("mapCanvas");
-  if(!panel || !svg) return;
-
-  const sr = svg.getBoundingClientRect(), pr = panel.getBoundingClientRect();
-  const nid = el.dataset.nodeid;
-  let nx = sr.left + sr.width / 2, ny = sr.top;
-
-  // SVG viewBox 좌표 → 화면 px 변환 (스크롤 오프셋 반영)
-  for(const floor of MAP_FLOORS) for(const n of floor){
-    if(n.id !== nid) continue;
-    const fi     = MAP_FLOORS.findIndex(f => f.includes(n));
-    const ni2    = MAP_FLOORS[fi].indexOf(n);
-    const cnt    = MAP_FLOORS[fi].length;
-    const floorN = MAP_FLOORS.length;
-    const useH   = MAP_FULL_H - PT - PB;
-    const vx     = cnt === 1 ? MAP_W / 2 : PX + (MAP_W - PX * 2) * ni2 / (cnt - 1);
-    const vy     = PT + useH * (1 - fi / (floorN - 1));
-    const viewBoxY = MAP_FULL_H - MAP_VIEW_H - Math.max(0, Math.min(MAP_MAX_SCROLL, mapScrollY));
-    nx = sr.left + vx * (sr.width / MAP_W);
-    ny = sr.top  + (vy - viewBoxY) * (sr.height / MAP_VIEW_H);
-  }
-
-  popup.style.cssText = `position:absolute; left:${nx - pr.left + 12}px; top:${ny - pr.top - 10}px;`;
-  panel.style.position = "relative";
-  panel.appendChild(popup);
-  setTimeout(() => document.addEventListener("click", removePopup, { once: true }), 0);
-}
-function removePopup(){ const p = document.getElementById("mapNodePopup"); if(p) p.remove(); }
-
-/* ── 승리 화면: '다시 시작' → '진행' 교체 ────────────────────────────── */
-function setupWinInterception(){
-  const overEl     = document.getElementById("over");
-  const restartBtn = document.getElementById("restart");
-  if(!overEl || !restartBtn) return;
-
-  const proceedBtn = document.createElement("button");
-  proceedBtn.id = "proceedBtn";
-  proceedBtn.textContent = "진행";
-  proceedBtn.style.display = "none";
-  restartBtn.parentNode.insertBefore(proceedBtn, restartBtn.nextSibling);
-
-  new MutationObserver(() => {
-    if(!overEl.classList.contains("show")) return;
-    const isWin = typeof S !== "undefined" && S.over === "win";
-    if(isWin && hasNextTier()){
-      restartBtn.style.display = "none";
-      proceedBtn.style.display = "";
-    } else {
-      restartBtn.style.display = "";
-      proceedBtn.style.display = "none";
-    }
-  }).observe(overEl, { attributes: true, attributeFilter: ["class"] });
-
-  proceedBtn.addEventListener("click", () => {
-    overEl.classList.remove("show");
-    window.MAP_STATE.proceedMode = true;
-    openMap();
-  });
-
-  // 캡처 페이즈: script.js 핸들러보다 먼저 실행
-  restartBtn.addEventListener("click", () => {
-    const isWin = typeof S !== "undefined" && S.over === "win";
-    if(isWin && !hasNextTier()){
-      // 보스 클리어 후 재시작 → 새 맵 생성
-      generateMap();
-      window.MAP_STATE.currentStage = 0;
-      loadStageMonsters(0);
-    }
-    window.MAP_STATE.proceedMode = false;
-    updateHudFloor();
-  }, true);
 }
 
 /* ── 초기화 ─────────────────────────────────────────────────────────────── */

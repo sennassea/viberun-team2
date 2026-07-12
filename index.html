@@ -287,18 +287,23 @@
 <script src="rarityLabelColor.js" defer></script>
 <!-- 전투 씬(구 script.js)은 기능별로 분리되어 있으며, 서로 참조하므로 이 순서를 유지해야 합니다 -->
 <script src="battleInit.js" defer></script>
+<script src="battleInitUI.js" defer></script>
 <script src="battleRunState.js" defer></script>
 <script src="relicSystem.js" defer></script>
 <script src="monsterAI.js" defer></script>
 <script src="statusEffectSystem.js" defer></script>
 <script src="cardPlaySystem.js" defer></script>
+<script src="cardPlaySystemUI.js" defer></script>
 <script src="battleRewards.js" defer></script>
+<script src="battleRewardsUI.js" defer></script>
 <script src="turnCycle.js" defer></script>
+<script src="turnCycleUI.js" defer></script>
 <script src="battleRender.js" defer></script>
 <script src="potionBattleUI.js" defer></script>
 <script src="battleDragDrop.js" defer></script>
 <script src="battleFeedback.js" defer></script>
 <script src="runRecord.js" defer></script>
+<script src="runRecordUI.js" defer></script>
 <script src="rankingService.js" defer></script>
 <script src="rankingUI.js" defer></script>
 <script src="userDataService.js" defer></script>
@@ -315,32 +320,53 @@
 <script src="monthlyPassUI.js" defer></script>
 <script src="menuProfileUI.js" defer></script>
 <script src="spiritPathUI.js" defer></script>
+<!-- startMenuUI.js는 startMenu.js가 로드 직후 즉시 호출하는
+     updateContinueButtonInfo/updateStartScreenMode를 담고 있으므로
+     startMenu.js보다 먼저 로드되어야 한다 -->
+<script src="startMenuUI.js" defer></script>
 <script src="startMenu.js" defer></script>
 <script src="tutorialDialogueData.js" defer></script>
+<!-- tutorialSystemUI.js는 tutorialSystem.js가 로드되자마자 즉시 실행되는
+     초기화 코드가 참조하므로 tutorialSystem.js보다 먼저 로드되어야 한다 -->
+<script src="tutorialSystemUI.js" defer></script>
 <script src="tutorialSystem.js" defer></script>
+<!-- tutorialBattleUI.js는 tutorialBattle.js 맨 아래 window.TUTORIAL_BATTLE
+     내보내기가 즉시 참조하는 openTutorialSettings/closeTutorialSettings를
+     담고 있으므로 tutorialBattle.js보다 먼저 로드되어야 한다 -->
+<script src="tutorialBattleUI.js" defer></script>
 <script src="tutorialBattle.js" defer></script>
 <script src="globalTooltip.js" defer></script>
 <script src="tooltip.js" defer></script>
 <script src="deckViewer.js" defer></script>
 <script src="settingsViewer.js" defer></script>
+<!-- mapUI.js는 mapSystem.js의 init()이 동기 실행되며 즉시 호출하는
+     updateHudFloor/setupWinInterception을 담고 있으므로 mapSystem.js보다
+     먼저 로드되어야 한다(defer 스크립트는 문서 순서대로 실행됨) -->
+<script src="mapUI.js" defer></script>
 <script src="mapSystem.js" defer></script>
 <script src="tutorialMapSystem.js" defer></script>
+<script src="tutorialMapSystemUI.js" defer></script>
 <script src="encounterPackages.js" defer></script>
 <script src="mapNodeLogic.js" defer></script>
-<script src="mapUI.js" defer></script>
 <script src="restNode.js" defer></script>
+<script src="restNodeUI.js" defer></script>
 <script src="bagUI.js" defer></script>
 <script src="shopNode.js" defer></script>
+<script src="shopNodeUI.js" defer></script>
 <script src="endlessJourneyEffects.js" defer></script>
 <script src="eventNode.js" defer></script>
+<script src="eventNodeUI.js" defer></script>
 <script src="treasureNode.js" defer></script>
+<script src="treasureNodeUI.js" defer></script>
 <script src="runResultData.js" defer></script>
 <script src="runRewardService.js" defer></script>
 <script src="startBlessing.js" defer></script>
+<script src="startBlessingUI.js" defer></script>
 <script src="endlessJourney.js" defer></script>
 <script src="endlessDepthUI.js" defer></script>
 <script src="journeyDisplay.js" defer></script>
 <script src="runResult.js" defer></script>
+<script src="runResultUI.js" defer></script>
 <script src="hand-layout.js" defer></script>
 <script src="debugPanel.js" defer></script>
 <script src="cheatWalletService.js" defer></script>
