@@ -136,6 +136,26 @@ function getGrowthAdjustedValue(cardRef, effect){
   return base + getHanpuriGrowth(cardRef) * (meta.perGrowth || 0);
 }
 
+/* 한풀이 성장 카드가 손패 등에 표시될 때, 실제로 누적된 성장치가 카드
+   설명 문구의 기본 수치에도 반영되도록 desc를 보정한 표시용 카드 객체를 만든다.
+   (fx/데미지 계산 자체는 getGrowthAdjustedValue가 이미 정확히 처리하지만,
+   카드 얼굴에 그려지는 desc 텍스트는 정적 원본이라 성장이 눈에 보이지 않았다.) */
+function getGrowthDisplayCard(card, instance, overrides){
+  if(!card) return card;
+  const meta = card.hanpuriGrowth;
+  let desc = card.desc;
+  const growth = meta ? getHanpuriGrowth(instance) : 0;
+  if(meta && growth > 0){
+    const fx = (card.fx || []).find(e => e && e.growthStat === meta.stat);
+    if(fx){
+      const baseValue = fx.v || 0;
+      const adjustedValue = baseValue + growth * (meta.perGrowth || 0);
+      desc = String(desc || "").replace(new RegExp("\\b" + baseValue + "\\b"), String(adjustedValue));
+    }
+  }
+  return { ...card, ...overrides, desc };
+}
+
 function ensureBlessingState(){
   if(!S) return;
   if(!S.blessings || typeof S.blessings !== "object") S.blessings = {};

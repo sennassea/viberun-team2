@@ -428,7 +428,8 @@ function renderHand(){
   h.innerHTML = "";
   S.hand.forEach((key, i) => {
     const c  = CARD_DB[key];
-    const displayCard = c ? { ...c, cost:getHandCardCost(i, key) } : c;
+    const instance = S.handInstances && S.handInstances[i];
+    const displayCard = getGrowthDisplayCard(c, instance, { cost:getHandCardCost(i, key) });
     const el = document.createElement("div");
     el.className     = "card card-frame-card cost-"+c.type;
     el.dataset.index = i;
