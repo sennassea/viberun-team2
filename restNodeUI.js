@@ -70,6 +70,7 @@ function ensurePrayerOverlay(){
     card.addEventListener("click", () => selectPrayerCard(card));
   });
   overlay.querySelector("#prayerConfirmBtn").addEventListener("click", confirmPrayerChoice);
+  overlay.querySelector("#prayerSkipBtn").addEventListener("click", skipPrayerNode);
 
   overlay.querySelector("#prayerMapBtn").addEventListener("click", () => {
     if(typeof openMap === "function") openMap();
@@ -140,6 +141,7 @@ function prayerOverlayHtml(){
       '</div>' +
     '</div>' +
     '<div class="prayer-actions">' +
+      '<button type="button" class="prayer-btn prayer-btn-skip" id="prayerSkipBtn">건너뛰기</button>' +
       '<button type="button" class="prayer-btn prayer-btn-confirm" id="prayerConfirmBtn" disabled>선택하고 다음으로</button>' +
     '</div>'
   );
@@ -294,7 +296,7 @@ function ensurePrayerStyles(){
     ".prayer-tip-right{right:0;flex-direction:row-reverse;text-align:right;}" +
     ".prayer-tip-ghost{flex:none;width:20cqh;height:20cqh;background-position:center;background-size:contain;background-repeat:no-repeat;position:relative;z-index:1;}" +
     ".prayer-tip-left .prayer-tip-ghost{margin-right:-3.2cqw;}" +
-    ".prayer-tip-right .prayer-tip-ghost{transform:translateX(-3.2cqw);}" +
+    ".prayer-tip-right .prayer-tip-ghost{margin-right:-3.2cqw;}" +
     ".prayer-tip-text{position:relative;z-index:0;font-size:1.85cqh;font-weight:800;color:#6b4a20;background:rgba(255,251,240,.88);" +
       "border-radius:1cqh;padding:.8cqh 1.1cqw;border:.15cqh solid rgba(178,140,80,.4);}" +
     ".prayer-tip-text b{color:#c94a3d;margin-right:.3cqw;}" +
@@ -302,6 +304,8 @@ function ensurePrayerStyles(){
     ".prayer-btn{min-width:16cqw;height:7.4cqh;border-radius:1.3cqh;font-size:2cqh;font-weight:900;cursor:pointer;" +
       "font:inherit;border:.22cqh solid rgba(178,140,80,.5);}" +
     ".prayer-btn-confirm{height:7.4cqh;width:auto;min-width:0;aspect-ratio:384/107;background:transparent url(\"assets/ui_buttons/prayer_select.png\") center/100% 100% no-repeat;color:transparent;border:0;border-radius:0;box-shadow:none;font-size:0;}" +
+    ".prayer-btn-skip{background:#fdf6e6;border-color:rgba(140,105,55,.9);color:#4a3a24;box-shadow:0 .4cqh 1cqh rgba(90,65,25,.22);}" +
+    ".prayer-btn-skip:hover{background:#fff;}" +
     ".prayer-btn-confirm:disabled{filter:grayscale(1) brightness(.85);cursor:default;}";
   document.head.appendChild(style);
 }
