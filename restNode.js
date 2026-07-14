@@ -125,6 +125,12 @@ function confirmPrayerChoice(){
   }
 }
 
+/* ── 건너뛰기: 아무 효과 없이 노드를 마치고 맵으로 복귀 ─────────────────── */
+function skipPrayerNode(){
+  if(typeof toast === "function") toast("기도터를 건너뛰었습니다.");
+  resolvePrayerNode();
+}
+
 /* ── 받아들이기: 기존 정화 보상 UI(전투 보상과 동일 렌더링)를 "휴식 카드 추가 모드"로 호출 ── */
 function openRestCardAdd(){
   if(typeof window.OPEN_CARD_REWARD_PICK !== "function"){

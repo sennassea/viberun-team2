@@ -587,7 +587,7 @@ function discardCard(key, options={}){
     }
     return;
   }
-  if(card.exhaust){
+  if(card.exhaust && options.source === "played"){
     S.exhaustedSpellCountThisTurn = (S.exhaustedSpellCountThisTurn || 0) + 1;
     if(Array.isArray(S.exhaust)) S.exhaust.push(key);
     const generated = !!(card.generatedOnly || options.generated);
